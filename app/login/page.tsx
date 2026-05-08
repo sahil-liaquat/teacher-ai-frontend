@@ -23,14 +23,15 @@ export default function LoginPage() {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "teacher@teacherai.local", password: "Teacher@12345" }
+    defaultValues: { email: "", password: "" }
   });
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       const user = await login(values.email, values.password);
       toast({ title: "Welcome back", description: user.name });
-      router.push(user.role === "admin" || user.role === "super_admin" ? "/admin" : "/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next || (user.role === "admin" ? "/admin" : "/dashboard"));
     } catch (error) {
       toast({ title: "Login failed", description: error instanceof Error ? error.message : "Try again" });
     }
@@ -46,7 +47,7 @@ export default function LoginPage() {
             Teacher AI Toolkit
           </div>
           <h1 className="mt-6 max-w-2xl text-[38px] font-black leading-tight tracking-tight text-[#101039] 2xl:mt-8 2xl:text-5xl">
-            Good morning, Demo Teacher.
+            Welcome back.
           </h1>
           <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[#67627d] 2xl:mt-6 2xl:text-lg 2xl:leading-8">
             Access the redesigned workspace for lesson plans, worksheets, saved resources, books, and reports.
@@ -54,12 +55,12 @@ export default function LoginPage() {
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-4 2xl:mt-10 2xl:gap-5">
             <div className="rounded-[20px] border border-[#dac6f6] bg-[#fbf6ff] p-5 2xl:p-6">
               <BookOpen className="h-8 w-8 text-[#7a43e8] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">24</p>
+              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">0</p>
               <p className="text-sm font-semibold text-[#67627d]">Lesson plans this month</p>
             </div>
             <div className="rounded-[20px] border border-[#bdebd7] bg-[#ecfff7] p-5 2xl:p-6">
               <Sparkles className="h-8 w-8 text-[#24a760] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">48</p>
+              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">0</p>
               <p className="text-sm font-semibold text-[#67627d]">Worksheets created</p>
             </div>
           </div>

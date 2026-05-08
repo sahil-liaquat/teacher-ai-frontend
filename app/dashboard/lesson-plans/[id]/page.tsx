@@ -6,7 +6,7 @@ import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { LessonPlanOutput } from "@/components/generation-output";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
-import { downloadLessonPlanPdf, formatLessonPlanForClipboard } from "@/lib/lesson-plan-export";
+import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } from "@/lib/lesson-plan-export";
 
 export default function LessonPlanDetailPage() {
   const params = useParams<{ id: string }>();
@@ -14,17 +14,29 @@ export default function LessonPlanDetailPage() {
   const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
   const output = lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null;
 
-  async function copy() {
-    await navigator.clipboard.writeText(formatLessonPlanForClipboard(output));
+  async function copy(currentOutput = output) {
+    await navigator.clipboard.writeText(formatLessonPlanForClipboard(currentOutput));
     toast({ title: "Copied" });
   }
-  async function exportPdf() {
+  async function exportPdf(currentOutput = output) {
     try {
-      await downloadLessonPlanPdf(output);
-      toast({ title: "PDF downloaded", description: "Exported as a clean text lesson plan." });
+      await downloadLessonPlanPdf(currentOutput);
+      toast({ title: "PDF downloaded", description: "Exported as a styled lesson plan PDF." });
     } catch (err) {
       toast({ title: "Download failed", description: err instanceof Error ? err.message : "Try again" });
     }
+  }
+  async function share(currentOutput = output) {
+    try {
+      const result = await shareLessonPlan(currentOutput);
+      if (result === "copied") toast({ title: "Copied", description: "Sharing is not available, so the lesson plan was copied." });
+      if (result === "shared") toast({ title: "Shared" });
+    } catch (err) {
+      toast({ title: "Share failed", description: err instanceof Error ? err.message : "Try again" });
+    }
+  }
+  function editsSaved() {
+    toast({ title: "Changes saved", description: "Your edits are shown in this lesson plan view." });
   }
 
   if (lesson.isLoading) return <LessonPlanLoadingState />;
@@ -32,7 +44,7 @@ export default function LessonPlanDetailPage() {
 
   return (
     <div className="print-shell">
-      <LessonPlanOutput output={output} streamKey={`lesson-plan-${params.id}`} streamSpeed="fast" onCopy={copy} onExport={exportPdf} />
+      <LessonPlanOutput output={output} streamKey={`lesson-plan-${params.id}`} streamSpeed="fast" onCopy={copy} onExport={exportPdf} onShare={share} onSave={editsSaved} />
     </div>
   );
 }

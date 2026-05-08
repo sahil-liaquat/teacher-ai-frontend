@@ -31,7 +31,7 @@ export function getTeacherFirstName(profile?: TeacherProfile) {
 
 export function defaultTeacherProfile(): TeacherProfile {
   return {
-    name: "Demo Teacher",
+    name: "Teacher",
     school: "",
     subjects: ""
   };

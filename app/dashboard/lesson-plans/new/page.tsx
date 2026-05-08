@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
+import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 
 const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, tone: "orange" },
@@ -129,6 +130,10 @@ export default function NewLessonPlanPage() {
     };
     window.sessionStorage.setItem(PENDING_LESSON_PLAN_KEY, JSON.stringify(payload));
     router.push("/dashboard/lesson-plans/generating");
+  }
+
+  if (loading) {
+    return <GenerationLoadingScreen type="lesson-plan" status="Reading the textbook..." onBack={() => setLoading(false)} />;
   }
 
   return (

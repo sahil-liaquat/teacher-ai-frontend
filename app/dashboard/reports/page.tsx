@@ -14,7 +14,7 @@ const kpis = [
 ];
 
 const usageBars = [34, 52, 46, 70, 62, 86, 74, 96, 78, 68, 88, 72];
-const books = [
+const books: [string, number, string][] = [
   ["Science Class 8", 42, "bg-[#6d38f2]"],
   ["Mathematics Class 7", 31, "bg-emerald-500"],
   ["English Reader", 24, "bg-blue-500"],

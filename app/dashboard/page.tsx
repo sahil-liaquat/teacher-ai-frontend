@@ -27,10 +27,10 @@ import { listWorksheetGenerations, WORKSHEET_STORAGE_EVENT } from "@/lib/workshe
 import { cn } from "@/lib/utils";
 
 const statCards = [
-  { label: "Lesson Plans Created", fallback: "24", sub: "This Month", trend: "32%", icon: BookOpen, tone: "purple" },
-  { label: "Worksheets Created", fallback: "48", sub: "This Month", trend: "18%", icon: FileText, tone: "green" },
-  { label: "Saved Resources", fallback: "86", sub: "Total", trend: "24%", icon: FolderOpen, tone: "orange" },
-  { label: "Monthly Generations", fallback: "158 / 200", sub: "Used This Month", icon: ClipboardCheck, tone: "blue" }
+  { label: "Lesson Plans Created", fallback: "0", sub: "This Month", icon: BookOpen, tone: "purple" },
+  { label: "Worksheets Created", fallback: "0", sub: "This Month", icon: FileText, tone: "green" },
+  { label: "Saved Resources", fallback: "0", sub: "Total", icon: FolderOpen, tone: "orange" },
+  { label: "Monthly Generations", fallback: "0", sub: "Used This Month", icon: ClipboardCheck, tone: "blue" }
 ];
 
 const quickAccess = [
@@ -41,25 +41,15 @@ const quickAccess = [
   { title: "Classroom Tools", desc: "Use tools like quiz maker and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
 ];
 
-const fallbackRecent = [
-  { topic: "Science Worksheet - The Invisible Living World", class_name: "8th Grade", subject: "Science", type: "Worksheet" },
-  { topic: "Science Lesson Plan: Uses of Coal and Petroleum", class_name: "8th Grade", subject: "Science", type: "Lesson Plan" },
-  { topic: "Science Lesson Plan: Irrigation", class_name: "8th Grade", subject: "Science", type: "Lesson Plan" },
-  { topic: "Science Lesson Plan: Conservation of Plants", class_name: "8th Grade", subject: "Science", type: "Lesson Plan" },
-  { topic: "Science Lesson Plan: Microorganisms", class_name: "8th Grade", subject: "Science", type: "Lesson Plan" }
-];
-
 const bars = [6, 16, 9, 17, 31, 24, 18, 34, 40, 31, 25, 36, 29];
 
 export default function TeacherDashboard() {
-  const [profile, setProfile] = useState<TeacherProfile>(() => ({ name: "Demo Teacher", school: "", subjects: "" }));
+  const [profile, setProfile] = useState<TeacherProfile>(() => ({ name: "Teacher", school: "", subjects: "" }));
   const [worksheets, setWorksheets] = useState<any[]>([]);
-  const boards = useQuery({ queryKey: ["boards-summary"], queryFn: () => backendApi.boards(0, 100), retry: false });
   const plans = useQuery({ queryKey: ["lesson-plans-summary"], queryFn: () => backendApi.lessonPlans(0, 5), retry: false });
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName(profile);
   const lessonTotal = plans.data?.total;
-  const boardTotal = boards.data?.total;
   const lessonRecent = plans.data?.items?.length
     ? plans.data.items.map((item: any) => ({
         ...item,
@@ -86,10 +76,10 @@ export default function TeacherDashboard() {
   });
   const recent = [...worksheetRecent, ...lessonRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-  const displayRecent = recent.length ? recent : fallbackRecent.map((item) => ({
-    ...item,
-    href: item.type === "Worksheet" ? "/dashboard/worksheets/new" : "/dashboard/lesson-plans/new"
-  }));
+  const displayRecent = recent;
+  const worksheetTotal = worksheets.length;
+  const savedResourcesTotal = (lessonTotal || 0) + worksheetTotal;
+  const monthlyGenerationsTotal = savedResourcesTotal;
 
   useEffect(() => {
     setProfile(getTeacherProfile());
@@ -139,7 +129,15 @@ export default function TeacherDashboard() {
           <StatCard
             key={stat.label}
             {...stat}
-            value={index === 0 ? formatNumber(lessonTotal, stat.fallback) : index === 2 ? formatNumber(boardTotal, stat.fallback) : stat.fallback}
+            value={
+              index === 0
+                ? formatNumber(lessonTotal, stat.fallback)
+                : index === 1
+                  ? formatNumber(worksheetTotal, stat.fallback)
+                  : index === 2
+                    ? formatNumber(savedResourcesTotal, stat.fallback)
+                    : formatNumber(monthlyGenerationsTotal, stat.fallback)
+            }
           />
         ))}
       </section>
@@ -170,7 +168,7 @@ export default function TeacherDashboard() {
             <Link href="/dashboard/resources" className="premium-hover-sm rounded-[11px] border border-[#ebe7f4] bg-white px-3 py-1.5 text-xs font-bold text-[#55516e] shadow-sm 2xl:rounded-[12px] 2xl:px-4 2xl:py-2 2xl:text-sm">View All</Link>
           </div>
           <div className="divide-y divide-[#eeeaf7]">
-            {displayRecent.slice(0, 5).map((item: any, index: number) => (
+            {displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
               <Link key={`${item.type}-${item.id || item.topic}-${index}`} href={item.href} className="premium-hover-sm grid grid-cols-[44px_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-[13px] px-2 py-3 2xl:grid-cols-[54px_minmax(0,1fr)_auto_auto] 2xl:gap-4 2xl:rounded-[14px] 2xl:py-4">
                 <div className={cn("grid h-10 w-10 place-items-center rounded-[11px] 2xl:h-12 2xl:w-12 2xl:rounded-[12px]", item.type === "Worksheet" ? "bg-[#dbfae6] text-[#28ae64]" : "bg-[#eee0ff] text-[#8d57f6]")}>
                   {item.type === "Worksheet" ? <FileText className="h-5 w-5 2xl:h-6 2xl:w-6" /> : <BookOpen className="h-5 w-5 2xl:h-6 2xl:w-6" />}
@@ -182,7 +180,11 @@ export default function TeacherDashboard() {
                 <span className={cn("hidden rounded-[8px] px-3 py-1.5 text-xs font-black sm:inline-flex 2xl:px-4 2xl:py-2 2xl:text-sm", item.type === "Worksheet" ? "bg-[#dbfae6] text-[#218e55]" : "bg-[#f0e5ff] text-[#7c3ee4]")}>{item.type}</span>
                 <MoreVertical className="h-5 w-5 text-[#8f89a1]" />
               </Link>
-            ))}
+            )) : (
+              <div className="rounded-[13px] border border-dashed border-[#d8def0] bg-[#fbfcff] p-5 text-sm font-semibold text-[#67627d]">
+                No recent generations yet.
+              </div>
+            )}
           </div>
         </div>
 

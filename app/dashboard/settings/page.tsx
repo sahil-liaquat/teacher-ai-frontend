@@ -51,8 +51,8 @@ export default function SettingsPage() {
         <Card>
           <CardHeader><CardTitle>Usage</CardTitle></CardHeader>
           <CardContent>
-            <div className="h-3 rounded-full bg-[#ece8f6]"><div className="h-3 w-1/3 rounded-full bg-primary" /></div>
-            <p className="mt-3 text-sm text-muted-foreground">Local demo limit: 200 generations per month.</p>
+            <div className="h-3 rounded-full bg-[#ece8f6]"><div className="h-3 w-0 rounded-full bg-primary" /></div>
+            <p className="mt-3 text-sm text-muted-foreground">0 generations used this month.</p>
           </CardContent>
         </Card>
       </div>

@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ClipboardList, Sparkles } from "lucide-react";
-import { apiFetch, backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { saveWorksheetGeneration } from "@/lib/worksheet-storage";
 
 const difficultyPresets = [
@@ -56,6 +57,8 @@ export default function NewWorksheetPage() {
   const [questionTypes, setQuestionTypes] = useState(defaultQuestionTypes);
   const [fetching, setFetching] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState("");
+  const [generationError, setGenerationError] = useState("");
 
   useEffect(() => {
     setFetching(true);
@@ -148,30 +151,53 @@ export default function NewWorksheetPage() {
       return;
     }
     setGenerating(true);
+    setGenerationError("");
+    setGenerationStatus("Reading the textbook...");
+    const conceptTimer = window.setTimeout(() => setGenerationStatus("Finding key concepts..."), 900);
+    const creatingTimer = window.setTimeout(() => setGenerationStatus("Preparing your worksheet..."), 1900);
     try {
-      const generation = await apiFetch<any>("/generate/worksheet", {
-        method: "POST",
-        body: JSON.stringify({
-          book_id: bookId,
-          chapter_names: chapterNames,
-          question_count: questionCount,
-          question_types: questionTypes,
-          language,
-          difficulty_distribution: difficulty,
-          include_answer_key: true,
-          include_marking_scheme: true,
-          include_hints: false,
-          include_diagrams_images: false
-        })
+      const generation = await backendApi.createWorksheet({
+        book_id: bookId,
+        chapter_names: chapterNames,
+        question_count: questionCount,
+        question_types: questionTypes,
+        language,
+        difficulty_distribution: difficulty,
+        include_answer_key: true,
+        include_marking_scheme: true,
+        include_hints: false,
+        include_diagrams_images: false
       });
+      setGenerationStatus("Formatting output...");
       saveWorksheetGeneration(generation);
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
       router.push(`/dashboard/worksheets/${generation.id}`);
     } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "Could not generate worksheet.");
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Could not generate worksheet." });
     } finally {
+      window.clearTimeout(conceptTimer);
+      window.clearTimeout(creatingTimer);
       setGenerating(false);
+      setGenerationStatus("");
     }
+  }
+
+  if (generating || generationError) {
+    return (
+      <GenerationLoadingScreen
+        type="worksheet"
+        state={generationError ? "error" : "loading"}
+        status={generating ? generationStatus : undefined}
+        errorMessage={generationError}
+        onRetry={generate}
+        onBack={() => {
+          setGenerationError("");
+          setGenerating(false);
+          setGenerationStatus("");
+        }}
+      />
+    );
   }
 
   return (
@@ -331,7 +357,7 @@ export default function NewWorksheetPage() {
               <div className="min-w-0">
                 <p className="text-base font-black text-[#101039]">Generate printable worksheet</p>
                 <p className="mt-1 text-sm font-medium text-[#67627d]">
-                  {fetching ? "Loading options..." : selectedBook ? `Using ${selectedBook.title} • ${chapterNames.length || 0} chapter${chapterNames.length === 1 ? "" : "s"}` : "Select a subject, textbook, and chapters."}
+                  {generating && generationStatus ? generationStatus : fetching ? "Loading options..." : selectedBook ? `Using ${selectedBook.title} • ${chapterNames.length || 0} chapter${chapterNames.length === 1 ? "" : "s"}` : "Select a subject, textbook, and chapters."}
                 </p>
               </div>
             </div>

@@ -18,7 +18,7 @@ import {
   Wand2,
   X
 } from "lucide-react";
-import { clearToken } from "@/lib/api";
+import { clearToken, getCurrentUser, logout as logoutSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 
@@ -49,11 +49,29 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
   const nav = admin ? adminNav : teacherNav;
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
-  function logout() {
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        setCurrentUser(user);
+        if (admin && user.role !== "admin") router.replace("/dashboard");
+      })
+      .catch(() => {
+        if (!cancelled) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [admin, pathname, router]);
+
+  async function logout() {
+    await logoutSession();
     clearToken();
     router.push("/login");
   }

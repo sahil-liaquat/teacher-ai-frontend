@@ -1,18 +1,24 @@
 function resolveApiBase() {
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured) return configured.replace(/\/$/, "");
+  const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  if (configured) return configured.endsWith("/api/v1") ? configured : `${configured}/api/v1`;
   return "http://localhost:8000/api/v1";
 }
 
 export const API_BASE = resolveApiBase();
+export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
+
+const ACCESS_TOKEN_KEY = "teacher_ai_access_token";
+const REFRESH_TOKEN_KEY = "teacher_ai_refresh_token";
 
 export type ApiUser = {
   id?: string;
   full_name?: string;
   name?: string;
   email?: string;
-  role?: "admin" | "teacher" | "super_admin";
+  role?: "admin" | "teacher";
   is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -51,19 +57,82 @@ export type LessonPlanGeneratePayload = {
   teaching_style?: string;
 };
 
+export type WorksheetGeneratePayload = {
+  book_id: string;
+  chapter_name?: string;
+  chapter_names?: string[];
+  topic?: string;
+  question_count: number;
+  question_types: string[];
+  language?: string;
+  difficulty_distribution?: { easy: number; medium: number; hard: number };
+  include_answer_key?: boolean;
+  include_marking_scheme?: boolean;
+  include_hints?: boolean;
+  include_diagrams_images?: boolean;
+};
+
+export type WorksheetGeneration = {
+  id: string;
+  output_json: any;
+  created_at?: string;
+};
+
+type TokenResponse = {
+  access_token: string;
+  refresh_token: string;
+  token_type?: string;
+};
+
+let refreshRequest: Promise<boolean> | null = null;
+
 export function getToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("teacher_ai_token") || window.localStorage.getItem("access_token");
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem("teacher_ai_token") || window.localStorage.getItem("access_token");
 }
 
 export function setToken(token: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
   window.localStorage.setItem("teacher_ai_token", token);
-  window.localStorage.setItem("access_token", token);
 }
 
 export function clearToken() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  clearLegacyTokens();
+}
+
+function getRefreshToken() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+function setTokens(tokens: TokenResponse) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
+  window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+  window.localStorage.setItem("teacher_ai_token", tokens.access_token);
+}
+
+function clearLegacyTokens() {
+  if (typeof window === "undefined") return;
   window.localStorage.removeItem("teacher_ai_token");
   window.localStorage.removeItem("access_token");
+  window.localStorage.removeItem("refresh_token");
+}
+
+function decodeTokenPayload(token: string): { sub?: string; role?: ApiUser["role"] } {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return {};
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return JSON.parse(window.atob(padded));
+  } catch {
+    return {};
+  }
 }
 
 function normalizeError(error: any) {
@@ -73,17 +142,68 @@ function normalizeError(error: any) {
   return detail || "Request failed";
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function parseError(res: Response) {
+  const error = await res.json().catch(() => ({ detail: res.statusText }));
+  return Object.assign(new Error(normalizeError(error)), { status: res.status });
+}
+
+async function refreshSession() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+  if (refreshRequest) return refreshRequest;
+  refreshRequest = fetch(`${API_BASE}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  })
+    .then(async (res) => {
+      if (!res.ok) return false;
+      setTokens(await res.json() as TokenResponse);
+      return true;
+    })
+    .catch(() => false)
+    .finally(() => {
+      refreshRequest = null;
+    });
+  return refreshRequest;
+}
+
+function redirectToLogin() {
+  clearToken();
+  if (typeof window === "undefined") return;
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (window.location.pathname !== "/login") {
+    window.location.href = `/login?next=${encodeURIComponent(current)}`;
+  }
+}
+
+function shouldTryRefresh(path: string, status: number) {
+  return status === 401 && !path.startsWith("/auth/login") && !path.startsWith("/auth/refresh");
+}
+
+async function requestWithSession(path: string, init: RequestInit = {}, retry = true) {
   const headers = new Headers(init.headers);
   const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
   if (!(init.body instanceof FormData) && !(init.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (shouldTryRefresh(path, res.status) && retry && await refreshSession()) {
+    return requestWithSession(path, init, false);
+  }
+  if (shouldTryRefresh(path, res.status)) {
+    redirectToLogin();
+  }
+  return res;
+}
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await requestWithSession(path, init);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw Object.assign(new Error(normalizeError(error)), { status: res.status });
+    throw await parseError(res);
   }
   if (res.status === 204) return undefined as T;
   const type = res.headers.get("content-type") || "";
@@ -93,16 +213,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
 
 export async function apiFetchBlob(path: string, init: RequestInit = {}): Promise<Blob> {
-  const headers = new Headers(init.headers);
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (!(init.body instanceof FormData) && !(init.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const res = await requestWithSession(path, init);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw Object.assign(new Error(normalizeError(error)), { status: res.status });
+    throw await parseError(res);
   }
   return res.blob();
 }
@@ -118,17 +231,9 @@ export async function streamApiFetch(
   init: RequestInit,
   onEvent: (event: LessonPlanStreamEvent) => void
 ) {
-  const headers = new Headers(init.headers);
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (!(init.body instanceof FormData) && !(init.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const res = await requestWithSession(path, init);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw Object.assign(new Error(normalizeError(error)), { status: res.status });
+    throw await parseError(res);
   }
   if (!res.body) throw new Error("Streaming is not supported by this browser.");
 
@@ -153,31 +258,51 @@ export async function streamApiFetch(
   if (buffer.trim()) onEvent(JSON.parse(buffer) as LessonPlanStreamEvent);
 }
 
-export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "super_admin" }> {
+export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
   const body = new URLSearchParams();
   body.set("username", email);
   body.set("password", password);
-  const data = await apiFetch<{ access_token: string; refresh_token?: string; token_type?: string }>("/auth/login", {
+  const tokens = await apiFetch<TokenResponse>("/auth/login", {
     method: "POST",
     body,
     headers: { "Content-Type": "application/x-www-form-urlencoded" }
   });
-  setToken(data.access_token);
-  return { name: email.split("@")[0], email, role: "teacher" as const };
+  setTokens(tokens);
+  const user = await getCurrentUser().catch(() => {
+    const payload = decodeTokenPayload(tokens.access_token);
+    return { email, role: payload.role || "teacher" } as ApiUser;
+  });
+  return {
+    ...user,
+    name: user.full_name || user.name || email.split("@")[0],
+    email: user.email || email,
+    role: user.role || "teacher"
+  };
+}
+
+export async function logout() {
+  clearLegacyTokens();
+  clearToken();
+}
+
+export async function getCurrentUser() {
+  return apiFetch<ApiUser>("/auth/me");
 }
 
 export async function signup(name: string, email: string, password: string, school_name?: string) {
   const created = await apiFetch<ApiUser>("/users", {
     method: "POST",
-    body: JSON.stringify({ full_name: name, email, password, school_name, role: "teacher" })
+    body: JSON.stringify({ full_name: name, email, password, role: "teacher" })
   });
   return { ...created, name: created.full_name || name };
 }
 
 export const backendApi = {
+  health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
   classesByBoard: (boardId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<ClassItem>>(`/classes/board/${boardId}?skip=${skip}&limit=${limit}`),
   booksByClass: (classId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<Book>>(`/books/class/${classId}?skip=${skip}&limit=${limit}`),
+  book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
@@ -187,7 +312,17 @@ export const backendApi = {
     payload: LessonPlanGeneratePayload,
     onEvent: (event: LessonPlanStreamEvent) => void
   ) => streamApiFetch("/lesson-plans/stream", { method: "POST", body: JSON.stringify(payload) }, onEvent),
-  users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`)
+  createWorksheet: (payload: WorksheetGeneratePayload) =>
+    apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) }),
+  users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
+  updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
+    apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteUser: (id: string) => apiFetch<void>(`/users/${id}`, { method: "DELETE" }),
+  updateBook: (id: string, payload: Partial<Book>) =>
+    apiFetch<Book>(`/books/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteBook: (id: string) => apiFetch<void>(`/books/${id}`, { method: "DELETE" }),
+  uploadBook: (classId: string, form: FormData) =>
+    apiFetch<Book>(`/books?class_id=${encodeURIComponent(classId)}`, { method: "POST", body: form })
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
@@ -204,25 +339,26 @@ export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
     title: plan.title || item?.topic || "Generated Lesson Plan",
     metadata: {
       ...metadata,
-      class: metadata.class || metadata.grade || item?.class_name || "Class",
-      subject: metadata.subject || item?.subject || "Subject",
-      chapter: metadata.chapter || item?.chapter_name || "Chapter",
-      topic: metadata.topic || item?.topic || "Topic",
-      duration: metadata.duration || `${metadata.duration_minutes || item?.duration_minutes || 45} min`,
-      book: metadata.book || "Selected textbook"
+      class: metadata.class || metadata.grade || item?.class_name,
+      subject: metadata.subject || item?.subject,
+      chapter: metadata.chapter || item?.chapter_name,
+      chapter_number: metadata.chapter_number || item?.chapter_number,
+      topic: metadata.topic || item?.topic,
+      duration: metadata.duration || (metadata.duration_minutes || item?.duration_minutes ? `${metadata.duration_minutes || item?.duration_minutes} min` : undefined),
+      book: metadata.book
     },
-    textbook_source: plan.textbook_source || metadata.book || "Selected textbook",
+    textbook_source: plan.textbook_source || metadata.book,
     lesson_outline: lessonFlow.map((row: any) => ({
-      time: row.time || "10 min",
-      phase: row.phase || row.title || "Lesson Activity",
-      teacher_action: row.teacher_action || row.teacher || row.description || String(row),
-      student_action: row.student_action || row.student || "Participate and respond using textbook evidence."
+      time: row.time || "",
+      phase: row.phase || row.title || "",
+      teacher_action: row.teacher_action || row.teacher || row.description || (typeof row === "string" ? row : ""),
+      student_action: row.student_action || row.student || ""
     })),
     learning_objectives: objectives,
     previous_knowledge: plan.previous_knowledge,
     key_concepts: concepts,
-    teaching_method_strategy: strategies.length ? strategies : ["Textbook-grounded explanation", "Interactive questioning", "Classroom discussion"],
-    classroom_activity: plan.classroom_activity || plan.activity || "Use the selected textbook content for a short classroom discussion and activity.",
+    teaching_method_strategy: strategies,
+    classroom_activity: plan.classroom_activity || plan.activity,
     introduction_warm_up: plan.introduction_warm_up,
     explanation_of_concept: plan.explanation_of_concept,
     physical_properties_key_features: toArray(plan.physical_properties_key_features),
@@ -230,16 +366,12 @@ export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
     uses_daily_life_connection: plan.uses_daily_life_connection,
     assessment_questions: assessment.map((q: any) => typeof q === "string" ? { question: q, marks: 1 } : q),
     board_work: plan.board_work,
-    materials_needed: materials.length ? materials : ["Textbook", "Notebook", "Blackboard / Whiteboard"],
-    differentiation: plan.differentiation && typeof plan.differentiation === "object" && !Array.isArray(plan.differentiation) ? plan.differentiation : {
-      support: "Use guided examples and textbook lines for learners who need support.",
-      core: "Ask students to explain key concepts in their own words.",
-      challenge: "Ask advanced learners to connect the concept with local real-life examples."
-    },
-    homework: plan.homework || "Revise the topic and answer the textbook-based questions.",
+    materials_needed: materials,
+    differentiation: plan.differentiation && typeof plan.differentiation === "object" && !Array.isArray(plan.differentiation) ? plan.differentiation : {},
+    homework: plan.homework,
     learning_outcome: plan.learning_outcome,
     selected_components: toArray(plan.selected_components),
-    teacher_notes: plan.teacher_notes || "Keep the lesson grounded in the selected chapter and avoid adding unsupported facts."
+    teacher_notes: plan.teacher_notes
   };
 }
 

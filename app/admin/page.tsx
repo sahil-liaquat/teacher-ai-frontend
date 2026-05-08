@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, BookOpen, Bot, Download, Search, ShieldCheck, Upload, UserPlus, Users, Wand2 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { backendApi } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const kpis = [
 ] as const;
 
 export default function AdminDashboard() {
-  const summary = useQuery({ queryKey: ["admin-summary"], queryFn: () => apiFetch<any>("/admin/summary") });
+  const summary = useQuery({ queryKey: ["admin-summary"], queryFn: loadAdminSummary });
 
   return (
     <div className="space-y-6">
@@ -118,6 +118,43 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+}
+
+async function loadAdminSummary() {
+  const [users, boards, health] = await Promise.all([
+    backendApi.users(0, 100).catch(() => ({ items: [], total: 0 })),
+    backendApi.boards(0, 100).catch(() => ({ items: [], total: 0 })),
+    backendApi.health().catch(() => ({ status: "unavailable" }))
+  ]);
+  let classCount = 0;
+  let bookCount = 0;
+  const topBooks: Array<{ id: string; title: string; subject?: string }> = [];
+  for (const board of boards.items) {
+    const classes = await backendApi.classesByBoard(board.id, 0, 100).catch(() => ({ items: [] as any[] }));
+    classCount += classes.items.length;
+    for (const cls of classes.items) {
+      const books = await backendApi.booksByClass(cls.id, 0, 100).catch(() => ({ items: [] as any[] }));
+      bookCount += books.items.length;
+      topBooks.push(...books.items.map((book: any) => ({ id: book.id, title: book.title, subject: book.subject })));
+    }
+  }
+  return {
+    total_users: users.total,
+    active_users: users.items.filter((user: any) => user.is_active).length,
+    lesson_plans_generated: 0,
+    worksheets_generated: 0,
+    books_in_library: bookCount,
+    total_ai_calls: 0,
+    recent_generations: [],
+    system_status: {
+      backend_api: health.status || "ok",
+      boards: boards.total,
+      classes: classCount,
+      books: bookCount
+    },
+    top_books: topBooks.slice(0, 5),
+    top_users: users.items.slice(0, 5).map((user: any) => ({ id: user.id, name: user.full_name, created_at: user.created_at }))
+  };
 }
 
 function AdminList({ items }: { items: any[] }) {

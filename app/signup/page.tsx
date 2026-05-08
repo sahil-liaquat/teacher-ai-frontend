@@ -31,10 +31,10 @@ export default function SignupPage() {
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       await signup(values.name, values.email, values.password, values.school_name);
-      toast({ title: "Account created", description: "Your teacher workspace is ready." });
-      router.push("/dashboard");
+      toast({ title: "Account created", description: "The teacher can now log in with these credentials." });
+      router.push("/login");
     } catch (error) {
-      toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Try again" });
+      toast({ title: "Signup failed", description: error instanceof Error ? error.message : "This backend only allows admins to create users." });
     }
   }
 
@@ -74,7 +74,7 @@ export default function SignupPage() {
         <Card className="mx-auto w-full max-w-md bg-white/90 shadow-xl backdrop-blur-md">
           <CardHeader>
             <CardTitle className="text-2xl">Signup</CardTitle>
-            <p className="text-sm text-slate-500">Create your Teacher AI Tools account.</p>
+            <p className="text-sm text-slate-500">User creation is handled by admins on the live backend.</p>
           </CardHeader>
           <CardContent>
             <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
