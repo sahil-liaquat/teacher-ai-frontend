@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
-import { login } from "@/lib/api";
+import { ensureSession, getCurrentUser, login } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 
 const schema = z.object({
@@ -26,12 +27,28 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" }
   });
 
+  useEffect(() => {
+    let cancelled = false;
+    ensureSession()
+      .then((hasSession) => hasSession ? getCurrentUser({ redirectOnUnauthorized: false }) : null)
+      .then((user) => {
+        if (!user || cancelled) return;
+        router.replace(user.role === "admin" ? "/admin" : "/dashboard");
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       const user = await login(values.email, values.password);
       toast({ title: "Welcome back", description: user.name });
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next || (user.role === "admin" ? "/admin" : "/dashboard"));
+      const destination = next?.startsWith("/") ? next : (user.role === "admin" ? "/admin" : "/dashboard");
+      router.replace(destination);
+      router.refresh();
     } catch (error) {
       toast({ title: "Login failed", description: error instanceof Error ? error.message : "Try again" });
     }

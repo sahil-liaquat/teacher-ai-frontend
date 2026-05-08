@@ -18,7 +18,7 @@ import {
   Wand2,
   X
 } from "lucide-react";
-import { clearToken, getCurrentUser, logout as logoutSession, type ApiUser } from "@/lib/api";
+import { clearToken, ensureSession, getCurrentUser, logout as logoutSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 
@@ -50,20 +50,36 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
+  const [authState, setAuthState] = useState<"checking" | "ready" | "denied">("checking");
   const nav = admin ? adminNav : teacherNav;
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
   useEffect(() => {
     let cancelled = false;
-    getCurrentUser()
+    setAuthState("checking");
+    ensureSession()
+      .then((hasSession) => {
+        if (!hasSession) throw new Error("No active session");
+        return getCurrentUser({ redirectOnUnauthorized: false });
+      })
       .then((user) => {
         if (cancelled) return;
         setCurrentUser(user);
-        if (admin && user.role !== "admin") router.replace("/dashboard");
+        if (admin && user.role !== "admin") {
+          setAuthState("denied");
+          router.replace("/dashboard");
+          return;
+        }
+        setAuthState("ready");
       })
       .catch(() => {
-        if (!cancelled) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+        if (!cancelled) {
+          clearToken();
+          setCurrentUser(null);
+          setAuthState("denied");
+          router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+        }
       });
     return () => {
       cancelled = true;
@@ -73,7 +89,11 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   async function logout() {
     await logoutSession();
     clearToken();
-    router.push("/login");
+    router.replace("/login");
+  }
+
+  if (authState !== "ready") {
+    return <AuthCheckingScreen />;
   }
 
   return (
@@ -133,6 +153,17 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
         <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 md:px-5 xl:px-5 xl:py-5 2xl:max-w-[1680px] 2xl:px-8 2xl:py-8">{children}</div>
       </main>
     </div>
+  );
+}
+
+function AuthCheckingScreen() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#fbfaff] px-4">
+      <div className="rounded-[18px] border border-[#ebe7f4] bg-white px-6 py-5 text-center shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#ded7ed] border-t-[#6f3ee9]" />
+        <p className="mt-4 text-sm font-bold text-[#5d5874]">Checking your session...</p>
+      </div>
+    </main>
   );
 }
 

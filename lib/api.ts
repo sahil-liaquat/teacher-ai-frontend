@@ -9,6 +9,8 @@ export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 
 const ACCESS_TOKEN_KEY = "teacher_ai_access_token";
 const REFRESH_TOKEN_KEY = "teacher_ai_refresh_token";
+const AUTH_STORAGE_EVENT = "teacher-ai-auth-change";
+const TOKEN_REFRESH_SKEW_SECONDS = 45;
 
 export type ApiUser = {
   id?: string;
@@ -86,6 +88,10 @@ type TokenResponse = {
 
 let refreshRequest: Promise<boolean> | null = null;
 
+type ApiRequestInit = RequestInit & {
+  redirectOnUnauthorized?: boolean;
+};
+
 export function getToken() {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem("teacher_ai_token") || window.localStorage.getItem("access_token");
@@ -95,6 +101,7 @@ export function setToken(token: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
   window.localStorage.setItem("teacher_ai_token", token);
+  window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
 export function clearToken() {
@@ -102,11 +109,12 @@ export function clearToken() {
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   clearLegacyTokens();
+  window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
 function getRefreshToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
+  return window.localStorage.getItem(REFRESH_TOKEN_KEY) || window.localStorage.getItem("refresh_token");
 }
 
 function setTokens(tokens: TokenResponse) {
@@ -114,6 +122,7 @@ function setTokens(tokens: TokenResponse) {
   window.localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
   window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
   window.localStorage.setItem("teacher_ai_token", tokens.access_token);
+  window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
 function clearLegacyTokens() {
@@ -123,7 +132,7 @@ function clearLegacyTokens() {
   window.localStorage.removeItem("refresh_token");
 }
 
-function decodeTokenPayload(token: string): { sub?: string; role?: ApiUser["role"] } {
+function decodeTokenPayload(token: string): { sub?: string; role?: ApiUser["role"]; exp?: number; type?: string } {
   try {
     const payload = token.split(".")[1];
     if (!payload) return {};
@@ -133,6 +142,13 @@ function decodeTokenPayload(token: string): { sub?: string; role?: ApiUser["role
   } catch {
     return {};
   }
+}
+
+function isTokenExpired(token: string | null, skewSeconds = 0) {
+  if (!token) return true;
+  const exp = decodeTokenPayload(token).exp;
+  if (!exp) return false;
+  return exp * 1000 <= Date.now() + skewSeconds * 1000;
 }
 
 function normalizeError(error: any) {
@@ -150,6 +166,10 @@ async function parseError(res: Response) {
 async function refreshSession() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
+  if (isTokenExpired(refreshToken)) {
+    clearToken();
+    return false;
+  }
   if (refreshRequest) return refreshRequest;
   refreshRequest = fetch(`${API_BASE}/auth/refresh`, {
     method: "POST",
@@ -181,26 +201,31 @@ function shouldTryRefresh(path: string, status: number) {
   return status === 401 && !path.startsWith("/auth/login") && !path.startsWith("/auth/refresh");
 }
 
-async function requestWithSession(path: string, init: RequestInit = {}, retry = true) {
-  const headers = new Headers(init.headers);
+async function requestWithSession(path: string, init: ApiRequestInit = {}, retry = true) {
+  const { redirectOnUnauthorized = true, ...fetchInit } = init;
+  if (!path.startsWith("/auth/login") && !path.startsWith("/auth/refresh") && isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) {
+    await refreshSession();
+  }
+
+  const headers = new Headers(fetchInit.headers);
   const token = getToken();
-  if (!(init.body instanceof FormData) && !(init.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
+  if (!(fetchInit.body instanceof FormData) && !(fetchInit.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...fetchInit, headers });
   if (shouldTryRefresh(path, res.status) && retry && await refreshSession()) {
     return requestWithSession(path, init, false);
   }
-  if (shouldTryRefresh(path, res.status)) {
+  if (redirectOnUnauthorized && shouldTryRefresh(path, res.status)) {
     redirectToLogin();
   }
   return res;
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
   const res = await requestWithSession(path, init);
   if (!res.ok) {
     throw await parseError(res);
@@ -212,7 +237,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 
-export async function apiFetchBlob(path: string, init: RequestInit = {}): Promise<Blob> {
+export async function apiFetchBlob(path: string, init: ApiRequestInit = {}): Promise<Blob> {
   const res = await requestWithSession(path, init);
   if (!res.ok) {
     throw await parseError(res);
@@ -228,7 +253,7 @@ export type LessonPlanStreamEvent =
 
 export async function streamApiFetch(
   path: string,
-  init: RequestInit,
+  init: ApiRequestInit,
   onEvent: (event: LessonPlanStreamEvent) => void
 ) {
   const res = await requestWithSession(path, init);
@@ -259,6 +284,7 @@ export async function streamApiFetch(
 }
 
 export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
+  clearToken();
   const body = new URLSearchParams();
   body.set("username", email);
   body.set("password", password);
@@ -281,12 +307,17 @@ export async function login(email: string, password: string): Promise<ApiUser & 
 }
 
 export async function logout() {
-  clearLegacyTokens();
   clearToken();
 }
 
-export async function getCurrentUser() {
-  return apiFetch<ApiUser>("/auth/me");
+export async function getCurrentUser(options: { redirectOnUnauthorized?: boolean } = {}) {
+  return apiFetch<ApiUser>("/auth/me", { redirectOnUnauthorized: options.redirectOnUnauthorized ?? true });
+}
+
+export async function ensureSession() {
+  if (!getToken() && !getRefreshToken()) return false;
+  if (isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) return refreshSession();
+  return true;
 }
 
 export async function signup(name: string, email: string, password: string, school_name?: string) {
