@@ -76,8 +76,28 @@ export type WorksheetGeneratePayload = {
 
 export type WorksheetGeneration = {
   id: string;
+  user_id?: string;
   output_json: any;
   created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminSummary = {
+  total_users: number;
+  active_users: number;
+  lesson_plans_generated: number;
+  worksheets_generated: number;
+  books_in_library: number;
+  total_ai_calls: number;
+  recent_generations: Array<{ id: string; tool: string; name: string; created_at?: string }>;
+  system_status: {
+    backend_api: string;
+    boards: number;
+    classes: number;
+    books: number;
+  };
+  top_books: Array<{ id: string; title: string; subject?: string; created_at?: string }>;
+  top_users: Array<{ id: string; name: string; created_at?: string }>;
 };
 
 type TokenResponse = {
@@ -163,7 +183,7 @@ async function parseError(res: Response) {
   return Object.assign(new Error(normalizeError(error)), { status: res.status });
 }
 
-async function refreshSession() {
+export async function refreshSession() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
   if (isTokenExpired(refreshToken)) {
@@ -330,8 +350,17 @@ export async function signup(name: string, email: string, password: string, scho
 
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
+  adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
+  createBoard: (payload: Pick<Board, "code" | "name"> & { description?: string }) =>
+    apiFetch<Board>("/boards", { method: "POST", body: JSON.stringify(payload) }),
+  updateBoard: (id: string, payload: Partial<Pick<Board, "code" | "name" | "description" | "is_active">>) =>
+    apiFetch<Board>(`/boards/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   classesByBoard: (boardId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<ClassItem>>(`/classes/board/${boardId}?skip=${skip}&limit=${limit}`),
+  createClass: (payload: Pick<ClassItem, "board_id" | "grade_number" | "name"> & { description?: string }) =>
+    apiFetch<ClassItem>("/classes", { method: "POST", body: JSON.stringify(payload) }),
+  updateClass: (id: string, payload: Partial<Pick<ClassItem, "grade_number" | "name" | "description" | "is_active">>) =>
+    apiFetch<ClassItem>(`/classes/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   booksByClass: (classId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<Book>>(`/books/class/${classId}?skip=${skip}&limit=${limit}`),
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
@@ -345,10 +374,12 @@ export const backendApi = {
   ) => streamApiFetch("/lesson-plans/stream", { method: "POST", body: JSON.stringify(payload) }, onEvent),
   createWorksheet: (payload: WorksheetGeneratePayload) =>
     apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) }),
+  worksheets: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<WorksheetGeneration>>(`/generate/worksheet?skip=${skip}&limit=${limit}`),
+  worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
   updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  deleteUser: (id: string) => apiFetch<void>(`/users/${id}`, { method: "DELETE" }),
+  deactivateUser: (id: string) => apiFetch<void>(`/users/${id}`, { method: "DELETE" }),
   updateBook: (id: string, payload: Partial<Book>) =>
     apiFetch<Book>(`/books/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteBook: (id: string) => apiFetch<void>(`/books/${id}`, { method: "DELETE" }),

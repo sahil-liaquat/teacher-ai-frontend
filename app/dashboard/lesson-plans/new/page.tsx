@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
-import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, tone: "orange" },
@@ -24,7 +24,6 @@ const lessonComponents = [
   { title: "Homework", body: "Practice after class", icon: GraduationCap, tone: "purple" },
   { title: "Extension Activity", body: "Extra activity for advanced learners", icon: Rocket, tone: "blue" }
 ];
-const PENDING_LESSON_PLAN_KEY = "teacher_ai_pending_lesson_plan";
 const defaultLessonComponents = [
   "Warm-up / Introduction",
   "Direct Instruction",
@@ -55,7 +54,6 @@ export default function NewLessonPlanPage() {
     objectives: false,
     customize: false
   });
-  const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
@@ -117,7 +115,6 @@ export default function NewLessonPlanPage() {
       toast({ title: "Complete required details", description: "Select board, class, book, chapter and enter topic." });
       return;
     }
-    setLoading(true);
     const payload: LessonPlanGeneratePayload = {
       book_id: bookId,
       chapter_name: chapterName,
@@ -128,12 +125,8 @@ export default function NewLessonPlanPage() {
       language,
       teaching_style: teachingStyle
     };
-    window.sessionStorage.setItem(PENDING_LESSON_PLAN_KEY, JSON.stringify(payload));
+    savePendingLessonPlan(payload);
     router.push("/dashboard/lesson-plans/generating");
-  }
-
-  if (loading) {
-    return <GenerationLoadingScreen type="lesson-plan" status="Reading the textbook..." onBack={() => setLoading(false)} />;
   }
 
   return (
@@ -223,7 +216,7 @@ export default function NewLessonPlanPage() {
                 <p className="text-base font-black text-[#101039]">Generate classroom-ready output</p>
                 <p className="mt-1 text-sm font-medium text-[#67627d]">{fetching ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
               </div>
-              <Button type="button" disabled={!canGenerate || loading} onClick={generate} className="sm:min-w-[220px]"><Sparkles className="h-5 w-5" />Generate Lesson Plan</Button>
+              <Button type="button" disabled={!canGenerate} onClick={generate} className="sm:min-w-[220px]"><Sparkles className="h-5 w-5" />Generate Lesson Plan</Button>
             </div>
           </div>
         </div>

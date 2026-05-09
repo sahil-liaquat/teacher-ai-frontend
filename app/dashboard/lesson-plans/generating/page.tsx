@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { backendApi, LessonPlan, LessonPlanGeneratePayload } from "@/lib/api";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
-
-const PENDING_LESSON_PLAN_KEY = "teacher_ai_pending_lesson_plan";
+import { useToast } from "@/components/ui/toast";
+import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 export default function GeneratingLessonPlanPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const started = useRef(false);
   const [status, setStatus] = useState("Finding textbook content...");
   const [payload, setPayload] = useState<LessonPlanGeneratePayload | null>(null);
@@ -18,47 +19,54 @@ export default function GeneratingLessonPlanPage() {
     if (started.current) return;
     started.current = true;
 
-    const rawPayload = window.sessionStorage.getItem(PENDING_LESSON_PLAN_KEY);
-    if (!rawPayload) {
+    const pending = readPendingLessonPlan();
+    if (!pending.ok) {
+      const descriptions = {
+        missing: "The lesson plan request was not found. Please review the form and start generation again.",
+        expired: "The saved lesson plan request expired. Please review the form and start generation again.",
+        invalid: "The saved lesson plan request could not be read. Please review the form and start generation again."
+      };
+      toast({
+        title: "Generation could not resume",
+        description: descriptions[pending.reason]
+      });
       router.replace("/dashboard/lesson-plans/new");
       return;
     }
 
-    let payload: LessonPlanGeneratePayload;
-    try {
-      payload = JSON.parse(rawPayload) as LessonPlanGeneratePayload;
-    } catch {
-      window.sessionStorage.removeItem(PENDING_LESSON_PLAN_KEY);
-      router.replace("/dashboard/lesson-plans/new");
-      return;
-    }
-
+    const payload = pending.payload;
     setPayload(payload);
     void runGeneration(payload);
-  }, [router]);
+  }, [router, toast]);
 
   async function runGeneration(nextPayload = payload) {
     if (!nextPayload) return;
     setError("");
     setStatus("Reading the textbook...");
-    const conceptTimer = window.setTimeout(() => setStatus("Finding key concepts..."), 900);
-    const creatingTimer = window.setTimeout(() => setStatus("Preparing your lesson plan..."), 1900);
+    const t1 = window.setTimeout(() => setStatus("Reading the textbook..."), 0);
+    const t2 = window.setTimeout(() => setStatus("Finding key concepts..."), 3000);
+    const t3 = window.setTimeout(() => setStatus("Drafting lesson structure..."), 10000);
+    const t4 = window.setTimeout(() => setStatus("Writing activities and assessments..."), 20000);
+    const t5 = window.setTimeout(() => setStatus("Almost ready..."), 35000);
     try {
       const completed: LessonPlan = await backendApi.createLessonPlan(nextPayload);
       if (!completed) throw new Error("Generation finished without a saved lesson plan.");
       setStatus("Formatting output...");
-      window.sessionStorage.removeItem(PENDING_LESSON_PLAN_KEY);
+      clearPendingLessonPlan();
       router.replace(`/dashboard/lesson-plans/${completed.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate the lesson plan.");
     } finally {
-      window.clearTimeout(conceptTimer);
-      window.clearTimeout(creatingTimer);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+      window.clearTimeout(t4);
+      window.clearTimeout(t5);
     }
   }
 
   function goBack() {
-    window.sessionStorage.removeItem(PENDING_LESSON_PLAN_KEY);
+    clearPendingLessonPlan();
     router.replace("/dashboard/lesson-plans/new");
   }
 

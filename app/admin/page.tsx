@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, BookOpen, Bot, Download, Search, ShieldCheck, Upload, UserPlus, Users, Wand2 } from "lucide-react";
 import { backendApi } from "@/lib/api";
@@ -21,6 +22,50 @@ const kpis = [
 
 export default function AdminDashboard() {
   const summary = useQuery({ queryKey: ["admin-summary"], queryFn: loadAdminSummary });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filterItems = (items: any[] = []) => {
+    if (!normalizedSearch) return items;
+    return items.filter((item) =>
+      [
+        item.title,
+        item.name,
+        item.tool,
+        item.subject,
+        item.created_at,
+        item.count
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch))
+    );
+  };
+  const recentGenerations = filterItems(summary.data?.recent_generations || []);
+  const topBooks = filterItems(summary.data?.top_books || []);
+  const topUsers = filterItems(summary.data?.top_users || []);
+
+  async function exportUsersCsv() {
+    setExporting(true);
+    try {
+      const firstPage = await backendApi.users(0, 100);
+      const users = firstPage.total > firstPage.items.length
+        ? (await backendApi.users(0, firstPage.total)).items
+        : firstPage.items;
+      const csv = toCsv(
+        ["Name", "Email", "Role", "Active", "Created at"],
+        users.map((user: any) => [
+          user.full_name || user.name || "",
+          user.email || "",
+          user.role || "",
+          user.is_active ? "Yes" : "No",
+          user.created_at || ""
+        ])
+      );
+      downloadCsv(csv, `admin-users-${new Date().toISOString().slice(0, 10)}.csv`);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -41,9 +86,9 @@ export default function AdminDashboard() {
                 Upload book
               </Button>
             </Link>
-            <Button variant="outline">
+            <Button variant="outline" onClick={exportUsersCsv} disabled={exporting}>
               <Download className="h-4 w-4" />
-              Export
+              {exporting ? "Exporting..." : "Export"}
             </Button>
           </>
         }
@@ -52,7 +97,12 @@ export default function AdminDashboard() {
       <Card>
         <CardContent className="relative p-5">
           <Search className="absolute left-8 top-8 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Global search users, generations, books, activity logs" />
+          <Input
+            className="pl-9"
+            placeholder="Search users, generations, and books"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
         </CardContent>
       </Card>
 
@@ -79,7 +129,7 @@ export default function AdminDashboard() {
             </div>
             <Link href="/admin/generations"><Button variant="outline" size="sm">View all</Button></Link>
           </CardHeader>
-          <CardContent><AdminList items={summary.data?.recent_generations || []} /></CardContent>
+          <CardContent><AdminList items={recentGenerations} /></CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -97,11 +147,11 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-xl text-slate-950">Top Books by Usage</CardTitle></CardHeader>
-          <CardContent><AdminList items={summary.data?.top_books || []} /></CardContent>
+          <CardContent><AdminList items={topBooks} /></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-xl text-slate-950">Top Active Users</CardTitle></CardHeader>
-          <CardContent><AdminList items={summary.data?.top_users || []} /></CardContent>
+          <CardContent><AdminList items={topUsers} /></CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -121,40 +171,72 @@ export default function AdminDashboard() {
 }
 
 async function loadAdminSummary() {
-  const [users, boards, health] = await Promise.all([
+  return backendApi.adminSummary().catch(loadAdminSummaryFromExistingApis);
+}
+
+async function loadAdminSummaryFromExistingApis() {
+  const [users, boards, health, lessonPlans] = await Promise.all([
     backendApi.users(0, 100).catch(() => ({ items: [], total: 0 })),
     backendApi.boards(0, 100).catch(() => ({ items: [], total: 0 })),
-    backendApi.health().catch(() => ({ status: "unavailable" }))
+    backendApi.health().catch(() => ({ status: "unavailable" })),
+    backendApi.lessonPlans(0, 100).catch(() => ({ items: [], total: 0 }))
   ]);
-  let classCount = 0;
-  let bookCount = 0;
+  const classesByBoard = await Promise.all(
+    boards.items.map((board) =>
+      backendApi.classesByBoard(board.id, 0, 100).catch(() => ({ items: [] as any[] }))
+    )
+  );
+  const allClasses = classesByBoard.flatMap((classes) => classes.items);
+  const booksByClass = await Promise.all(
+    allClasses.map((cls) =>
+      backendApi.booksByClass(cls.id, 0, 100).catch(() => ({ items: [] as any[] }))
+    )
+  );
+  const allBooks = booksByClass.flatMap((books) => books.items);
   const topBooks: Array<{ id: string; title: string; subject?: string }> = [];
-  for (const board of boards.items) {
-    const classes = await backendApi.classesByBoard(board.id, 0, 100).catch(() => ({ items: [] as any[] }));
-    classCount += classes.items.length;
-    for (const cls of classes.items) {
-      const books = await backendApi.booksByClass(cls.id, 0, 100).catch(() => ({ items: [] as any[] }));
-      bookCount += books.items.length;
-      topBooks.push(...books.items.map((book: any) => ({ id: book.id, title: book.title, subject: book.subject })));
-    }
-  }
+  topBooks.push(...allBooks.map((book: any) => ({ id: book.id, title: book.title, subject: book.subject })));
+
   return {
     total_users: users.total,
     active_users: users.items.filter((user: any) => user.is_active).length,
-    lesson_plans_generated: 0,
+    lesson_plans_generated: lessonPlans.total,
     worksheets_generated: 0,
-    books_in_library: bookCount,
-    total_ai_calls: 0,
-    recent_generations: [],
+    books_in_library: allBooks.length,
+    total_ai_calls: lessonPlans.total,
+    recent_generations: lessonPlans.items.slice(0, 5).map((item: any) => ({
+      id: item.id,
+      name: item.topic || item.chapter_name || "Lesson plan",
+      tool: "Lesson plan",
+      created_at: item.created_at
+    })),
     system_status: {
       backend_api: health.status || "ok",
       boards: boards.total,
-      classes: classCount,
-      books: bookCount
+      classes: allClasses.length,
+      books: allBooks.length
     },
     top_books: topBooks.slice(0, 5),
     top_users: users.items.slice(0, 5).map((user: any) => ({ id: user.id, name: user.full_name, created_at: user.created_at }))
   };
+}
+
+function toCsv(headers: string[], rows: Array<Array<string | number | boolean>>) {
+  return [headers, ...rows]
+    .map((row) => row.map((value) => {
+      const text = String(value ?? "");
+      return /[",\n]/.test(text) ? `"${text.replaceAll("\"", "\"\"")}"` : text;
+    }).join(","))
+    .join("\n");
+}
+
+function downloadCsv(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function AdminList({ items }: { items: any[] }) {

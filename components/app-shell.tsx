@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
   BarChart3,
   BookMarked,
   BookOpen,
+  GraduationCap,
   Home,
   LogOut,
   Menu,
@@ -18,7 +20,7 @@ import {
   Wand2,
   X
 } from "lucide-react";
-import { clearToken, ensureSession, getCurrentUser, logout as logoutSession, type ApiUser } from "@/lib/api";
+import { clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 
@@ -40,65 +42,71 @@ const teacherNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
   { href: "/admin/generations", label: "Generations", icon: BarChart3 },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/system", label: "System", icon: Shield }
 ];
 
+const CURRENT_USER_QUERY_KEY = ["current-user"];
+const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
+
 export function AppShell({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<ApiUser | null>(null);
-  const [authState, setAuthState] = useState<"checking" | "ready" | "denied">("checking");
   const nav = admin ? adminNav : teacherNav;
+  const { data: currentUser, isError, isLoading } = useQuery<ApiUser>({
+    queryKey: CURRENT_USER_QUERY_KEY,
+    queryFn: async () => {
+      const hasSession = await ensureSession();
+      if (!hasSession) throw new Error("No active session");
+      return getCurrentUser({ redirectOnUnauthorized: false });
+    },
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false,
+    staleTime: Infinity
+  });
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
   useEffect(() => {
-    let cancelled = false;
-    setAuthState("checking");
-    ensureSession()
-      .then((hasSession) => {
-        if (!hasSession) throw new Error("No active session");
-        return getCurrentUser({ redirectOnUnauthorized: false });
-      })
-      .then((user) => {
-        if (cancelled) return;
-        setCurrentUser(user);
-        if (admin && user.role !== "admin") {
-          setAuthState("denied");
-          router.replace("/dashboard");
-          return;
-        }
-        setAuthState("ready");
-      })
-      .catch(() => {
-        if (!cancelled) {
-          clearToken();
-          setCurrentUser(null);
-          setAuthState("denied");
-          router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [admin, pathname, router]);
+    const interval = window.setInterval(() => {
+      void refreshSession();
+    }, SESSION_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (isError) {
+      clearToken();
+      const next = typeof window === "undefined" ? "/dashboard" : `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    }
+  }, [isError, router]);
+
+  useEffect(() => {
+    if (admin && currentUser && currentUser.role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [admin, currentUser, router]);
 
   async function logout() {
     await logoutSession();
     clearToken();
+    queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
     router.replace("/login");
   }
 
-  if (authState !== "ready") {
+  if (isLoading || isError || !currentUser || (admin && currentUser.role !== "admin")) {
     return <AuthCheckingScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfaff] text-[#101039]">
-      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-[#eeeaf7] bg-white/95 px-4 py-3 shadow-[0_10px_30px_rgba(39,30,91,0.06)] backdrop-blur-xl xl:hidden">
+    <div className="min-h-screen bg-[#fbfaff] text-[#101039] [--mobile-header-height:calc(68px+env(safe-area-inset-top))]">
+      <header className="fixed inset-x-0 top-0 z-40 flex min-h-[var(--mobile-header-height)] items-center justify-between border-b border-[#eeeaf7] bg-white/95 px-4 pb-3 pt-[calc(12px+env(safe-area-inset-top))] shadow-[0_10px_30px_rgba(39,30,91,0.06)] backdrop-blur-xl xl:hidden">
         <button onClick={() => setMobileOpen(true)} className="premium-hover-sm grid h-11 w-11 place-items-center rounded-[14px] border border-[#ebe7f4] bg-white text-[#5d5874] shadow-sm">
           <Menu className="h-5 w-5" />
         </button>
@@ -149,7 +157,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
         </button>
       </aside>
 
-      <main className="min-h-screen pt-[68px] transition-[margin] duration-150 ease-out xl:ml-[76px] xl:pt-0 2xl:ml-[92px]">
+      <main className="min-h-screen pt-[var(--mobile-header-height)] transition-[margin] duration-150 ease-out xl:ml-[76px] xl:pt-0 2xl:ml-[92px]">
         <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 md:px-5 xl:px-5 xl:py-5 2xl:max-w-[1680px] 2xl:px-8 2xl:py-8">{children}</div>
       </main>
     </div>

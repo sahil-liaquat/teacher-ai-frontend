@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { BookOpen, Brain, Sparkles } from "lucide-react";
+import { BookOpen, Brain, ClipboardCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -72,13 +72,13 @@ export default function LoginPage() {
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-4 2xl:mt-10 2xl:gap-5">
             <div className="rounded-[20px] border border-[#dac6f6] bg-[#fbf6ff] p-5 2xl:p-6">
               <BookOpen className="h-8 w-8 text-[#7a43e8] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">0</p>
-              <p className="text-sm font-semibold text-[#67627d]">Lesson plans this month</p>
+              <p className="mt-4 text-lg font-black text-[#101039] 2xl:mt-5 2xl:text-xl">Lesson plans</p>
+              <p className="mt-1 text-sm font-semibold text-[#67627d]">Build textbook-grounded classroom plans</p>
             </div>
             <div className="rounded-[20px] border border-[#bdebd7] bg-[#ecfff7] p-5 2xl:p-6">
-              <Sparkles className="h-8 w-8 text-[#24a760] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-2xl font-black text-[#101039] 2xl:mt-5 2xl:text-3xl">0</p>
-              <p className="text-sm font-semibold text-[#67627d]">Worksheets created</p>
+              <ClipboardCheck className="h-8 w-8 text-[#24a760] 2xl:h-9 2xl:w-9" />
+              <p className="mt-4 text-lg font-black text-[#101039] 2xl:mt-5 2xl:text-xl">Worksheets</p>
+              <p className="mt-1 text-sm font-semibold text-[#67627d]">Create printable practice materials</p>
             </div>
           </div>
         </section>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { WorksheetOutput } from "@/components/generation-output";
 import { useToast } from "@/components/ui/toast";
+import { backendApi } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getWorksheetGeneration, saveWorksheetGeneration } from "@/lib/worksheet-storage";
 
@@ -11,10 +12,28 @@ export default function WorksheetDetailPage() {
   const params = useParams<{ id: string }>();
   const [tab, setTab] = useState("Worksheet");
   const [generation, setGeneration] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    setGeneration(getWorksheetGeneration(params.id));
+    let cancelled = false;
+    setLoading(true);
+    backendApi.worksheet(params.id)
+      .then((worksheet) => {
+        if (cancelled) return;
+        setGeneration(worksheet);
+        saveWorksheetGeneration(worksheet);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGeneration(getWorksheetGeneration(params.id));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [params.id]);
 
   async function save() {
@@ -39,6 +58,15 @@ export default function WorksheetDetailPage() {
   async function exportPdf() {
     await downloadWorksheetPdf(generation.output_json);
     toast({ title: "PDF downloaded", description: "Exported as a proper text PDF." });
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#ebe7f4] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#ded7ed] border-t-[#6f3ee9]" />
+        <p className="mt-4 text-sm font-bold text-[#67627d]">Loading worksheet...</p>
+      </div>
+    );
   }
 
   if (!generation?.output_json) {

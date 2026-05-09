@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ClipboardCheck, FileQuestion, MessageSquareText, Plus, Search, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,15 @@ const tools = [
 ];
 
 export default function ClassroomToolsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredTools = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return tools;
+    return tools.filter((tool) =>
+      `${tool.title} ${tool.description}`.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
   return (
     <div className="grid gap-4 2xl:gap-7">
       <header className="premium-hover flex flex-col gap-3 rounded-[18px] border border-[#ebe7f4] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:flex-row 2xl:items-center 2xl:justify-between 2xl:rounded-[24px] 2xl:p-7">
@@ -27,12 +37,17 @@ export default function ClassroomToolsPage() {
         </div>
         <label className="premium-hover-sm relative block w-full sm:w-[320px] 2xl:w-[360px]">
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#77728e]" />
-          <input className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-sm font-semibold outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 2xl:h-12 2xl:rounded-[14px] 2xl:px-12" placeholder="Search tools..." />
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-sm font-semibold outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
+            placeholder="Search tools..."
+          />
         </label>
       </header>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6">
-        {tools.map((tool) => {
+        {filteredTools.map((tool) => {
           const Icon = tool.icon;
           const available = tool.href !== "#";
           const card = (
@@ -54,6 +69,11 @@ export default function ClassroomToolsPage() {
           );
           return available ? <Link key={tool.title} href={tool.href}>{card}</Link> : <div key={tool.title}>{card}</div>;
         })}
+        {!filteredTools.length ? (
+          <div className="rounded-[18px] border border-dashed border-[#d8def0] bg-white p-6 text-sm font-semibold text-[#67627d] md:col-span-2 xl:col-span-4">
+            No tools match your search.
+          </div>
+        ) : null}
       </section>
     </div>
   );

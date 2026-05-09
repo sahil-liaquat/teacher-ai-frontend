@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import { getTeacherFirstName, getTeacherProfile, TeacherProfile } from "@/lib/profile";
-import { listWorksheetGenerations, WORKSHEET_STORAGE_EVENT } from "@/lib/worksheet-storage";
 import { cn } from "@/lib/utils";
 
 const statCards = [
@@ -41,12 +40,10 @@ const quickAccess = [
   { title: "Classroom Tools", desc: "Use tools like quiz maker and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
 ];
 
-const bars = [6, 16, 9, 17, 31, 24, 18, 34, 40, 31, 25, 36, 29];
-
 export default function TeacherDashboard() {
   const [profile, setProfile] = useState<TeacherProfile>(() => ({ name: "Teacher", school: "", subjects: "" }));
-  const [worksheets, setWorksheets] = useState<any[]>([]);
-  const plans = useQuery({ queryKey: ["lesson-plans-summary"], queryFn: () => backendApi.lessonPlans(0, 5), retry: false });
+  const plans = useQuery({ queryKey: ["lesson-plans-summary"], queryFn: () => backendApi.lessonPlans(0, 50), retry: false });
+  const worksheets = useQuery({ queryKey: ["worksheets-summary"], queryFn: () => backendApi.worksheets(0, 50), retry: false });
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName(profile);
   const lessonTotal = plans.data?.total;
@@ -61,7 +58,8 @@ export default function TeacherDashboard() {
         created_at: item.created_at || item.updated_at || ""
       }))
     : [];
-  const worksheetRecent = worksheets.map((item: any) => {
+  const worksheetItems = worksheets.data?.items || [];
+  const worksheetRecent = worksheetItems.map((item: any) => {
     const output = item.output_json || {};
     const metadata = output.metadata || {};
     return {
@@ -77,9 +75,14 @@ export default function TeacherDashboard() {
   const recent = [...worksheetRecent, ...lessonRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   const displayRecent = recent;
-  const worksheetTotal = worksheets.length;
-  const savedResourcesTotal = (lessonTotal || 0) + worksheetTotal;
-  const monthlyGenerationsTotal = savedResourcesTotal;
+  const worksheetTotal = worksheets.data?.total;
+  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0);
+  const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
+  const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
+  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal;
+  const generationBars = getDailyGenerationBars([...(plans.data?.items || []), ...worksheetItems]);
+  const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal);
+  const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
   useEffect(() => {
     setProfile(getTeacherProfile());
@@ -92,19 +95,6 @@ export default function TeacherDashboard() {
     return () => {
       window.removeEventListener("teacher-profile-updated", syncProfile);
       window.removeEventListener("storage", syncProfile);
-    };
-  }, []);
-
-  useEffect(() => {
-    function syncWorksheets() {
-      setWorksheets(listWorksheetGenerations());
-    }
-    syncWorksheets();
-    window.addEventListener(WORKSHEET_STORAGE_EVENT, syncWorksheets);
-    window.addEventListener("storage", syncWorksheets);
-    return () => {
-      window.removeEventListener(WORKSHEET_STORAGE_EVENT, syncWorksheets);
-      window.removeEventListener("storage", syncWorksheets);
     };
   }, []);
 
@@ -131,9 +121,9 @@ export default function TeacherDashboard() {
             {...stat}
             value={
               index === 0
-                ? formatNumber(lessonTotal, stat.fallback)
+                ? formatNumber(lessonMonthlyTotal, stat.fallback)
                 : index === 1
-                  ? formatNumber(worksheetTotal, stat.fallback)
+                  ? formatNumber(worksheetMonthlyTotal, stat.fallback)
                   : index === 2
                     ? formatNumber(savedResourcesTotal, stat.fallback)
                     : formatNumber(monthlyGenerationsTotal, stat.fallback)
@@ -196,21 +186,20 @@ export default function TeacherDashboard() {
           <div className="grid gap-3 lg:grid-cols-[0.82fr_1.18fr] 2xl:gap-5">
             <div className="premium-hover rounded-[16px] border border-[#eeeaf7] bg-white p-4 shadow-[0_10px_28px_rgba(39,30,91,0.05)] 2xl:rounded-[18px] 2xl:p-5">
               <p className="mb-3 text-base font-black text-[#101039] 2xl:mb-4 2xl:text-lg">Your Usage</p>
-              <div className="relative mx-auto grid h-28 w-28 place-items-center rounded-full bg-[conic-gradient(#8d57f6_0_42%,#0db986_42%_68%,#ffb336_68%_100%)] 2xl:h-44 2xl:w-44">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-black text-[#101039] 2xl:h-24 2xl:w-24 2xl:text-3xl">158</div>
+              <div className="relative mx-auto grid h-28 w-28 place-items-center rounded-full 2xl:h-44 2xl:w-44" style={{ background: usageGradient }}>
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-black text-[#101039] 2xl:h-24 2xl:w-24 2xl:text-3xl">{monthlyGenerationsTotal}</div>
               </div>
               <div className="mt-3 grid gap-1 text-xs font-medium text-[#67627d] 2xl:mt-4 2xl:gap-1.5 2xl:text-sm">
-                <Legend color="#8d57f6" label="Lesson Plan (40%)" />
-                <Legend color="#0db986" label="Worksheet (25%)" />
-                <Legend color="#ffb336" label="Other (25%)" />
+                <Legend color="#8d57f6" label={`Lesson plans (${lessonMonthlyTotal})`} />
+                <Legend color="#0db986" label={`Worksheets (${worksheetMonthlyTotal})`} />
               </div>
             </div>
             <div className="premium-hover rounded-[16px] border border-[#eeeaf7] bg-white p-4 shadow-[0_10px_28px_rgba(39,30,91,0.05)] 2xl:rounded-[18px] 2xl:p-5">
               <p className="mb-4 text-base font-black text-[#101039] 2xl:mb-5 2xl:text-lg">Daily Generations</p>
               <div className="flex h-[130px] items-end gap-2 border-b border-l border-[#e5e1f1] pl-2 2xl:h-[190px] 2xl:gap-4 2xl:pl-3">
-                {bars.map((bar, index) => (
+                {generationBars.map((bar, index) => (
                   <div key={index} className="flex flex-1 items-end justify-center">
-                    <div className="w-full max-w-[11px] rounded-t-full bg-gradient-to-t from-[#6b35df] to-[#b06cff] shadow-[0_8px_18px_rgba(116,65,230,0.22)] 2xl:max-w-[14px]" style={{ height: `${bar * 3.25}px` }} />
+                    <div className="w-full max-w-[11px] rounded-t-full bg-gradient-to-t from-[#6b35df] to-[#b06cff] shadow-[0_8px_18px_rgba(116,65,230,0.22)] 2xl:max-w-[14px]" style={{ height: `${Math.max(8, bar * 18)}px` }} />
                   </div>
                 ))}
               </div>
@@ -238,7 +227,7 @@ export default function TeacherDashboard() {
                 <Clock3 className="h-8 w-8 text-[#326fd4] 2xl:h-9 2xl:w-9" />
                 <div>
                   <p className="text-sm font-black text-[#3262b6] 2xl:text-base">Time Saved</p>
-                  <p className="text-xl font-black text-[#101039] 2xl:text-2xl">37.5 Hours</p>
+                  <p className="text-xl font-black text-[#101039] 2xl:text-2xl">{estimatedHoursSaved} Hours</p>
                   <p className="text-xs font-medium text-[#67627d] 2xl:text-sm">This Month</p>
                 </div>
               </div>
@@ -338,6 +327,38 @@ function Legend({ color, label }: { color: string; label: string }) {
 function formatNumber(value: number | undefined, fallback: string) {
   if (typeof value !== "number") return fallback;
   return new Intl.NumberFormat("en-IN").format(value);
+}
+
+function countItemsThisMonth(items: Array<{ created_at?: string; updated_at?: string }>) {
+  const now = new Date();
+  return items.filter((item) => {
+    const created = new Date(item.created_at || item.updated_at || 0);
+    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
+  }).length;
+}
+
+function getDailyGenerationBars(items: Array<{ created_at?: string; updated_at?: string }>) {
+  const today = new Date();
+  const days = Array.from({ length: 13 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (12 - index));
+    return date;
+  });
+  return days.map((day) => items.filter((item) => {
+    const created = new Date(item.created_at || item.updated_at || 0);
+    return created.getFullYear() === day.getFullYear() && created.getMonth() === day.getMonth() && created.getDate() === day.getDate();
+  }).length);
+}
+
+function getUsageGradient(lessonCount: number, worksheetCount: number) {
+  const total = lessonCount + worksheetCount;
+  if (!total) return "conic-gradient(#d7dae4 0 100%)";
+  const lessonEnd = Math.round((lessonCount / total) * 100);
+  return `conic-gradient(#8d57f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
+}
+
+function formatHours(hours: number) {
+  return Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
 }
 
 function toneClass(tone: string) {

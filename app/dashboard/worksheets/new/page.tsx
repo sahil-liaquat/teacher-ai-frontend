@@ -153,8 +153,11 @@ export default function NewWorksheetPage() {
     setGenerating(true);
     setGenerationError("");
     setGenerationStatus("Reading the textbook...");
-    const conceptTimer = window.setTimeout(() => setGenerationStatus("Finding key concepts..."), 900);
-    const creatingTimer = window.setTimeout(() => setGenerationStatus("Preparing your worksheet..."), 1900);
+    const t1 = window.setTimeout(() => setGenerationStatus("Reading the textbook..."), 0);
+    const t2 = window.setTimeout(() => setGenerationStatus("Finding key concepts..."), 3000);
+    const t3 = window.setTimeout(() => setGenerationStatus("Writing questions..."), 10000);
+    const t4 = window.setTimeout(() => setGenerationStatus("Building answer key..."), 20000);
+    const t5 = window.setTimeout(() => setGenerationStatus("Almost ready..."), 35000);
     try {
       const generation = await backendApi.createWorksheet({
         book_id: bookId,
@@ -175,11 +178,14 @@ export default function NewWorksheetPage() {
     } catch (error) {
       setGenerationError(error instanceof Error ? error.message : "Could not generate worksheet.");
       toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Could not generate worksheet." });
-    } finally {
-      window.clearTimeout(conceptTimer);
-      window.clearTimeout(creatingTimer);
       setGenerating(false);
       setGenerationStatus("");
+    } finally {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+      window.clearTimeout(t4);
+      window.clearTimeout(t5);
     }
   }
 
