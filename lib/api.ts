@@ -1,7 +1,7 @@
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   if (configured) return configured.endsWith("/api/v1") ? configured : `${configured}/api/v1`;
-  return "http://localhost:8000/api/v1";
+  return "https://teacher-ai-backend-dev.onrender.com/api/v1";
 }
 
 export const API_BASE = resolveApiBase();
