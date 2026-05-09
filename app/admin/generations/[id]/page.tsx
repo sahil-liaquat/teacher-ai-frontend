@@ -2,10 +2,10 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { FileText } from "lucide-react";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { LessonPlanOutput } from "@/components/generation-output";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
 
 export default function AdminGenerationDetailPage() {
   const params = useParams<{ id: string }>();
@@ -13,24 +13,41 @@ export default function AdminGenerationDetailPage() {
   const output = generation.data ? normalizeLessonPlanForOutput(generation.data) : null;
 
   if (generation.isLoading) {
-    return <Card><CardContent className="p-6 text-sm font-semibold text-[#52617d]">Loading generation...</CardContent></Card>;
+    return <LoadingState label="Loading generation" />;
   }
 
   if (generation.error || !output) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <h1 className="text-xl font-black text-red-700">Could not load generation</h1>
-          <p className="mt-2 text-sm text-[#52617d]">{generation.error instanceof Error ? generation.error.message : "This backend exposes lesson-plan detail records only."}</p>
-        </CardContent>
-      </Card>
+      <AdminPanel>
+        <EmptyState
+          title="Could not load generation"
+          description={generation.error instanceof Error ? generation.error.message : "This backend exposes lesson-plan detail records only."}
+        />
+      </AdminPanel>
     );
   }
 
   return (
-    <div className="grid gap-5">
-      <PageHeader title={output.title || "Generated lesson plan"} description="Rendered from the live backend lesson-plan record." />
-      <LessonPlanOutput output={output} streamKey={`admin-generation-${params.id}`} streamSpeed="instant" />
-    </div>
+    <>
+      <AdminPageHeader
+        eyebrow="Generation detail"
+        title={output.title || "Generated lesson plan"}
+        description="Rendered from the live backend lesson-plan record."
+        meta={
+          <>
+            <StatusPill status="info">Lesson plan</StatusPill>
+            <StatusPill status="neutral">{formatDateTime(generation.data?.created_at)}</StatusPill>
+          </>
+        }
+      />
+      <AdminPanel
+        title="Rendered output"
+        description="The lesson plan below is shown exactly through the existing output renderer."
+        actions={<FileText className="h-5 w-5 text-slate-500" />}
+        contentClassName="bg-slate-50 p-3 sm:p-4"
+      >
+        <LessonPlanOutput output={output} streamKey={`admin-generation-${params.id}`} streamSpeed="instant" />
+      </AdminPanel>
+    </>
   );
 }

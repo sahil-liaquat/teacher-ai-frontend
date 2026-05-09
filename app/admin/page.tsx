@@ -1,23 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, BookOpen, Bot, Download, Search, ShieldCheck, Upload, UserPlus, Users, Wand2 } from "lucide-react";
+import { Activity, ArrowRight, BookOpen, Download, FileText, LibraryBig, Search, ShieldCheck, Upload, Users, Wand2 } from "lucide-react";
 import { backendApi } from "@/lib/api";
-import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
+import { AdminPageHeader, AdminPanel, HealthIndicator, MetricCard, StatusPill, compactNumber, formatDateTime } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 const kpis = [
-  ["total_users", "Total users", Users, "from-blue-500 to-blue-600"],
-  ["active_users", "Active users", ShieldCheck, "from-emerald-500 to-green-600"],
-  ["lesson_plans_generated", "Lesson plans", Wand2, "from-purple-500 to-indigo-600"],
-  ["worksheets_generated", "Worksheets", Bot, "from-cyan-500 to-blue-600"],
-  ["books_in_library", "Books", BookOpen, "from-orange-500 to-amber-500"],
-  ["total_ai_calls", "AI calls", Activity, "from-rose-500 to-pink-600"]
+  { key: "total_users", label: "Total users", detail: "All accounts", icon: Users, tone: "blue" },
+  { key: "active_users", label: "Active users", detail: "Can sign in", icon: ShieldCheck, tone: "green" },
+  { key: "lesson_plans_generated", label: "Lesson plans", detail: "Saved generations", icon: FileText, tone: "violet" },
+  { key: "worksheets_generated", label: "Worksheets", detail: "Worksheet records", icon: Wand2, tone: "amber" },
+  { key: "books_in_library", label: "Books", detail: "Indexed library", icon: LibraryBig, tone: "rose" },
+  { key: "total_ai_calls", label: "AI calls", detail: "Tracked requests", icon: Activity, tone: "slate" }
 ] as const;
 
 export default function AdminDashboard() {
@@ -25,24 +23,11 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [exporting, setExporting] = useState(false);
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filterItems = (items: any[] = []) => {
-    if (!normalizedSearch) return items;
-    return items.filter((item) =>
-      [
-        item.title,
-        item.name,
-        item.tool,
-        item.subject,
-        item.created_at,
-        item.count
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedSearch))
-    );
-  };
-  const recentGenerations = filterItems(summary.data?.recent_generations || []);
-  const topBooks = filterItems(summary.data?.top_books || []);
-  const topUsers = filterItems(summary.data?.top_users || []);
+  const data = summary.data;
+
+  const filteredGenerations = useMemo(() => filterItems(data?.recent_generations || [], normalizedSearch), [data?.recent_generations, normalizedSearch]);
+  const filteredBooks = useMemo(() => filterItems(data?.top_books || [], normalizedSearch), [data?.top_books, normalizedSearch]);
+  const filteredUsers = useMemo(() => filterItems(data?.top_users || [], normalizedSearch), [data?.top_users, normalizedSearch]);
 
   async function exportUsersCsv() {
     setExporting(true);
@@ -68,105 +53,112 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Control Center"
-        description="Manage users, textbook indexing, AI generations, activity logs, and system health from one dense workspace."
+    <>
+      <AdminPageHeader
+        eyebrow="Admin control center"
+        title="Operate the teaching platform with confidence"
+        description="Monitor adoption, manage access, maintain curriculum data, and keep the content library healthy from one responsive workspace."
+        meta={<HealthIndicator status={data?.system_status?.backend_api} />}
         actions={
           <>
-            <Link href="/admin/users">
-              <Button variant="outline">
-                <UserPlus className="h-4 w-4" />
-                Add user
-              </Button>
-            </Link>
+            <Button variant="outline" onClick={exportUsersCsv} disabled={exporting}>
+              <Download className="h-4 w-4" />
+              {exporting ? "Exporting" : "Export users"}
+            </Button>
             <Link href="/admin/textbooks">
               <Button>
                 <Upload className="h-4 w-4" />
                 Upload book
               </Button>
             </Link>
-            <Button variant="outline" onClick={exportUsersCsv} disabled={exporting}>
-              <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : "Export"}
-            </Button>
           </>
         }
       />
 
-      <Card>
-        <CardContent className="relative p-5">
-          <Search className="absolute left-8 top-8 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Search users, generations, and books"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        {kpis.map(({ key, label, detail, icon: Icon, tone }) => (
+          <MetricCard
+            key={key}
+            label={label}
+            value={summary.isLoading ? "..." : compactNumber(Number(data?.[key] ?? 0))}
+            detail={detail}
+            icon={<Icon className="h-5 w-5" />}
+            tone={tone}
           />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        {kpis.map(([key, label, Icon, color], index) => (
-          <Card key={key} className="reveal-card" style={{ animationDelay: `${index * 55}ms` }}>
-            <CardContent className="p-5">
-              <div className={`grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-r ${color} shadow-lg`}>
-                <Icon className="h-5 w-5 text-white" />
-              </div>
-              <p className="mt-4 text-3xl font-black text-slate-950">{summary.data?.[key] ?? 0}</p>
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
-            </CardContent>
-          </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader className="flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-2xl text-slate-950">Recent Generations</CardTitle>
-              <CardDescription>Latest outputs across teachers and tools.</CardDescription>
-            </div>
-            <Link href="/admin/generations"><Button variant="outline" size="sm">View all</Button></Link>
-          </CardHeader>
-          <CardContent><AdminList items={recentGenerations} /></CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-slate-950">System Status</CardTitle>
-            <CardDescription>Operational health snapshot.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            {Object.entries(summary.data?.system_status || {}).map(([key, value]) => (
-              <div key={key} className="flex justify-between rounded-xl bg-emerald-50 p-3">
-                <span className="font-semibold capitalize text-slate-700">{key.replaceAll("_", " ")}</span>
-                <Badge className="bg-white text-emerald-700">{String(value)}</Badge>
+      <AdminPanel contentClassName="p-3 sm:p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <Search className="h-4 w-4 text-slate-500" />
+          <Input
+            className="h-9 border-0 bg-transparent px-0 shadow-none focus:ring-0"
+            placeholder="Filter recent generations, books, and users"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+      </AdminPanel>
+
+      <div className="grid gap-5 xl:grid-cols-[1.35fr_0.85fr]">
+        <AdminPanel
+          title="Recent generations"
+          description="Latest saved lesson-plan activity from the backend."
+          actions={<Link href="/admin/generations" className="inline-flex items-center gap-1 text-sm font-bold text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
+        >
+          <div className="space-y-3">
+            {filteredGenerations.length ? filteredGenerations.map((item: any, index) => (
+              <Link key={item.id || index} href={item.id ? `/admin/generations/${item.id}` : "/admin/generations"} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-3 py-3 hover:bg-slate-50">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-slate-950">{item.name || item.title || "Lesson plan"}</p>
+                  <p className="mt-1 truncate text-xs text-slate-500">{item.tool || "Lesson plan"} · {formatDateTime(item.created_at)}</p>
+                </div>
+                <StatusPill status="info">Open</StatusPill>
+              </Link>
+            )) : <MiniEmpty label="No matching generations" />}
+          </div>
+        </AdminPanel>
+
+        <AdminPanel title="System snapshot" description="Live values exposed by the current API.">
+          <div className="space-y-3">
+            {Object.entries(data?.system_status || {}).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-3">
+                <span className="text-sm font-bold capitalize text-slate-700">{key.replaceAll("_", " ")}</span>
+                <StatusPill status={String(value) === "ok" ? "success" : "neutral"}>{String(value)}</StatusPill>
               </div>
             ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-xl text-slate-950">Top Books by Usage</CardTitle></CardHeader>
-          <CardContent><AdminList items={topBooks} /></CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-xl text-slate-950">Top Active Users</CardTitle></CardHeader>
-          <CardContent><AdminList items={topUsers} /></CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-slate-950">Tool Usage Overview</CardTitle>
-            <CardDescription>Tracked per user and month.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 text-sm text-slate-600">
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">Lesson plan and worksheet counts are measured per teacher.</div>
-              <div className="rounded-2xl border border-purple-100 bg-purple-50 p-4">Token usage is reserved as a provider placeholder.</div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </AdminPanel>
       </div>
-    </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <AdminPanel title="Library focus" description="Books currently visible through the curriculum hierarchy.">
+          <CompactList
+            items={filteredBooks}
+            emptyLabel="No matching books"
+            render={(item: any) => ({
+              title: item.title || "Untitled book",
+              detail: item.subject || "No subject",
+              href: item.id ? `/admin/textbooks/${item.id}` : "/admin/textbooks",
+              icon: <BookOpen className="h-4 w-4" />
+            })}
+          />
+        </AdminPanel>
+
+        <AdminPanel title="Active users" description="Recent accounts returned by the users endpoint.">
+          <CompactList
+            items={filteredUsers}
+            emptyLabel="No matching users"
+            render={(item: any) => ({
+              title: item.name || item.email || "User",
+              detail: formatDateTime(item.created_at),
+              href: "/admin/users",
+              icon: <Users className="h-4 w-4" />
+            })}
+          />
+        </AdminPanel>
+      </div>
+    </>
   );
 }
 
@@ -175,35 +167,34 @@ async function loadAdminSummary() {
 }
 
 async function loadAdminSummaryFromExistingApis() {
-  const [users, boards, health, lessonPlans] = await Promise.all([
+  const [users, boards, health, lessonPlans, worksheets] = await Promise.all([
     backendApi.users(0, 100).catch(() => ({ items: [], total: 0 })),
     backendApi.boards(0, 100).catch(() => ({ items: [], total: 0 })),
     backendApi.health().catch(() => ({ status: "unavailable" })),
-    backendApi.lessonPlans(0, 100).catch(() => ({ items: [], total: 0 }))
+    backendApi.lessonPlans(0, 100).catch(() => ({ items: [], total: 0 })),
+    backendApi.worksheets(0, 100).catch(() => ({ items: [], total: 0 }))
   ]);
   const classesByBoard = await Promise.all(
-    boards.items.map((board) =>
+    boards.items.map((board: any) =>
       backendApi.classesByBoard(board.id, 0, 100).catch(() => ({ items: [] as any[] }))
     )
   );
   const allClasses = classesByBoard.flatMap((classes) => classes.items);
   const booksByClass = await Promise.all(
-    allClasses.map((cls) =>
+    allClasses.map((cls: any) =>
       backendApi.booksByClass(cls.id, 0, 100).catch(() => ({ items: [] as any[] }))
     )
   );
   const allBooks = booksByClass.flatMap((books) => books.items);
-  const topBooks: Array<{ id: string; title: string; subject?: string }> = [];
-  topBooks.push(...allBooks.map((book: any) => ({ id: book.id, title: book.title, subject: book.subject })));
 
   return {
     total_users: users.total,
     active_users: users.items.filter((user: any) => user.is_active).length,
     lesson_plans_generated: lessonPlans.total,
-    worksheets_generated: 0,
+    worksheets_generated: worksheets.total,
     books_in_library: allBooks.length,
-    total_ai_calls: lessonPlans.total,
-    recent_generations: lessonPlans.items.slice(0, 5).map((item: any) => ({
+    total_ai_calls: lessonPlans.total + worksheets.total,
+    recent_generations: lessonPlans.items.slice(0, 6).map((item: any) => ({
       id: item.id,
       name: item.topic || item.chapter_name || "Lesson plan",
       tool: "Lesson plan",
@@ -215,9 +206,43 @@ async function loadAdminSummaryFromExistingApis() {
       classes: allClasses.length,
       books: allBooks.length
     },
-    top_books: topBooks.slice(0, 5),
-    top_users: users.items.slice(0, 5).map((user: any) => ({ id: user.id, name: user.full_name, created_at: user.created_at }))
+    top_books: allBooks.slice(0, 6).map((book: any) => ({ id: book.id, title: book.title, subject: book.subject })),
+    top_users: users.items.slice(0, 6).map((user: any) => ({ id: user.id, name: user.full_name || user.name || user.email, created_at: user.created_at }))
   };
+}
+
+function filterItems(items: any[], search: string) {
+  if (!search) return items;
+  return items.filter((item) =>
+    [item.title, item.name, item.tool, item.subject, item.created_at, item.count]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search))
+  );
+}
+
+function CompactList({ items, emptyLabel, render }: { items: any[]; emptyLabel: string; render: (item: any) => { title: string; detail: string; href: string; icon: React.ReactNode } }) {
+  if (!items.length) return <MiniEmpty label={emptyLabel} />;
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => {
+        const row = render(item);
+        return (
+          <Link key={item.id || index} href={row.href} className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 hover:bg-slate-50">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700">{row.icon}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-black text-slate-950">{row.title}</span>
+              <span className="mt-1 block truncate text-xs text-slate-500">{row.detail}</span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniEmpty({ label }: { label: string }) {
+  return <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-bold text-slate-500">{label}</div>;
 }
 
 function toCsv(headers: string[], rows: Array<Array<string | number | boolean>>) {
@@ -237,21 +262,4 @@ function downloadCsv(csv: string, filename: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
-}
-
-function AdminList({ items }: { items: any[] }) {
-  return (
-    <div className="grid gap-3">
-      {items.length ? (
-        items.map((item, index) => (
-          <div key={item.id || index} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 text-sm shadow-sm">
-            <span className="min-w-0 truncate font-semibold text-slate-800">{item.title || item.name || item.tool || item.subject || "Record"}</span>
-            <span className="ml-4 shrink-0 text-slate-500">{item.count ?? item.created_at ?? ""}</span>
-          </div>
-        ))
-      ) : (
-        <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-muted-foreground">No data yet.</p>
-      )}
-    </div>
-  );
 }
