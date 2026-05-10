@@ -31,6 +31,7 @@ export function AdminPageHeader({
 }
 
 export function AdminPanel({
+  id,
   title,
   description,
   actions,
@@ -38,6 +39,7 @@ export function AdminPanel({
   className,
   contentClassName
 }: {
+  id?: string;
   title?: string;
   description?: string;
   actions?: ReactNode;
@@ -46,7 +48,7 @@ export function AdminPanel({
   contentClassName?: string;
 }) {
   return (
-    <section className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}>
+    <section id={id} className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}>
       {(title || description || actions) ? (
         <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
           <div className="min-w-0">
