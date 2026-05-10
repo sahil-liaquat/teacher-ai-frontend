@@ -55,6 +55,14 @@ export default function NewLessonPlanPage() {
     customize: false
   });
   const [fetching, setFetching] = useState(false);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
+  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
+  const [classesError, setClassesError] = useState("");
+  const [subjectsError, setSubjectsError] = useState("");
+  const [booksError, setBooksError] = useState("");
+  const [chaptersError, setChaptersError] = useState("");
 
   useEffect(() => {
     setFetching(true);
@@ -62,42 +70,145 @@ export default function NewLessonPlanPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!boardId) return;
-    setClasses([]); setBooks([]); setChapters([]); setClassId(""); setSubject(""); setBookId(""); setChapterName("");
-    setFetching(true);
-    backendApi.classesByBoard(boardId, 0, 100).then((res) => setClasses(res.items.filter((c) => c.is_active !== false))).catch((err) => toast({ title: "Could not load classes", description: err.message })).finally(() => setFetching(false));
+    if (!boardId) {
+      setIsLoadingClasses(false);
+      return;
+    }
+    let cancelled = false;
+    setClassesError("");
+    setIsLoadingClasses(true);
+    backendApi.classesByBoard(boardId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setClasses(res.items.filter((c) => c.is_active !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) setClassesError(err instanceof Error ? err.message : "Could not load classes.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingClasses(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [boardId, toast]);
 
   useEffect(() => {
-    if (!classId) return;
-    setBooks([]); setChapters([]); setSubject(""); setBookId(""); setChapterName("");
-    setFetching(true);
-    backendApi.booksByClass(classId, 0, 100).then((res) => setBooks(res.items.filter((b) => b.is_active !== false && b.is_ingested !== false))).catch((err) => toast({ title: "Could not load books", description: err.message })).finally(() => setFetching(false));
+    if (!classId) {
+      setIsLoadingSubjects(false);
+      setIsLoadingBooks(false);
+      return;
+    }
+    let cancelled = false;
+    setSubjectsError("");
+    setBooksError("");
+    setIsLoadingSubjects(true);
+    setIsLoadingBooks(true);
+    backendApi.booksByClass(classId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setBooks(res.items.filter((b) => b.is_active !== false && b.is_ingested !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "Could not load books.";
+          setSubjectsError(message);
+          setBooksError(message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingSubjects(false);
+          setIsLoadingBooks(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [classId, toast]);
 
   useEffect(() => {
-    if (!bookId) return;
-    setChapters([]); setChapterName("");
-    setFetching(true);
-    backendApi.chaptersByBook(bookId).then((items) => setChapters(items)).catch((err) => toast({ title: "Could not load chapters", description: err.message })).finally(() => setFetching(false));
+    if (!bookId) {
+      setIsLoadingChapters(false);
+      return;
+    }
+    let cancelled = false;
+    setChaptersError("");
+    setIsLoadingChapters(true);
+    backendApi.chaptersByBook(bookId)
+      .then((items) => {
+        if (!cancelled) setChapters(items);
+      })
+      .catch((err) => {
+        if (!cancelled) setChaptersError(err instanceof Error ? err.message : "Could not load chapters.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingChapters(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [bookId, toast]);
 
   const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
+  const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
   const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && selected.length);
+
+  function chooseBoard(value: string) {
+    setBoardId(value);
+    setClasses([]);
+    setBooks([]);
+    setChapters([]);
+    setClassId("");
+    setSubject("");
+    setBookId("");
+    setChapterName("");
+    setTopic("");
+    setClassesError("");
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingClasses(Boolean(value));
+    setIsLoadingSubjects(false);
+    setIsLoadingBooks(false);
+    setIsLoadingChapters(false);
+  }
+
+  function chooseClass(value: string) {
+    setClassId(value);
+    setBooks([]);
+    setChapters([]);
+    setSubject("");
+    setBookId("");
+    setChapterName("");
+    setTopic("");
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingSubjects(Boolean(value));
+    setIsLoadingBooks(Boolean(value));
+    setIsLoadingChapters(false);
+  }
 
   function chooseSubject(value: string) {
     setSubject(value);
     setBookId("");
     setChapters([]);
     setChapterName("");
+    setTopic("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingBooks(Boolean(value));
+    window.requestAnimationFrame(() => setIsLoadingBooks(false));
   }
 
   function chooseBook(value: string) {
     setBookId(value);
     setChapters([]);
     setChapterName("");
+    setTopic("");
+    setChaptersError("");
+    setIsLoadingChapters(Boolean(value));
   }
 
   function toggleComponent(title: string) {
@@ -153,11 +264,11 @@ export default function NewLessonPlanPage() {
           <div className="grid gap-6">
             <NumericSection number="1" title="Plan Details" subtitle="Provide basic information about your lesson.">
               <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)] 2xl:gap-5">
-                <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => setBoardId(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
-                <FieldBox label="Class / Grade" required><Select value={classId} onChange={(e) => setClassId(e.target.value)} disabled={!boardId}><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
-                <FieldBox label="Subject" required><Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length}><option value="">Select Subject</option>{subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FieldBox>
-                <FieldBox label="Book / Textbook" required><Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject}><option value="">Select Book / Textbook</option>{filteredBooks.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}</Select></FieldBox>
-                <FieldBox label="Chapter / Unit" required><Select value={chapterName} onChange={(e) => setChapterName(e.target.value)} disabled={!bookId}><option value="">Select Chapter / Unit</option>{chapters.map((ch) => <option key={ch.id} value={ch.chapter_title || ch.title || ""}>{ch.chapter_number ? `${ch.chapter_number}. ` : ""}{ch.chapter_title || ch.title}</option>)}</Select></FieldBox>
+                <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
+                <FieldBox label="Class / Grade" required error={classesError}><Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes..."><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
+                <FieldBox label="Subject" required error={subjectsError}><Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length || isLoadingSubjects} isLoading={isLoadingSubjects} loadingLabel="Loading subjects..."><option value="">Select Subject</option>{subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FieldBox>
+                <FieldBox label="Book / Textbook" required error={booksError}><Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject || isLoadingBooks} isLoading={isLoadingBooks} loadingLabel="Loading books..."><option value="">Select Book / Textbook</option>{filteredBooks.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}</Select></FieldBox>
+                <FieldBox label="Chapter / Unit" required error={chaptersError}><Select value={chapterName} onChange={(e) => setChapterName(e.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters..."><option value="">Select Chapter / Unit</option>{chapters.map((ch) => <option key={ch.id} value={ch.chapter_title || ch.title || ""}>{ch.chapter_number ? `${ch.chapter_number}. ` : ""}{ch.chapter_title || ch.title}</option>)}</Select></FieldBox>
                 <FieldBox label="Topic / Lesson Title" required><Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Type Any Topic" maxLength={150} /></FieldBox>
                 <FieldBox label="Duration" required><Select value={String(duration)} onChange={(e) => setDuration(Number(e.target.value))}><option value="30">30 min</option><option value="40">40 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="90">90 min</option></Select></FieldBox>
                 <FieldBox label="Language" required><Select value={language} onChange={(e) => setLanguage(e.target.value)}><option>English</option><option>Hindi</option><option>Urdu</option></Select></FieldBox>
@@ -214,7 +325,7 @@ export default function NewLessonPlanPage() {
             <div className="flex flex-col gap-3 rounded-[18px] border border-[#ebe7f4] bg-[#fbfaff] p-4 sm:flex-row sm:items-center sm:justify-between 2xl:p-5">
               <div>
                 <p className="text-base font-black text-[#101039]">Generate classroom-ready output</p>
-                <p className="mt-1 text-sm font-medium text-[#67627d]">{fetching ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
+                <p className="mt-1 text-sm font-medium text-[#67627d]">{isLoadingOptions ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
               </div>
               <Button type="button" disabled={!canGenerate} onClick={generate} className="sm:min-w-[220px]"><Sparkles className="h-5 w-5" />Generate Lesson Plan</Button>
             </div>
@@ -292,11 +403,12 @@ function SectionTitle({ number, title, subtitle }: { number: string; title: stri
     </>
   );
 }
-function FieldBox({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) { 
+function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) { 
   return (
     <label className="grid min-w-0 gap-2">
       <span className="truncate text-sm font-black text-[#4f4b68]">{label} {required && <span className="text-red-500">*</span>}</span>
       {children}
+      {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}
     </label>
   );
 }

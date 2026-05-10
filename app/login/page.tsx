@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { BookOpen, Brain, ClipboardCheck, Sparkles } from "lucide-react";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
-import { ensureSession, getCurrentUser, login } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, login } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 
 const schema = z.object({
@@ -22,6 +23,7 @@ const schema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" }
@@ -43,7 +45,9 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
+      queryClient.clear();
       const user = await login(values.email, values.password);
+      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
       toast({ title: "Welcome back", description: user.name });
       const next = new URLSearchParams(window.location.search).get("next");
       const destination = next?.startsWith("/") ? next : (user.role === "admin" ? "/admin" : "/dashboard");

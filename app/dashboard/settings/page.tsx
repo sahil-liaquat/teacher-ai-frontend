@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/profile";
 import { useToast } from "@/components/ui/toast";
-import { backendApi, getCurrentUser, type ApiUser } from "@/lib/api";
-
-const CURRENT_USER_QUERY_KEY = ["current-user"];
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser } from "@/lib/api";
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -26,15 +24,12 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    setProfile(getTeacherProfile());
-  }, []);
-
-  useEffect(() => {
-    if (!currentUser.data?.full_name) return;
-    setProfile((current) => ({
-      ...current,
-      name: !current.name || current.name === "Teacher" ? currentUser.data.full_name || current.name : current.name
-    }));
+    if (!currentUser.data?.id) return;
+    const savedProfile = getTeacherProfile(currentUser.data.id);
+    setProfile({
+      ...savedProfile,
+      name: currentUser.data.full_name || currentUser.data.name || ""
+    });
   }, [currentUser.data]);
 
   function updateProfile(field: keyof TeacherProfile, value: string) {
@@ -44,24 +39,31 @@ export default function SettingsPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = {
-      name: profile.name.trim() || "Teacher",
+      name: profile.name.trim(),
       school: profile.school.trim(),
       subjects: profile.subjects.trim()
     };
+    if (!next.name) {
+      toast({ title: "Name is required", description: "Please enter the name for this account." });
+      return;
+    }
+    const currentUserId = currentUser.data?.id;
+    if (!currentUserId) {
+      toast({ title: "Could not save profile", description: "Please sign in again before updating your profile." });
+      return;
+    }
 
     setSaving(true);
     try {
-      let savedUser = currentUser.data;
-      if (currentUser.data?.id) {
-        savedUser = await backendApi.updateUser(currentUser.data.id, { full_name: next.name });
-        queryClient.setQueryData(CURRENT_USER_QUERY_KEY, savedUser);
-      }
+      await backendApi.updateUser(currentUserId, { full_name: next.name });
+      const savedUser = await getCurrentUser({ redirectOnUnauthorized: false });
+      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, savedUser);
 
       const savedProfile = {
         ...next,
-        name: savedUser?.full_name || next.name
+        name: savedUser.full_name || next.name
       };
-      saveTeacherProfile(savedProfile);
+      saveTeacherProfile(savedProfile, savedUser.id || currentUserId);
       setProfile(savedProfile);
       toast({ title: "Profile saved", description: "Your name is saved to your account." });
     } catch (error) {

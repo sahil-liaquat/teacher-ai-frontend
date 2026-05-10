@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, Sparkles } from "lucide-react";
+import { BookOpen, ClipboardList, LoaderCircle, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,14 @@ export default function NewWorksheetPage() {
   const [difficulty, setDifficulty] = useState<DifficultyDistribution>(difficultyPresets[1].values);
   const [questionTypes, setQuestionTypes] = useState(defaultQuestionTypes);
   const [fetching, setFetching] = useState(false);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
+  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
+  const [classesError, setClassesError] = useState("");
+  const [subjectsError, setSubjectsError] = useState("");
+  const [booksError, setBooksError] = useState("");
+  const [chaptersError, setChaptersError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
@@ -69,7 +77,93 @@ export default function NewWorksheetPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!boardId) return;
+    if (!boardId) {
+      setIsLoadingClasses(false);
+      return;
+    }
+    let cancelled = false;
+    setClassesError("");
+    setIsLoadingClasses(true);
+    backendApi.classesByBoard(boardId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) setClassesError(err instanceof Error ? err.message : "Could not load classes.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingClasses(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [boardId, toast]);
+
+  useEffect(() => {
+    if (!classId) {
+      setIsLoadingSubjects(false);
+      setIsLoadingBooks(false);
+      return;
+    }
+    let cancelled = false;
+    setSubjectsError("");
+    setBooksError("");
+    setIsLoadingSubjects(true);
+    setIsLoadingBooks(true);
+    backendApi.booksByClass(classId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "Could not load books.";
+          setSubjectsError(message);
+          setBooksError(message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingSubjects(false);
+          setIsLoadingBooks(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [classId, toast]);
+
+  useEffect(() => {
+    if (!bookId) {
+      setIsLoadingChapters(false);
+      return;
+    }
+    let cancelled = false;
+    setChaptersError("");
+    setIsLoadingChapters(true);
+    backendApi.chaptersByBook(bookId)
+      .then((items) => {
+        if (!cancelled) setChapters(items);
+      })
+      .catch((err) => {
+        if (!cancelled) setChaptersError(err instanceof Error ? err.message : "Could not load chapters.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingChapters(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, toast]);
+
+  const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
+  const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
+  const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
+  const questionCount = Number(questionCountInput);
+  const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
+  const canGenerate = Boolean(bookId && chapterNames.length && Number.isFinite(questionCount) && questionCount >= 1 && questionTypes.length);
+
+  function chooseBoard(value: string) {
+    setBoardId(value);
     setClasses([]);
     setBooks([]);
     setChapters([]);
@@ -77,55 +171,48 @@ export default function NewWorksheetPage() {
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setFetching(true);
-    backendApi.classesByBoard(boardId, 0, 100)
-      .then((res) => setClasses(res.items.filter((item) => item.is_active !== false)))
-      .catch((err) => toast({ title: "Could not load classes", description: err.message }))
-      .finally(() => setFetching(false));
-  }, [boardId, toast]);
+    setClassesError("");
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingClasses(Boolean(value));
+    setIsLoadingSubjects(false);
+    setIsLoadingBooks(false);
+    setIsLoadingChapters(false);
+  }
 
-  useEffect(() => {
-    if (!classId) return;
+  function chooseClass(value: string) {
+    setClassId(value);
     setBooks([]);
     setChapters([]);
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setFetching(true);
-    backendApi.booksByClass(classId, 0, 100)
-      .then((res) => setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false)))
-      .catch((err) => toast({ title: "Could not load books", description: err.message }))
-      .finally(() => setFetching(false));
-  }, [classId, toast]);
-
-  useEffect(() => {
-    if (!bookId) return;
-    setChapters([]);
-    setChapterNames([]);
-    setFetching(true);
-    backendApi.chaptersByBook(bookId)
-      .then((items) => setChapters(items))
-      .catch((err) => toast({ title: "Could not load chapters", description: err.message }))
-      .finally(() => setFetching(false));
-  }, [bookId, toast]);
-
-  const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
-  const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
-  const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
-  const questionCount = Number(questionCountInput);
-  const canGenerate = Boolean(bookId && chapterNames.length && Number.isFinite(questionCount) && questionCount >= 1 && questionTypes.length);
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingSubjects(Boolean(value));
+    setIsLoadingBooks(Boolean(value));
+    setIsLoadingChapters(false);
+  }
 
   function chooseSubject(value: string) {
     setSubject(value);
     setBookId("");
     setChapters([]);
     setChapterNames([]);
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingBooks(Boolean(value));
+    window.requestAnimationFrame(() => setIsLoadingBooks(false));
   }
 
   function chooseBook(value: string) {
     setBookId(value);
     setChapters([]);
     setChapterNames([]);
+    setChaptersError("");
+    setIsLoadingChapters(Boolean(value));
   }
 
   function toggleQuestionType(type: string) {
@@ -230,25 +317,25 @@ export default function NewWorksheetPage() {
           <NumericSection number="1" title="Worksheet Setup" subtitle="Select the textbook source and chapters for this worksheet.">
             <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3 2xl:gap-5">
               <FieldBox label="Board / Curriculum" required>
-                <Select value={boardId} onChange={(e) => setBoardId(e.target.value)}>
+                <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}>
                   <option value="">Select Board / Curriculum</option>
                   {boards.map((board) => <option key={board.id} value={board.id}>{board.name} ({board.code})</option>)}
                 </Select>
               </FieldBox>
-              <FieldBox label="Class / Grade" required>
-                <Select value={classId} onChange={(e) => setClassId(e.target.value)} disabled={!boardId}>
+              <FieldBox label="Class / Grade" required error={classesError}>
+                <Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes...">
                   <option value="">Select Class / Grade</option>
                   {classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </Select>
               </FieldBox>
-              <FieldBox label="Subject" required>
-                <Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length}>
+              <FieldBox label="Subject" required error={subjectsError}>
+                <Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length || isLoadingSubjects} isLoading={isLoadingSubjects} loadingLabel="Loading subjects...">
                   <option value="">Select Subject</option>
                   {subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}
                 </Select>
               </FieldBox>
-              <FieldBox label="Book / Textbook" required>
-                <Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject}>
+              <FieldBox label="Book / Textbook" required error={booksError}>
+                <Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject || isLoadingBooks} isLoading={isLoadingBooks} loadingLabel="Loading books...">
                   <option value="">Select Book / Textbook</option>
                   {filteredBooks.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
                 </Select>
@@ -277,6 +364,14 @@ export default function NewWorksheetPage() {
                 <p className="text-sm font-black text-[#4f4b68]">Chapters / Units <span className="text-red-500">*</span></p>
                 <span className="rounded-full bg-[#ecfff7] px-3 py-1 text-xs font-black text-[#0b7f53]">{chapterNames.length} selected</span>
               </div>
+              {isLoadingChapters ? (
+                <div className="flex min-h-[82px] items-center justify-between gap-3 rounded-[16px] border border-[#ebe7f4] bg-[#f8f6fb] px-4 text-sm font-bold text-[#67627d]">
+                  <span>Loading chapters...</span>
+                  <LoaderCircle className="h-5 w-5 animate-spin text-[#159565]" />
+                </div>
+              ) : chaptersError ? (
+                <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{chaptersError}</p>
+              ) : (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {chapters.map((chapter) => {
                   const name = chapter.chapter_title || chapter.title || "";
@@ -298,6 +393,7 @@ export default function NewWorksheetPage() {
                   );
                 })}
               </div>
+              )}
               {!bookId ? <p className="mt-3 text-sm font-semibold text-[#67627d]">Select a textbook to load chapters.</p> : null}
             </div>
           </NumericSection>
@@ -363,7 +459,7 @@ export default function NewWorksheetPage() {
               <div className="min-w-0">
                 <p className="text-base font-black text-[#101039]">Generate printable worksheet</p>
                 <p className="mt-1 text-sm font-medium text-[#67627d]">
-                  {generating && generationStatus ? generationStatus : fetching ? "Loading options..." : selectedBook ? `Using ${selectedBook.title} • ${chapterNames.length || 0} chapter${chapterNames.length === 1 ? "" : "s"}` : "Select a subject, textbook, and chapters."}
+                  {generating && generationStatus ? generationStatus : isLoadingOptions ? "Loading options..." : selectedBook ? `Using ${selectedBook.title} • ${chapterNames.length || 0} chapter${chapterNames.length === 1 ? "" : "s"}` : "Select a subject, textbook, and chapters."}
                 </p>
               </div>
             </div>
@@ -393,13 +489,14 @@ function NumericSection({ number, title, subtitle, children }: { number: string;
   );
 }
 
-function FieldBox({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
+function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
     <label className="grid min-w-0 gap-2">
       <span className="truncate text-sm font-black text-[#4f4b68]">
         {label} {required && <span className="text-red-500">*</span>}
       </span>
       {children}
+      {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}
     </label>
   );
 }

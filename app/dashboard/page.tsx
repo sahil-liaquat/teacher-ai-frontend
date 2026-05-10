@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -21,8 +21,8 @@ import {
   Sparkles,
   TrendingUp
 } from "lucide-react";
-import { backendApi } from "@/lib/api";
-import { getTeacherFirstName, getTeacherProfile, TeacherProfile } from "@/lib/profile";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser } from "@/lib/api";
+import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const statCards = [
@@ -41,11 +41,16 @@ const quickAccess = [
 ];
 
 export default function TeacherDashboard() {
-  const [profile, setProfile] = useState<TeacherProfile>(() => ({ name: "Teacher", school: "", subjects: "" }));
   const plans = useQuery({ queryKey: ["lesson-plans-summary"], queryFn: () => backendApi.lessonPlans(0, 50), retry: false });
   const worksheets = useQuery({ queryKey: ["worksheets-summary"], queryFn: () => backendApi.worksheets(0, 50), retry: false });
+  const currentUser = useQuery<ApiUser>({
+    queryKey: CURRENT_USER_QUERY_KEY,
+    queryFn: () => getCurrentUser({ redirectOnUnauthorized: false }),
+    retry: false,
+    staleTime: Infinity
+  });
   const greeting = useMemo(() => getGreeting(), []);
-  const firstName = getTeacherFirstName(profile);
+  const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
   const lessonTotal = plans.data?.total;
   const lessonRecent = plans.data?.items?.length
     ? plans.data.items.map((item: any) => ({
@@ -81,22 +86,10 @@ export default function TeacherDashboard() {
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal;
   const generationBars = getDailyGenerationBars([...(plans.data?.items || []), ...worksheetItems]);
+  const maxGenerationBar = Math.max(1, ...generationBars.map((bar) => bar.value));
+  const generationTicks = getDailyGenerationTicks(generationBars);
   const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal);
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
-
-  useEffect(() => {
-    setProfile(getTeacherProfile());
-    function syncProfile(event: Event) {
-      const customEvent = event as CustomEvent<TeacherProfile>;
-      setProfile(customEvent.detail || getTeacherProfile());
-    }
-    window.addEventListener("teacher-profile-updated", syncProfile);
-    window.addEventListener("storage", syncProfile);
-    return () => {
-      window.removeEventListener("teacher-profile-updated", syncProfile);
-      window.removeEventListener("storage", syncProfile);
-    };
-  }, []);
 
   return (
     <div className="grid gap-4 2xl:gap-7">
@@ -108,7 +101,7 @@ export default function TeacherDashboard() {
         <div className="flex flex-wrap items-center gap-3 2xl:gap-6">
           <label className="premium-hover-sm relative block w-full sm:w-[320px] 2xl:w-[420px]">
             <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#77728e] 2xl:left-5 2xl:h-5 2xl:w-5" />
-            <input className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 pr-16 text-sm font-semibold text-[#101039] shadow-[0_12px_28px_rgba(39,30,91,0.07)] outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 2xl:h-[58px] 2xl:rounded-[14px] 2xl:px-14 2xl:pr-24" placeholder="Search anything..." />
+            <input className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 pr-16 text-base font-semibold text-[#101039] shadow-[0_12px_28px_rgba(39,30,91,0.07)] outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 sm:text-sm 2xl:h-[58px] 2xl:rounded-[14px] 2xl:px-14 2xl:pr-24" placeholder="Search anything..." />
             <span className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-[8px] border border-[#ebe7f4] bg-[#fbfaff] px-2 py-1 text-[11px] font-black text-[#706b84] 2xl:right-5 2xl:gap-2 2xl:text-xs"><span>⌘</span><span>K</span></span>
           </label>
         </div>
@@ -196,19 +189,27 @@ export default function TeacherDashboard() {
             </div>
             <div className="premium-hover rounded-[16px] border border-[#eeeaf7] bg-white p-4 shadow-[0_10px_28px_rgba(39,30,91,0.05)] 2xl:rounded-[18px] 2xl:p-5">
               <p className="mb-4 text-base font-black text-[#101039] 2xl:mb-5 2xl:text-lg">Daily Generations</p>
-              <div className="flex h-[130px] items-end gap-2 border-b border-l border-[#e5e1f1] pl-2 2xl:h-[190px] 2xl:gap-4 2xl:pl-3">
-                {generationBars.map((bar, index) => (
-                  <div key={index} className="flex flex-1 items-end justify-center">
-                    <div className="w-full max-w-[11px] rounded-t-full bg-gradient-to-t from-[#6b35df] to-[#b06cff] shadow-[0_8px_18px_rgba(116,65,230,0.22)] 2xl:max-w-[14px]" style={{ height: `${Math.max(8, bar * 18)}px` }} />
+              <div
+                className="grid h-[130px] items-end gap-1 overflow-hidden border-b border-l border-[#e5e1f1] px-2 pt-2 sm:gap-1.5 2xl:h-[190px] 2xl:gap-2 2xl:px-3"
+                style={{ gridTemplateColumns: `repeat(${generationBars.length}, minmax(0, 1fr))` }}
+              >
+                {generationBars.map((bar) => (
+                  <div key={bar.label} className="flex h-full min-w-0 items-end justify-center">
+                    <div
+                      className="w-[7px] rounded-t-full bg-gradient-to-t from-[#6b35df] to-[#b06cff] shadow-[0_8px_18px_rgba(116,65,230,0.22)] sm:w-2.5 2xl:w-3.5"
+                      style={{ height: bar.value ? `${Math.max(8, Math.round((bar.value / maxGenerationBar) * 100))}%` : 0 }}
+                      aria-label={`${bar.label}: ${bar.value} generations`}
+                    />
                   </div>
                 ))}
               </div>
-              <div className="mt-2 flex justify-between text-[11px] font-semibold text-[#77728e] 2xl:mt-3 2xl:text-xs">
-                <span>May 1</span>
-                <span>May 5</span>
-                <span>May 15</span>
-                <span>May 22</span>
-                <span>May 29</span>
+              <div
+                className="mt-2 grid px-2 text-center text-[11px] font-semibold text-[#77728e] 2xl:mt-3 2xl:px-3 2xl:text-xs"
+                style={{ gridTemplateColumns: `repeat(${generationBars.length}, minmax(0, 1fr))` }}
+              >
+                {generationTicks.map((tick) => (
+                  <span key={tick.label} className="min-w-max whitespace-nowrap" style={{ gridColumn: `${tick.day} / span 1` }}>{tick.label}</span>
+                ))}
               </div>
             </div>
           </div>
@@ -337,17 +338,30 @@ function countItemsThisMonth(items: Array<{ created_at?: string; updated_at?: st
   }).length;
 }
 
+const dailyGenerationTickDays = [1, 5, 15, 22, 29];
+
 function getDailyGenerationBars(items: Array<{ created_at?: string; updated_at?: string }>) {
-  const today = new Date();
-  const days = Array.from({ length: 13 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (12 - index));
-    return date;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const monthLabel = now.toLocaleString("en-US", { month: "short" });
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const dayOfMonth = index + 1;
+    const value = items.filter((item) => {
+      const created = new Date(item.created_at || item.updated_at || 0);
+      return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
+    }).length;
+    return { day: dayOfMonth, label: `${monthLabel} ${dayOfMonth}`, value };
   });
-  return days.map((day) => items.filter((item) => {
-    const created = new Date(item.created_at || item.updated_at || 0);
-    return created.getFullYear() === day.getFullYear() && created.getMonth() === day.getMonth() && created.getDate() === day.getDate();
-  }).length);
+}
+
+function getDailyGenerationTicks(bars: Array<{ day: number; label: string; value: number }>) {
+  const availableDays = new Set(bars.map((bar) => bar.day));
+  return dailyGenerationTickDays
+    .filter((day) => availableDays.has(day))
+    .map((day) => bars[day - 1]);
 }
 
 function getUsageGradient(lessonCount: number, worksheetCount: number) {

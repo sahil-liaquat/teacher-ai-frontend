@@ -40,7 +40,7 @@ export default function ClassroomToolsPage() {
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-sm font-semibold outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
+            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-base font-semibold outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 sm:text-sm 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
             placeholder="Search tools..."
           />
         </label>

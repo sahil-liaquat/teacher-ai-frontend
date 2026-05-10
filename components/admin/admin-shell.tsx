@@ -19,7 +19,7 @@ import {
   Users,
   X
 } from "lucide-react";
-import { clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type AdminNavItem = {
@@ -38,7 +38,6 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/system", label: "System", description: "Health and version", icon: Activity }
 ];
 
-const CURRENT_USER_QUERY_KEY = ["current-user"];
 const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -72,10 +71,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isError) {
       clearToken();
+      queryClient.clear();
       const next = typeof window === "undefined" ? "/admin" : `${window.location.pathname}${window.location.search}`;
       router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
-  }, [isError, router]);
+  }, [isError, queryClient, router]);
 
   useEffect(() => {
     if (currentUser && currentUser.role !== "admin") {
@@ -86,7 +86,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   async function logout() {
     await logoutSession();
     clearToken();
-    queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+    queryClient.clear();
     router.replace("/login");
   }
 

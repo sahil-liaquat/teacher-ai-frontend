@@ -11,6 +11,7 @@ const ACCESS_TOKEN_KEY = "teacher_ai_access_token";
 const REFRESH_TOKEN_KEY = "teacher_ai_refresh_token";
 const AUTH_STORAGE_EVENT = "teacher-ai-auth-change";
 const TOKEN_REFRESH_SKEW_SECONDS = 45;
+export const CURRENT_USER_QUERY_KEY = ["current-user"] as const;
 
 export type ApiUser = {
   id?: string;
@@ -119,6 +120,7 @@ export function getToken() {
 
 export function setToken(token: string) {
   if (typeof window === "undefined") return;
+  clearAccountStorage();
   window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
   window.localStorage.setItem("teacher_ai_token", token);
   window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
@@ -129,6 +131,7 @@ export function clearToken() {
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   clearLegacyTokens();
+  clearAccountStorage();
   window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
@@ -150,6 +153,28 @@ function clearLegacyTokens() {
   window.localStorage.removeItem("teacher_ai_token");
   window.localStorage.removeItem("access_token");
   window.localStorage.removeItem("refresh_token");
+}
+
+function clearAccountStorage() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem("teacher_ai_profile");
+  window.localStorage.removeItem("teacher_ai_pending_lesson_plan");
+  window.sessionStorage.removeItem("teacher_ai_profile");
+  window.sessionStorage.removeItem("teacher_ai_pending_lesson_plan");
+
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_")) {
+      window.localStorage.removeItem(key);
+    }
+  }
+
+  for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.sessionStorage.key(index);
+    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_")) {
+      window.sessionStorage.removeItem(key);
+    }
+  }
 }
 
 function decodeTokenPayload(token: string): { sub?: string; role?: ApiUser["role"]; exp?: number; type?: string } {
@@ -314,15 +339,21 @@ export async function login(email: string, password: string): Promise<ApiUser & 
     headers: { "Content-Type": "application/x-www-form-urlencoded" }
   });
   setTokens(tokens);
-  const user = await getCurrentUser().catch(() => {
-    const payload = decodeTokenPayload(tokens.access_token);
-    return { email, role: payload.role || "teacher" } as ApiUser;
-  });
+  let user: ApiUser;
+  try {
+    user = await getCurrentUser();
+  } catch (error) {
+    clearToken();
+    throw error;
+  }
+  if (!user.id || !user.email || !user.role) {
+    clearToken();
+    throw new Error("Could not load the signed-in account.");
+  }
   return {
     ...user,
-    name: user.full_name || user.name || email.split("@")[0],
-    email: user.email || email,
-    role: user.role || "teacher"
+    name: user.full_name || user.name || "",
+    role: user.role
   };
 }
 
@@ -379,6 +410,8 @@ export const backendApi = {
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
   updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  updateCurrentUser: (payload: Pick<ApiUser, "full_name">) =>
+    apiFetch<ApiUser>("/users/me", { method: "PATCH", body: JSON.stringify(payload) }),
   deactivateUser: (id: string) => apiFetch<void>(`/users/${id}`, { method: "DELETE" }),
   updateBook: (id: string, payload: Partial<Book>) =>
     apiFetch<Book>(`/books/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),

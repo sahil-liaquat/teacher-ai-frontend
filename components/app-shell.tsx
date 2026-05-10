@@ -20,7 +20,7 @@ import {
   Wand2,
   X
 } from "lucide-react";
-import { clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 
@@ -48,7 +48,6 @@ const adminNav: NavItem[] = [
   { href: "/admin/system", label: "System", icon: Shield }
 ];
 
-const CURRENT_USER_QUERY_KEY = ["current-user"];
 const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
 
 export function AppShell({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
@@ -82,10 +81,11 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   useEffect(() => {
     if (isError) {
       clearToken();
+      queryClient.clear();
       const next = typeof window === "undefined" ? "/dashboard" : `${window.location.pathname}${window.location.search}`;
       router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
-  }, [isError, router]);
+  }, [isError, queryClient, router]);
 
   useEffect(() => {
     if (admin && currentUser && currentUser.role !== "admin") {
@@ -96,7 +96,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   async function logout() {
     await logoutSession();
     clearToken();
-    queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+    queryClient.clear();
     router.replace("/login");
   }
 

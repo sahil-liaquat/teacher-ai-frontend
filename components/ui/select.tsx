@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SelectOption = {
@@ -61,8 +61,13 @@ function assignRef<T>(ref: React.ForwardedRef<T>, value: T | null) {
   }
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
-  ({ className, children, disabled, name, onChange, onBlur, value, defaultValue, ...props }, forwardedRef) => {
+type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+  isLoading?: boolean;
+  loadingLabel?: string;
+};
+
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, children, disabled, isLoading = false, loadingLabel = "Loading...", name, onChange, onBlur, value, defaultValue, ...props }, forwardedRef) => {
     const options = React.useMemo(() => collectOptions(children), [children]);
     const optionValues = React.useMemo(() => options.map((option) => option.value).join("\u0000"), [options]);
     const initialValue = String(value ?? defaultValue ?? options[0]?.value ?? "");
@@ -124,7 +129,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
           tabIndex={-1}
           name={name}
           defaultValue={selectedValue}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           onChange={onChange}
           onBlur={onBlur}
           className="pointer-events-none absolute h-px w-px opacity-0"
@@ -135,7 +140,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
 
         <SelectPrimitive.Root
           value={toRadixValue(selectedOption?.value ?? selectedValue)}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           onValueChange={handleValueChange}
           onOpenChange={(open) => {
             if (!open && hiddenSelectRef.current && onBlur) {
@@ -151,18 +156,22 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
             onFocus={syncDisplayFromHiddenSelect}
             onPointerDown={syncDisplayFromHiddenSelect}
             className={cn(
-              "tat-select-trigger flex h-11 w-full min-w-0 items-center justify-between gap-3 overflow-hidden rounded-[14px] border border-[#e5e1f1] bg-white px-4 text-left text-sm font-semibold text-[#101039] shadow-[0_8px_20px_rgba(39,30,91,0.04)] outline-none transition duration-200 hover:border-[#d8ccf4] focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 data-[disabled]:cursor-not-allowed data-[disabled]:bg-[#f8f6fb] data-[disabled]:text-[#a19bb2] 2xl:h-12 [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
+              "tat-select-trigger flex h-11 w-full min-w-0 items-center justify-between gap-3 overflow-hidden rounded-[14px] border border-[#e5e1f1] bg-white px-4 text-left text-base font-semibold text-[#101039] shadow-[0_8px_20px_rgba(39,30,91,0.04)] outline-none transition duration-200 hover:border-[#d8ccf4] focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 data-[disabled]:cursor-not-allowed data-[disabled]:bg-[#f8f6fb] data-[disabled]:text-[#a19bb2] sm:text-sm 2xl:h-12 [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
               className
             )}
           >
             <SelectPrimitive.Value>
-              <span className={selectedOption ? "block min-w-0 max-w-full truncate text-[#071343]" : "block min-w-0 max-w-full truncate text-[#6d7791]"}>
-                {selectedOption?.label || "Select an option"}
+              <span className={isLoading ? "block min-w-0 max-w-full truncate text-[#6d7791]" : selectedOption ? "block min-w-0 max-w-full truncate text-[#071343]" : "block min-w-0 max-w-full truncate text-[#6d7791]"}>
+                {isLoading ? loadingLabel : selectedOption?.label || "Select an option"}
               </span>
             </SelectPrimitive.Value>
-            <SelectPrimitive.Icon asChild>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#8a4df7]" />
-            </SelectPrimitive.Icon>
+            {isLoading ? (
+              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-[#8a4df7]" />
+            ) : (
+              <SelectPrimitive.Icon asChild>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#8a4df7]" />
+              </SelectPrimitive.Icon>
+            )}
           </SelectPrimitive.Trigger>
           <SelectPrimitive.Portal>
             <SelectPrimitive.Content
@@ -177,7 +186,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
                     key={option.value}
                     value={toRadixValue(option.value)}
                     disabled={option.disabled}
-                    className="group relative flex min-h-11 cursor-pointer select-none items-start justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-[#071343] outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-[#f5f1ff] data-[state=checked]:bg-[#f1edff] data-[state=checked]:text-[#5b2de2] data-[disabled]:pointer-events-none data-[disabled]:opacity-45"
+                    className="group relative flex min-h-11 cursor-pointer select-none items-start justify-between gap-3 rounded-xl px-3 py-2.5 text-base font-bold text-[#071343] outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-[#f5f1ff] data-[state=checked]:bg-[#f1edff] data-[state=checked]:text-[#5b2de2] data-[disabled]:pointer-events-none data-[disabled]:opacity-45 sm:text-sm"
                   >
                     <SelectPrimitive.ItemText>
                       <span className="block min-w-0 whitespace-normal break-words leading-5">{option.label}</span>

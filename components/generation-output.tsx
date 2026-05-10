@@ -557,7 +557,7 @@ function InlineTextInput({
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className={`w-full min-w-0 rounded-[8px] border border-[#d9cff0] bg-white px-2 py-1 outline-none ring-[#8a4df7]/20 transition focus:ring-4 ${className || ""}`}
+      className={`w-full min-w-0 rounded-[8px] border border-[#d9cff0] bg-white px-2 py-1 text-base outline-none ring-[#8a4df7]/20 transition focus:ring-4 sm:text-sm ${className || ""}`}
     />
   );
 }
@@ -577,7 +577,7 @@ function InlineTextArea({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       rows={Math.max(2, Math.min(7, value.split(/\n/).length + Math.ceil(value.length / 90)))}
-      className="w-full min-w-0 resize-y rounded-[10px] border border-[#d9cff0] bg-white px-3 py-2 text-sm leading-7 text-[#4f4a66] outline-none ring-[#8a4df7]/20 transition focus:ring-4"
+      className="w-full min-w-0 resize-y rounded-[10px] border border-[#d9cff0] bg-white px-3 py-2 text-base leading-7 text-[#4f4a66] outline-none ring-[#8a4df7]/20 transition focus:ring-4 sm:text-sm"
     />
   );
 }

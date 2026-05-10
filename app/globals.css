@@ -62,6 +62,16 @@ select {
   background: white;
 }
 
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  .tat-select-trigger {
+    font-size: 16px !important;
+  }
+}
+
 input::placeholder,
 textarea::placeholder {
   color: #8a96b1;
