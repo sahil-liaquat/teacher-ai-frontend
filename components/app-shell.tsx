@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Home,
   LogOut,
+  Menu,
   Settings,
   Shield,
   Sparkles,
@@ -106,7 +107,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 text-slate-900">
       <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/50 bg-white/80 px-4 shadow-md backdrop-blur-xl lg:hidden">
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm hover:bg-white transition-all">
-          <Sparkles className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
         </button>
         <Brand compact />
         <Link href="/dashboard/settings" aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-md backdrop-blur-sm hover:bg-white transition-all">
@@ -139,13 +140,11 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
 
-      <main className="min-h-screen pt-16 pb-20 lg:pt-0 lg:pb-0">
+      <main className="min-h-screen pt-16 lg:pt-0">
         <div className="mx-auto w-full max-w-full px-4 py-5 sm:px-6 lg:px-8 lg:pl-28 xl:py-8">
           {children}
         </div>
       </main>
-
-      <MobileBottomNav nav={nav} activePath={pathname} />
     </div>
   );
 }

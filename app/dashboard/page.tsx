@@ -85,9 +85,9 @@ export default function TeacherDashboard() {
   const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal;
-  const generationBars = getDailyGenerationBars([...(plans.data?.items || []), ...worksheetItems]);
-  const maxGenerationBar = Math.max(1, ...generationBars.map((bar) => bar.value));
-  const generationTicks = getDailyGenerationTicks(generationBars);
+  const allItems = [...(plans.data?.items || []), ...worksheetItems];
+  const last7DaysBars = getLast7DaysBars(allItems);
+  const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal);
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
@@ -221,27 +221,37 @@ export default function TeacherDashboard() {
             </div>
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
               <p className="mb-4 text-sm font-bold text-slate-900">Daily Generations</p>
-              <div
-                className="grid h-[130px] items-end gap-1 overflow-hidden border-b border-l border-slate-200 px-2 pt-2"
-                style={{ gridTemplateColumns: `repeat(${generationBars.length}, minmax(0, 1fr))` }}
-              >
-                {generationBars.map((bar) => (
-                  <div key={bar.label} className="flex h-full min-w-0 items-end justify-center">
-                    <div
-                      className="w-2 rounded-t-full bg-gradient-to-t from-violet-500 to-blue-500 shadow-lg"
-                      style={{ height: bar.value ? `${Math.max(8, Math.round((bar.value / maxGenerationBar) * 100))}%` : 0 }}
-                      aria-label={`${bar.label}: ${bar.value} generations`}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div
-                className="mt-2 grid px-2 text-center text-xs font-medium text-slate-500"
-                style={{ gridTemplateColumns: `repeat(${generationBars.length}, minmax(0, 1fr))` }}
-              >
-                {generationTicks.map((tick) => (
-                  <span key={tick.label} className="min-w-max whitespace-nowrap" style={{ gridColumn: `${tick.day} / span 1` }}>{tick.label}</span>
-                ))}
+              <div className="flex h-[130px] items-end justify-between gap-2 px-2">
+                {last7DaysBars.map((bar, index) => {
+                  const heightPercent = bar.value ? Math.max(12, Math.round((bar.value / maxLast7Days) * 100)) : 4;
+                  const isToday = index === last7DaysBars.length - 1;
+                  return (
+                    <div key={bar.label} className="group/flex relative flex flex-1 flex-col items-center justify-end">
+                      <div
+                        className="w-full max-w-[32px] animate-bar-rise rounded-t-lg transition-transform duration-200 hover:scale-110 hover:shadow-md"
+                        style={{
+                          height: `${heightPercent}%`,
+                          background: isToday
+                            ? "linear-gradient(180deg, #8b5cf6 0%, #6366f1 100%)"
+                            : "linear-gradient(180deg, #a78bfa 0%, #818cf8 100%)",
+                          boxShadow: isToday ? "0 4px 12px rgba(139, 92, 246, 0.4)" : "0 2px 6px rgba(139, 92, 246, 0.2)",
+                          animationDelay: `${index * 80}ms`,
+                          transformOrigin: "bottom"
+                        }}
+                      >
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-bold text-white opacity-0 shadow-lg transition-all duration-200 group-hover/flex:-translate-y-1 group-hover/flex:opacity-100">
+                          {bar.value}
+                        </div>
+                      </div>
+                      <span className={cn(
+                        "mt-1.5 text-[10px] font-semibold",
+                        isToday ? "text-violet-600" : "text-slate-400"
+                      )}>
+                        {bar.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -593,4 +603,36 @@ function getGreeting() {
   if (hour < 12) return { text: "Good morning", emoji: "☀️" };
   if (hour >= 17) return { text: "Good evening", emoji: "🌙" };
   return { text: "Good afternoon", emoji: "☀️" };
+}
+
+function getLast6DaysBars(items: Array<{ created_at?: string; updated_at?: string }>) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+
+  return Array.from({ length: 6 }, (_, index) => {
+    const dayOfMonth = today - (5 - index);
+    const value = items.filter((item) => {
+      const created = new Date(item.created_at || item.updated_at || 0);
+      return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
+    }).length;
+    return { day: dayOfMonth, label: `M${index + 1}`, value };
+  });
+}
+
+function getLast7DaysBars(items: Array<{ created_at?: string; updated_at?: string }>) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const dayOfMonth = today - (6 - index);
+    const value = items.filter((item) => {
+      const created = new Date(item.created_at || item.updated_at || 0);
+      return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
+    }).length;
+    return { day: dayOfMonth, label: `M${index + 1}`, value };
+  });
 }
