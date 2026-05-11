@@ -23,47 +23,47 @@ const books: [string, number, string][] = [
 
 export default function ReportsPage() {
   return (
-    <div className="space-y-5 2xl:space-y-7">
-      <header className="rounded-[20px] border border-[#dfe6f5] bg-white p-5 shadow-[0_18px_45px_-35px_rgba(29,43,77,0.5)] 2xl:rounded-[28px] 2xl:p-7">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div className="space-y-5">
+      <header className="rounded-2xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d8def0] bg-[#f6f2ff] px-4 py-2 text-sm font-black text-[#6d38f2]">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 sm:mb-4 sm:px-4 sm:py-2 sm:text-sm">
               <BarChart3 className="h-4 w-4" />
               Reports & Analytics
             </div>
-            <h1 className="text-[30px] font-black tracking-tight text-[#071343] 2xl:text-4xl">Teaching workflow insights</h1>
-            <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-[#52617d]">
+            <h1 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">Teaching workflow insights</h1>
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
               Track generation usage, popular books, classroom trends, and resource activity.
             </p>
           </div>
-          <Button><Download className="h-4 w-4" /> Export Report</Button>
+          <Button className="w-full sm:w-auto"><Download className="h-4 w-4" /> Export Report</Button>
         </div>
       </header>
 
       <Card>
-        <CardContent className="grid gap-3 p-5 md:grid-cols-[1fr_160px_160px_auto]">
-          <div className="relative">
-            <CalendarDays className="absolute left-3 top-3.5 h-4 w-4 text-[#6d38f2]" />
-            <Input type="date" className="pl-9" />
+        <CardContent className="grid gap-3 p-4 sm:p-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative col-span-1 sm:col-span-2 lg:col-span-4">
+            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-500" />
+            <Input type="date" className="pl-9 w-full" />
           </div>
-          <Select><option>All classes</option><option>8th Grade</option><option>9th Grade</option></Select>
-          <Select><option>All subjects</option><option>Science</option><option>Mathematics</option></Select>
-          <Button variant="outline"><Filter className="h-4 w-4" /> Apply Filters</Button>
+          <Select className="w-full"><option>All classes</option><option>8th Grade</option><option>9th Grade</option></Select>
+          <Select className="w-full"><option>All subjects</option><option>Science</option><option>Mathematics</option></Select>
+          <Button variant="outline" className="w-full sm:w-auto col-span-1 sm:col-span-2 lg:col-span-2"><Filter className="h-4 w-4" /> Apply Filters</Button>
         </CardContent>
       </Card>
 
-      <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+      <section className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi, index) => {
           const Icon = kpi.icon;
           return (
             <Card key={kpi.label} className="reveal-card" style={{ animationDelay: `${index * 60}ms` }}>
-              <CardContent className="flex items-center gap-5 p-5">
-                <div className={`grid h-14 w-14 place-items-center rounded-2xl ${kpi.tone}`}>
-                  <Icon className="h-7 w-7" />
+              <CardContent className="flex items-center gap-3 p-4 sm:p-5">
+                <div className={`grid h-10 w-10 sm:h-14 sm:w-14 place-items-center rounded-xl sm:rounded-2xl ${kpi.tone}`}>
+                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
-                <div>
-                  <p className="text-3xl font-black text-[#071343]">{kpi.value}</p>
-                  <p className="mt-1 text-sm font-bold text-[#52617d]">{kpi.label}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xl sm:text-3xl font-extrabold text-slate-900 truncate">{kpi.value}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 truncate">{kpi.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -71,20 +71,20 @@ export default function ReportsPage() {
         })}
       </section>
 
-      <section className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#071343]"><TrendingUp className="h-5 w-5 text-[#6d38f2]" /> Usage Trend</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-slate-900"><TrendingUp className="h-5 w-5 text-violet-600" /> Usage Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex h-72 items-end gap-4 rounded-2xl border border-[#e3e8f5] bg-[#fbfcff] px-6 pb-6 pt-10">
+            <div className="flex h-48 sm:h-72 items-end gap-2 sm:gap-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 sm:px-6 pb-4 sm:pb-6 pt-6 sm:pt-10 overflow-x-auto">
               {usageBars.map((height, index) => (
-                <div key={index} className="flex flex-1 flex-col items-center gap-3">
+                <div key={index} className="flex flex-1 flex-col items-center gap-2 sm:gap-3 min-w-[20px]">
                   <div
-                    className="w-full max-w-7 rounded-t-full bg-gradient-to-t from-[#6d38f2] to-[#a78bfa] shadow-lg shadow-purple-500/20 transition-all duration-500 hover:scale-y-105"
-                    style={{ height: `${height * 2}px` }}
+                    className="w-full min-w-[8px] sm:min-w-[12px] max-w-[24px] sm:max-w-[32px] rounded-t-full bg-gradient-to-t from-violet-500 to-blue-500 shadow-lg transition-all duration-500 hover:scale-y-105"
+                    style={{ height: `${Math.max(8, height * (index < 5 ? 1.5 : 2))}px` }}
                   />
-                  <span className="text-[10px] font-bold text-[#52617d]">{index + 1}</span>
+                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-500">{index + 1}</span>
                 </div>
               ))}
             </div>
@@ -93,17 +93,17 @@ export default function ReportsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#071343]"><FileText className="h-5 w-5 text-emerald-600" /> Popular Books</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-slate-900"><FileText className="h-5 w-5 text-emerald-600" /> Popular Books</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-3 sm:gap-4">
             {books.map(([title, count, color]) => (
-              <div key={String(title)} className="rounded-2xl border border-[#e3e8f5] bg-white p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="font-black text-[#071343]">{title}</p>
-                  <span className="text-sm font-black text-[#52617d]">{count}</span>
+              <div key={String(title)} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                <div className="mb-2 sm:mb-3 flex items-center justify-between gap-2">
+                  <p className="text-sm sm:text-base font-bold text-slate-900 truncate">{title}</p>
+                  <span className="text-sm font-bold text-slate-600 shrink-0">{count}</span>
                 </div>
-                <div className="h-3 rounded-full bg-[#eef2fb]">
-                  <div className={`h-3 rounded-full ${color}`} style={{ width: `${Number(count) * 2}%` }} />
+                <div className="h-2 sm:h-3 rounded-full bg-slate-100">
+                  <div className={`h-2 sm:h-3 rounded-full ${color}`} style={{ width: `${Math.min(100, Number(count) * 2.5)}%` }} />
                 </div>
               </div>
             ))}

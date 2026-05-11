@@ -12,12 +12,10 @@ import {
   GraduationCap,
   Home,
   LogOut,
-  Menu,
   Settings,
   Shield,
-  SlidersHorizontal,
+  Sparkles,
   Users,
-  Wand2,
   X
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
@@ -32,7 +30,7 @@ type NavItem = {
 
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Wand2 },
+  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
   { href: "/dashboard/resources", label: "Saved", icon: BookOpen },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
@@ -105,71 +103,200 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfaff] text-[#101039] [--mobile-header-height:calc(68px+env(safe-area-inset-top))]">
-      <header className="fixed inset-x-0 top-0 z-40 flex min-h-[var(--mobile-header-height)] items-center justify-between border-b border-[#eeeaf7] bg-white/95 px-4 pb-3 pt-[calc(12px+env(safe-area-inset-top))] shadow-[0_10px_30px_rgba(39,30,91,0.06)] backdrop-blur-xl xl:hidden">
-        <button onClick={() => setMobileOpen(true)} className="premium-hover-sm grid h-11 w-11 place-items-center rounded-[14px] border border-[#ebe7f4] bg-white text-[#5d5874] shadow-sm">
-          <Menu className="h-5 w-5" />
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 text-slate-900">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/50 bg-white/80 px-4 shadow-md backdrop-blur-xl lg:hidden">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm hover:bg-white transition-all">
+          <Sparkles className="h-5 w-5" />
         </button>
         <Brand compact />
-        <Link href="/dashboard/settings" aria-label="Open profile settings" className="premium-hover-sm grid h-11 w-11 place-items-center overflow-hidden rounded-[14px] border border-[#ebe7f4] bg-white shadow-sm">
+        <Link href="/dashboard/settings" aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-md backdrop-blur-sm hover:bg-white transition-all">
           <BoyAvatar />
         </Link>
       </header>
 
-      {mobileOpen ? <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-[#101039]/35 backdrop-blur-sm xl:hidden" /> : null}
+      {mobileOpen && (
+        <>
+          <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm lg:hidden" />
+          <aside className="fixed inset-y-0 left-0 z-50 w-[280px] rounded-r-3xl border-r border-white/50 bg-white/95 p-5 shadow-2xl lg:hidden">
+            <div className="flex items-center justify-between">
+              <Brand />
+              <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/70 bg-white/90 text-slate-600 shadow-sm hover:bg-white transition-all">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <nav className="mt-6 flex-1 space-y-1.5">
+              {nav.map((item) => (
+                <MobileNavItem key={item.href} item={item} active={isActive(item.href, pathname)} onClick={() => setMobileOpen(false)} />
+              ))}
+            </nav>
+            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-slate-500 transition-all hover:bg-red-50 hover:text-red-600">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-slate-50"><LogOut className="h-5 w-5" /></span>
+              Logout
+            </button>
+          </aside>
+        </>
+      )}
 
-      <aside
+      <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
+
+      <main className="min-h-screen pt-16 pb-20 lg:pt-0 lg:pb-0">
+        <div className="mx-auto w-full max-w-full px-4 py-5 sm:px-6 lg:px-8 lg:pl-28 xl:py-8">
+          {children}
+        </div>
+      </main>
+
+      <MobileBottomNav nav={nav} activePath={pathname} />
+    </div>
+  );
+}
+
+function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
+  const logout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onLogout();
+  };
+
+  return (
+    <aside className="fixed bottom-0 left-6 top-0 z-40 hidden h-[calc(100vh-48px)] translate-y-[24px] lg:block">
+      <nav className="flex h-full flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-[32px] border border-white/70 bg-white/85 px-3 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-md">
+          {nav.map((item) => (
+            <FloatingNavItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href, activePath)}
+              onClick={onNavigate}
+            />
+          ))}
+
+          <div className="my-2 h-px w-8 bg-slate-100" />
+
+          <a
+            href="#"
+            onClick={logout}
+            title="Logout"
+            className="group flex h-11 w-11 items-center justify-center rounded-2xl text-slate-400 transition-all duration-300 hover:scale-110 hover:bg-red-50 hover:text-red-500"
+          >
+            <LogOut className="h-5 w-5" />
+          </a>
+        </div>
+      </nav>
+    </aside>
+  );
+}
+
+function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      title={item.label}
+      className={cn(
+        "group relative flex items-center justify-center transition-all duration-300 hover:scale-110",
+        active ? "scale-110" : ""
+      )}
+    >
+      <span
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#eeeaf7] bg-white shadow-[26px_0_80px_rgba(39,30,91,0.09)] transition-[transform,width,padding] duration-150 ease-out will-change-[transform,width]",
-          "w-[min(86vw,320px)] px-4 py-5 xl:translate-x-0 xl:py-5 2xl:py-7",
-          "xl:w-[76px] xl:px-2.5 2xl:w-[92px] 2xl:px-3",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300",
+          active
+            ? "bg-white shadow-[0_8px_24px_rgba(59,130,246,0.15)]"
+            : "group-hover:bg-blue-50"
         )}
       >
-        <div className="flex items-center justify-between xl:justify-center">
-          <div className="xl:hidden">
-            <Brand />
-          </div>
-          <button onClick={() => setMobileOpen(false)} className="premium-hover-sm grid h-10 w-10 place-items-center rounded-[12px] border border-[#ebe7f4] text-[#5d5874] xl:hidden">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <Icon
+          className={cn(
+            "h-5 w-5 transition-colors duration-300",
+            active ? "text-blue-600" : "text-slate-500 group-hover:text-blue-500"
+          )}
+        />
+      </span>
+    </Link>
+  );
+}
 
-        <nav className="mt-6 flex-1 space-y-1.5 2xl:mt-9 2xl:space-y-2">
-          {nav.map((item, index) => (
-            <div key={`${item.label}-${item.href}`}>
-              {index === 5 && !admin ? <div className="my-4 h-px bg-[#eeeaf7] 2xl:my-6" /> : null}
-              <SidebarItem item={item} active={isActive(item.href, pathname)} />
-            </div>
-          ))}
-        </nav>
+function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  const Icon = item.icon;
 
-        <button
-          onClick={logout}
-          className="sidebar-menu-item flex h-12 items-center gap-3 rounded-[14px] px-3 text-sm font-bold text-[#5d5874] transition-colors duration-200 hover:bg-[#f8f6ff] hover:text-[#6f3ee9] xl:justify-center xl:px-0"
-          title="Logout"
-          aria-label="Logout"
-        >
-          <span className="grid h-9 w-9 place-items-center rounded-[12px] transition-colors duration-200">
-            <LogOut className="h-5 w-5" />
-          </span>
-          <span className="xl:hidden">Logout</span>
-        </button>
-      </aside>
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={cn(
+        "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200",
+        active
+          ? "bg-gradient-to-r from-blue-50 to-violet-50 text-blue-600"
+          : "text-slate-600 hover:bg-slate-50"
+      )}
+    >
+      <span className={cn(
+        "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200",
+        active ? "bg-blue-100 text-blue-600" : "bg-slate-50 text-slate-500"
+      )}>
+        <Icon className="h-5 w-5" />
+      </span>
+      {item.label}
+    </Link>
+  );
+}
 
-      <main className="min-h-screen pt-[var(--mobile-header-height)] transition-[margin] duration-150 ease-out xl:ml-[76px] xl:pt-0 2xl:ml-[92px]">
-        <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 md:px-5 xl:px-5 xl:py-5 2xl:max-w-[1680px] 2xl:px-8 2xl:py-8">{children}</div>
-      </main>
-    </div>
+function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: string }) {
+  const visibleNav = nav.slice(0, 5);
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-40 w-full max-w-full border-t border-white/50 bg-white/90 px-3 shadow-[0_-10px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden" style={{ boxSizing: "border-box" }}>
+      <div className="flex h-16 items-center" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
+        {visibleNav.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href, activePath);
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={item.label}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition-all duration-200 min-w-0",
+                active ? "scale-110" : ""
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
+                  active
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg"
+                    : "bg-slate-50"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5",
+                    active ? "text-white" : "text-slate-500"
+                  )}
+                />
+              </span>
+              <span className={cn(
+                "text-[10px] font-semibold transition-colors truncate max-w-full",
+                active ? "text-blue-600" : "text-slate-500"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
 function AuthCheckingScreen() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#fbfaff] px-4">
-      <div className="rounded-[18px] border border-[#ebe7f4] bg-white px-6 py-5 text-center shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#ded7ed] border-t-[#6f3ee9]" />
-        <p className="mt-4 text-sm font-bold text-[#5d5874]">Checking your session...</p>
+    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-sky-50 via-white to-violet-50 px-4">
+      <div className="rounded-3xl border border-white/70 bg-white/90 px-8 py-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
+        <p className="mt-5 text-sm font-semibold text-slate-600">Checking your session...</p>
       </div>
     </main>
   );
@@ -178,31 +305,9 @@ function AuthCheckingScreen() {
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/dashboard" className="block min-w-0">
-      <p className={cn("font-black leading-6 tracking-tight text-[#171236]", compact ? "text-[17px]" : "text-[20px] 2xl:text-[22px]")}>Teacher AI Tools</p>
-      {!compact ? <p className="mt-1 text-xs font-semibold text-[#77728e] 2xl:text-sm">AI-Powered Teaching Assistant</p> : null}
-    </Link>
-  );
-}
-
-function SidebarItem({ item, active }: { item: NavItem; active: boolean }) {
-  const Icon = item.icon;
-  return (
-    <Link
-      href={item.href}
-      title={item.label}
-      className={cn(
-        "sidebar-menu-item flex h-11 items-center gap-3 rounded-[13px] px-3.5 text-sm font-bold text-[#4f4b68] transition-colors duration-200 hover:bg-[#f8f6ff] hover:text-[#6f3ee9] xl:justify-center xl:px-0 2xl:h-[56px] 2xl:gap-4 2xl:rounded-[14px] 2xl:px-0 2xl:text-[16px]",
-        active && "text-[#6f3ee9]"
-      )}
-    >
-      <span className={cn(
-        "grid h-9 w-9 place-items-center rounded-[12px] transition-colors duration-200 2xl:h-11 2xl:w-11",
-        active ? "text-[#6f3ee9]" : "text-[#5d5874]"
-      )}>
-        <Icon className="h-5 w-5 shrink-0 2xl:h-6 2xl:w-6" />
-      </span>
-      <span className="xl:hidden">{item.label}</span>
-      {item.label === "Settings" ? <SlidersHorizontal className="ml-auto h-4 w-4 opacity-0 xl:hidden" /> : null}
+      <p className={cn("font-extrabold leading-tight tracking-tight text-slate-900", compact ? "text-base" : "text-lg")}>
+        Teacher AI Tools
+      </p>
     </Link>
   );
 }

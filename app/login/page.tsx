@@ -59,40 +59,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfaff]">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
       <AuthHeader actionHref="/signup" actionLabel="Signup" />
       <main className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 lg:grid-cols-[1fr_400px] 2xl:max-w-6xl 2xl:gap-10 2xl:py-20 2xl:grid-cols-[1fr_440px]">
         <section className="hidden lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#f0e5ff] px-4 py-2 text-sm font-black text-[#7a43e8] shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-bold text-violet-700 shadow-md">
             <Sparkles className="h-4 w-4" />
             Teacher AI Toolkit
           </div>
-          <h1 className="mt-6 max-w-2xl text-[38px] font-black leading-tight tracking-tight text-[#101039] 2xl:mt-8 2xl:text-5xl">
+          <h1 className="mt-6 max-w-2xl text-[38px] font-extrabold leading-tight tracking-tight text-slate-900 2xl:mt-8 2xl:text-5xl">
             Welcome back.
           </h1>
-          <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[#67627d] 2xl:mt-6 2xl:text-lg 2xl:leading-8">
+          <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-slate-600 2xl:mt-6 2xl:text-lg 2xl:leading-8">
             Access the redesigned workspace for lesson plans, worksheets, saved resources, books, and reports.
           </p>
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-4 2xl:mt-10 2xl:gap-5">
-            <div className="rounded-[20px] border border-[#dac6f6] bg-[#fbf6ff] p-5 2xl:p-6">
-              <BookOpen className="h-8 w-8 text-[#7a43e8] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-lg font-black text-[#101039] 2xl:mt-5 2xl:text-xl">Lesson plans</p>
-              <p className="mt-1 text-sm font-semibold text-[#67627d]">Build textbook-grounded classroom plans</p>
+            <div className="rounded-[20px] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
+              <BookOpen className="h-8 w-8 text-violet-600 2xl:h-9 2xl:w-9" />
+              <p className="mt-4 text-lg font-bold text-slate-900 2xl:mt-5 2xl:text-xl">Lesson plans</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Build textbook-grounded classroom plans</p>
             </div>
-            <div className="rounded-[20px] border border-[#bdebd7] bg-[#ecfff7] p-5 2xl:p-6">
-              <ClipboardCheck className="h-8 w-8 text-[#24a760] 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-lg font-black text-[#101039] 2xl:mt-5 2xl:text-xl">Worksheets</p>
-              <p className="mt-1 text-sm font-semibold text-[#67627d]">Create printable practice materials</p>
+            <div className="rounded-[20px] border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
+              <ClipboardCheck className="h-8 w-8 text-emerald-600 2xl:h-9 2xl:w-9" />
+              <p className="mt-4 text-lg font-bold text-slate-900 2xl:mt-5 2xl:text-xl">Worksheets</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Create printable practice materials</p>
             </div>
           </div>
         </section>
 
-        <Card className="mx-auto w-full max-w-md">
+        <Card className="mx-auto w-full max-w-md border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.1)] backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-3xl font-black text-[#101039]">Login</CardTitle>
-            <p className="mt-2 text-sm text-[#67627d]">Access your Teacher AI Tools dashboard.</p>
+            <CardTitle className="text-3xl font-extrabold text-slate-900">Login</CardTitle>
+            <p className="mt-2 text-sm text-slate-600">Access your Teacher AI Tools dashboard.</p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5">
             <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
               <Field label="Email" error={form.formState.errors.email?.message}>
                 <Input {...form.register("email")} placeholder="name@example.com" />
@@ -104,8 +104,8 @@ export default function LoginPage() {
                 {form.formState.isSubmitting ? "Signing in..." : "Login"}
               </Button>
             </form>
-            <p className="text-center text-sm text-[#67627d]">
-              New here? <Link className="font-semibold text-[#7a43e8] transition-colors hover:text-[#4e35dd]" href="/signup">Create an account</Link>
+            <p className="text-center text-sm text-slate-600">
+              New here? <Link className="font-semibold text-violet-600 transition-colors hover:text-violet-700" href="/signup">Create an account</Link>
             </p>
           </CardContent>
         </Card>
@@ -116,15 +116,15 @@ export default function LoginPage() {
 
 function AuthHeader({ actionHref, actionLabel }: { actionHref: string; actionLabel: string }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-[#eeeaf7] bg-white/90 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/90 shadow-md backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#9b62ff] to-[#4e35dd] shadow-lg 2xl:h-12 2xl:w-12">
-            <Brain className="h-6 w-6 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg 2xl:h-12 2xl:w-12">
+            <Brain className="h-6 w-6 text-white 2xl:h-7 2xl:w-7" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-[#101039] 2xl:text-2xl">Teacher AI Tools</h1>
-            <p className="text-xs font-semibold text-[#77728e]">AI-Powered Teaching Assistant</p>
+            <h1 className="text-xl font-extrabold text-slate-900 2xl:text-2xl">Teacher AI Tools</h1>
+            <p className="text-xs font-medium text-slate-500 2xl:text-sm">AI-Powered Teaching Assistant</p>
           </div>
         </Link>
         <Link href={actionHref}>

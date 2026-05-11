@@ -16,15 +16,15 @@ export function AdminPageHeader({
   meta?: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5 lg:px-6">
+    <section className="rounded-xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          {eyebrow ? <p className="text-xs font-bold uppercase text-slate-500">{eyebrow}</p> : null}
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{title}</h1>
-          {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
-          {meta ? <div className="mt-3 flex flex-wrap gap-2">{meta}</div> : null}
+          {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">{eyebrow}</p>}
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{title}</h1>
+          {description && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">{description}</p>}
+          {meta && <div className="mt-4 flex flex-wrap gap-2">{meta}</div>}
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions && <div className="flex shrink-0 flex-wrap items-center gap-3">{actions}</div>}
       </div>
     </section>
   );
@@ -48,17 +48,17 @@ export function AdminPanel({
   contentClassName?: string;
 }) {
   return (
-    <section id={id} className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}>
-      {(title || description || actions) ? (
-        <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+    <section id={id} className={cn("rounded-xl border border-gray-200 bg-white shadow-sm", className)}>
+      {(title || description || actions) && (
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            {title ? <h2 className="text-base font-black text-slate-950">{title}</h2> : null}
-            {description ? <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p> : null}
+            {title && <h2 className="text-base font-semibold text-gray-900">{title}</h2>}
+            {description && <p className="mt-0.5 text-sm text-gray-500">{description}</p>}
           </div>
-          {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+          {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
         </div>
-      ) : null}
-      <div className={cn("p-4 sm:p-5", contentClassName)}>{children}</div>
+      )}
+      <div className={cn("p-6", contentClassName)}>{children}</div>
     </section>
   );
 }
@@ -76,25 +76,25 @@ export function MetricCard({
   icon: ReactNode;
   tone?: "blue" | "green" | "amber" | "rose" | "slate" | "violet";
 }) {
-  const toneClass = {
-    blue: "bg-blue-50 text-blue-700 ring-blue-100",
-    green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-    amber: "bg-amber-50 text-amber-700 ring-amber-100",
-    rose: "bg-rose-50 text-rose-700 ring-rose-100",
-    slate: "bg-slate-100 text-slate-700 ring-slate-200",
-    violet: "bg-violet-50 text-violet-700 ring-violet-100"
-  }[tone];
+  const toneClasses = {
+    blue: "bg-blue-50 text-blue-600 ring-blue-100",
+    green: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    amber: "bg-amber-50 text-amber-600 ring-amber-100",
+    rose: "bg-rose-50 text-rose-600 ring-rose-100",
+    slate: "bg-gray-100 text-gray-600 ring-gray-200",
+    violet: "bg-violet-50 text-violet-600 ring-violet-100"
+  };
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value}</p>
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
+          {detail && <p className="mt-1 text-sm text-gray-500">{detail}</p>}
         </div>
-        <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg ring-1", toneClass)}>{icon}</span>
+        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1", toneClasses[tone])}>{icon}</span>
       </div>
-      {detail ? <p className="mt-3 truncate text-sm text-slate-500">{detail}</p> : null}
     </div>
   );
 }
@@ -111,11 +111,11 @@ export function StatusPill({
     warning: "border-amber-200 bg-amber-50 text-amber-700",
     danger: "border-rose-200 bg-rose-50 text-rose-700",
     info: "border-blue-200 bg-blue-50 text-blue-700",
-    neutral: "border-slate-200 bg-slate-100 text-slate-700"
+    neutral: "border-gray-200 bg-gray-50 text-gray-600"
   }[status];
 
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold", className)}>
+    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold", className)}>
       {children}
     </span>
   );
@@ -131,19 +131,21 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <AlertCircle className="mx-auto h-8 w-8 text-slate-400" />
-      <p className="mt-3 text-sm font-black text-slate-900">{title}</p>
-      {description ? <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-600">{description}</p> : null}
-      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
+    <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+      <AlertCircle className="h-10 w-10 text-gray-400" />
+      <div>
+        <p className="text-sm font-semibold text-gray-900">{title}</p>
+        {description && <p className="mt-1 text-sm text-gray-500 max-w-md">{description}</p>}
+      </div>
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }
 
 export function LoadingState({ label = "Loading data" }: { label?: string }) {
   return (
-    <div className="grid min-h-40 place-items-center rounded-lg border border-slate-200 bg-slate-50">
-      <div className="flex items-center gap-2 text-sm font-bold text-slate-600">
+    <div className="flex min-h-32 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+      <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
         <Loader2 className="h-4 w-4 animate-spin" />
         {label}
       </div>
@@ -154,8 +156,11 @@ export function LoadingState({ label = "Loading data" }: { label?: string }) {
 export function HealthIndicator({ status }: { status?: string }) {
   const healthy = status === "ok";
   return (
-    <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold", healthy ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700")}>
-      {healthy ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
+    <span className={cn(
+      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold",
+      healthy ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"
+    )}>
+      {healthy ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
       {status || "checking"}
     </span>
   );

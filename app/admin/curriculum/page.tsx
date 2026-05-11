@@ -122,33 +122,33 @@ export default function AdminCurriculumPage() {
       <AdminPageHeader
         eyebrow="Academic structure"
         title="Curriculum"
-        description="Maintain boards and classes that organize textbook uploads and teacher generation workflows."
+        description="Manage boards and classes that organize content and teacher workflows."
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard label="Boards" value={boards.data?.total ?? 0} detail={`${activeBoards} active`} tone="blue" icon={<Layers3 className="h-5 w-5" />} />
-        <MetricCard label="Selected classes" value={classes.data?.total ?? 0} detail={`${activeClasses} active`} tone="green" icon={<GraduationCap className="h-5 w-5" />} />
-        <MetricCard label="Selected board" value={selectedBoard?.code?.toUpperCase() || "-"} detail={selectedBoard?.name || "No board selected"} tone="amber" icon={<Search className="h-5 w-5" />} />
+        <MetricCard label="Classes" value={classes.data?.total ?? 0} detail={`${activeClasses} active`} tone="green" icon={<GraduationCap className="h-5 w-5" />} />
+        <MetricCard label="Selected Board" value={selectedBoard?.code?.toUpperCase() || "-"} detail={selectedBoard?.name || "No board selected"} tone="amber" icon={<Search className="h-5 w-5" />} />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.35fr]">
+      <div className="grid gap-6 xl:grid-cols-2">
         <AdminPanel
           title="Boards"
-          description="Create, select, edit, and pause education boards."
+          description="Create and manage education boards."
           actions={
-            <div className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 sm:w-72">
-              <Search className="h-4 w-4 text-slate-500" />
+            <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-64">
+              <Search className="h-4 w-4 text-gray-400" />
               <Input
-                className="h-8 border-0 bg-transparent px-0 shadow-none focus:ring-0"
-                placeholder="Search boards"
+                className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
+                placeholder="Search boards..."
                 value={boardSearch}
                 onChange={(event) => setBoardSearch(event.target.value)}
               />
             </div>
           }
         >
-          <form onSubmit={createBoard} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <form onSubmit={createBoard} className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Code">
                 <Input value={boardForm.code} onChange={(event) => setBoardForm({ ...boardForm, code: event.target.value })} placeholder="cbse" required />
               </Field>
@@ -157,11 +157,11 @@ export default function AdminCurriculumPage() {
               </Field>
             </div>
             <Field label="Description">
-              <Textarea value={boardForm.description} onChange={(event) => setBoardForm({ ...boardForm, description: event.target.value })} placeholder="Optional internal note" />
+              <Textarea value={boardForm.description} onChange={(event) => setBoardForm({ ...boardForm, description: event.target.value })} placeholder="Optional description" />
             </Field>
             <Button type="submit" disabled={!boardForm.code.trim() || !boardForm.name.trim()}>
               <Plus className="h-4 w-4" />
-              Create board
+              Create Board
             </Button>
           </form>
 
@@ -172,9 +172,12 @@ export default function AdminCurriculumPage() {
               const editing = editingBoardId === board.id;
               const selected = selectedBoardId === board.id;
               return (
-                <div key={board.id} className={cn("rounded-lg border p-3 transition-colors", selected ? "border-blue-300 bg-blue-50/60" : "border-slate-200 bg-white")}>
+                <div key={board.id} className={cn(
+                  "rounded-xl border p-4 transition-all",
+                  selected ? "border-indigo-200 bg-indigo-50/50" : "border-gray-200 bg-white"
+                )}>
                   {editing ? (
-                    <div className="grid gap-3">
+                    <div className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <Input value={editingBoard.code} onChange={(event) => setEditingBoard({ ...editingBoard, code: event.target.value })} />
                         <Input value={editingBoard.name} onChange={(event) => setEditingBoard({ ...editingBoard, name: event.target.value })} />
@@ -189,14 +192,16 @@ export default function AdminCurriculumPage() {
                     <div className="flex items-start justify-between gap-3">
                       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedBoardId(board.id)}>
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate font-black text-slate-950">{board.name}</p>
+                          <p className="truncate font-semibold text-gray-900">{board.name}</p>
                           <StatusPill status={board.is_active ? "success" : "danger"}>{board.is_active ? "active" : "inactive"}</StatusPill>
                         </div>
-                        <p className="mt-1 text-xs font-bold uppercase text-slate-500">{board.code}</p>
-                        {board.description ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{board.description}</p> : null}
+                        <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gray-500">{board.code}</p>
+                        {board.description ? <p className="mt-2 line-clamp-2 text-sm text-gray-600">{board.description}</p> : null}
                       </button>
                       <div className="flex shrink-0 items-center gap-1">
-                        <Button size="icon" variant="ghost" title="Edit board" onClick={() => { setEditingBoardId(board.id); setEditingBoard({ code: board.code, name: board.name, description: board.description || "" }); }}><Edit3 className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" title="Edit board" onClick={() => { setEditingBoardId(board.id); setEditingBoard({ code: board.code, name: board.name, description: board.description || "" }); }}>
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" title={board.is_active ? "Deactivate board" : "Activate board"} onClick={() => setBoardActive(board, !board.is_active)}>
                           {board.is_active ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
                         </Button>
@@ -211,44 +216,48 @@ export default function AdminCurriculumPage() {
 
         <AdminPanel
           title="Classes"
-          description={selectedBoard ? `Manage classes under ${selectedBoard.name}.` : "Select or create a board to manage classes."}
+          description={selectedBoard ? `Manage classes under ${selectedBoard.name}.` : "Select a board to manage classes."}
           actions={
-            <Select value={selectedBoardId} onChange={(event) => setSelectedBoardId(event.target.value)} disabled={boards.isLoading} className="w-full sm:w-64">
+            <Select value={selectedBoardId} onChange={(event) => setSelectedBoardId(event.target.value)} disabled={boards.isLoading} className="w-full sm:w-56">
               {(boards.data?.items || []).map((board) => <option key={board.id} value={board.id}>{board.name}</option>)}
             </Select>
           }
         >
-          <form onSubmit={createClass} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[120px_1fr]">
-            <Field label="Grade">
-              <Input type="number" min={1} max={12} value={classForm.grade_number} onChange={(event) => setClassForm({ ...classForm, grade_number: event.target.value })} required />
-            </Field>
-            <Field label="Class name">
-              <Input value={classForm.name} onChange={(event) => setClassForm({ ...classForm, name: event.target.value })} placeholder="Class 8" required />
-            </Field>
-            <div className="md:col-span-2">
-              <Field label="Description">
-                <Textarea value={classForm.description} onChange={(event) => setClassForm({ ...classForm, description: event.target.value })} placeholder="Optional internal note" />
+          <form onSubmit={createClass} className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-[100px_1fr]">
+              <Field label="Grade">
+                <Input type="number" min={1} max={12} value={classForm.grade_number} onChange={(event) => setClassForm({ ...classForm, grade_number: event.target.value })} required />
+              </Field>
+              <Field label="Class Name">
+                <Input value={classForm.name} onChange={(event) => setClassForm({ ...classForm, name: event.target.value })} placeholder="Class 8" required />
               </Field>
             </div>
-            <Button type="submit" className="md:col-span-2" disabled={!selectedBoardId || !classForm.grade_number || !classForm.name.trim()}>
+            <Field label="Description">
+              <Textarea value={classForm.description} onChange={(event) => setClassForm({ ...classForm, description: event.target.value })} placeholder="Optional description" />
+            </Field>
+            <Button type="submit" disabled={!selectedBoardId || !classForm.grade_number || !classForm.name.trim()}>
               <Plus className="h-4 w-4" />
-              Create class
+              Create Class
             </Button>
           </form>
 
-          <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+          <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden">
             {classes.isLoading ? <div className="p-4"><LoadingState label="Loading classes" /></div> : null}
             {!classes.isLoading && selectedBoardId && !classes.data?.items?.length ? <div className="p-4"><EmptyState title="No classes found" /></div> : null}
             {classes.data?.items?.length ? (
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                  <tr>{["Grade", "Name", "Description", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3">{heading}</th>)}</tr>
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                  <tr>
+                    {["Grade", "Name", "Description", "Status", "Actions"].map((heading) => (
+                      <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>
+                    ))}
+                  </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-gray-100">
                   {(classes.data?.items || []).map((item) => {
                     const editing = editingClassId === item.id;
                     return (
-                      <tr key={item.id} className="hover:bg-slate-50">
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                         {editing ? (
                           <>
                             <td className="px-4 py-3"><Input type="number" min={1} max={12} value={editingClass.grade_number} onChange={(event) => setEditingClass({ ...editingClass, grade_number: event.target.value })} /></td>
@@ -259,11 +268,20 @@ export default function AdminCurriculumPage() {
                           </>
                         ) : (
                           <>
-                            <td className="px-4 py-3 font-black text-slate-950">{item.grade_number || "-"}</td>
-                            <td className="px-4 py-3 font-semibold text-slate-900">{item.name}</td>
-                            <td className="max-w-[320px] truncate px-4 py-3 text-slate-600">{item.description || "-"}</td>
+                            <td className="px-4 py-3 font-bold text-gray-900">{item.grade_number || "-"}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
+                            <td className="max-w-[200px] truncate px-4 py-3 text-gray-600">{item.description || "-"}</td>
                             <td className="px-4 py-3"><StatusPill status={item.is_active ? "success" : "danger"}>{item.is_active ? "active" : "inactive"}</StatusPill></td>
-                            <td className="px-4 py-3"><div className="flex gap-1"><Button size="icon" variant="ghost" title="Edit class" onClick={() => { setEditingClassId(item.id); setEditingClass({ grade_number: String(item.grade_number || ""), name: item.name, description: item.description || "" }); }}><Edit3 className="h-4 w-4" /></Button><Button size="icon" variant="ghost" title={item.is_active ? "Deactivate class" : "Activate class"} onClick={() => setClassActive(item, !item.is_active)}>{item.is_active ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}</Button></div></td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-1">
+                                <Button size="icon" variant="ghost" title="Edit class" onClick={() => { setEditingClassId(item.id); setEditingClass({ grade_number: String(item.grade_number || ""), name: item.name, description: item.description || "" }); }}>
+                                  <Edit3 className="h-4 w-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" title={item.is_active ? "Deactivate class" : "Activate class"} onClick={() => setClassActive(item, !item.is_active)}>
+                                  {item.is_active ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                                </Button>
+                              </div>
+                            </td>
                           </>
                         )}
                       </tr>

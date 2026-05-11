@@ -6,18 +6,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
-  Activity,
-  BarChart3,
   BookOpen,
+  BarChart3,
   GraduationCap,
   LayoutDashboard,
   LogOut,
   Menu,
-  Search,
   Shield,
-  UserRound,
   Users,
-  X
+  Activity,
+  X,
+  ChevronRight
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -25,17 +24,16 @@ import { cn } from "@/lib/utils";
 type AdminNavItem = {
   href: string;
   label: string;
-  description: string;
   icon: ComponentType<{ className?: string }>;
 };
 
 const ADMIN_NAV: AdminNavItem[] = [
-  { href: "/admin", label: "Overview", description: "Operating snapshot", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", description: "People and access", icon: Users },
-  { href: "/admin/curriculum", label: "Curriculum", description: "Boards and classes", icon: GraduationCap },
-  { href: "/admin/textbooks", label: "Textbooks", description: "Library and indexing", icon: BookOpen },
-  { href: "/admin/generations", label: "Generations", description: "Saved outputs", icon: BarChart3 },
-  { href: "/admin/system", label: "System", description: "Health and version", icon: Activity }
+  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
+  { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
+  { href: "/admin/generations", label: "Generations", icon: BarChart3 },
+  { href: "/admin/system", label: "System", icon: Activity }
 ];
 
 const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
@@ -95,79 +93,93 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+    <div className="min-h-screen bg-gray-50">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[304px] border-r border-slate-200 bg-slate-950 text-white shadow-2xl transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-white/10 px-5 py-5">
+          <div className="border-b border-gray-100 px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <Link href="/admin" className="flex min-w-0 items-center gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white text-slate-950">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
                   <Shield className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-base font-black">Teacher AI Admin</span>
-                  <span className="block truncate text-xs font-semibold text-slate-400">Control workspace</span>
+                  <span className="block truncate text-sm font-bold text-gray-900">Teacher AI</span>
+                  <span className="block truncate text-xs text-gray-500">Admin Panel</span>
                 </span>
               </Link>
-              <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-300 hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close admin navigation">
+              <button 
+                className="grid h-8 w-8 place-items-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden" 
+                onClick={() => setMobileOpen(false)} 
+                aria-label="Close navigation"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-            {ADMIN_NAV.map((item) => (
-              <AdminNavLink key={item.href} item={item} active={isActive(item.href, pathname)} />
-            ))}
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <div className="space-y-1">
+              {ADMIN_NAV.map((item) => (
+                <AdminNavLink key={item.href} item={item} active={isActive(item.href, pathname)} />
+              ))}
+            </div>
           </nav>
 
-          <div className="border-t border-white/10 p-4">
-            <div className="rounded-lg bg-white/5 p-3">
+          <div className="border-t border-gray-100 p-4">
+            <div className="rounded-xl bg-gray-50 p-3">
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-cyan-100 text-cyan-800">
-                  <UserRound className="h-5 w-5" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                  <Users className="h-4 w-4" />
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black">{currentUser.full_name || currentUser.name || "Admin"}</p>
-                  <p className="truncate text-xs text-slate-400">{currentUser.email}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-900">{currentUser.full_name || currentUser.name || "Admin"}</p>
+                  <p className="truncate text-xs text-gray-500">{currentUser.email}</p>
                 </div>
               </div>
-              <button onClick={logout} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 text-sm font-bold text-slate-200 hover:bg-white/10">
+              <button 
+                onClick={logout} 
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-white hover:text-gray-900 transition-colors"
+              >
                 <LogOut className="h-4 w-4" />
-                Logout
+                Sign out
               </button>
             </div>
           </div>
         </div>
       </aside>
 
-      {mobileOpen ? <button className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm lg:hidden" aria-label="Close admin navigation overlay" onClick={() => setMobileOpen(false)} /> : null}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden" 
+          aria-hidden="true" 
+          onClick={() => setMobileOpen(false)} 
+        />
+      )}
 
-      <div className="min-h-screen lg:pl-[304px]">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
-          <div className="flex min-h-[72px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-            <div className="flex min-w-0 items-center gap-3">
-              <button className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open admin navigation">
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+          <div className="flex h-16 items-center justify-between gap-4 px-6">
+            <div className="flex items-center gap-3">
+              <button 
+                className="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm lg:hidden" 
+                onClick={() => setMobileOpen(true)} 
+                aria-label="Open navigation"
+              >
                 <Menu className="h-5 w-5" />
               </button>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-black text-slate-950">{activeItem.label}</p>
-                <p className="truncate text-xs font-medium text-slate-500">{activeItem.description}</p>
+              <div>
+                <h1 className="text-base font-semibold text-gray-900">{activeItem.label}</h1>
               </div>
-            </div>
-            <div className="hidden min-w-[280px] items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 md:flex">
-              <Search className="h-4 w-4" />
-              <span className="truncate">Use each page filter to find records</span>
             </div>
           </div>
         </header>
-        <main className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-          <div className="mx-auto max-w-[1440px] space-y-5">{children}</div>
+        <main className="p-6">
+          <div className="mx-auto max-w-7xl space-y-6">{children}</div>
         </main>
       </div>
     </div>
@@ -180,27 +192,25 @@ function AdminNavLink({ item, active }: { item: AdminNavItem; active: boolean })
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
-        active && "bg-white text-slate-950 hover:bg-white hover:text-slate-950"
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+        active 
+          ? "bg-indigo-50 text-indigo-600" 
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
       )}
     >
-      <span className={cn("grid h-9 w-9 place-items-center rounded-lg", active ? "bg-slate-950 text-white" : "bg-white/10 text-slate-300")}>
-        <Icon className="h-4.5 w-4.5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate">{item.label}</span>
-        <span className={cn("block truncate text-xs font-medium", active ? "text-slate-500" : "text-slate-500")}>{item.description}</span>
-      </span>
+      <Icon className={cn("h-5 w-5", active ? "text-indigo-600" : "text-gray-400")} />
+      <span className="flex-1">{item.label}</span>
+      {active && <ChevronRight className="h-4 w-4 text-indigo-400" />}
     </Link>
   );
 }
 
 function AdminAuthScreen() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f6f8fb] px-4">
-      <div className="rounded-lg border border-slate-200 bg-white px-6 py-5 text-center shadow-sm">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
-        <p className="mt-4 text-sm font-bold text-slate-700">Checking admin access...</p>
+    <main className="grid min-h-screen place-items-center bg-gray-50 px-4">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
+        <p className="text-sm font-medium text-gray-600">Checking admin access...</p>
       </div>
     </main>
   );

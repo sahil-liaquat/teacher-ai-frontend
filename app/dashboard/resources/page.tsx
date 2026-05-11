@@ -63,7 +63,14 @@ export default function ResourcesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Saved Resources" description="Your saved lesson plans and worksheets." actions={<Link href="/dashboard/lesson-plans/new"><Button><Sparkles className="h-4 w-4" /> New Plan</Button></Link>} />
-      <Card><CardContent className="grid gap-3 p-5 md:grid-cols-[1fr_150px_150px_150px]"><div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" placeholder="Search resources" /></div><Select><option>All types</option><option>Lesson plan</option><option>Worksheet</option></Select><Input placeholder="Class" /><Input placeholder="Subject" /></CardContent></Card>
+      <Card>
+        <CardContent className="grid gap-3 p-4 sm:p-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative col-span-1 sm:col-span-2 lg:col-span-4"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9 w-full" placeholder="Search resources" /></div>
+          <Select className="w-full"><option>All types</option><option>Lesson plan</option><option>Worksheet</option></Select>
+          <Input placeholder="Class" className="w-full" />
+          <Input placeholder="Subject" className="w-full" />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader className="flex-col gap-2 md:flex-row md:items-center md:justify-between"><div><CardTitle className="text-2xl text-slate-950">Your Library</CardTitle><CardDescription>Card-table hybrid view optimized for scanning and quick actions.</CardDescription></div><Badge className="bg-blue-50 text-blue-700">{savedResources.length} items</Badge></CardHeader>
         <CardContent className="grid gap-4">
@@ -77,5 +84,25 @@ export default function ResourcesPage() {
 function ResourceRow({ resource, index }: { resource: any; index: number }) {
   const isWorksheet = resource.type === "worksheet";
   const Icon = isWorksheet ? ClipboardCheck : BookOpen;
-  return <div className="premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" style={{ animationDelay: `${index * 60}ms` }}><div className="grid gap-4 xl:grid-cols-[auto_1fr_auto] xl:items-center"><div className={`grid h-12 w-12 place-items-center rounded-2xl ${isWorksheet ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-600"}`}><Icon className="h-6 w-6" /></div><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-950">{resource.title}</h3><Badge>{resource.type}</Badge><Badge className="bg-[#eef8f1] text-[#166534]">{resource.subject}</Badge></div><p className="mt-1 text-sm leading-6 text-slate-600">{resource.detail || "Ready to open and export"}</p></div><div className="flex flex-wrap gap-2"><Link href={resource.href}><Button variant="outline" size="sm"><ExternalLink className="h-4 w-4" /> Open</Button></Link><Button variant="outline" size="sm" onClick={() => window.print()}><Download className="h-4 w-4" /> Download</Button></div></div></div>;
+  return (
+    <div className="premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" style={{ animationDelay: `${index * 60}ms` }}>
+      <div className="grid gap-4 sm:grid-cols-[auto_1fr_auto] items-start sm:items-center">
+        <div className={`grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-xl sm:rounded-2xl ${isWorksheet ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-600"}`}>
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">{resource.title}</h3>
+            <Badge>{resource.type}</Badge>
+            <Badge className="bg-emerald-50 text-emerald-700 hidden sm:inline-flex">{resource.subject}</Badge>
+          </div>
+          <p className="mt-1 text-xs sm:text-sm text-slate-600 line-clamp-2 sm:line-clamp-1">{resource.detail || "Ready to open and export"}</p>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+          <Link href={resource.href} className="flex-1 sm:flex-none"><Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm"><ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Open</span></Button></Link>
+          <Button variant="outline" size="sm" onClick={() => window.print()} className="flex-1 sm:flex-none text-xs sm:text-sm"><Download className="h-3 w-3 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Download</span></Button>
+        </div>
+      </div>
+    </div>
+  );
 }
