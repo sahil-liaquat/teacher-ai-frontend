@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
-  BarChart3,
   BookOpen,
   Bot,
   Check,
@@ -41,8 +40,27 @@ const quickAccess = [
 ];
 
 export default function TeacherDashboard() {
-  const plans = useQuery({ queryKey: ["lesson-plans-summary"], queryFn: () => backendApi.lessonPlans(0, 50), retry: false });
-  const worksheets = useQuery({ queryKey: ["worksheets-summary"], queryFn: () => backendApi.worksheets(0, 50), retry: false });
+  const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
+  const plans = useQuery({
+    queryKey: ["lesson-plans-summary"],
+    queryFn: () => backendApi.lessonPlans(0, 50),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+  const worksheets = useQuery({
+    queryKey: ["worksheets-summary"],
+    queryFn: () => backendApi.worksheets(0, 50),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
   const currentUser = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: () => getCurrentUser({ redirectOnUnauthorized: false }),
@@ -115,30 +133,61 @@ export default function TeacherDashboard() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        {statCards.map((stat, index) => (
-          <StatCard
-            key={stat.label}
-            {...stat}
-            value={
-              index === 0
-                ? formatNumber(lessonMonthlyTotal, stat.fallback)
-                : index === 1
-                  ? formatNumber(worksheetMonthlyTotal, stat.fallback)
-                  : index === 2
-                    ? formatNumber(savedResourcesTotal, stat.fallback)
-                    : formatNumber(monthlyGenerationsTotal, stat.fallback)
-            }
-            numericValue={
-              index === 0
-                ? lessonMonthlyTotal || 0
-                : index === 1
-                  ? worksheetMonthlyTotal || 0
-                  : index === 2
-                    ? savedResourcesTotal || 0
-                    : monthlyGenerationsTotal || 0
-            }
-          />
-        ))}
+        {(plans.isLoading || worksheets.isLoading) ? (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-[22px] sm:rounded-[28px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-3 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[140px] animate-pulse">
+                <div className="flex items-center gap-3 sm:gap-5">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl bg-slate-200" />
+                  <div className="flex-1">
+                    <div className="h-3 sm:h-4 w-20 bg-slate-200 rounded mb-2" />
+                    <div className="h-6 sm:h-8 w-12 bg-slate-200 rounded mb-2" />
+                    <div className="h-2 sm:h-3 w-16 bg-slate-200 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (plans.isError || worksheets.isError) ? (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-[22px] sm:rounded-[28px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-3 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[140px] flex items-center gap-3 sm:gap-5">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl bg-red-100 flex items-center justify-center">
+                  <span className="text-red-400 text-xl">!</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
+                  <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          statCards.map((stat, index) => (
+            <StatCard
+              key={stat.label}
+              {...stat}
+              value={
+                index === 0
+                  ? formatNumber(lessonMonthlyTotal, stat.fallback)
+                  : index === 1
+                    ? formatNumber(worksheetMonthlyTotal, stat.fallback)
+                    : index === 2
+                      ? formatNumber(savedResourcesTotal, stat.fallback)
+                      : formatNumber(monthlyGenerationsTotal, stat.fallback)
+              }
+              numericValue={
+                index === 0
+                  ? lessonMonthlyTotal
+                  : index === 1
+                    ? worksheetMonthlyTotal
+                    : index === 2
+                      ? savedResourcesTotal
+                      : monthlyGenerationsTotal
+              }
+            />
+          ))
+        )}
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
@@ -204,49 +253,54 @@ export default function TeacherDashboard() {
         <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] min-w-0">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-900">Your Progress This Month</h2>
-            <Link href="/dashboard/reports" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
-              View Report
-            </Link>
           </div>
-          <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-              <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
-              <div className="relative mx-auto grid h-32 w-32 place-items-center rounded-full" style={{ background: usageGradient }}>
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-extrabold text-slate-900">{monthlyGenerationsTotal}</div>
-              </div>
-              <div className="mt-3 space-y-1.5 text-xs font-medium text-slate-600">
-                <Legend color="#8b5cf6" label={`Lesson plans (${lessonMonthlyTotal})`} />
-                <Legend color="#10b981" label={`Worksheets (${worksheetMonthlyTotal})`} />
+
+          <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 flex flex-col">
+              <p className="mb-4 text-sm font-bold text-slate-900">Your Usage</p>
+              <div className="flex-1 flex items-center justify-center gap-5">
+                <div className="relative" style={{ width: "140px", height: "140px" }}>
+                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#8b5cf6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
+                  <div className="absolute inset-[16px] rounded-full bg-white" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full bg-violet-500" />
+                    <span className="text-sm font-medium text-slate-700">Lesson Plans</span>
+                    <span className="text-sm font-bold text-slate-900">{lessonMonthlyTotal}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full bg-emerald-500" />
+                    <span className="text-sm font-medium text-slate-700">Worksheets</span>
+                    <span className="text-sm font-bold text-slate-900">{worksheetMonthlyTotal}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+
+            <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 flex flex-col">
               <p className="mb-4 text-sm font-bold text-slate-900">Daily Generations</p>
-              <div className="flex h-[130px] items-end justify-between gap-2 px-2">
-                {last7DaysBars.map((bar, index) => {
-                  const heightPercent = bar.value ? Math.max(12, Math.round((bar.value / maxLast7Days) * 100)) : 4;
-                  const isToday = index === last7DaysBars.length - 1;
+              <div className="flex-1 flex items-end justify-between gap-2 px-1 min-h-[120px]">
+                {last7DaysBars.map((bar, i) => {
+                  const pct = bar.value > 0 ? Math.max(25, Math.round((bar.value / maxLast7Days) * 100)) : 10;
+                  const isLast = i === last7DaysBars.length - 1;
                   return (
-                    <div key={bar.label} className="group/flex relative flex flex-1 flex-col items-center justify-end">
+                    <div key={bar.label} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
                       <div
-                        className="w-full max-w-[32px] animate-bar-rise rounded-t-lg transition-transform duration-200 hover:scale-110 hover:shadow-md"
+                        className="w-full max-w-[40px] rounded-t-lg transition-all duration-300 hover:-translate-y-1 animate-chart-appear"
                         style={{
-                          height: `${heightPercent}%`,
-                          background: isToday
-                            ? "linear-gradient(180deg, #8b5cf6 0%, #6366f1 100%)"
-                            : "linear-gradient(180deg, #a78bfa 0%, #818cf8 100%)",
-                          boxShadow: isToday ? "0 4px 12px rgba(139, 92, 246, 0.4)" : "0 2px 6px rgba(139, 92, 246, 0.2)",
-                          animationDelay: `${index * 80}ms`,
-                          transformOrigin: "bottom"
+                          height: `${pct}%`,
+                          background: isLast
+                            ? "linear-gradient(180deg, #7c3aed, #4f46e5)"
+                            : "linear-gradient(180deg, #a78bfa, #818cf8)",
+                          boxShadow: isLast ? "0 4px 16px rgba(124, 58, 237, 0.4)" : "0 2px 8px rgba(139, 92, 246, 0.2)",
+                          animationDelay: `${i * 80}ms`
                         }}
-                      >
-                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-bold text-white opacity-0 shadow-lg transition-all duration-200 group-hover/flex:-translate-y-1 group-hover/flex:opacity-100">
-                          {bar.value}
-                        </div>
-                      </div>
-                      <span className={cn(
-                        "mt-1.5 text-[10px] font-semibold",
-                        isToday ? "text-violet-600" : "text-slate-400"
-                      )}>
+                      />
+                      <span className={`text-[10px] font-semibold ${isLast ? "text-violet-600" : "text-slate-400"}`}>
                         {bar.label}
                       </span>
                     </div>
@@ -255,24 +309,24 @@ export default function TeacherDashboard() {
               </div>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4 backdrop-blur-sm">
-              <div className="flex gap-3">
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            <div className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
                 <Lightbulb className="h-6 w-6 text-amber-600" />
-                <div>
-                  <p className="text-sm font-bold text-amber-800">Pro Tip</p>
-                  <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI to get more accurate and board-aligned content.</p>
-                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-amber-800">Pro Tip</p>
+                <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI for accurate, board-aligned content.</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <Clock3 className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="text-sm font-bold text-blue-800">Time Saved</p>
-                  <p className="text-xl font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
-                  <p className="text-xs font-medium text-slate-500">This Month</p>
-                </div>
+            <div className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+                <Clock3 className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-blue-800">Time Saved</p>
+                <p className="mt-1 text-xl font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
               </div>
             </div>
           </div>
@@ -626,13 +680,34 @@ function getLast7DaysBars(items: Array<{ created_at?: string; updated_at?: strin
   const year = now.getFullYear();
   const month = now.getMonth();
   const today = now.getDate();
+  const monthLabel = now.toLocaleString("en-US", { month: "short" });
 
   return Array.from({ length: 7 }, (_, index) => {
-    const dayOfMonth = today - (6 - index);
+    let dayOfMonth = today - (6 - index);
+    let labelYear = year;
+    let labelMonth = month;
+    let labelDay = dayOfMonth;
+    let labelMonthStr = monthLabel;
+
+    if (dayOfMonth < 1) {
+      const prevMonth = new Date(year, month, 0);
+      const daysInPrevMonth = prevMonth.getDate();
+      labelDay = daysInPrevMonth + dayOfMonth;
+      if (month === 0) {
+        labelYear = year - 1;
+        labelMonth = 11;
+        labelMonthStr = new Date(labelYear, 11, 1).toLocaleString("en-US", { month: "short" });
+      } else {
+        labelMonth = month - 1;
+        labelMonthStr = new Date(labelYear, labelMonth, 1).toLocaleString("en-US", { month: "short" });
+      }
+    }
+
     const value = items.filter((item) => {
       const created = new Date(item.created_at || item.updated_at || 0);
-      return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
+      return created.getFullYear() === labelYear && created.getMonth() === labelMonth && created.getDate() === labelDay;
     }).length;
-    return { day: dayOfMonth, label: `M${index + 1}`, value };
+
+    return { day: labelDay, label: `${labelDay}`, value };
   });
 }

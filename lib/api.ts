@@ -397,6 +397,7 @@ export const backendApi = {
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
+  deleteLessonPlan: (id: string) => apiFetch<void>(`/lesson-plans/${id}`, { method: "DELETE" }),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) }),
   streamLessonPlan: (

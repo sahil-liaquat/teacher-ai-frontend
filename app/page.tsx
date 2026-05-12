@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -14,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ensureSession, getCurrentUser } from "@/lib/api";
 
 const tools = [
   {
@@ -74,6 +79,22 @@ const features = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    let cancelled = false;
+    ensureSession()
+      .then((hasSession) => hasSession ? getCurrentUser({ redirectOnUnauthorized: false }) : null)
+      .then((user) => {
+        if (!user || cancelled) return;
+        router.replace(user.role === "admin" ? "/admin" : "/dashboard");
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm">

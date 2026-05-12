@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
   BarChart3,
+  BookmarkCheck,
   BookMarked,
   BookOpen,
   GraduationCap,
@@ -32,8 +33,7 @@ type NavItem = {
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
-  { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
-  { href: "/dashboard/resources", label: "Saved", icon: BookOpen },
+  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
 ];

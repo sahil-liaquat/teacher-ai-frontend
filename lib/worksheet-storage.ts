@@ -30,8 +30,24 @@ export function listWorksheetGenerations() {
       const generation = JSON.parse(stored);
       if (generation?.id && generation?.output_json) items.push(generation);
     } catch {
-      // Ignore malformed local records.
     }
   }
   return items.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+}
+
+export function deleteWorksheetGeneration(id: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(`${WORKSHEET_STORAGE_PREFIX}${id}`);
+  window.dispatchEvent(new CustomEvent(WORKSHEET_STORAGE_EVENT, { detail: { id } }));
+}
+
+export function clearAllWorksheetGenerations() {
+  if (typeof window === "undefined") return;
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith(WORKSHEET_STORAGE_PREFIX)) {
+      window.localStorage.removeItem(key);
+    }
+  }
+  window.dispatchEvent(new CustomEvent(WORKSHEET_STORAGE_EVENT, { detail: {} }));
 }
