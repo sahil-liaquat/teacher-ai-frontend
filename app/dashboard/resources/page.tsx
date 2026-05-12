@@ -6,8 +6,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   BookOpen,
+  CalendarDays,
   ChevronRight,
   ClipboardCheck,
+  Clock3,
   Download,
   ExternalLink,
   FileText,
@@ -527,33 +529,30 @@ function SubjectDetailView({
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-slate-600">
+        <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-slate-600 hover:text-slate-900">
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
         <div className="h-5 w-px bg-slate-200" />
         <div>
           <h1 className="text-lg font-extrabold text-slate-950">{className} · {subject}</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500">
             {lessonPlanCount} Lesson Plan{lessonPlanCount !== 1 ? "s" : ""} · {worksheetCount} Worksheet{worksheetCount !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      <div className="rounded-[16px] border border-white/70 bg-white/60 p-1 shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-sm inline-flex">
         {(["all", "lesson plan", "worksheet"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`relative px-4 py-2.5 text-sm font-semibold transition-colors ${
+            className={`relative px-4 py-2 text-xs sm:text-sm font-semibold transition-all rounded-xl ${
               tab === t
-                ? "text-blue-600"
+                ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
             {t === "all" ? "All" : t === "lesson plan" ? "Lesson Plans" : "Worksheets"}
-            {tab === t && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
-            )}
           </button>
         ))}
       </div>
@@ -575,9 +574,9 @@ function SubjectDetailView({
           </div>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((resource, i) => (
-            <ResourceListItem
+            <ResourceCard
               key={`${resource.type}-${resource.id}`}
               resource={resource}
               index={i}
@@ -591,7 +590,7 @@ function SubjectDetailView({
   );
 }
 
-function ResourceListItem({
+function ResourceCard({
   resource,
   index,
   onDelete,
@@ -603,71 +602,60 @@ function ResourceListItem({
   onDownload: (r: ResourceItem) => void;
 }) {
   const isWorksheet = resource.type === "worksheet";
-  const [showActions, setShowActions] = useState(false);
   const Icon = isWorksheet ? ClipboardCheck : BookOpen;
 
   return (
     <div
-      className="premium-hover reveal-card rounded-[20px] border border-white/70 bg-white/80 p-3 sm:p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm transition-all duration-200"
-      style={{ animationDelay: `${index * 40}ms` }}
+      className="premium-hover reveal-card rounded-[20px] border border-white/70 bg-white/80 overflow-hidden shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
+      style={{ animationDelay: `${index * 50}ms` }}
     >
-        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isWorksheet ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate font-bold text-slate-900 text-sm">{resource.title}</h3>
-            <Badge
-              className={`text-xs ${isWorksheet ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"}`}
-            >
-              {isWorksheet ? "Worksheet" : "Lesson Plan"}
-            </Badge>
+      <div className="p-4">
+        <div className="flex items-start gap-3 mb-3">
+          <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${isWorksheet ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"}`}>
+            <Icon className="h-5 w-5" />
           </div>
-          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-            {resource.chapterName ? `${resource.chapterName}` : ""}
-            {resource.type === "lesson plan" && resource.raw?.duration_minutes ? ` · ${resource.raw.duration_minutes} min` : ""}
-            {resource.type === "worksheet" && resource.raw?.output_json?.metadata?.question_count ? ` · ${resource.raw.output_json.metadata.question_count} Qs` : ""}
-          </p>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-bold text-slate-900 text-sm leading-tight">{resource.title}</h3>
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+              {resource.chapterName || "No chapter"}
+            </p>
+          </div>
+          <Badge className={`shrink-0 text-[10px] ${isWorksheet ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
+            {isWorksheet ? "Worksheet" : "Lesson Plan"}
+          </Badge>
         </div>
-        <div className="hidden sm:flex items-center gap-1 text-xs text-slate-400 shrink-0">
-          {new Date(resource.createdAt || 0).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-        </div>
-        <div className="relative shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
-            onClick={() => setShowActions(!showActions)}
-          >
-            <span className="text-xs font-bold">•••</span>
-          </Button>
-          {showActions && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowActions(false)} />
-              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-2xl border border-slate-200 bg-white p-1 shadow-xl">
-                <button
-                  onClick={() => { window.open(resource.href, "_blank"); setShowActions(false); }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <ExternalLink className="h-4 w-4" /> Open
-                </button>
-                <button
-                  onClick={() => { onDownload(resource); setShowActions(false); }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Download className="h-4 w-4" /> Download
-                </button>
-                <div className="my-1 h-px bg-slate-100" />
-                <button
-                  onClick={() => { onDelete(resource); setShowActions(false); }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" /> Delete
-                </button>
-              </div>
-            </>
+
+        <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
+          {resource.type === "lesson plan" && resource.raw?.duration_minutes && (
+            <span className="flex items-center gap-1">
+              <Clock3 className="h-3 w-3" /> {resource.raw.duration_minutes} min
+            </span>
           )}
+          {resource.type === "worksheet" && resource.raw?.output_json?.metadata?.question_count && (
+            <span className="flex items-center gap-1">
+              <FileText className="h-3 w-3" /> {resource.raw.output_json.metadata.question_count} Qs
+            </span>
+          )}
+          <span className="flex items-center gap-1 ml-auto">
+            <CalendarDays className="h-3 w-3" />
+            {new Date(resource.createdAt || 0).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </span>
+        </div>
+
+        <div className="flex gap-2">
+          <Link href={resource.href} target="_blank" className="flex-1">
+            <Button variant="default" size="sm" className="w-full gap-1.5 text-xs">
+              <ExternalLink className="h-3.5 w-3.5" /> View
+            </Button>
+          </Link>
+          <Button variant="outline" size="sm" onClick={() => onDownload(resource)} className="flex-1 gap-1.5 text-xs">
+            <Download className="h-3.5 w-3.5" /> Download
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(resource)} className="px-2 text-red-500 hover:bg-red-50 hover:text-red-600">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
