@@ -15,7 +15,6 @@ import {
   Lightbulb,
   MoreVertical,
   Plus,
-  Search,
   Settings2,
   Sparkles,
   TrendingUp
@@ -110,39 +109,34 @@ export default function TeacherDashboard() {
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
   return (
-    <div className="grid gap-5 sm:gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mx-auto grid w-full max-w-[1480px] gap-4 px-0 2xl:px-4">
+      <header className="mx-auto flex w-full max-w-[1240px] flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             {greeting.text}, {firstName} <span className="inline-block">{greeting.emoji}</span>
           </h1>
-          <p className="mt-1.5 text-sm sm:text-base font-medium text-slate-500">Let&apos;s create something amazing today.</p>
+          <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="premium-hover-sm relative block w-full sm:w-[300px] lg:w-[360px]">
-            <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-            <input
-              className="h-11 w-full rounded-2xl border border-white/70 bg-white/80 px-11 pr-16 text-sm font-semibold text-slate-900 shadow-lg backdrop-blur-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 hover:border-slate-200"
-              placeholder="Search anything..."
-            />
-            <span className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-500">
-              <span>⌘</span><span>K</span>
-            </span>
-          </label>
+        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-start sm:flex sm:h-14 sm:w-[230px] sm:justify-end lg:w-[260px]">
+          <img
+            src="/assets/teachpad-logo.png"
+            alt="Teachpad"
+            className="h-auto max-h-10 w-full object-contain object-left sm:max-h-11 sm:object-right"
+          />
         </div>
       </header>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <section className="mx-auto grid w-full max-w-[1240px] grid-cols-2 gap-3 lg:grid-cols-4 xl:gap-4">
         {(plans.isLoading || worksheets.isLoading) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="rounded-[22px] sm:rounded-[28px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-3 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[140px] animate-pulse">
-                <div className="flex items-center gap-3 sm:gap-5">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl bg-slate-200" />
+              <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
+                <div className="flex h-full items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-slate-200 sm:h-14 sm:w-14" />
                   <div className="flex-1">
-                    <div className="h-3 sm:h-4 w-20 bg-slate-200 rounded mb-2" />
-                    <div className="h-6 sm:h-8 w-12 bg-slate-200 rounded mb-2" />
-                    <div className="h-2 sm:h-3 w-16 bg-slate-200 rounded" />
+                    <div className="mb-2 h-3 w-24 rounded bg-slate-200 sm:h-4" />
+                    <div className="mb-2 h-7 w-14 rounded bg-slate-200" />
+                    <div className="h-2 w-16 rounded bg-slate-200 sm:h-3" />
                   </div>
                 </div>
               </div>
@@ -151,8 +145,8 @@ export default function TeacherDashboard() {
         ) : (plans.isError || worksheets.isError) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="rounded-[22px] sm:rounded-[28px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-3 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[140px] flex items-center gap-3 sm:gap-5">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl bg-red-100 flex items-center justify-center">
+              <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
+                <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
                   <span className="text-red-400 text-xl">!</span>
                 </div>
                 <div className="flex-1">
@@ -190,7 +184,7 @@ export default function TeacherDashboard() {
         )}
       </section>
 
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+      <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 gap-4 xl:grid-cols-2">
         <ActionPanel
           title="Create Lesson Plan"
           desc="Generate curriculum-aligned lesson plans in seconds."
@@ -209,10 +203,10 @@ export default function TeacherDashboard() {
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] min-w-0">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Recent Generations</h2>
+      <section className="mx-auto grid w-full max-w-[1240px] items-stretch gap-4 lg:grid-cols-[1fr_1.2fr]">
+        <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
             <Link href="/dashboard/resources" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
               View All
             </Link>
@@ -222,10 +216,10 @@ export default function TeacherDashboard() {
               <Link
                 key={`${item.type}-${item.id || item.topic}-${index}`}
                 href={item.href}
-                className="premium-hover-sm flex items-center gap-3 rounded-2xl p-3 transition-all duration-200 hover:bg-slate-50"
+                className="premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 hover:bg-slate-50"
               >
                 <div className={cn(
-                  "grid h-11 w-11 shrink-0 place-items-center rounded-2xl",
+                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
                   item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"
                 )}>
                   {item.type === "Worksheet" ? <FileText className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
@@ -235,14 +229,14 @@ export default function TeacherDashboard() {
                   <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
                 </div>
                 <span className={cn(
-                  "rounded-xl px-3 py-1.5 text-xs font-semibold",
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold",
                   item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
                 )}>
                   {item.type}
                 </span>
               </Link>
             )) : (
-              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
+              <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
                 <FileText className="mx-auto h-10 w-10 text-slate-300" />
                 <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
               </div>
@@ -250,30 +244,30 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] min-w-0">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Your Progress This Month</h2>
+        <div className="flex h-full min-w-0 flex-col rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-900">Your Progress This Month</h2>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-            <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 flex flex-col">
-              <p className="mb-4 text-sm font-bold text-slate-900">Your Usage</p>
-              <div className="flex-1 flex items-center justify-center gap-5">
-                <div className="relative" style={{ width: "140px", height: "140px" }}>
+          <div className="grid flex-1 gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col">
+              <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
+              <div className="flex-1 flex items-center justify-center gap-4">
+                <div className="relative" style={{ width: "108px", height: "108px" }}>
                   <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#3b82f6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
-                  <div className="absolute inset-[16px] rounded-full bg-white" />
+                  <div className="absolute inset-[12px] rounded-full bg-white" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
+                    <span className="text-2xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
                   </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full bg-blue-500" />
+                    <span className="h-3 w-3 rounded-full bg-blue-500" />
                     <span className="text-sm font-medium text-slate-700">Lesson Plans</span>
                     <span className="text-sm font-bold text-slate-900">{lessonMonthlyTotal}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full bg-emerald-500" />
+                    <span className="h-3 w-3 rounded-full bg-emerald-500" />
                     <span className="text-sm font-medium text-slate-700">Worksheets</span>
                     <span className="text-sm font-bold text-slate-900">{worksheetMonthlyTotal}</span>
                   </div>
@@ -281,9 +275,9 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 flex flex-col">
-              <p className="mb-4 text-sm font-bold text-slate-900">Daily Generations</p>
-              <div className="flex-1 flex items-end justify-between gap-2 px-1 min-h-[120px]">
+            <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col">
+              <p className="mb-3 text-sm font-bold text-slate-900">Daily Generations</p>
+              <div className="flex-1 flex items-end justify-between gap-2 px-1 min-h-[96px]">
                 {last7DaysBars.map((bar, i) => {
                   const pct = bar.value > 0 ? Math.max(25, Math.round((bar.value / maxLast7Days) * 100)) : 10;
                   const isLast = i === last7DaysBars.length - 1;
@@ -310,32 +304,32 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                <Lightbulb className="h-6 w-6 text-amber-600" />
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Lightbulb className="h-5 w-5 text-amber-600" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-amber-800">Pro Tip</p>
                 <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI for accurate, board-aligned content.</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
-                <Clock3 className="h-6 w-6 text-blue-600" />
+            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                <Clock3 className="h-5 w-5 text-blue-600" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-blue-800">Time Saved</p>
-                <p className="mt-1 text-xl font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
+                <p className="mt-0.5 text-lg font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Quick Access</h2>
+      <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold text-slate-900">Quick Access</h2>
           <button className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
             Customize <Settings2 className="h-4 w-4" />
           </button>
@@ -347,10 +341,10 @@ export default function TeacherDashboard() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="premium-hover flex min-h-[100px] items-center gap-3 rounded-2xl border border-white/70 bg-white/50 p-3 shadow-md backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lg"
+                className="premium-hover flex min-h-[82px] items-center gap-3 rounded-xl border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
               >
-                <div className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", toneClass(item.tone))}>
-                  <Icon className="h-6 w-6" />
+                <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-slate-900">{item.title}</p>
@@ -398,36 +392,36 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
   return (
     <div className={cn(
       "premium-hover relative overflow-hidden min-w-0 w-full",
-      "rounded-[22px] sm:rounded-[28px]",
+      "rounded-[18px]",
       "border border-white/70",
-      "p-3 sm:p-5 lg:p-6",
-      "min-h-[105px] sm:min-h-[140px]",
-      "flex items-center gap-3 sm:gap-5",
-      "shadow-[0_18px_45px_rgba(15,23,42,0.08)]",
+      "p-4 sm:p-5",
+      "min-h-[116px] sm:min-h-[126px]",
+      "flex items-center gap-3 sm:gap-4",
+      "shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
       "transition-all duration-300 ease-out",
-      "hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]",
+      "hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]",
       g.card
     )}>
       <div className={cn("absolute -left-8 -top-8 h-24 w-24 rounded-full blur-2xl", g.glow)} />
 
       <div className={cn(
         "shrink-0",
-        "w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20",
-        "rounded-2xl",
+        "h-12 w-12 sm:h-14 sm:w-14",
+        "rounded-xl",
         "flex items-center justify-center",
         "shadow-lg",
         g.iconBox,
         g.iconShadow
       )}>
-        <Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
       </div>
 
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <p className="text-[11px] sm:text-sm lg:text-base font-bold text-slate-900 leading-tight truncate">{label}</p>
-        <p className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 leading-none">
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-bold leading-snug text-slate-900 sm:text-sm">{label}</p>
+        <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
           <CountUpNumber value={numericValue} />
         </p>
-        <p className="mt-1 text-[11px] sm:text-sm font-medium text-slate-600 truncate">{sub}</p>
+        <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -499,65 +493,65 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: s
   return (
     <div className={cn(
       "premium-hover relative overflow-hidden min-w-0 w-full",
-      "rounded-[28px] sm:rounded-[32px]",
+      "rounded-[20px]",
       "border border-white/60",
-      "p-5 sm:p-6 lg:p-8",
-      "min-h-[260px] sm:min-h-[280px]",
-      "shadow-[0_18px_45px_rgba(15,23,42,0.08)]",
+      "p-4 sm:p-5",
+      "min-h-[190px] sm:min-h-[210px]",
+      "shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
       "transition-all duration-300 ease-out",
-      "hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]",
+      "hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]",
       gradients.card
     )}>
-      <div className={cn("absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl", gradients.glow)} />
-      <div className={cn("absolute -right-4 bottom-4 h-20 w-20 rounded-full blur-2xl", gradients.glow)} />
+      <div className={cn("absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl", gradients.glow)} />
+      <div className={cn("absolute -right-4 bottom-4 h-16 w-16 rounded-full blur-2xl", gradients.glow)} />
 
       <div className="relative z-10 flex h-full min-w-0 w-full flex-col justify-between sm:max-w-none">
         <div>
           <div className={cn(
             "inline-flex",
-            "w-14 h-14 sm:w-16 sm:h-16",
-            "rounded-2xl",
+            "h-11 w-11 sm:h-12 sm:w-12",
+            "rounded-xl",
             "items-center justify-center",
-            "shadow-lg mb-4",
+            "shadow-lg mb-3",
             gradients.iconBox,
             gradients.iconShadow
           )}>
-            <Icon className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">{title}</h2>
-          <p className="mt-2 text-sm sm:text-base font-medium text-slate-600 leading-relaxed line-clamp-2">{desc}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">{title}</h2>
+          <p className="mt-1.5 text-sm font-medium text-slate-600 leading-5 line-clamp-2">{desc}</p>
         </div>
 
         <Link
           href={href}
           className={cn(
-            "premium-hover-sm mt-6 inline-flex",
-            "h-12 sm:h-14",
+            "premium-hover-sm mt-4 inline-flex",
+            "h-10",
             "w-fit",
             "items-center justify-center gap-2",
-            "rounded-xl sm:rounded-2xl",
-            "px-6 sm:px-8",
-            "text-sm sm:text-base font-bold text-white",
+            "rounded-xl",
+            "px-4",
+            "text-sm font-bold text-white",
             "shadow-lg hover:shadow-xl",
             "transition-all duration-300",
             gradients.button
           )}
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
           {button}
         </Link>
       </div>
 
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 hidden sm:block">
+      <div className="absolute bottom-4 right-4 hidden sm:block">
         <div className={cn(
-          "relative w-[120px] h-[100px] sm:w-[160px] sm:h-[130px]",
+          "relative h-[96px] w-[118px]",
           "rotate-6"
         )}>
           <div className={cn(
             "absolute inset-0",
             "rounded-2xl border border-white/60 bg-white/70",
             "shadow-lg backdrop-blur-sm",
-            "flex flex-col items-center justify-center gap-2 p-3"
+            "flex flex-col items-center justify-center gap-1.5 p-3"
           )}>
             <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-blue-100")}>
               <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-blue-600")} />
@@ -568,12 +562,12 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: s
           </div>
           <div className={cn(
             "absolute -top-3 -right-3",
-            "w-10 h-10 sm:w-12 sm:h-12",
+            "h-9 w-9",
             "rounded-xl border border-white/60 bg-white/80",
             "shadow-md backdrop-blur-sm",
             "flex items-center justify-center"
           )}>
-            <Check className={cn("h-5 w-5 sm:h-6 sm:w-6", isGreen ? "text-emerald-500" : "text-blue-500")} />
+            <Check className={cn("h-5 w-5", isGreen ? "text-emerald-500" : "text-blue-500")} />
           </div>
         </div>
       </div>

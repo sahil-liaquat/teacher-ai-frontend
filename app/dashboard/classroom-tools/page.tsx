@@ -25,42 +25,42 @@ export default function ClassroomToolsPage() {
   }, [searchQuery]);
 
   return (
-    <div className="grid gap-4 2xl:gap-7">
-      <header className="premium-hover flex flex-col gap-3 rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:flex-row 2xl:items-center 2xl:justify-between 2xl:rounded-[24px] 2xl:p-7">
+    <div className="grid gap-4">
+      <header className="premium-hover flex flex-col gap-3 rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#dbeafe] px-3 py-1.5 text-xs font-black text-[#2563eb] 2xl:mb-4 2xl:px-4 2xl:py-2 2xl:text-sm">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#dbeafe] px-3 py-1.5 text-xs font-black text-[#2563eb]">
             <Sparkles className="h-4 w-4" />
             AI Tools
           </div>
-          <h1 className="text-[clamp(1.5rem,2.2vw,2rem)] font-black tracking-tight text-[#101039] 2xl:text-[34px]">Choose a teaching tool</h1>
-          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#67627d] 2xl:mt-3 2xl:text-base 2xl:leading-7">Start from the same actions shown on the dashboard, with the backend integrations left exactly as they are.</p>
+          <h1 className="text-[clamp(1.5rem,2.2vw,2rem)] font-black tracking-tight text-[#101039]">Choose a teaching tool</h1>
+          <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-[#67627d]">Start from the same actions shown on the dashboard, with the backend integrations left exactly as they are.</p>
         </div>
-        <label className="premium-hover-sm relative block w-full sm:w-[320px] 2xl:w-[360px]">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#77728e]" />
+        <label className="premium-hover-sm relative block w-full sm:w-[320px]">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77728e]" />
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-base font-semibold outline-none focus:border-[#93c5fd] focus:ring-4 focus:ring-[#2563eb]/10 sm:text-sm 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
+            className="h-10 w-full rounded-xl border border-[#e5e1f1] bg-white px-10 text-base font-semibold outline-none focus:border-[#93c5fd] focus:ring-4 focus:ring-[#2563eb]/10 sm:text-sm"
             placeholder="Search tools..."
           />
         </label>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {filteredTools.map((tool) => {
           const Icon = tool.icon;
           const available = tool.href !== "#";
           const card = (
-            <div className="premium-hover flex h-full min-h-[210px] flex-col rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:min-h-[290px] 2xl:rounded-[24px] 2xl:p-7">
-              <div className={cn("grid h-12 w-12 place-items-center rounded-[14px] shadow-[0_12px_24px_rgba(39,30,91,0.07)] 2xl:h-[72px] 2xl:w-[72px] 2xl:rounded-[18px]", toneClass(tool.tone))}>
-                <Icon className="h-6 w-6 2xl:h-9 2xl:w-9" />
+            <div className="premium-hover flex h-full min-h-[190px] flex-col rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)]">
+              <div className={cn("grid h-11 w-11 place-items-center rounded-xl shadow-[0_12px_24px_rgba(39,30,91,0.07)]", toneClass(tool.tone))}>
+                <Icon className="h-5 w-5" />
               </div>
-              <div className="mt-4 flex items-center justify-between gap-2 2xl:mt-6 2xl:gap-3">
-                <h2 className="text-lg font-black text-[#101039] 2xl:text-2xl">{tool.title}</h2>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <h2 className="text-base font-black text-[#101039]">{tool.title}</h2>
                 <Badge className={available ? "bg-[#dbfae6] text-[#218e55]" : "bg-[#fff0d8] text-[#bc7619]"}>{tool.badge}</Badge>
               </div>
-              <p className="mt-3 flex-1 text-sm font-medium leading-6 text-[#67627d] 2xl:mt-4 2xl:leading-7">{tool.description}</p>
-              <Button className={cn("mt-5 w-full 2xl:mt-6", tool.tone === "green" && "from-[#1fbc79] to-[#069462]")} variant={available ? "default" : "outline"} disabled={!available}>
+              <p className="mt-2.5 flex-1 text-sm font-medium leading-5 text-[#67627d]">{tool.description}</p>
+              <Button className={cn("mt-4 w-full", tool.tone === "green" && "from-[#1fbc79] to-[#069462]")} variant={available ? "default" : "outline"} disabled={!available}>
                 {available ? <Plus className="h-4 w-4" /> : null}
                 {available ? "Open Tool" : "Coming Soon"}
                 {available ? <ArrowRight className="h-4 w-4" /> : null}

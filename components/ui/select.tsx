@@ -156,7 +156,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             onFocus={syncDisplayFromHiddenSelect}
             onPointerDown={syncDisplayFromHiddenSelect}
             className={cn(
-              "flex h-11 w-full min-w-0 items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/70 bg-white/80 px-4 text-left text-base font-semibold text-slate-900 shadow-md outline-none transition-all duration-300 hover:border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 data-[disabled]:cursor-not-allowed data-[disabled]:bg-slate-50 data-[disabled]:text-slate-400 sm:text-sm 2xl:h-12 [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
+              "flex h-10 w-full min-w-0 items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-white/70 bg-white/80 px-3.5 text-left text-base font-semibold text-slate-900 shadow-sm outline-none transition-all duration-300 hover:border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 data-[disabled]:cursor-not-allowed data-[disabled]:bg-slate-50 data-[disabled]:text-slate-400 sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
               className
             )}
           >
@@ -178,15 +178,15 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               position="popper"
               sideOffset={8}
               avoidCollisions
-              className="z-[100] max-h-[320px] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+              className="z-[100] max-h-[280px] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-white/70 bg-white/95 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.25)] backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
             >
-              <SelectPrimitive.Viewport className="max-h-[300px] overflow-y-auto p-2">
+              <SelectPrimitive.Viewport className="max-h-[260px] overflow-y-auto p-1.5">
                 {options.map((option) => (
                   <SelectPrimitive.Item
                     key={option.value}
                     value={toRadixValue(option.value)}
                     disabled={option.disabled}
-                    className="group relative flex min-h-11 cursor-pointer select-none items-start justify-between gap-3 rounded-xl px-3 py-2.5 text-base font-semibold text-slate-800 outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-45 sm:text-sm"
+                    className="group relative flex min-h-9 cursor-pointer select-none items-start justify-between gap-2.5 rounded-lg px-2.5 py-2 text-base font-semibold text-slate-800 outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-45 sm:text-sm"
                   >
                     <SelectPrimitive.ItemText>
                       <span className="block min-w-0 whitespace-normal break-words leading-5">{option.label}</span>

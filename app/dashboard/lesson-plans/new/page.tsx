@@ -241,16 +241,16 @@ export default function NewLessonPlanPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px] 2xl:max-w-[1320px]">
-      <div className="overflow-visible rounded-[24px] border border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-        <div className="relative min-h-[240px] overflow-hidden rounded-t-[24px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-9 sm:px-7 2xl:min-h-[300px] 2xl:py-12">
-          <div className="relative z-10 max-w-[560px] 2xl:max-w-[620px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/70 border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 shadow-md backdrop-blur-sm"><Sparkles className="h-4 w-4" /> AI-Powered</div>
-            <h1 className="flex items-center gap-3 text-[34px] font-extrabold tracking-tight text-slate-900 sm:text-[42px] 2xl:text-5xl">Create Lesson Plan</h1>
-            <p className="mt-4 max-w-[520px] text-base font-medium leading-relaxed text-slate-600 2xl:mt-5 2xl:max-w-[560px] 2xl:text-lg 2xl:leading-9">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
-            <Button type="button" variant="outline" className="mt-7 border-blue-200 bg-white/90 px-6 text-blue-700 hover:bg-blue-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
+    <div className="mx-auto max-w-[1120px]">
+      <div className="overflow-visible rounded-[18px] border border-white/70 bg-white/80 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+        <div className="relative min-h-[178px] overflow-hidden rounded-t-[18px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-6 sm:px-6">
+          <div className="relative z-10 max-w-[560px]">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/70 border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm backdrop-blur-sm"><Sparkles className="h-4 w-4" /> AI-Powered</div>
+            <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold tracking-tight text-slate-900 sm:text-[34px]">Create Lesson Plan</h1>
+            <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-slate-600">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
+            <Button type="button" variant="outline" className="mt-4 border-blue-200 bg-white/90 px-4 text-blue-700 hover:bg-blue-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
           </div>
-          <div className="absolute bottom-0 right-6 hidden h-64 w-[560px] 2xl:block 2xl:h-80 2xl:w-[720px]">
+          <div className="absolute bottom-0 right-6 hidden h-48 w-[440px] 2xl:block">
             <div className="absolute bottom-0 right-0 h-52 w-[620px] rounded-t-full bg-white/60" />
             <div className="absolute bottom-28 right-[288px] h-28 w-28 rounded-t-full bg-emerald-200/50" />
             <div className="absolute bottom-[72px] right-[264px] h-[72px] w-36 rounded-[14px] bg-emerald-100/50" />
@@ -260,10 +260,10 @@ export default function NewLessonPlanPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 p-5 sm:p-6 2xl:gap-6 2xl:p-8">
-          <div className="grid gap-6">
+        <div className="grid gap-4 p-4 sm:p-5">
+          <div className="grid gap-4">
             <NumericSection number="1" title="Plan Details" subtitle="Provide basic information about your lesson.">
-              <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)] 2xl:gap-5">
+              <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
                 <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
                 <FieldBox label="Class / Grade" required error={classesError}><Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes..."><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
                 <FieldBox label="Subject" required error={subjectsError}><Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length || isLoadingSubjects} isLoading={isLoadingSubjects} loadingLabel="Loading subjects..."><option value="">Select Subject</option>{subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FieldBox>
@@ -297,7 +297,7 @@ export default function NewLessonPlanPage() {
               open={openSections.customize}
               onToggle={() => setOpenSections((sections) => ({ ...sections, customize: !sections.customize }))}
             >
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 2xl:gap-6">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {lessonComponents.map((component) => {
                   const Icon = component.icon;
                   const active = selected.includes(component.title);
@@ -307,7 +307,7 @@ export default function NewLessonPlanPage() {
                       type="button"
                       onClick={() => toggleComponent(component.title)}
                       aria-pressed={active}
-                      className={`group rounded-2xl border bg-white p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_16px_36px_rgba(37,99,235,0.14)] ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_12px_28px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
+                      className={`group rounded-xl border bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_12px_28px_rgba(37,99,235,0.12)] ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_10px_22px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
                     >
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div className={`grid h-10 w-10 place-items-center rounded-lg ${toneClass(component.tone)}`}><Icon className="h-5 w-5" /></div>
@@ -322,7 +322,7 @@ export default function NewLessonPlanPage() {
               {!selected.length ? <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one lesson component to generate.</p> : null}
             </NumericSection>
 
-            <div className="flex flex-col gap-3 rounded-[18px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 sm:flex-row sm:items-center sm:justify-between 2xl:p-5">
+            <div className="flex flex-col gap-3 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-base font-bold text-slate-900">Generate classroom-ready output</p>
                 <p className="mt-1 text-sm font-medium text-slate-600">{isLoadingOptions ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
@@ -356,8 +356,8 @@ function NumericSection({
   onToggle?: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-[20px] border border-white/70 bg-white/80 shadow-[0_12px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm">
-      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6 2xl:p-8">
+    <div className="overflow-hidden rounded-[16px] border border-white/70 bg-white/80 shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
         {expandable ? (
           <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-4 text-left" aria-expanded={open}>
             <SectionTitle number={number} title={title} subtitle={subtitle} />
@@ -374,7 +374,7 @@ function NumericSection({
               type="button"
               onClick={onToggle}
               aria-label={`${open ? "Collapse" : "Expand"} ${title}`}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm transition hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
             >
               <ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
             </button>
@@ -383,7 +383,7 @@ function NumericSection({
       </div>
       <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
         <div className="min-h-0 overflow-hidden">
-          <div className="px-5 pb-5 sm:px-6 sm:pb-6 2xl:px-8 2xl:pb-8">
+          <div className="px-4 pb-4">
             {children}
           </div>
         </div>
@@ -395,9 +395,9 @@ function NumericSection({
 function SectionTitle({ number, title, subtitle }: { number: string; title: string; subtitle: string }) {
   return (
     <>
-      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-lg font-extrabold text-white shadow-lg">{number}</div>
+      <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-base font-extrabold text-white shadow-md">{number}</div>
       <div>
-        <h2 className="text-base font-bold text-slate-900 2xl:text-lg">{title}</h2>
+        <h2 className="text-base font-bold text-slate-900">{title}</h2>
         <p className="text-sm text-slate-600">{subtitle}</p>
       </div>
     </>

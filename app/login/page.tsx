@@ -7,9 +7,8 @@ import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { BookOpen, Brain, ClipboardCheck, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
 import { CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, login } from "@/lib/api";
@@ -59,78 +58,72 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
-      <AuthHeader actionHref="/signup" actionLabel="Signup" />
-      <main className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 lg:grid-cols-[1fr_400px] 2xl:max-w-6xl 2xl:gap-10 2xl:py-20 2xl:grid-cols-[1fr_440px]">
-        <section className="hidden lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 shadow-md">
-            <Sparkles className="h-4 w-4" />
-            Teacher AI Toolkit
-          </div>
-          <h1 className="mt-6 max-w-2xl text-[38px] font-extrabold leading-tight tracking-tight text-slate-900 2xl:mt-8 2xl:text-5xl">
-            Welcome back.
+    <main className="grid min-h-screen bg-[#f3f5ff] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <section className="relative hidden overflow-hidden bg-[#18266d] px-12 py-10 text-white lg:flex lg:items-center xl:px-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(110,133,255,0.24),transparent_30rem),radial-gradient(circle_at_80%_88%,rgba(51,76,180,0.34),transparent_34rem)]" />
+        <div className="relative mx-auto w-full max-w-[560px]">
+          <h1 className="text-[52px] font-black leading-[0.95] tracking-tight xl:text-[64px]">
+            Teacher
+            <span className="block text-[#a99cff]">AI</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-slate-600 2xl:mt-6 2xl:text-lg 2xl:leading-8">
-            Access the redesigned workspace for lesson plans, worksheets, saved resources, books, and reports.
+          <p className="mt-8 max-w-[500px] text-xl font-semibold leading-8 text-white/78">
+            An intelligent lesson planning platform powered by AI. Build structured, curriculum-aligned lesson plans in minutes.
           </p>
-          <div className="mt-8 grid max-w-xl grid-cols-2 gap-4 2xl:mt-10 2xl:gap-5">
-            <div className="rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
-              <BookOpen className="h-8 w-8 text-blue-600 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-lg font-bold text-slate-900 2xl:mt-5 2xl:text-xl">Lesson plans</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">Build textbook-grounded classroom plans</p>
-            </div>
-            <div className="rounded-[20px] border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
-              <ClipboardCheck className="h-8 w-8 text-emerald-600 2xl:h-9 2xl:w-9" />
-              <p className="mt-4 text-lg font-bold text-slate-900 2xl:mt-5 2xl:text-xl">Worksheets</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">Create printable practice materials</p>
-            </div>
-          </div>
-        </section>
 
-        <Card className="mx-auto w-full max-w-md border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.1)] backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-3xl font-extrabold text-slate-900">Login</CardTitle>
-            <p className="mt-2 text-sm text-slate-600">Access your Teacher AI Tools dashboard.</p>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-              <Field label="Email" error={form.formState.errors.email?.message}>
-                <Input {...form.register("email")} placeholder="name@example.com" />
-              </Field>
-              <Field label="Password" error={form.formState.errors.password?.message}>
-                <Input type="password" {...form.register("password")} placeholder="••••••••" />
-              </Field>
-              <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Signing in..." : "Login"}
-              </Button>
-            </form>
-            <p className="text-center text-sm text-slate-600">
-              New here? <Link className="font-semibold text-blue-600 transition-colors hover:text-blue-700" href="/signup">Create an account</Link>
+          <div className="mt-16 grid gap-6 text-lg font-semibold text-white/68">
+            <p className="flex items-center gap-4">
+              <Check className="h-5 w-5 text-amber-300" />
+              Curriculum-aligned lesson plans
             </p>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
-  );
-}
+            <p className="flex items-center gap-4">
+              <Check className="h-5 w-5 text-amber-300" />
+              AI-powered content retrieval
+            </p>
+            <p className="flex items-center gap-4">
+              <Check className="h-5 w-5 text-amber-300" />
+              Multi-board & grade support
+            </p>
+          </div>
+        </div>
+      </section>
 
-function AuthHeader({ actionHref, actionLabel }: { actionHref: string; actionLabel: string }) {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/90 shadow-md backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg 2xl:h-12 2xl:w-12">
-            <Brain className="h-6 w-6 text-white 2xl:h-7 2xl:w-7" />
+      <section className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
+        <div className="w-full max-w-[440px] rounded-[28px] bg-white px-7 py-8 shadow-[0_28px_80px_rgba(30,41,94,0.12)] sm:px-9 sm:py-10 xl:max-w-[480px] xl:px-11 xl:py-12">
+          <div className="mb-7">
+            <h2 className="text-3xl font-black tracking-tight text-[#1b2559] sm:text-[34px]">Welcome back</h2>
+            <p className="mt-3 text-base font-semibold text-[#7b86ad]">Sign in to your account to continue</p>
           </div>
-          <div>
-            <h1 className="text-xl font-extrabold text-slate-900 2xl:text-2xl">Teacher AI Tools</h1>
-            <p className="text-xs font-medium text-slate-500 2xl:text-sm">AI-Powered Teaching Assistant</p>
-          </div>
-        </Link>
-        <Link href={actionHref}>
-          <Button variant="ghost">{actionLabel}</Button>
-        </Link>
-      </div>
-    </header>
+
+          <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+            <Field label="Email address" error={form.formState.errors.email?.message}>
+              <Input
+                {...form.register("email")}
+                placeholder="you@school.edu"
+                className="h-14 rounded-[18px] border-[#e2e7f4] bg-white px-5 text-base font-semibold shadow-none focus:border-[#b7a7ff] focus:ring-[#7c5cff]/20"
+              />
+            </Field>
+            <Field label="Password" error={form.formState.errors.password?.message}>
+              <Input
+                type="password"
+                {...form.register("password")}
+                placeholder="••••••••"
+                className="h-14 rounded-[18px] border-[#e2e7f4] bg-white px-5 text-base font-semibold shadow-none focus:border-[#b7a7ff] focus:ring-[#7c5cff]/20"
+              />
+            </Field>
+            <Button
+              className="mt-8 h-14 w-full rounded-[16px] bg-gradient-to-r from-[#6d4df4] to-[#8363f4] text-base font-black shadow-[0_18px_34px_rgba(109,77,244,0.22)] hover:shadow-[0_20px_42px_rgba(109,77,244,0.28)]"
+              type="submit"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+            </Button>
+          </form>
+
+          <p className="mt-8 text-center text-sm font-semibold text-[#7b86ad]">
+            New here? <Link className="font-black text-[#6d4df4] transition-colors hover:text-[#5438dd]" href="/signup">Create an account</Link>
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -294,28 +294,28 @@ export default function NewWorksheetPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px] 2xl:max-w-[1320px]">
-      <div className="overflow-hidden rounded-[24px] border border-[#d8f1e5] bg-white shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
-        <div className="relative border-b border-[#d8f1e5] bg-gradient-to-br from-[#ecfff7] to-[#def8ef] px-5 py-9 sm:px-7 2xl:py-12">
+    <div className="mx-auto max-w-[1120px]">
+      <div className="overflow-hidden rounded-[18px] border border-[#d8f1e5] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
+        <div className="relative border-b border-[#d8f1e5] bg-gradient-to-br from-[#ecfff7] to-[#def8ef] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[620px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/75 px-4 py-2 text-xs font-black text-[#159565] shadow-sm 2xl:text-sm">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#159565] shadow-sm">
               <Sparkles className="h-4 w-4" /> Printable practice
             </div>
-            <h1 className="flex items-center gap-3 text-[34px] font-black tracking-tight text-[#101039] sm:text-[42px] 2xl:text-5xl">
+            <h1 className="flex items-center gap-2.5 text-[28px] font-black tracking-tight text-[#101039] sm:text-[34px]">
               Create Worksheet
             </h1>
-            <p className="mt-4 max-w-[560px] text-base font-medium leading-7 text-[#55516e] 2xl:mt-5 2xl:text-xl 2xl:leading-9">
+            <p className="mt-2.5 max-w-[560px] text-sm font-medium leading-6 text-[#55516e]">
               Generate clean A4 worksheets from selected textbook chapters with only the question types you choose.
             </p>
-            <Button type="button" variant="outline" className="mt-7 border-[#bdebd7] bg-white/90 px-6 text-[#159565]">
+            <Button type="button" variant="outline" className="mt-4 border-[#bdebd7] bg-white/90 px-4 text-[#159565]">
               <BookOpen className="h-4 w-4" /> Textbook grounded
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-5 p-5 sm:p-6 2xl:gap-6 2xl:p-8">
+        <div className="grid gap-4 p-4 sm:p-5">
           <NumericSection number="1" title="Worksheet Setup" subtitle="Select the textbook source and chapters for this worksheet.">
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3 2xl:gap-5">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3">
               <FieldBox label="Board / Curriculum" required>
                 <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}>
                   <option value="">Select Board / Curriculum</option>
@@ -359,13 +359,13 @@ export default function NewWorksheetPage() {
                 </Select>
               </FieldBox>
             </div>
-            <div className="mt-5">
+            <div className="mt-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-black text-[#4f4b68]">Chapters / Units <span className="text-red-500">*</span></p>
                 <span className="rounded-full bg-[#ecfff7] px-3 py-1 text-xs font-black text-[#0b7f53]">{chapterNames.length} selected</span>
               </div>
               {isLoadingChapters ? (
-                <div className="flex min-h-[82px] items-center justify-between gap-3 rounded-[16px] border border-[#dbeafe] bg-[#f8f6fb] px-4 text-sm font-bold text-[#67627d]">
+                <div className="flex min-h-[64px] items-center justify-between gap-3 rounded-xl border border-[#dbeafe] bg-[#f8f6fb] px-4 text-sm font-bold text-[#67627d]">
                   <span>Loading chapters...</span>
                   <LoaderCircle className="h-5 w-5 animate-spin text-[#159565]" />
                 </div>
@@ -383,7 +383,7 @@ export default function NewWorksheetPage() {
                       disabled={!bookId}
                       onClick={() => toggleChapter(name)}
                       aria-pressed={active}
-                      className={`premium-hover-sm flex min-h-[70px] items-start gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
+                      className={`premium-hover-sm flex min-h-[60px] items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_10px_22px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
                     >
                       <span className={`mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
                       <span className="min-w-0 text-sm font-black leading-5">
@@ -408,7 +408,7 @@ export default function NewWorksheetPage() {
                     type="button"
                     onClick={() => toggleQuestionType(type)}
                     aria-pressed={active}
-                    className={`premium-hover-sm flex min-h-[74px] items-center gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
+                    className={`premium-hover-sm flex min-h-[60px] items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_10px_22px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
                   >
                     <span className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
                     <span className="text-sm font-black">{type}</span>
@@ -420,8 +420,8 @@ export default function NewWorksheetPage() {
           </NumericSection>
 
           <NumericSection number="3" title="Difficulty Distribution" subtitle="Choose the balance for easy, medium, and hard questions.">
-            <div className="grid gap-5">
-              <div className="flex rounded-[16px] border border-[#dbeafe] bg-[#eff6ff] p-1.5">
+            <div className="grid gap-4">
+              <div className="flex rounded-xl border border-[#dbeafe] bg-[#eff6ff] p-1">
                 {difficultyPresets.map((preset) => {
                   const active = difficulty.easy === preset.values.easy && difficulty.medium === preset.values.medium && difficulty.hard === preset.values.hard;
                   return (
@@ -429,20 +429,20 @@ export default function NewWorksheetPage() {
                       key={preset.key}
                       type="button"
                       onClick={() => setDifficulty(preset.values)}
-                      className={`h-12 flex-1 rounded-xl text-sm font-black transition-all duration-200 ${active ? "bg-white text-[#101039] shadow-md" : "text-[#67627d] hover:text-emerald-700"}`}
+                      className={`h-10 flex-1 rounded-lg text-sm font-black transition-all duration-200 ${active ? "bg-white text-[#101039] shadow-sm" : "text-[#67627d] hover:text-emerald-700"}`}
                     >
                       {preset.label}
                     </button>
                   );
                 })}
               </div>
-              <div className="overflow-hidden rounded-[16px] border border-[#dbeafe] bg-white">
-                <div className="flex h-5">
+              <div className="overflow-hidden rounded-xl border border-[#dbeafe] bg-white">
+                <div className="flex h-4">
                   <div className="bg-emerald-400 transition-all duration-500" style={{ width: `${difficulty.easy}%` }} />
                   <div className="bg-blue-500 transition-all duration-500" style={{ width: `${difficulty.medium}%` }} />
                   <div className="bg-orange-400 transition-all duration-500" style={{ width: `${difficulty.hard}%` }} />
                 </div>
-                <div className="grid gap-3 p-4 text-sm font-black text-[#101039] md:grid-cols-3">
+                <div className="grid gap-3 p-3 text-sm font-black text-[#101039] md:grid-cols-3">
                   <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" /> Easy {difficulty.easy}%</span>
                   <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-blue-500" /> Medium {difficulty.medium}%</span>
                   <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-orange-400" /> Hard {difficulty.hard}%</span>
@@ -451,7 +451,7 @@ export default function NewWorksheetPage() {
             </div>
           </NumericSection>
 
-          <div className="flex flex-col gap-3 rounded-[18px] border border-[#bdebd7] bg-[#f8fffb] p-4 sm:flex-row sm:items-center sm:justify-between 2xl:p-5">
+          <div className="flex flex-col gap-3 rounded-xl border border-[#bdebd7] bg-[#f8fffb] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
               <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-[14px] bg-[#dbfae6] text-[#24a760]">
                 <ClipboardList className="h-5 w-5" />
@@ -476,15 +476,15 @@ export default function NewWorksheetPage() {
 
 function NumericSection({ number, title, subtitle, children }: { number: string; title: string; subtitle: string; children: ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-[18px] border border-[#dbeafe] bg-white shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:rounded-[20px]">
-      <div className="flex items-start gap-4 p-5 sm:p-6 2xl:p-8">
-        <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#22c977] to-[#079765] text-lg font-black text-white">{number}</div>
+    <section className="overflow-hidden rounded-[16px] border border-[#dbeafe] bg-white shadow-[0_10px_24px_rgba(39,30,91,0.04)]">
+      <div className="flex items-start gap-3 p-4">
+        <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#22c977] to-[#079765] text-base font-black text-white">{number}</div>
         <div>
-          <h2 className="text-base font-black text-[#101039] 2xl:text-lg">{title}</h2>
+          <h2 className="text-base font-black text-[#101039]">{title}</h2>
           <p className="text-sm text-[#67627d]">{subtitle}</p>
         </div>
       </div>
-      <div className="px-5 pb-5 sm:px-6 sm:pb-6 2xl:px-8 2xl:pb-8">{children}</div>
+      <div className="px-4 pb-4">{children}</div>
     </section>
   );
 }

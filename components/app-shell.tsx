@@ -141,7 +141,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
       <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
 
       <main className="min-h-screen pt-16 lg:pt-0">
-        <div className="mx-auto w-full max-w-full px-4 py-5 sm:px-6 lg:px-8 lg:pl-28 xl:py-8">
+        <div className="mx-auto w-full max-w-full px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
           {children}
         </div>
       </main>
@@ -156,9 +156,9 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
   };
 
   return (
-    <aside className="fixed bottom-0 left-6 top-0 z-40 hidden h-[calc(100vh-48px)] translate-y-[24px] lg:block">
+    <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
       <nav className="flex h-full flex-col items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-3 rounded-[32px] border border-white/70 bg-white/85 px-3 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-md">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-white/70 bg-white/85 px-2.5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-md">
           {nav.map((item) => (
             <FloatingNavItem
               key={item.href}
@@ -174,7 +174,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
             href="#"
             onClick={logout}
             title="Logout"
-            className="group flex h-11 w-11 items-center justify-center rounded-2xl text-slate-400 transition-all duration-300 hover:scale-110 hover:bg-red-50 hover:text-red-500"
+            className="group flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition-all duration-300 hover:scale-105 hover:bg-red-50 hover:text-red-500"
           >
             <LogOut className="h-5 w-5" />
           </a>
@@ -193,13 +193,13 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
       onClick={onClick}
       title={item.label}
       className={cn(
-        "group relative flex items-center justify-center transition-all duration-300 hover:scale-110",
-        active ? "scale-110" : ""
+        "group relative flex items-center justify-center transition-all duration-300 hover:scale-105",
+        active ? "scale-105" : ""
       )}
     >
       <span
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300",
+          "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
           active
             ? "bg-white shadow-[0_8px_24px_rgba(59,130,246,0.15)]"
             : "group-hover:bg-blue-50"
@@ -303,10 +303,18 @@ function AuthCheckingScreen() {
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/dashboard" className="block min-w-0">
-      <p className={cn("font-extrabold leading-tight tracking-tight text-slate-900", compact ? "text-base" : "text-lg")}>
-        Teacher AI Tools
-      </p>
+    <Link href="/dashboard" className={cn("block min-w-0", compact && "w-[154px]")}>
+      {compact ? (
+        <img
+          src="/assets/teachpad-logo.png"
+          alt="Teachpad"
+          className="h-auto max-h-8 w-full object-contain"
+        />
+      ) : (
+        <p className="font-extrabold leading-tight tracking-tight text-lg text-slate-900">
+          Teacher AI Tools
+        </p>
+      )}
     </Link>
   );
 }
