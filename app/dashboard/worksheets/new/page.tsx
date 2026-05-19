@@ -365,7 +365,7 @@ export default function NewWorksheetPage() {
                 <span className="rounded-full bg-[#ecfff7] px-3 py-1 text-xs font-black text-[#0b7f53]">{chapterNames.length} selected</span>
               </div>
               {isLoadingChapters ? (
-                <div className="flex min-h-[82px] items-center justify-between gap-3 rounded-[16px] border border-[#ebe7f4] bg-[#f8f6fb] px-4 text-sm font-bold text-[#67627d]">
+                <div className="flex min-h-[82px] items-center justify-between gap-3 rounded-[16px] border border-[#dbeafe] bg-[#f8f6fb] px-4 text-sm font-bold text-[#67627d]">
                   <span>Loading chapters...</span>
                   <LoaderCircle className="h-5 w-5 animate-spin text-[#159565]" />
                 </div>
@@ -383,7 +383,7 @@ export default function NewWorksheetPage() {
                       disabled={!bookId}
                       onClick={() => toggleChapter(name)}
                       aria-pressed={active}
-                      className={`premium-hover-sm flex min-h-[70px] items-start gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#ebe7f4] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
+                      className={`premium-hover-sm flex min-h-[70px] items-start gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
                     >
                       <span className={`mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
                       <span className="min-w-0 text-sm font-black leading-5">
@@ -408,7 +408,7 @@ export default function NewWorksheetPage() {
                     type="button"
                     onClick={() => toggleQuestionType(type)}
                     aria-pressed={active}
-                    className={`premium-hover-sm flex min-h-[74px] items-center gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#ebe7f4] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
+                    className={`premium-hover-sm flex min-h-[74px] items-center gap-3 rounded-[16px] border p-4 text-left transition-all duration-200 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_12px_28px_rgba(22,163,99,0.10)]" : "border-[#dbeafe] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
                   >
                     <span className={`grid h-8 w-8 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
                     <span className="text-sm font-black">{type}</span>
@@ -421,7 +421,7 @@ export default function NewWorksheetPage() {
 
           <NumericSection number="3" title="Difficulty Distribution" subtitle="Choose the balance for easy, medium, and hard questions.">
             <div className="grid gap-5">
-              <div className="flex rounded-[16px] border border-[#ebe7f4] bg-[#fbfaff] p-1.5">
+              <div className="flex rounded-[16px] border border-[#dbeafe] bg-[#eff6ff] p-1.5">
                 {difficultyPresets.map((preset) => {
                   const active = difficulty.easy === preset.values.easy && difficulty.medium === preset.values.medium && difficulty.hard === preset.values.hard;
                   return (
@@ -436,7 +436,7 @@ export default function NewWorksheetPage() {
                   );
                 })}
               </div>
-              <div className="overflow-hidden rounded-[16px] border border-[#ebe7f4] bg-white">
+              <div className="overflow-hidden rounded-[16px] border border-[#dbeafe] bg-white">
                 <div className="flex h-5">
                   <div className="bg-emerald-400 transition-all duration-500" style={{ width: `${difficulty.easy}%` }} />
                   <div className="bg-blue-500 transition-all duration-500" style={{ width: `${difficulty.medium}%` }} />
@@ -476,7 +476,7 @@ export default function NewWorksheetPage() {
 
 function NumericSection({ number, title, subtitle, children }: { number: string; title: string; subtitle: string; children: ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-[18px] border border-[#ebe7f4] bg-white shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:rounded-[20px]">
+    <section className="overflow-hidden rounded-[18px] border border-[#dbeafe] bg-white shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:rounded-[20px]">
       <div className="flex items-start gap-4 p-5 sm:p-6 2xl:p-8">
         <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#22c977] to-[#079765] text-lg font-black text-white">{number}</div>
         <div>

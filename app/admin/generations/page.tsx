@@ -48,7 +48,7 @@ export default function AdminGenerationsPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <MetricCard label="Total Records" value={generations.data?.total || 0} detail="Lesson plans" tone="blue" icon={<FileText className="h-5 w-5" />} />
         <MetricCard label="Known Users" value={users.data?.total || 0} detail="Account names" tone="green" icon={<Users className="h-5 w-5" />} />
-        <MetricCard label="Showing" value={filteredGenerations.length} detail="Filtered results" tone="violet" icon={<Wand2 className="h-5 w-5" />} />
+        <MetricCard label="Showing" value={filteredGenerations.length} detail="Filtered results" tone="blue" icon={<Wand2 className="h-5 w-5" />} />
       </div>
 
       <AdminPanel

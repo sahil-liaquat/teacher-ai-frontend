@@ -24,7 +24,7 @@ html {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  background: #fbfaff;
+  background: #eff6ff;
 }
 
 body {
@@ -35,7 +35,7 @@ body {
   background:
     radial-gradient(circle at top left, rgba(152, 97, 255, 0.08), transparent 32rem),
     radial-gradient(circle at 75% 15%, rgba(45, 143, 212, 0.06), transparent 28rem),
-    #fbfaff;
+    #eff6ff;
   color: #101039;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
@@ -48,7 +48,7 @@ canvas {
 }
 
 ::selection {
-  background: #8d57f6;
+  background: #2563eb;
   color: white;
 }
 
@@ -82,11 +82,11 @@ textarea::placeholder {
 }
 
 .print-shell {
-  background: #fbfaff;
+  background: #eff6ff;
 }
 
 .tat-card {
-  border: 1px solid #ebe7f4;
+  border: 1px solid #dbeafe;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 18px 50px rgba(39, 30, 91, 0.08);
   backdrop-filter: blur(20px);
@@ -100,7 +100,7 @@ textarea::placeholder {
 
 .tat-soft-grid {
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
   background-size: 28px 28px;
 }
@@ -108,22 +108,22 @@ textarea::placeholder {
 .glass {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(16px);
-  border: 1px solid #ebe7f4;
+  border: 1px solid #dbeafe;
 }
 
 .gradient-text-blue {
-  background: linear-gradient(135deg, #8d57f6, #4e35dd);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #8d57f6, #4e35dd);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
 .btn-gradient:hover {
-  background: linear-gradient(135deg, #7a43e8, #412cc9);
+  background: linear-gradient(135deg, #2563eb, #412cc9);
 }
 
 @keyframes page-in {
@@ -169,7 +169,7 @@ textarea::placeholder {
 @keyframes glow-pulse {
   0%,
   100% {
-    box-shadow: 0 20px 50px rgba(99, 102, 241, 0.15), inset 0 1px 0 0 rgba(232, 236, 241, 0.08);
+    box-shadow: 0 20px 50px rgba(37, 99, 235, 0.15), inset 0 1px 0 0 rgba(232, 236, 241, 0.08);
   }
   50% {
     box-shadow: 0 30px 70px rgba(59, 130, 246, 0.2), inset 0 1px 0 0 rgba(232, 236, 241, 0.12);
@@ -190,10 +190,10 @@ textarea::placeholder {
 
 @keyframes neon-glow {
   0%, 100% {
-    text-shadow: 0 0 10px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.15);
+    text-shadow: 0 0 10px rgba(37, 99, 235, 0.3), 0 0 20px rgba(37, 99, 235, 0.15);
   }
   50% {
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(99, 102, 241, 0.25);
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(37, 99, 235, 0.25);
   }
 }
 
@@ -237,13 +237,13 @@ textarea::placeholder {
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 15px rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 15px rgba(37, 99, 235, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
   }
 }
 
@@ -357,7 +357,7 @@ textarea::placeholder {
 @media (hover: hover) and (pointer: fine) {
   .interactive-card:hover {
     transform: translateY(-6px);
-    border-color: rgba(99, 102, 241, 0.35);
+    border-color: rgba(37, 99, 235, 0.35);
     box-shadow: 0 24px 58px rgba(39, 30, 91, 0.13), inset 0 1px 0 0 rgba(232, 236, 241, 0.08);
   }
 }
@@ -384,7 +384,7 @@ textarea::placeholder {
 @media (hover: hover) and (pointer: fine) {
   .lesson-section:hover {
     transform: translateY(-5px);
-    border-color: rgba(99, 102, 241, 0.35);
+    border-color: rgba(37, 99, 235, 0.35);
     box-shadow: 0 22px 52px rgba(39, 30, 91, 0.12), inset 0 1px 0 0 rgba(232, 236, 241, 0.08);
   }
 }
@@ -481,7 +481,7 @@ textarea::placeholder {
   height: 58px;
   width: 58px;
   border-radius: 999px;
-  border: 5px solid #4e35dd;
+  border: 5px solid #1d4ed8;
   background: radial-gradient(circle at 34% 32%, rgba(255, 255, 255, 0.8), rgba(141, 87, 246, 0.16));
   box-shadow: 0 0 28px rgba(78, 53, 221, 0.25);
 }
@@ -493,7 +493,7 @@ textarea::placeholder {
   height: 38px;
   width: 8px;
   border-radius: 999px;
-  background: #4e35dd;
+  background: #1d4ed8;
   transform: rotate(-42deg);
   transform-origin: top center;
 }
@@ -509,7 +509,7 @@ textarea::placeholder {
 }
 
 .generation-particle:nth-child(3n) {
-  background: #8d57f6;
+  background: #2563eb;
   box-shadow: 0 0 18px rgba(141, 87, 246, 0.7);
 }
 
@@ -553,8 +553,8 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(99, 102, 241, 0.1);
-  box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.08);
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: inset 0 0 20px rgba(37, 99, 235, 0.08);
 }
 
 @keyframes bar-rise {
@@ -615,16 +615,16 @@ tbody tr:hover {
   }
 }
 
-@keyframes sparkle-violet {
+@keyframes sparkle-blue {
   0%, 100% {
     opacity: 0;
     transform: scale(0.5);
-    box-shadow: 0 0 4px 2px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 4px 2px rgba(59, 130, 246, 0.3);
   }
   50% {
     opacity: 1;
     transform: scale(1.2);
-    box-shadow: 0 0 12px 4px rgba(139, 92, 246, 0.6);
+    box-shadow: 0 0 12px 4px rgba(59, 130, 246, 0.6);
   }
 }
 
@@ -658,8 +658,8 @@ tbody tr:hover {
   animation: flip-page 1.4s ease-in-out infinite;
 }
 
-.animate-sparkle-violet {
-  animation: sparkle-violet 2s ease-in-out infinite;
+.animate-sparkle-blue {
+  animation: sparkle-blue 2s ease-in-out infinite;
 }
 
 .animate-sparkle-emerald {
@@ -691,7 +691,7 @@ tbody tr:hover {
   .lesson-section,
   .lesson-component-card,
   .animate-flip-page,
-  .animate-sparkle-violet,
+  .animate-sparkle-blue,
   .animate-sparkle-emerald,
   .animate-sparkle-amber,
   .animate-chart-appear,

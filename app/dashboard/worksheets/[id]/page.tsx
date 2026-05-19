@@ -62,8 +62,8 @@ export default function WorksheetDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#ebe7f4] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#ded7ed] border-t-[#6f3ee9]" />
+      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#dbeafe] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#bfdbfe] border-t-[#6f3ee9]" />
         <p className="mt-4 text-sm font-bold text-[#67627d]">Loading worksheet...</p>
       </div>
     );
@@ -71,7 +71,7 @@ export default function WorksheetDetailPage() {
 
   if (!generation?.output_json) {
     return (
-      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#ebe7f4] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
+      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#dbeafe] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
         <h1 className="text-xl font-black text-[#101039]">Worksheet not found</h1>
         <p className="mt-2 text-sm font-medium text-[#67627d]">Generate a worksheet again to open the printable output.</p>
       </div>

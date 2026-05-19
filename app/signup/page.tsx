@@ -39,11 +39,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <header className="sticky top-0 z-50 border-b border-white/50 bg-white/90 shadow-md backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg 2xl:h-12 2xl:w-12">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg 2xl:h-12 2xl:w-12">
               <Brain className="h-6 w-6 text-white 2xl:h-7 2xl:w-7" />
             </div>
             <div>
@@ -59,7 +59,7 @@ export default function SignupPage() {
 
       <main className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-10 lg:grid-cols-[1fr_420px] 2xl:max-w-6xl 2xl:gap-10 2xl:py-16 2xl:grid-cols-[1fr_460px]">
         <section className="hidden lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-bold text-violet-700 shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 shadow-md">
             <Sparkles className="h-4 w-4" />
             Start your AI teaching workspace
           </div>
@@ -87,7 +87,7 @@ export default function SignupPage() {
               </Button>
             </form>
             <p className="mt-5 text-center text-sm text-slate-600">
-              Already have an account? <Link className="font-bold text-violet-600" href="/login">Login</Link>
+              Already have an account? <Link className="font-bold text-blue-600" href="/login">Login</Link>
             </p>
           </CardContent>
         </Card>

@@ -174,7 +174,7 @@ export default function AdminCurriculumPage() {
               return (
                 <div key={board.id} className={cn(
                   "rounded-xl border p-4 transition-all",
-                  selected ? "border-indigo-200 bg-indigo-50/50" : "border-gray-200 bg-white"
+                  selected ? "border-blue-200 bg-blue-50/50" : "border-gray-200 bg-white"
                 )}>
                   {editing ? (
                     <div className="space-y-3">

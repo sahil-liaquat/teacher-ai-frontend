@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 const kpis = [
   { key: "total_users", label: "Total Users", detail: "All accounts", icon: Users, tone: "blue" as const },
   { key: "active_users", label: "Active Users", detail: "Can sign in", icon: ShieldCheck, tone: "green" as const },
-  { key: "lesson_plans_generated", label: "Lesson Plans", detail: "Generated outputs", icon: FileText, tone: "violet" as const },
+  { key: "lesson_plans_generated", label: "Lesson Plans", detail: "Generated outputs", icon: FileText, tone: "blue" as const },
   { key: "worksheets_generated", label: "Worksheets", detail: "Worksheet records", icon: Wand2, tone: "amber" as const },
   { key: "books_in_library", label: "Books", detail: "Content library", icon: LibraryBig, tone: "rose" as const },
   { key: "total_ai_calls", label: "AI Calls", detail: "Total requests", icon: Activity, tone: "slate" as const }
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         <AdminPanel
           title="Recent Generations"
           description="Latest lesson plan activity"
-          actions={<Link href="/admin/generations" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">View all <ArrowRight className="h-4 w-4" /></Link>}
+          actions={<Link href="/admin/generations" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
         >
           {filteredGenerations.length === 0 ? (
             <Empty label="No recent generations" />
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
         <AdminPanel 
           title="Top Books" 
           description="Most active content"
-          actions={<Link href="/admin/textbooks" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">View all <ArrowRight className="h-4 w-4" /></Link>}
+          actions={<Link href="/admin/textbooks" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
         >
           {filteredBooks.length === 0 ? (
             <Empty label="No books found" />
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
                   href={item.id ? `/admin/textbooks/${item.id}` : "/admin/textbooks"} 
                   className="flex items-center gap-3 rounded-xl border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <BookOpen className="h-5 w-5" />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
         <AdminPanel 
           title="Recent Users" 
           description="Latest account activity"
-          actions={<Link href="/admin/users" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">View all <ArrowRight className="h-4 w-4" /></Link>}
+          actions={<Link href="/admin/users" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
         >
           {filteredUsers.length === 0 ? (
             <Empty label="No users found" />

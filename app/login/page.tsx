@@ -59,11 +59,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
       <AuthHeader actionHref="/signup" actionLabel="Signup" />
       <main className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 lg:grid-cols-[1fr_400px] 2xl:max-w-6xl 2xl:gap-10 2xl:py-20 2xl:grid-cols-[1fr_440px]">
         <section className="hidden lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-bold text-violet-700 shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 shadow-md">
             <Sparkles className="h-4 w-4" />
             Teacher AI Toolkit
           </div>
@@ -74,8 +74,8 @@ export default function LoginPage() {
             Access the redesigned workspace for lesson plans, worksheets, saved resources, books, and reports.
           </p>
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-4 2xl:mt-10 2xl:gap-5">
-            <div className="rounded-[20px] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
-              <BookOpen className="h-8 w-8 text-violet-600 2xl:h-9 2xl:w-9" />
+            <div className="rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg 2xl:p-6">
+              <BookOpen className="h-8 w-8 text-blue-600 2xl:h-9 2xl:w-9" />
               <p className="mt-4 text-lg font-bold text-slate-900 2xl:mt-5 2xl:text-xl">Lesson plans</p>
               <p className="mt-1 text-sm font-medium text-slate-600">Build textbook-grounded classroom plans</p>
             </div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
               </Button>
             </form>
             <p className="text-center text-sm text-slate-600">
-              New here? <Link className="font-semibold text-violet-600 transition-colors hover:text-violet-700" href="/signup">Create an account</Link>
+              New here? <Link className="font-semibold text-blue-600 transition-colors hover:text-blue-700" href="/signup">Create an account</Link>
             </p>
           </CardContent>
         </Card>
@@ -119,7 +119,7 @@ function AuthHeader({ actionHref, actionLabel }: { actionHref: string; actionLab
     <header className="sticky top-0 z-50 border-b border-white/50 bg-white/90 shadow-md backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg 2xl:h-12 2xl:w-12">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg 2xl:h-12 2xl:w-12">
             <Brain className="h-6 w-6 text-white 2xl:h-7 2xl:w-7" />
           </div>
           <div>

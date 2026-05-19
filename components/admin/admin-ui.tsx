@@ -19,7 +19,7 @@ export function AdminPageHeader({
     <section className="rounded-xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">{eyebrow}</p>}
+          {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>}
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{title}</h1>
           {description && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">{description}</p>}
           {meta && <div className="mt-4 flex flex-wrap gap-2">{meta}</div>}
@@ -74,15 +74,14 @@ export function MetricCard({
   value: ReactNode;
   detail?: string;
   icon: ReactNode;
-  tone?: "blue" | "green" | "amber" | "rose" | "slate" | "violet";
+  tone?: "blue" | "green" | "amber" | "rose" | "slate";
 }) {
   const toneClasses = {
     blue: "bg-blue-50 text-blue-600 ring-blue-100",
     green: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     amber: "bg-amber-50 text-amber-600 ring-amber-100",
     rose: "bg-rose-50 text-rose-600 ring-rose-100",
-    slate: "bg-gray-100 text-gray-600 ring-gray-200",
-    violet: "bg-violet-50 text-violet-600 ring-violet-100"
+    slate: "bg-gray-100 text-gray-600 ring-gray-200"
   };
 
   return (

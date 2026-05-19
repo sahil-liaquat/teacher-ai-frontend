@@ -52,14 +52,14 @@ export default function LessonPlanDetailPage() {
 function LessonPlanLoadingState() {
   return (
     <div className="mx-auto max-w-[1180px] 2xl:max-w-[1440px]">
-      <Card className="overflow-hidden border-[#ebe7f4] shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
+      <Card className="overflow-hidden border-[#dbeafe] shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
         <CardContent className="grid gap-5 p-5 sm:p-7 2xl:p-8">
           <div className="flex items-center gap-4">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#f1edff]">
-              <span className="h-3 w-3 animate-ping rounded-full bg-[#6d38f2]" />
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#dbeafe]">
+              <span className="h-3 w-3 animate-ping rounded-full bg-[#2563eb]" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="h-7 w-64 max-w-full animate-pulse rounded-[12px] bg-[#f1edff]" />
+              <div className="h-7 w-64 max-w-full animate-pulse rounded-[12px] bg-[#dbeafe]" />
               <div className="mt-3 h-4 w-80 max-w-full animate-pulse rounded-[10px] bg-[#f7f4ff]" />
             </div>
           </div>
@@ -80,5 +80,5 @@ function LessonPlanLoadingState() {
 }
 
 function LoadingBlock({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-[18px] border border-[#ebe7f4] bg-[#fbfaff] ${className}`} />;
+  return <div className={`animate-pulse rounded-[18px] border border-[#dbeafe] bg-[#eff6ff] ${className}`} />;
 }

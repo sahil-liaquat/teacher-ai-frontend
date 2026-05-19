@@ -104,7 +104,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="border-b border-gray-100 px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <Link href="/admin" className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
                   <Shield className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
@@ -133,7 +133,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="border-t border-gray-100 p-4">
             <div className="rounded-xl bg-gray-50 p-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                   <Users className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -194,13 +194,13 @@ function AdminNavLink({ item, active }: { item: AdminNavItem; active: boolean })
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
         active 
-          ? "bg-indigo-50 text-indigo-600" 
+          ? "bg-blue-50 text-blue-600" 
           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
       )}
     >
-      <Icon className={cn("h-5 w-5", active ? "text-indigo-600" : "text-gray-400")} />
+      <Icon className={cn("h-5 w-5", active ? "text-blue-600" : "text-gray-400")} />
       <span className="flex-1">{item.label}</span>
-      {active && <ChevronRight className="h-4 w-4 text-indigo-400" />}
+      {active && <ChevronRight className="h-4 w-4 text-blue-400" />}
     </Link>
   );
 }
@@ -209,7 +209,7 @@ function AdminAuthScreen() {
   return (
     <main className="grid min-h-screen place-items-center bg-gray-50 px-4">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
         <p className="text-sm font-medium text-gray-600">Checking admin access...</p>
       </div>
     </main>

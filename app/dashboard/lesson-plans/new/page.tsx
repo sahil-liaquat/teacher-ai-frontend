@@ -16,12 +16,12 @@ const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, tone: "orange" },
   { title: "Direct Instruction", body: "Detailed explanation from selected chapter", icon: BookOpen, tone: "blue" },
   { title: "Classroom Activity", body: "Hands-on or group activity", icon: Users, tone: "green" },
-  { title: "Class Discussion", body: "Discussion to encourage thinking", icon: MessageCircle, tone: "purple" },
+  { title: "Class Discussion", body: "Discussion to encourage thinking", icon: MessageCircle, tone: "blue" },
   { title: "Assessment", body: "Questions to check understanding", icon: ClipboardCheck, tone: "orange" },
-  { title: "Materials Needed", body: "Resources required for class", icon: Boxes, tone: "purple" },
+  { title: "Materials Needed", body: "Resources required for class", icon: Boxes, tone: "blue" },
   { title: "Differentiation", body: "Support for diverse learners", icon: Brain, tone: "blue" },
   { title: "Teacher Notes", body: "Extra guidance for teacher", icon: FileText, tone: "orange" },
-  { title: "Homework", body: "Practice after class", icon: GraduationCap, tone: "purple" },
+  { title: "Homework", body: "Practice after class", icon: GraduationCap, tone: "blue" },
   { title: "Extension Activity", body: "Extra activity for advanced learners", icon: Rocket, tone: "blue" }
 ];
 const defaultLessonComponents = [
@@ -243,19 +243,19 @@ export default function NewLessonPlanPage() {
   return (
     <div className="mx-auto max-w-[1120px] 2xl:max-w-[1320px]">
       <div className="overflow-visible rounded-[24px] border border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-        <div className="relative min-h-[240px] overflow-hidden rounded-t-[24px] border-b border-white/50 bg-gradient-to-br from-violet-50 via-purple-50 to-white px-5 py-9 sm:px-7 2xl:min-h-[300px] 2xl:py-12">
+        <div className="relative min-h-[240px] overflow-hidden rounded-t-[24px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-9 sm:px-7 2xl:min-h-[300px] 2xl:py-12">
           <div className="relative z-10 max-w-[560px] 2xl:max-w-[620px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/70 border border-violet-200 px-4 py-2 text-xs font-bold text-violet-700 shadow-md backdrop-blur-sm"><Sparkles className="h-4 w-4" /> AI-Powered</div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/70 border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 shadow-md backdrop-blur-sm"><Sparkles className="h-4 w-4" /> AI-Powered</div>
             <h1 className="flex items-center gap-3 text-[34px] font-extrabold tracking-tight text-slate-900 sm:text-[42px] 2xl:text-5xl">Create Lesson Plan</h1>
             <p className="mt-4 max-w-[520px] text-base font-medium leading-relaxed text-slate-600 2xl:mt-5 2xl:max-w-[560px] 2xl:text-lg 2xl:leading-9">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
-            <Button type="button" variant="outline" className="mt-7 border-violet-200 bg-white/90 px-6 text-violet-700 hover:bg-violet-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
+            <Button type="button" variant="outline" className="mt-7 border-blue-200 bg-white/90 px-6 text-blue-700 hover:bg-blue-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
           </div>
           <div className="absolute bottom-0 right-6 hidden h-64 w-[560px] 2xl:block 2xl:h-80 2xl:w-[720px]">
             <div className="absolute bottom-0 right-0 h-52 w-[620px] rounded-t-full bg-white/60" />
             <div className="absolute bottom-28 right-[288px] h-28 w-28 rounded-t-full bg-emerald-200/50" />
             <div className="absolute bottom-[72px] right-[264px] h-[72px] w-36 rounded-[14px] bg-emerald-100/50" />
-            <div className="absolute bottom-[88px] right-24 h-32 w-32 rounded-[18px] bg-violet-500/75 shadow-lg" />
-            <div className="absolute bottom-[120px] right-[72px] h-20 w-10 rotate-12 rounded-[12px] bg-violet-600/75" />
+            <div className="absolute bottom-[88px] right-24 h-32 w-32 rounded-[18px] bg-blue-500/75 shadow-lg" />
+            <div className="absolute bottom-[120px] right-[72px] h-20 w-10 rotate-12 rounded-[12px] bg-blue-600/75" />
             <div className="absolute bottom-0 right-[180px] h-28 w-20 rounded-t-[16px] bg-amber-200/90" />
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function NewLessonPlanPage() {
               expandable
               open={openSections.objectives}
               onToggle={() => setOpenSections((sections) => ({ ...sections, objectives: !sections.objectives }))}
-              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} className="w-full border-indigo-300 text-indigo-600 hover:bg-indigo-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
+              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
             >
               <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} />
               <div className="mt-2 flex justify-end text-xs text-slate-500">{learningObjective.length}/300</div>
@@ -307,11 +307,11 @@ export default function NewLessonPlanPage() {
                       type="button"
                       onClick={() => toggleComponent(component.title)}
                       aria-pressed={active}
-                      className={`group rounded-2xl border bg-white p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-[0_16px_36px_rgba(85,66,188,0.14)] ${active ? "border-indigo-300 bg-indigo-50/70 shadow-[0_12px_28px_rgba(85,66,188,0.10)]" : "border-slate-200"}`}
+                      className={`group rounded-2xl border bg-white p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_16px_36px_rgba(37,99,235,0.14)] ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_12px_28px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
                     >
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div className={`grid h-10 w-10 place-items-center rounded-lg ${toneClass(component.tone)}`}><Icon className="h-5 w-5" /></div>
-                        <span className={`grid h-6 w-6 place-items-center rounded-full border-2 text-xs font-black transition-all duration-300 ${active ? "border-indigo-500 bg-indigo-500 text-white" : "border-slate-300 bg-transparent text-transparent group-hover:border-indigo-300"}`}>✓</span>
+                        <span className={`grid h-6 w-6 place-items-center rounded-full border-2 text-xs font-black transition-all duration-300 ${active ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300 bg-transparent text-transparent group-hover:border-blue-300"}`}>✓</span>
                       </div>
                       <p className="font-black text-slate-900">{component.title}</p>
                       <p className="mt-1 text-sm leading-5 text-slate-600">{component.body}</p>
@@ -322,7 +322,7 @@ export default function NewLessonPlanPage() {
               {!selected.length ? <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one lesson component to generate.</p> : null}
             </NumericSection>
 
-            <div className="flex flex-col gap-3 rounded-[18px] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4 sm:flex-row sm:items-center sm:justify-between 2xl:p-5">
+            <div className="flex flex-col gap-3 rounded-[18px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 sm:flex-row sm:items-center sm:justify-between 2xl:p-5">
               <div>
                 <p className="text-base font-bold text-slate-900">Generate classroom-ready output</p>
                 <p className="mt-1 text-sm font-medium text-slate-600">{isLoadingOptions ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
@@ -374,7 +374,7 @@ function NumericSection({
               type="button"
               onClick={onToggle}
               aria-label={`${open ? "Collapse" : "Expand"} ${title}`}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm transition hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700"
+              className="grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm transition hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
             >
               <ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
             </button>
@@ -395,7 +395,7 @@ function NumericSection({
 function SectionTitle({ number, title, subtitle }: { number: string; title: string; subtitle: string }) {
   return (
     <>
-      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-lg font-extrabold text-white shadow-lg">{number}</div>
+      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-lg font-extrabold text-white shadow-lg">{number}</div>
       <div>
         <h2 className="text-base font-bold text-slate-900 2xl:text-lg">{title}</h2>
         <p className="text-sm text-slate-600">{subtitle}</p>
@@ -416,5 +416,5 @@ function toneClass(tone: string) {
   return tone === "blue" ? "bg-gradient-to-br from-sky-100 to-blue-100 text-blue-700" : 
          tone === "green" ? "bg-gradient-to-br from-emerald-100 to-green-100 text-emerald-700" : 
          tone === "orange" ? "bg-gradient-to-br from-amber-100 to-orange-100 text-orange-700" : 
-         "bg-gradient-to-br from-violet-100 to-purple-100 text-violet-700"; 
+         "bg-gradient-to-br from-blue-100 to-blue-100 text-blue-700"; 
 }

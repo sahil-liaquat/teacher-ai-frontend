@@ -78,7 +78,7 @@ export default function TeacherTextbooksPage() {
             <div key={board.id} className="premium-hover rounded-[24px] border border-white/70 bg-white/80 p-4 sm:p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-100 to-purple-50 text-violet-600 shrink-0">
+                  <div className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 shrink-0">
                     <Layers className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
                   <div>
@@ -106,7 +106,7 @@ export default function TeacherTextbooksPage() {
                       {cls.books.length ? cls.books.map((book) => (
                         <div key={book.id} className="rounded-xl border border-slate-100 bg-white p-2.5">
                           <div className="flex items-start gap-2">
-                            <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500" />
+                            <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-xs sm:text-sm font-semibold text-slate-900 leading-tight">{book.title}</p>
                               <div className="mt-1.5 flex flex-wrap gap-1">

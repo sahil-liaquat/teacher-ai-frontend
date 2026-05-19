@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
 const kpis = [
-  { label: "Total Generations", value: "158", icon: Sparkles, tone: "bg-[#f1edff] text-[#6d38f2]" },
+  { label: "Total Generations", value: "158", icon: Sparkles, tone: "bg-[#dbeafe] text-[#2563eb]" },
   { label: "Lesson Plans", value: "64", icon: BookOpen, tone: "bg-[#eaf4ff] text-[#1684f6]" },
   { label: "Worksheets", value: "56", icon: ClipboardCheck, tone: "bg-[#eafff3] text-emerald-700" },
   { label: "Exports", value: "38", icon: Download, tone: "bg-[#fff4df] text-orange-700" }
@@ -15,7 +15,7 @@ const kpis = [
 
 const usageBars = [34, 52, 46, 70, 62, 86, 74, 96, 78, 68, 88, 72];
 const books: [string, number, string][] = [
-  ["Science Class 8", 42, "bg-[#6d38f2]"],
+  ["Science Class 8", 42, "bg-[#2563eb]"],
   ["Mathematics Class 7", 31, "bg-emerald-500"],
   ["English Reader", 24, "bg-blue-500"],
   ["Social Science", 18, "bg-orange-400"]
@@ -27,7 +27,7 @@ export default function ReportsPage() {
       <header className="rounded-2xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 sm:mb-4 sm:px-4 sm:py-2 sm:text-sm">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 sm:mb-4 sm:px-4 sm:py-2 sm:text-sm">
               <BarChart3 className="h-4 w-4" />
               Reports & Analytics
             </div>
@@ -43,7 +43,7 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="grid gap-3 p-4 sm:p-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative col-span-1 sm:col-span-2 lg:col-span-4">
-            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-500" />
+            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-500" />
             <Input type="date" className="pl-9 w-full" />
           </div>
           <Select className="w-full"><option>All classes</option><option>8th Grade</option><option>9th Grade</option></Select>
@@ -74,14 +74,14 @@ export default function ReportsPage() {
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-slate-900"><TrendingUp className="h-5 w-5 text-violet-600" /> Usage Trend</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-slate-900"><TrendingUp className="h-5 w-5 text-blue-600" /> Usage Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex h-48 sm:h-72 items-end gap-2 sm:gap-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 sm:px-6 pb-4 sm:pb-6 pt-6 sm:pt-10 overflow-x-auto">
               {usageBars.map((height, index) => (
                 <div key={index} className="flex flex-1 flex-col items-center gap-2 sm:gap-3 min-w-[20px]">
                   <div
-                    className="w-full min-w-[8px] sm:min-w-[12px] max-w-[24px] sm:max-w-[32px] rounded-t-full bg-gradient-to-t from-violet-500 to-blue-500 shadow-lg transition-all duration-500 hover:scale-y-105"
+                    className="w-full min-w-[8px] sm:min-w-[12px] max-w-[24px] sm:max-w-[32px] rounded-t-full bg-gradient-to-t from-blue-500 to-blue-500 shadow-lg transition-all duration-500 hover:scale-y-105"
                     style={{ height: `${Math.max(8, height * (index < 5 ? 1.5 : 2))}px` }}
                   />
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-500">{index + 1}</span>

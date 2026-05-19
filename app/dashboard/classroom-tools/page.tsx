@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const tools = [
-  { title: "Create Lesson Plan", description: "Generate complete textbook-grounded lesson plans with objectives, timeline, assessment, and notes.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "purple", badge: "Ready" },
+  { title: "Create Lesson Plan", description: "Generate complete textbook-grounded lesson plans with objectives, timeline, assessment, and notes.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "blue", badge: "Ready" },
   { title: "Create Worksheet", description: "Generate printable worksheet screens with answer keys and marking schemes using the existing worksheet integration.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green", badge: "Ready" },
   { title: "Quiz Generator", description: "Build quick checks for understanding from selected chapters and classroom objectives.", href: "#", icon: FileQuestion, tone: "blue", badge: "Coming soon" },
   { title: "Rubric Assistant", description: "Draft evaluation rubrics and feedback criteria for assignments, projects, and activities.", href: "#", icon: MessageSquareText, tone: "orange", badge: "Coming soon" }
@@ -26,9 +26,9 @@ export default function ClassroomToolsPage() {
 
   return (
     <div className="grid gap-4 2xl:gap-7">
-      <header className="premium-hover flex flex-col gap-3 rounded-[18px] border border-[#ebe7f4] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:flex-row 2xl:items-center 2xl:justify-between 2xl:rounded-[24px] 2xl:p-7">
+      <header className="premium-hover flex flex-col gap-3 rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:flex-row 2xl:items-center 2xl:justify-between 2xl:rounded-[24px] 2xl:p-7">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#f0e5ff] px-3 py-1.5 text-xs font-black text-[#7a43e8] 2xl:mb-4 2xl:px-4 2xl:py-2 2xl:text-sm">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#dbeafe] px-3 py-1.5 text-xs font-black text-[#2563eb] 2xl:mb-4 2xl:px-4 2xl:py-2 2xl:text-sm">
             <Sparkles className="h-4 w-4" />
             AI Tools
           </div>
@@ -40,7 +40,7 @@ export default function ClassroomToolsPage() {
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-base font-semibold outline-none focus:border-[#b998f6] focus:ring-4 focus:ring-[#8d57f6]/10 sm:text-sm 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
+            className="h-11 w-full rounded-[13px] border border-[#e5e1f1] bg-white px-11 text-base font-semibold outline-none focus:border-[#93c5fd] focus:ring-4 focus:ring-[#2563eb]/10 sm:text-sm 2xl:h-12 2xl:rounded-[14px] 2xl:px-12"
             placeholder="Search tools..."
           />
         </label>
@@ -51,7 +51,7 @@ export default function ClassroomToolsPage() {
           const Icon = tool.icon;
           const available = tool.href !== "#";
           const card = (
-            <div className="premium-hover flex h-full min-h-[210px] flex-col rounded-[18px] border border-[#ebe7f4] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:min-h-[290px] 2xl:rounded-[24px] 2xl:p-7">
+            <div className="premium-hover flex h-full min-h-[210px] flex-col rounded-[18px] border border-[#dbeafe] bg-white p-4 shadow-[0_14px_38px_rgba(39,30,91,0.06)] 2xl:min-h-[290px] 2xl:rounded-[24px] 2xl:p-7">
               <div className={cn("grid h-12 w-12 place-items-center rounded-[14px] shadow-[0_12px_24px_rgba(39,30,91,0.07)] 2xl:h-[72px] 2xl:w-[72px] 2xl:rounded-[18px]", toneClass(tool.tone))}>
                 <Icon className="h-6 w-6 2xl:h-9 2xl:w-9" />
               </div>
@@ -81,10 +81,9 @@ export default function ClassroomToolsPage() {
 
 function toneClass(tone: string) {
   const tones: Record<string, string> = {
-    purple: "bg-[#eee0ff] text-[#7a43e8]",
+    blue: "bg-[#dbeafe] text-[#2563eb]",
     green: "bg-[#dbfae6] text-[#24a760]",
-    orange: "bg-[#fff0d8] text-[#d88920]",
-    blue: "bg-[#e3f0ff] text-[#2c75d0]"
+    orange: "bg-[#fff0d8] text-[#d88920]"
   };
-  return tones[tone] || tones.purple;
+  return tones[tone] || tones.blue;
 }

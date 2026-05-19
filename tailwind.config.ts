@@ -27,17 +27,17 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'neon-purple': 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+        'neon-blue': 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
         'neon-cyan': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        'neon-pink': 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-        'neon-gradient': 'linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #10b981 100%)'
+        'neon-pink': 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+        'neon-gradient': 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #10b981 100%)'
       },
       boxShadow: {
-        soft: "0 18px 45px rgba(99, 102, 241, 0.15)",
-        neon: "0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(59, 130, 246, 0.2)",
-        glow: "0 0 30px rgba(99, 102, 241, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)",
+        soft: "0 18px 45px rgba(37, 99, 235, 0.15)",
+        neon: "0 0 20px rgba(37, 99, 235, 0.3), 0 0 40px rgba(59, 130, 246, 0.2)",
+        glow: "0 0 30px rgba(37, 99, 235, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)",
         'glow-cyan': "0 0 30px rgba(59, 130, 246, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)",
-        'glow-pink': "0 0 30px rgba(168, 162, 250, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)"
+        'glow-pink': "0 0 30px rgba(96, 165, 250, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)"
       },
       animation: {
         'gradient-shift': 'gradient-shift 8s ease infinite',
@@ -54,13 +54,13 @@ const config: Config = {
           '100%': { 'background-position': '0% 50%' }
         },
         'neon-glow': {
-          '0%, 100%': { 'text-shadow': '0 0 10px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.15)' },
-          '50%': { 'text-shadow': '0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(99, 102, 241, 0.25)' }
+          '0%, 100%': { 'text-shadow': '0 0 10px rgba(37, 99, 235, 0.3), 0 0 20px rgba(37, 99, 235, 0.15)' },
+          '50%': { 'text-shadow': '0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(37, 99, 235, 0.25)' }
         },
         'pulse-ring': {
-          '0%': { 'box-shadow': '0 0 0 0 rgba(99, 102, 241, 0.5)' },
-          '70%': { 'box-shadow': '0 0 0 15px rgba(99, 102, 241, 0)' },
-          '100%': { 'box-shadow': '0 0 0 0 rgba(99, 102, 241, 0)' }
+          '0%': { 'box-shadow': '0 0 0 0 rgba(37, 99, 235, 0.5)' },
+          '70%': { 'box-shadow': '0 0 0 15px rgba(37, 99, 235, 0)' },
+          '100%': { 'box-shadow': '0 0 0 0 rgba(37, 99, 235, 0)' }
         }
       }
     }

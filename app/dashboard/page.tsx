@@ -32,7 +32,7 @@ const statCards = [
 ];
 
 const quickAccess = [
-  { title: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "purple" },
+  { title: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "blue" },
   { title: "Worksheet Generator", desc: "Generate printable worksheets with answers.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green" },
   { title: "Explore Resources", desc: "Find high-quality teaching resources and materials.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
   { title: "AI Chat Assistant", desc: "Ask anything and get instant help from AI.", href: "/dashboard/classroom-tools", icon: Bot, tone: "red" },
@@ -197,7 +197,7 @@ export default function TeacherDashboard() {
           href="/dashboard/lesson-plans/new"
           button="Create Lesson Plan"
           icon={FileText}
-          tone="purple"
+          tone="blue"
         />
         <ActionPanel
           title="Create Worksheet"
@@ -226,7 +226,7 @@ export default function TeacherDashboard() {
               >
                 <div className={cn(
                   "grid h-11 w-11 shrink-0 place-items-center rounded-2xl",
-                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600"
+                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"
                 )}>
                   {item.type === "Worksheet" ? <FileText className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
                 </div>
@@ -236,7 +236,7 @@ export default function TeacherDashboard() {
                 </div>
                 <span className={cn(
                   "rounded-xl px-3 py-1.5 text-xs font-semibold",
-                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-violet-50 text-violet-700"
+                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
                 )}>
                   {item.type}
                 </span>
@@ -260,7 +260,7 @@ export default function TeacherDashboard() {
               <p className="mb-4 text-sm font-bold text-slate-900">Your Usage</p>
               <div className="flex-1 flex items-center justify-center gap-5">
                 <div className="relative" style={{ width: "140px", height: "140px" }}>
-                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#8b5cf6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
+                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#3b82f6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
                   <div className="absolute inset-[16px] rounded-full bg-white" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-3xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
@@ -268,7 +268,7 @@ export default function TeacherDashboard() {
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full bg-violet-500" />
+                    <span className="h-4 w-4 rounded-full bg-blue-500" />
                     <span className="text-sm font-medium text-slate-700">Lesson Plans</span>
                     <span className="text-sm font-bold text-slate-900">{lessonMonthlyTotal}</span>
                   </div>
@@ -294,13 +294,13 @@ export default function TeacherDashboard() {
                         style={{
                           height: `${pct}%`,
                           background: isLast
-                            ? "linear-gradient(180deg, #7c3aed, #4f46e5)"
-                            : "linear-gradient(180deg, #a78bfa, #818cf8)",
-                          boxShadow: isLast ? "0 4px 16px rgba(124, 58, 237, 0.4)" : "0 2px 8px rgba(139, 92, 246, 0.2)",
+                            ? "linear-gradient(180deg, #2563eb, #1d4ed8)"
+                            : "linear-gradient(180deg, #60a5fa, #60a5fa)",
+                          boxShadow: isLast ? "0 4px 16px rgba(37, 99, 235, 0.4)" : "0 2px 8px rgba(59, 130, 246, 0.2)",
                           animationDelay: `${i * 80}ms`
                         }}
                       />
-                      <span className={`text-[10px] font-semibold ${isLast ? "text-violet-600" : "text-slate-400"}`}>
+                      <span className={`text-[10px] font-semibold ${isLast ? "text-blue-600" : "text-slate-400"}`}>
                         {bar.label}
                       </span>
                     </div>
@@ -479,21 +479,21 @@ function CountUpNumber({ value }: { value: number }) {
   return <>{displayValue}</>;
 }
 
-function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: string; desc: string; href: string; button: string; icon: any; tone: "purple" | "green" }) {
+function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: string; desc: string; href: string; button: string; icon: any; tone: "blue" | "green" }) {
   const isGreen = tone === "green";
   const gradients = {
     card: isGreen
       ? "bg-gradient-to-br from-emerald-50 via-green-50 to-white"
-      : "bg-gradient-to-br from-violet-50 via-purple-50 to-white",
+      : "bg-gradient-to-br from-blue-50 via-blue-50 to-white",
     iconBox: isGreen
       ? "bg-gradient-to-br from-emerald-500 to-green-600"
-      : "bg-gradient-to-br from-violet-500 to-purple-600",
-    iconShadow: isGreen ? "shadow-emerald-300/40" : "shadow-violet-300/40",
-    glow: isGreen ? "bg-emerald-200/30" : "bg-violet-200/30",
+      : "bg-gradient-to-br from-blue-500 to-blue-600",
+    iconShadow: isGreen ? "shadow-emerald-300/40" : "shadow-blue-300/40",
+    glow: isGreen ? "bg-emerald-200/30" : "bg-blue-200/30",
     button: isGreen
       ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-      : "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
-    accent: isGreen ? "#10b981" : "#8b5cf6"
+      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
+    accent: isGreen ? "#10b981" : "#3b82f6"
   };
 
   return (
@@ -559,12 +559,12 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: s
             "shadow-lg backdrop-blur-sm",
             "flex flex-col items-center justify-center gap-2 p-3"
           )}>
-            <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-violet-100")}>
-              <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-violet-600")} />
+            <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-blue-100")}>
+              <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-blue-600")} />
             </div>
-            <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-violet-200")} />
-            <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-violet-100")} />
-            <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-violet-200")} />
+            <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
+            <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-blue-100")} />
+            <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
           </div>
           <div className={cn(
             "absolute -top-3 -right-3",
@@ -573,7 +573,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: s
             "shadow-md backdrop-blur-sm",
             "flex items-center justify-center"
           )}>
-            <Check className={cn("h-5 w-5 sm:h-6 sm:w-6", isGreen ? "text-emerald-500" : "text-violet-500")} />
+            <Check className={cn("h-5 w-5 sm:h-6 sm:w-6", isGreen ? "text-emerald-500" : "text-blue-500")} />
           </div>
         </div>
       </div>
@@ -633,7 +633,7 @@ function getUsageGradient(lessonCount: number, worksheetCount: number) {
   const total = lessonCount + worksheetCount;
   if (!total) return "conic-gradient(#d7dae4 0 100%)";
   const lessonEnd = Math.round((lessonCount / total) * 100);
-  return `conic-gradient(#8d57f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
+  return `conic-gradient(#2563eb 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
 }
 
 function formatHours(hours: number) {
@@ -642,14 +642,13 @@ function formatHours(hours: number) {
 
 function toneClass(tone: string) {
   const tones: Record<string, string> = {
-    purple: "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg",
+    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg",
     pink: "bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-lg",
     green: "bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg",
     orange: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg",
-    blue: "bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg",
     red: "bg-gradient-to-br from-red-400 to-rose-600 text-white shadow-lg"
   };
-  return tones[tone] || tones.purple;
+  return tones[tone] || tones.blue;
 }
 
 function getGreeting() {

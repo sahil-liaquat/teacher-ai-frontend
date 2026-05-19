@@ -42,7 +42,7 @@ export function GenerationLoadingScreen({
   return (
     <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center px-4 py-6 sm:px-5 lg:px-8">
       <section className="relative w-full overflow-hidden rounded-[24px] border border-white/70 bg-white/95 shadow-[0_24px_70px_rgba(39,30,91,0.10)] backdrop-blur-sm">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white/80 to-violet-50/50" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white/80 to-blue-50/50" />
 
         {state === "error" ? (
           <div className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 px-5 py-10 text-center">
@@ -80,7 +80,7 @@ export function GenerationLoadingScreen({
               </div>
 
               <div className="mt-8 flex items-center justify-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-violet-400 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
                 <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
               </div>
@@ -123,7 +123,7 @@ function FlippingTextbookLoader() {
 
         <div className="book-left-page absolute left-0 top-2 h-[calc(100%-16px)] w-[calc(50%-6px)] origin-right rounded-l-lg bg-gradient-to-br from-slate-100 to-white shadow-lg">
           <div className="p-3 sm:p-4">
-            <div className="mb-2 h-2 w-16 rounded-full bg-violet-200/60" />
+            <div className="mb-2 h-2 w-16 rounded-full bg-blue-200/60" />
             <div className="mb-1.5 h-1.5 w-24 rounded-full bg-slate-300/60" />
             <div className="mb-1.5 h-1.5 w-20 rounded-full bg-slate-200/60" />
             <div className="mb-3 h-1.5 w-28 rounded-full bg-slate-300/60" />
@@ -150,23 +150,23 @@ function FlippingTextbookLoader() {
         <div className="flipping-page absolute right-1 top-2 h-[calc(100%-16px)] w-[calc(50%-8px)] origin-left rounded-r-lg bg-gradient-to-bl from-slate-100 via-white to-slate-50 shadow-md animate-flip-page" />
       </div>
 
-      <div className="book-glow absolute inset-0 rounded-full bg-gradient-to-r from-violet-200/30 via-transparent to-emerald-200/30 blur-2xl animate-pulse" />
+      <div className="book-glow absolute inset-0 rounded-full bg-gradient-to-r from-blue-200/30 via-transparent to-emerald-200/30 blur-2xl animate-pulse" />
     </div>
   );
 }
 
 function SparklesRing() {
   const sparkles = useMemo(() => [
-    { top: "5%", left: "15%", delay: "0s", color: "violet" },
+    { top: "5%", left: "15%", delay: "0s", color: "blue" },
     { top: "12%", left: "85%", delay: "0.3s", color: "emerald" },
     { top: "30%", left: "5%", delay: "0.6s", color: "amber" },
-    { top: "30%", left: "92%", delay: "0.9s", color: "violet" },
+    { top: "30%", left: "92%", delay: "0.9s", color: "blue" },
     { top: "55%", left: "8%", delay: "1.2s", color: "emerald" },
     { top: "55%", left: "88%", delay: "0.2s", color: "amber" },
-    { top: "80%", left: "18%", delay: "0.5s", color: "violet" },
+    { top: "80%", left: "18%", delay: "0.5s", color: "blue" },
     { top: "85%", left: "80%", delay: "0.8s", color: "emerald" },
     { top: "15%", left: "50%", delay: "1s", color: "amber" },
-    { top: "75%", left: "48%", delay: "0.4s", color: "violet" },
+    { top: "75%", left: "48%", delay: "0.4s", color: "blue" },
   ], []);
 
   return (
@@ -175,7 +175,7 @@ function SparklesRing() {
         <div
           key={i}
           className={`absolute h-2 w-2 rounded-full animate-sparkle-${
-            s.color === "violet" ? "violet" : s.color === "emerald" ? "emerald" : "amber"
+            s.color === "blue" ? "blue" : s.color === "emerald" ? "emerald" : "amber"
           }`}
           style={{
             top: s.top,

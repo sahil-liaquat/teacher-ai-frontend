@@ -104,7 +104,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 text-slate-900">
       <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/50 bg-white/80 px-4 shadow-md backdrop-blur-xl lg:hidden">
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm hover:bg-white transition-all">
           <Menu className="h-5 w-5" />
@@ -226,7 +226,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       className={cn(
         "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200",
         active
-          ? "bg-gradient-to-r from-blue-50 to-violet-50 text-blue-600"
+          ? "bg-gradient-to-r from-blue-50 to-blue-50 text-blue-600"
           : "text-slate-600 hover:bg-slate-50"
       )}
     >
@@ -292,7 +292,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
 
 function AuthCheckingScreen() {
   return (
-    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-sky-50 via-white to-violet-50 px-4">
+    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-sky-50 via-white to-blue-50 px-4">
       <div className="rounded-3xl border border-white/70 bg-white/90 px-8 py-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
         <p className="mt-5 text-sm font-semibold text-slate-600">Checking your session...</p>
