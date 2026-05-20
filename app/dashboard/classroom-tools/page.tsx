@@ -107,7 +107,7 @@ export default function ClassroomToolsPage() {
       <header className="overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white/88 shadow-[0_18px_48px_var(--teachpad-shadowCard)] backdrop-blur-sm">
         <div className="relative p-5 sm:p-6 lg:min-h-[220px]">
           <div className="relative z-10 min-w-0 lg:max-w-[52%]">
-            <h1 className="max-w-3xl text-[clamp(1.9rem,4vw,3.35rem)] font-black leading-[1.02] tracking-tight text-teachpad-ink">
+            <h1 className="max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] font-black leading-[1.02] tracking-tight text-transparent">
               Choose the classroom tool you need.
             </h1>
           </div>

@@ -104,7 +104,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   }
 
   return (
-    <div className="min-h-screen bg-white text-teachpad-ink">
+    <div className="min-h-screen bg-transparent text-teachpad-ink">
       <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-teachpad-cardBorder bg-white/80 px-4 shadow-[0_10px_28px_var(--teachpad-shadowCard)] backdrop-blur-xl lg:hidden">
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-teachpad-blue">
           <Menu className="h-5 w-5" />

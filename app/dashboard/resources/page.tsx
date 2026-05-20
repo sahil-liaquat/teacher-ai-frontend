@@ -61,33 +61,11 @@ interface GroupedData {
 
 function normalizeClassName(raw: string | undefined): string {
   if (!raw) return "Unknown Class";
-  const lower = raw.toLowerCase();
-  if (lower.includes("class 1") || lower === "1") return "Class 1";
-  if (lower.includes("class 2") || lower === "2") return "Class 2";
-  if (lower.includes("class 3") || lower === "3") return "Class 3";
-  if (lower.includes("class 4") || lower === "4") return "Class 4";
-  if (lower.includes("class 5") || lower === "5") return "Class 5";
-  if (lower.includes("class 6") || lower === "6") return "Class 6";
-  if (lower.includes("class 7") || lower === "7") return "Class 7";
-  if (lower.includes("class 8") || lower === "8") return "Class 8";
-  if (lower.includes("class 9") || lower === "9") return "Class 9";
-  if (lower.includes("class 10") || lower === "10") return "Class 10";
-  if (lower.includes("class 11") || lower === "11") return "Class 11";
-  if (lower.includes("class 12") || lower === "12") return "Class 12";
-  if (lower.match(/grade\s*1/i) || lower === "grade 1") return "Class 1";
-  if (lower.match(/grade\s*2/i) || lower === "grade 2") return "Class 2";
-  if (lower.match(/grade\s*3/i) || lower === "grade 3") return "Class 3";
-  if (lower.match(/grade\s*4/i) || lower === "grade 4") return "Class 4";
-  if (lower.match(/grade\s*5/i) || lower === "grade 5") return "Class 5";
-  if (lower.match(/grade\s*6/i) || lower === "grade 6") return "Class 6";
-  if (lower.match(/grade\s*7/i) || lower === "grade 7") return "Class 7";
-  if (lower.match(/grade\s*8/i) || lower === "grade 8") return "Class 8";
-  if (lower.match(/grade\s*9/i) || lower === "grade 9") return "Class 9";
-  if (lower.match(/grade\s*10/i) || lower === "grade 10") return "Class 10";
-  if (lower.match(/grade\s*11/i) || lower === "grade 11") return "Class 11";
-  if (lower.match(/grade\s*12/i) || lower === "grade 12") return "Class 12";
-  const match = raw.match(/^(Class|Grade)\s*(\d+)/i);
-  if (match) return `Class ${match[2]}`;
+  const match = raw.toLowerCase().match(/\b(?:class|grade)?\s*(\d{1,2})(?:st|nd|rd|th)?\b/);
+  if (match) {
+    const grade = Number(match[1]);
+    if (grade >= 1 && grade <= 12) return `Class ${grade}`;
+  }
   return raw || "Unknown Class";
 }
 

@@ -80,7 +80,7 @@ export default function LoginPage() {
     <main className="min-h-screen overflow-hidden bg-[#f7fbff] lg:grid lg:h-screen lg:grid-cols-[minmax(0,1.01fr)_minmax(0,0.99fr)]">
       <section
         className="relative hidden min-h-screen overflow-hidden bg-[#061d59] bg-cover bg-left lg:block lg:min-h-0"
-        style={{ backgroundImage: "url('/assets/auth/login-reference.png')" }}
+        style={{ backgroundImage: "url('/assets/auth/login-hero-left.png')" }}
         aria-label="teachpad illustration"
       />
 

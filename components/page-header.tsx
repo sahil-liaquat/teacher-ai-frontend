@@ -24,7 +24,10 @@ export function PageHeader({
     >
       {illustration ? <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] lg:block">{illustration}</div> : null}
       <div className={cn("relative z-10 min-w-0 flex-1", illustration ? "lg:max-w-[64%]" : "")}>
-        <h1 className={cn("font-black tracking-tight text-teachpad-ink", isHero ? "max-w-3xl text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02]" : "text-xl")}>{title}</h1>
+        <h1 className={cn(
+          "font-black tracking-tight",
+          isHero ? "max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02] text-transparent" : "text-xl text-teachpad-ink"
+        )}>{title}</h1>
         {description ? (
           <p className={cn("max-w-2xl text-teachpad-muted", isHero ? "mt-3 text-sm font-semibold leading-6 sm:text-base" : "mt-1.5 text-sm font-medium leading-5")}>
             {description}

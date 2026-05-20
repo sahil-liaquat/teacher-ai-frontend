@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, ChevronRight, Filter, Search, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Filter, Search, Sparkles, XCircle } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
@@ -31,6 +31,8 @@ export default function TeacherTextbooksPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,42 +74,63 @@ export default function TeacherTextbooksPage() {
     return { boards: data.length, classes, books, ready };
   }, [data]);
 
-  const filteredBoards = useMemo(() => {
+  const selectedBoard = useMemo(() => data.find((board) => board.id === selectedBoardId) || null, [data, selectedBoardId]);
+  const selectedClass = useMemo(
+    () => selectedBoard?.classes.find((classItem) => classItem.id === selectedClassId) || null,
+    [selectedBoard, selectedClassId]
+  );
+
+  const visibleBoards = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+    if (!query) return data;
+    return data.filter((board) => `${board.name} ${board.code || ""}`.toLowerCase().includes(query));
+  }, [data, searchQuery]);
 
-    return data
-      .map((board) => {
-        const boardMatches = `${board.name} ${board.code || ""}`.toLowerCase().includes(query);
-        const classes = board.classes
-          .map((cls) => {
-            const classMatches = cls.name.toLowerCase().includes(query);
-            const books = cls.books.filter((book) => {
-              const statusMatches =
-                filterMode === "all" || (filterMode === "ingested" && book.is_ingested) || (filterMode === "pending" && !book.is_ingested);
-              const textMatches =
-                !query ||
-                boardMatches ||
-                classMatches ||
-                `${book.title} ${book.subject || ""}`.toLowerCase().includes(query);
-              return statusMatches && textMatches;
-            });
+  const visibleClasses = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!selectedBoard) return [];
+    if (!query) return selectedBoard.classes;
+    return selectedBoard.classes.filter((classItem) => classItem.name.toLowerCase().includes(query));
+  }, [searchQuery, selectedBoard]);
 
-            if (books.length || (classMatches && filterMode === "all")) {
-              return { ...cls, books };
-            }
-            return null;
-          })
-          .filter((cls): cls is ClassItem & { books: Book[] } => Boolean(cls));
+  const subjectGroups = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!selectedClass) return [];
 
-        if (classes.length || (boardMatches && filterMode === "all")) {
-          return { ...board, classes };
-        }
-        return null;
-      })
-      .filter((board): board is BoardWithData => Boolean(board));
-  }, [data, filterMode, searchQuery]);
+    const groups = selectedClass.books.reduce<Record<string, Book[]>>((collection, book) => {
+      const subject = book.subject || "General";
+      const statusMatches =
+        filterMode === "all" || (filterMode === "ingested" && book.is_ingested) || (filterMode === "pending" && !book.is_ingested);
+      const textMatches = !query || `${subject} ${book.title}`.toLowerCase().includes(query);
+      if (!statusMatches || !textMatches) return collection;
+      collection[subject] = [...(collection[subject] || []), book];
+      return collection;
+    }, {});
 
-  const hasActiveFilters = Boolean(searchQuery.trim()) || filterMode !== "all";
+    return Object.entries(groups)
+      .map(([subject, books]) => ({ subject, books }))
+      .sort((a, b) => a.subject.localeCompare(b.subject));
+  }, [filterMode, searchQuery, selectedClass]);
+
+  const hasActiveFilters = Boolean(searchQuery.trim()) || (Boolean(selectedClass) && filterMode !== "all");
+  const searchPlaceholder = selectedClass
+    ? "Search subject or textbook..."
+    : selectedBoard
+      ? "Search class..."
+      : "Search board...";
+
+  const goToBoards = () => {
+    setSelectedBoardId(null);
+    setSelectedClassId(null);
+    setSearchQuery("");
+    setFilterMode("all");
+  };
+
+  const goToClasses = () => {
+    setSelectedClassId(null);
+    setSearchQuery("");
+    setFilterMode("all");
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
@@ -150,18 +173,20 @@ export default function TeacherTextbooksPage() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="h-11 pl-10"
-              placeholder="Search board, class, book, or subject..."
+              placeholder={searchPlaceholder}
             />
           </label>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-teachpad-tag px-3 py-2 text-sm font-bold text-teachpad-muted">
-              <Filter className="h-4 w-4" />
-              <Select value={filterMode} onChange={(event) => setFilterMode(event.target.value as FilterMode)} className="h-7 w-[150px] border-0 bg-transparent p-0 shadow-none">
-                <option value="all">All books</option>
-                <option value="ingested">Ready only</option>
-                <option value="pending">Pending only</option>
-              </Select>
-            </div>
+            {selectedClass ? (
+              <div className="flex items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-teachpad-tag px-3 py-2 text-sm font-bold text-teachpad-muted">
+                <Filter className="h-4 w-4" />
+                <Select value={filterMode} onChange={(event) => setFilterMode(event.target.value as FilterMode)} className="h-7 w-[150px] border-0 bg-transparent p-0 shadow-none">
+                  <option value="all">All books</option>
+                  <option value="ingested">Ready only</option>
+                  <option value="pending">Pending only</option>
+                </Select>
+              </div>
+            ) : null}
             {hasActiveFilters ? (
               <Button
                 variant="ghost"
@@ -182,42 +207,116 @@ export default function TeacherTextbooksPage() {
 
       {!loading && !data.length ? <EmptyLibrary /> : null}
 
-      {!loading && data.length > 0 && !filteredBoards.length ? (
-        <EmptyState
-          title="No textbooks match your filters"
-          description="Try another search term or switch the status filter back to all books."
-          action={
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSearchQuery("");
-                setFilterMode("all");
-              }}
-            >
-              Clear filters
-            </Button>
-          }
-        />
+      {!loading && data.length > 0 ? (
+        <section className="rounded-[24px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-teachpad-muted">
+            <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
+              Boards
+            </button>
+            {selectedBoard ? (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <button type="button" onClick={goToClasses} className={cn("transition hover:text-teachpad-blue", !selectedClass && "text-teachpad-blue")}>
+                  {selectedBoard.name}
+                </button>
+              </>
+            ) : null}
+            {selectedClass ? (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-teachpad-blue">{selectedClass.name}</span>
+              </>
+            ) : null}
+          </div>
+        </section>
       ) : null}
 
-      {!loading && filteredBoards.length > 0 ? (
-        <section className="grid gap-5">
-          {filteredBoards.map((board) => (
-            <BoardSection key={board.id} board={board} />
-          ))}
+      {!loading && data.length > 0 && !selectedBoard ? (
+        visibleBoards.length ? (
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visibleBoards.map((board) => (
+              <BoardCard
+                key={board.id}
+                board={board}
+                onSelect={() => {
+                  setSelectedBoardId(board.id);
+                  setSelectedClassId(null);
+                  setSearchQuery("");
+                  setFilterMode("all");
+                }}
+              />
+            ))}
+          </section>
+        ) : (
+          <NoMatchState onClear={() => setSearchQuery("")} />
+        )
+      ) : null}
+
+      {!loading && selectedBoard && !selectedClass ? (
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleClasses.length ? (
+            visibleClasses.map((classItem) => (
+              <ClassCard
+                key={classItem.id}
+                cls={classItem}
+                onSelect={() => {
+                  setSelectedClassId(classItem.id);
+                  setSearchQuery("");
+                  setFilterMode("all");
+                }}
+              />
+            ))
+          ) : (
+            <div className="md:col-span-2 xl:col-span-3">
+              <EmptyState title="No classes found" description="Try another search term, or go back to choose another board." compact />
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {!loading && selectedClass ? (
+        <section className="grid gap-4">
+          <Button variant="ghost" size="sm" className="w-fit" onClick={goToClasses}>
+            <ArrowLeft className="h-4 w-4" /> Back to classes
+          </Button>
+          {subjectGroups.length ? (
+            subjectGroups.map((group) => <SubjectShelf key={group.subject} subject={group.subject} books={group.books} />)
+          ) : (
+            <EmptyState
+              title="No subjects found"
+              description={hasActiveFilters ? "Try clearing your search or status filter." : "Subjects will appear here once textbooks are added for this class."}
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setFilterMode("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
         </section>
       ) : null}
     </div>
   );
 }
 
-function BoardSection({ board }: { board: BoardWithData }) {
+function BoardCard({ board, onSelect }: { board: BoardWithData; onSelect: () => void }) {
   const bookCount = board.classes.reduce((sum, cls) => sum + cls.books.length, 0);
   const readyCount = board.classes.reduce((sum, cls) => sum + cls.books.filter((book) => book.is_ingested).length, 0);
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-      <div className="flex flex-col gap-4 border-b border-teachpad-cardBorder bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5 sm:flex-row sm:items-center sm:justify-between">
+    <button
+      type="button"
+      onClick={onSelect}
+      className="group overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white text-left shadow-[0_18px_45px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)]"
+    >
+      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5">
         <div className="flex min-w-0 items-center gap-3">
           <PastelIconTile name="layers" className="h-14 w-14 rounded-[20px]" />
           <div className="min-w-0">
@@ -238,27 +337,22 @@ function BoardSection({ board }: { board: BoardWithData }) {
           <MiniMetric label="Ready" value={readyCount} />
           <MiniMetric label="Pending" value={Math.max(bookCount - readyCount, 0)} />
         </div>
+        <div className="flex items-center justify-end text-sm font-black text-teachpad-blue">
+          View classes <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </div>
       </div>
-
-      {board.classes.length ? (
-        <div className="grid gap-4 p-4 lg:grid-cols-2">
-          {board.classes.map((cls) => (
-            <ClassShelf key={cls.id} cls={cls} />
-          ))}
-        </div>
-      ) : (
-        <div className="p-5">
-          <EmptyState title="No classes in this board" description="Classes will appear here once they are added by the admin." compact />
-        </div>
-      )}
-    </article>
+    </button>
   );
 }
 
-function ClassShelf({ cls }: { cls: ClassItem & { books: Book[] } }) {
+function ClassCard({ cls, onSelect }: { cls: ClassItem & { books: Book[] }; onSelect: () => void }) {
   return (
-    <div className="rounded-[22px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-[#f8ffff] p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <button
+      type="button"
+      onClick={onSelect}
+      className="group rounded-[22px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-[#f8ffff] p-4 text-left shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)]"
+    >
+      <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <PastelIconTile name="graduationCap" className="h-11 w-11 rounded-2xl" />
           <div className="min-w-0">
@@ -266,20 +360,36 @@ function ClassShelf({ cls }: { cls: ClassItem & { books: Book[] } }) {
             <p className="text-xs font-bold text-teachpad-muted">{cls.books.length} {cls.books.length === 1 ? "textbook" : "textbooks"}</p>
           </div>
         </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-teachpad-muted transition group-hover:translate-x-0.5 group-hover:text-teachpad-blue" />
       </div>
+    </button>
+  );
+}
 
-      {cls.books.length ? (
-        <div className="grid gap-2">
-          {cls.books.map((book) => (
-            <BookRow key={book.id} book={book} />
-          ))}
+function SubjectShelf({ subject, books }: { subject: string; books: Book[] }) {
+  const readyCount = books.filter((book) => book.is_ingested).length;
+
+  return (
+    <article className="rounded-[24px] border border-teachpad-cardBorder bg-white p-4 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <PastelIconTile name="bookOpen" className="h-12 w-12 rounded-[18px] bg-[#fff0bf]" />
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-black text-teachpad-ink">{subject}</h2>
+            <p className="text-xs font-bold text-teachpad-muted">{books.length} {books.length === 1 ? "textbook" : "textbooks"}</p>
+          </div>
         </div>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-teachpad-cardBorder bg-white/72 p-4 text-center">
-          <p className="text-sm font-bold text-teachpad-muted">No books yet</p>
+        <div className="grid grid-cols-2 gap-2 sm:w-[220px]">
+          <MiniMetric label="Ready" value={readyCount} />
+          <MiniMetric label="Pending" value={Math.max(books.length - readyCount, 0)} />
         </div>
-      )}
-    </div>
+      </div>
+      <div className="grid gap-2">
+        {books.map((book) => (
+          <BookRow key={book.id} book={book} />
+        ))}
+      </div>
+    </article>
   );
 }
 
@@ -329,6 +439,20 @@ function EmptyLibrary() {
             <Sparkles className="h-4 w-4" /> Generate Lesson Plan
           </Button>
         </Link>
+      }
+    />
+  );
+}
+
+function NoMatchState({ onClear }: { onClear: () => void }) {
+  return (
+    <EmptyState
+      title="No boards match your search"
+      description="Try another board name or clear the search."
+      action={
+        <Button variant="secondary" onClick={onClear}>
+          Clear search
+        </Button>
       }
     />
   );
