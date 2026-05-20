@@ -375,27 +375,27 @@ export default function TeacherDashboard() {
 function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string }) {
   const gradients = {
     pink: {
-      card: "bg-gradient-to-br from-pink-50 via-rose-50 to-white",
-      iconBox: "bg-gradient-to-br from-pink-400 to-rose-500",
-      iconShadow: "shadow-pink-300/40",
+      card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
+      iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
+      iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-pink-200/30"
     },
     green: {
-      card: "bg-gradient-to-br from-emerald-50 via-green-50 to-white",
-      iconBox: "bg-gradient-to-br from-emerald-400 to-green-600",
-      iconShadow: "shadow-emerald-300/40",
+      card: "bg-gradient-to-br from-white via-emerald-50/70 to-white",
+      iconBox: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100",
+      iconShadow: "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-emerald-200/30"
     },
     orange: {
-      card: "bg-gradient-to-br from-orange-50 via-amber-50 to-white",
-      iconBox: "bg-gradient-to-br from-amber-400 to-orange-500",
-      iconShadow: "shadow-orange-300/40",
+      card: "bg-gradient-to-br from-white via-amber-50/80 to-white",
+      iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+      iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-amber-200/30"
     },
     blue: {
-      card: "bg-gradient-to-br from-sky-50 via-[#eff6ff] to-white",
-      iconBox: "bg-gradient-to-br from-[#38bdf8] to-[#2563eb]",
-      iconShadow: "shadow-[#93c5fd]/40",
+      card: "bg-gradient-to-br from-white via-[#eff6ff] to-white",
+      iconBox: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+      iconShadow: "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-[#bfdbfe]/30"
     }
   };
@@ -418,14 +418,14 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
 
       <div className={cn(
         "shrink-0",
-        "h-12 w-12 sm:h-14 sm:w-14",
-        "rounded-xl",
+        "h-14 w-14 sm:h-[64px] sm:w-[64px]",
+        "rounded-[22px]",
         "flex items-center justify-center",
-        "shadow-lg",
+        "ring-1",
         g.iconBox,
         g.iconShadow
       )}>
-        <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+        <Icon className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -492,9 +492,11 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
       ? "bg-gradient-to-br from-emerald-50 via-green-50 to-white"
       : "bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white",
     iconBox: isGreen
-      ? "bg-gradient-to-br from-emerald-500 to-green-600"
-      : "bg-gradient-to-br from-[#3b82f6] to-[#2563eb]",
-    iconShadow: isGreen ? "shadow-emerald-300/40" : "shadow-[#93c5fd]/40",
+      ? "bg-[#ecfff6] text-[#24b77a] ring-emerald-100"
+      : "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+    iconShadow: isGreen
+      ? "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]"
+      : "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: isGreen ? "bg-emerald-200/30" : "bg-[#bfdbfe]/30",
     button: isGreen
       ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
@@ -521,14 +523,14 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
         <div>
           <div className={cn(
             "inline-flex",
-            "h-11 w-11 sm:h-12 sm:w-12",
-            "rounded-xl",
+            "h-14 w-14 sm:h-[64px] sm:w-[64px]",
+            "rounded-[22px]",
             "items-center justify-center",
-            "shadow-lg mb-3",
+            "mb-3 ring-1",
             gradients.iconBox,
             gradients.iconShadow
           )}>
-            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <Icon className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">{title}</h2>
           <p className="mt-1.5 text-sm font-medium text-slate-600 leading-5 line-clamp-2">{desc}</p>
