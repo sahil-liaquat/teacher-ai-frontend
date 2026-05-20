@@ -19,7 +19,7 @@ export function PageHeader({
     <div
       className={cn(
         "reveal-card relative mb-4 flex flex-col gap-3 overflow-hidden border border-teachpad-cardBorder bg-white/88 shadow-[0_12px_28px_var(--teachpad-shadowCard)] backdrop-blur-sm sm:flex-row sm:items-start sm:justify-between",
-        isHero ? "min-h-[180px] rounded-[24px] px-5 py-5 sm:px-6" : "rounded-xl px-4 py-3.5"
+        isHero ? "rounded-[24px] px-5 py-5 sm:px-6 lg:min-h-[180px]" : "rounded-xl px-4 py-3.5"
       )}
     >
       {illustration ? <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] lg:block">{illustration}</div> : null}

@@ -266,7 +266,7 @@ export default function ResourcesPage() {
               src="/assets/illustrations/saved-resources-header.png"
               alt=""
               aria-hidden="true"
-              className="absolute right-6 top-1/2 w-[260px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-8 xl:w-[320px]"
+              className="absolute right-8 top-1/2 w-[220px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-10 xl:w-[270px]"
             />
           </>
         }
