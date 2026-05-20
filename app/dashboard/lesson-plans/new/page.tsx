@@ -250,13 +250,14 @@ export default function NewLessonPlanPage() {
             <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-slate-600">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
             <Button type="button" variant="outline" className="mt-4 border-blue-200 bg-white/90 px-4 text-blue-700 hover:bg-blue-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
           </div>
-          <div className="absolute bottom-0 right-6 hidden h-48 w-[440px] 2xl:block">
-            <div className="absolute bottom-0 right-0 h-52 w-[620px] rounded-t-full bg-white/60" />
-            <div className="absolute bottom-28 right-[288px] h-28 w-28 rounded-t-full bg-emerald-200/50" />
-            <div className="absolute bottom-[72px] right-[264px] h-[72px] w-36 rounded-[14px] bg-emerald-100/50" />
-            <div className="absolute bottom-[88px] right-24 h-32 w-32 rounded-[18px] bg-blue-500/75 shadow-lg" />
-            <div className="absolute bottom-[120px] right-[72px] h-20 w-10 rotate-12 rounded-[12px] bg-blue-600/75" />
-            <div className="absolute bottom-0 right-[180px] h-28 w-20 rounded-t-[16px] bg-amber-200/90" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-blue-50 to-transparent" />
+            <img
+              src="/assets/illustrations/create-lesson-plan-header.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute -bottom-5 -right-8 w-[390px] select-none object-contain drop-shadow-[0_18px_18px_rgba(30,64,175,0.18)] xl:-right-5 xl:w-[470px]"
+            />
           </div>
         </div>
 

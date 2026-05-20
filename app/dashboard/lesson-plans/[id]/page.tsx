@@ -40,7 +40,7 @@ export default function LessonPlanDetailPage() {
   }
 
   if (lesson.isLoading) return <LessonPlanLoadingState />;
-  if (lesson.error) return <Card><CardContent className="p-7"><h1 className="text-2xl font-black text-red-700">Could not open lesson plan</h1><p className="mt-2 text-sm text-[#52617d]">{lesson.error instanceof Error ? lesson.error.message : "Request failed"}</p></CardContent></Card>;
+  if (lesson.error) return <Card><CardContent className="p-7"><h1 className="text-2xl font-black text-red-700">Could not open lesson plan</h1><p className="mt-2 text-sm text-[#6d6f78]">{lesson.error instanceof Error ? lesson.error.message : "Request failed"}</p></CardContent></Card>;
 
   return (
     <div className="print-shell">
@@ -52,15 +52,15 @@ export default function LessonPlanDetailPage() {
 function LessonPlanLoadingState() {
   return (
     <div className="mx-auto max-w-[1180px] 2xl:max-w-[1440px]">
-      <Card className="overflow-hidden border-[#dbeafe] shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
+      <Card className="overflow-hidden border-[#dffafa] shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
         <CardContent className="grid gap-5 p-5 sm:p-7 2xl:p-8">
           <div className="flex items-center gap-4">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#dbeafe]">
-              <span className="h-3 w-3 animate-ping rounded-full bg-[#2563eb]" />
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#dffafa]">
+              <span className="h-3 w-3 animate-ping rounded-full bg-[#1677ff]" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="h-7 w-64 max-w-full animate-pulse rounded-[12px] bg-[#dbeafe]" />
-              <div className="mt-3 h-4 w-80 max-w-full animate-pulse rounded-[10px] bg-[#f7f4ff]" />
+              <div className="h-7 w-64 max-w-full animate-pulse rounded-[12px] bg-[#dffafa]" />
+              <div className="mt-3 h-4 w-80 max-w-full animate-pulse rounded-[10px] bg-[#f8ffff]" />
             </div>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
@@ -80,5 +80,5 @@ function LessonPlanLoadingState() {
 }
 
 function LoadingBlock({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-[18px] border border-[#dbeafe] bg-[#eff6ff] ${className}`} />;
+  return <div className={`animate-pulse rounded-[18px] border border-[#dffafa] bg-[#f8ffff] ${className}`} />;
 }

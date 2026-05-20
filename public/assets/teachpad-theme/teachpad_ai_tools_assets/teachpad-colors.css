@@ -1,0 +1,28 @@
+:root {
+  --teachpad-ink: #25262b;
+  --teachpad-muted: #6d6f78;
+  --teachpad-blue: #1677ff;
+  --teachpad-aqua: #dffafa;
+  --teachpad-pink: #ffdce8;
+  --teachpad-yellow: #fff0bf;
+  --teachpad-lavender: #e9e1ff;
+  --teachpad-lilac: #f2dcff;
+  --teachpad-green: #e5ffc6;
+  --teachpad-mint: #c7f7ed;
+  --teachpad-sky: #c9f7fb;
+  --teachpad-peach: #ffe1d2;
+  --teachpad-red: #ffd9de;
+  --teachpad-white: #ffffff;
+  --teachpad-cardBorder: #eceef3;
+  --teachpad-softPanel: #f8ffff;
+  --teachpad-inputBg: #f7f8fb;
+  --teachpad-tagBg: #f5f7fb;
+  --teachpad-placeholderText: #9ca0aa;
+  --teachpad-secondaryText: #7b7e89;
+  --teachpad-aquaAccent: #16a9b6;
+  --teachpad-errorRed: #eb3b5a;
+  --teachpad-hoverBlue: #0969e8;
+  --teachpad-shadowBlue: rgba(22,119,255,0.22);
+  --teachpad-shadowCard: rgba(30,80,90,0.08);
+  --teachpad-shadowToolCard: rgba(30,50,80,0.07);
+}

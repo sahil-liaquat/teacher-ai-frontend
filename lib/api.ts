@@ -7,8 +7,11 @@ function resolveApiBase() {
 export const API_BASE = resolveApiBase();
 export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 
-const ACCESS_TOKEN_KEY = "teacher_ai_access_token";
-const REFRESH_TOKEN_KEY = "teacher_ai_refresh_token";
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
+const LEGACY_ACCESS_TOKEN_KEY = "teacher_ai_access_token";
+const LEGACY_REFRESH_TOKEN_KEY = "teacher_ai_refresh_token";
+const LEGACY_CUSTOM_TOKEN_KEY = "teacher_ai_token";
 const AUTH_STORAGE_EVENT = "teacher-ai-auth-change";
 const TOKEN_REFRESH_SKEW_SECONDS = 45;
 export const CURRENT_USER_QUERY_KEY = ["current-user"] as const;
@@ -105,6 +108,19 @@ type TokenResponse = {
   access_token: string;
   refresh_token: string;
   token_type?: string;
+  expires_in?: number;
+  user?: {
+    id: string;
+    email?: string;
+    email_confirmed?: boolean;
+  };
+};
+
+type SignupResponse = {
+  id: string;
+  email: string;
+  email_confirmed: boolean;
+  message: string;
 };
 
 let refreshRequest: Promise<boolean> | null = null;
@@ -115,14 +131,14 @@ type ApiRequestInit = RequestInit & {
 
 export function getToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem("teacher_ai_token") || window.localStorage.getItem("access_token");
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function setToken(token: string) {
   if (typeof window === "undefined") return;
   clearAccountStorage();
   window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  window.localStorage.setItem("teacher_ai_token", token);
+  window.localStorage.setItem(LEGACY_ACCESS_TOKEN_KEY, token);
   window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
@@ -137,22 +153,24 @@ export function clearToken() {
 
 function getRefreshToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(REFRESH_TOKEN_KEY) || window.localStorage.getItem("refresh_token");
+  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 function setTokens(tokens: TokenResponse) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
   window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-  window.localStorage.setItem("teacher_ai_token", tokens.access_token);
+  window.localStorage.setItem(LEGACY_ACCESS_TOKEN_KEY, tokens.access_token);
+  window.localStorage.setItem(LEGACY_REFRESH_TOKEN_KEY, tokens.refresh_token);
+  window.localStorage.removeItem(LEGACY_CUSTOM_TOKEN_KEY);
   window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));
 }
 
 function clearLegacyTokens() {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem("teacher_ai_token");
-  window.localStorage.removeItem("access_token");
-  window.localStorage.removeItem("refresh_token");
+  window.localStorage.removeItem(LEGACY_CUSTOM_TOKEN_KEY);
+  window.localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
+  window.localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY);
 }
 
 function clearAccountStorage() {
@@ -222,7 +240,10 @@ export async function refreshSession() {
     body: JSON.stringify({ refresh_token: refreshToken })
   })
     .then(async (res) => {
-      if (!res.ok) return false;
+      if (!res.ok) {
+        clearToken();
+        return false;
+      }
       setTokens(await res.json() as TokenResponse);
       return true;
     })
@@ -242,13 +263,24 @@ function redirectToLogin() {
   }
 }
 
+function isPublicAuthPath(path: string) {
+  return (
+    path.startsWith("/auth/login") ||
+    path.startsWith("/auth/refresh") ||
+    path.startsWith("/auth/signup") ||
+    path.startsWith("/auth/forgot-password") ||
+    path.startsWith("/auth/reset-password")
+  );
+}
+
 function shouldTryRefresh(path: string, status: number) {
-  return status === 401 && !path.startsWith("/auth/login") && !path.startsWith("/auth/refresh");
+  return status === 401 && !isPublicAuthPath(path);
 }
 
 async function requestWithSession(path: string, init: ApiRequestInit = {}, retry = true) {
   const { redirectOnUnauthorized = true, ...fetchInit } = init;
-  if (!path.startsWith("/auth/login") && !path.startsWith("/auth/refresh") && isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) {
+  const publicAuthPath = isPublicAuthPath(path);
+  if (!publicAuthPath && isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) {
     await refreshSession();
   }
 
@@ -257,7 +289,7 @@ async function requestWithSession(path: string, init: ApiRequestInit = {}, retry
   if (!(fetchInit.body instanceof FormData) && !(fetchInit.body instanceof URLSearchParams) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (token && !headers.has("Authorization")) {
+  if (!publicAuthPath && token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
   const res = await fetch(`${API_BASE}${path}`, { ...fetchInit, headers });
@@ -330,13 +362,9 @@ export async function streamApiFetch(
 
 export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
   clearToken();
-  const body = new URLSearchParams();
-  body.set("username", email);
-  body.set("password", password);
   const tokens = await apiFetch<TokenResponse>("/auth/login", {
     method: "POST",
-    body,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    body: JSON.stringify({ email, password })
   });
   setTokens(tokens);
   let user: ApiUser;
@@ -357,8 +385,48 @@ export async function login(email: string, password: string): Promise<ApiUser & 
   };
 }
 
-export async function logout() {
+export async function completeTokenLogin(tokens: Pick<TokenResponse, "access_token" | "refresh_token">): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
+  if (!tokens.access_token || !tokens.refresh_token) {
+    throw new Error("Confirmation link is missing the required session tokens.");
+  }
+
   clearToken();
+  setTokens({
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token
+  });
+
+  let user: ApiUser;
+  try {
+    user = await getCurrentUser({ redirectOnUnauthorized: false });
+  } catch (error) {
+    clearToken();
+    throw error;
+  }
+
+  if (!user.id || !user.email || !user.role) {
+    clearToken();
+    throw new Error("Your email was verified, but we could not load the signed-in account.");
+  }
+
+  return {
+    ...user,
+    name: user.full_name || user.name || "",
+    role: user.role
+  };
+}
+
+export async function logout() {
+  if (!getToken()) {
+    clearToken();
+    return;
+  }
+
+  try {
+    await requestWithSession("/auth/logout", { method: "POST", redirectOnUnauthorized: false }, false);
+  } finally {
+    clearToken();
+  }
 }
 
 export async function getCurrentUser(options: { redirectOnUnauthorized?: boolean } = {}) {
@@ -372,11 +440,26 @@ export async function ensureSession() {
 }
 
 export async function signup(name: string, email: string, password: string, school_name?: string) {
-  const created = await apiFetch<ApiUser>("/users", {
+  const created = await apiFetch<SignupResponse>("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ full_name: name, email, password, role: "teacher" })
+    body: JSON.stringify({ full_name: name, email, password })
   });
-  return { ...created, name: created.full_name || name };
+  return { ...created, full_name: name, name };
+}
+
+export async function requestPasswordReset(email: string) {
+  return apiFetch<{ message: string }>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email })
+  });
+}
+
+export async function resetPassword(accessToken: string, password: string) {
+  return apiFetch<{ message: string }>("/auth/reset-password", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ password })
+  });
 }
 
 export const backendApi = {
@@ -433,6 +516,7 @@ export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
   return {
     ...plan,
     title: plan.title || item?.topic || "Generated Lesson Plan",
+    generated_at: plan.generated_at || item?.created_at || item?.updated_at,
     metadata: {
       ...metadata,
       class: metadata.class || metadata.grade || item?.class_name,

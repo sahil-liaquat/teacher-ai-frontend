@@ -14,11 +14,11 @@ export function Button({ className, variant = "default", size = "md", ...props }
         size === "sm" && "h-8 px-3 text-xs",
         size === "md" && "h-10 px-4 text-sm",
         size === "icon" && "h-9 w-9",
-        variant === "default" && "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98]",
-        variant === "secondary" && "bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm hover:-translate-y-0.5 hover:bg-emerald-100",
-        variant === "outline" && "border border-white/70 bg-white/80 text-slate-700 shadow-md hover:-translate-y-0.5 hover:bg-white hover:shadow-lg backdrop-blur-sm",
-        variant === "ghost" && "text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors",
-        variant === "danger" && "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl",
+        variant === "default" && "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_14px_28px_var(--teachpad-shadowBlue)] hover:-translate-y-0.5 hover:shadow-[0_18px_36px_var(--teachpad-shadowBlue)] active:scale-[0.98]",
+        variant === "secondary" && "border border-teachpad-cardBorder bg-gradient-to-br from-teachpad-green to-white text-teachpad-ink shadow-sm hover:-translate-y-0.5 hover:bg-teachpad-green",
+        variant === "outline" && "border border-teachpad-cardBorder bg-white/85 text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] backdrop-blur-sm hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:text-teachpad-blue hover:shadow-[0_14px_30px_var(--teachpad-shadowCard)]",
+        variant === "ghost" && "text-teachpad-muted transition-colors hover:bg-teachpad-tag hover:text-teachpad-ink",
+        variant === "danger" && "bg-gradient-to-r from-[#eb3b5a] to-[#ff5c8a] text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl",
         className
       )}
       {...props}

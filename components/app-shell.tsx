@@ -104,24 +104,24 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 text-slate-900">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/50 bg-white/80 px-4 shadow-md backdrop-blur-xl lg:hidden">
-        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-white/70 bg-white/90 text-slate-600 shadow-md backdrop-blur-sm hover:bg-white transition-all">
+    <div className="min-h-screen bg-white text-teachpad-ink">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-teachpad-cardBorder bg-white/80 px-4 shadow-[0_10px_28px_var(--teachpad-shadowCard)] backdrop-blur-xl lg:hidden">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-teachpad-blue">
           <Menu className="h-5 w-5" />
         </button>
         <Brand compact />
-        <Link href="/dashboard/settings" aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-md backdrop-blur-sm hover:bg-white transition-all">
+        <Link href="/dashboard/settings" aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-md backdrop-blur-sm transition-all hover:bg-white">
           <BoyAvatar />
         </Link>
       </header>
 
       {mobileOpen && (
         <>
-          <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm lg:hidden" />
-          <aside className="fixed inset-y-0 left-0 z-50 w-[280px] rounded-r-3xl border-r border-white/50 bg-white/95 p-5 shadow-2xl lg:hidden">
+          <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-teachpad-ink/20 backdrop-blur-sm lg:hidden" />
+          <aside className="fixed inset-y-0 left-0 z-50 w-[280px] rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
             <div className="flex items-center justify-between">
               <Brand />
-              <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/70 bg-white/90 text-slate-600 shadow-sm hover:bg-white transition-all">
+              <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -130,8 +130,8 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
                 <MobileNavItem key={item.href} item={item} active={isActive(item.href, pathname)} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
-            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-slate-500 transition-all hover:bg-red-50 hover:text-red-600">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-slate-50"><LogOut className="h-5 w-5" /></span>
+            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-teachpad-muted transition-all hover:bg-teachpad-red hover:text-[#eb3b5a]">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-teachpad-tag"><LogOut className="h-5 w-5" /></span>
               Logout
             </button>
           </aside>
@@ -141,7 +141,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
       <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
 
       <main className="min-h-screen pt-16 lg:pt-0">
-        <div className="mx-auto w-full max-w-full px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
+        <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
           {children}
         </div>
       </main>
@@ -158,7 +158,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
   return (
     <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
       <nav className="flex h-full flex-col items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-white/70 bg-white/85 px-2.5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-md">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
           {nav.map((item) => (
             <FloatingNavItem
               key={item.href}
@@ -168,13 +168,13 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
             />
           ))}
 
-          <div className="my-2 h-px w-8 bg-slate-100" />
+          <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
 
           <a
             href="#"
             onClick={logout}
             title="Logout"
-            className="group flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition-all duration-300 hover:scale-105 hover:bg-red-50 hover:text-red-500"
+            className="group flex h-10 w-10 items-center justify-center rounded-xl text-teachpad-muted transition-all duration-300 hover:scale-105 hover:bg-teachpad-red hover:text-[#eb3b5a]"
           >
             <LogOut className="h-5 w-5" />
           </a>
@@ -201,14 +201,14 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
         className={cn(
           "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
           active
-            ? "bg-white shadow-[0_8px_24px_rgba(59,130,246,0.15)]"
+            ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
             : "group-hover:bg-blue-50"
         )}
       >
         <Icon
           className={cn(
             "h-5 w-5 transition-colors duration-300",
-            active ? "text-blue-600" : "text-slate-500 group-hover:text-blue-500"
+            active ? "text-teachpad-blue" : "text-teachpad-muted group-hover:text-teachpad-blue"
           )}
         />
       </span>
@@ -226,13 +226,13 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       className={cn(
         "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200",
         active
-          ? "bg-gradient-to-r from-blue-50 to-blue-50 text-blue-600"
-          : "text-slate-600 hover:bg-slate-50"
+          ? "bg-gradient-to-r from-blue-50 to-white text-teachpad-blue"
+          : "text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink"
       )}
     >
       <span className={cn(
         "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200",
-        active ? "bg-blue-100 text-blue-600" : "bg-slate-50 text-slate-500"
+        active ? "bg-blue-100 text-teachpad-blue" : "bg-teachpad-tag text-teachpad-muted"
       )}>
         <Icon className="h-5 w-5" />
       </span>
@@ -245,7 +245,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
   const visibleNav = nav.slice(0, 5);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 w-full max-w-full border-t border-white/50 bg-white/90 px-3 shadow-[0_-10px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden" style={{ boxSizing: "border-box" }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-40 w-full max-w-full border-t border-teachpad-cardBorder bg-white/90 px-3 shadow-[0_-10px_40px_var(--teachpad-shadowCard)] backdrop-blur-xl lg:hidden" style={{ boxSizing: "border-box" }}>
       <div className="flex h-16 items-center" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
         {visibleNav.map((item) => {
           const Icon = item.icon;
@@ -265,20 +265,20 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
                   active
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg"
-                    : "bg-slate-50"
+                    ? "bg-gradient-to-br from-teachpad-blue to-blue-600 shadow-lg"
+                    : "bg-teachpad-tag"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5",
-                    active ? "text-white" : "text-slate-500"
+                    active ? "text-white" : "text-teachpad-muted"
                   )}
                 />
               </span>
               <span className={cn(
                 "text-[10px] font-semibold transition-colors truncate max-w-full",
-                active ? "text-blue-600" : "text-slate-500"
+                active ? "text-teachpad-blue" : "text-teachpad-muted"
               )}>
                 {item.label}
               </span>
@@ -292,10 +292,10 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
 
 function AuthCheckingScreen() {
   return (
-    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-sky-50 via-white to-blue-50 px-4">
-      <div className="rounded-3xl border border-white/70 bg-white/90 px-8 py-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
-        <p className="mt-5 text-sm font-semibold text-slate-600">Checking your session...</p>
+    <main className="teachpad-page grid min-h-screen place-items-center px-4">
+      <div className="rounded-3xl border border-teachpad-cardBorder bg-white/90 px-8 py-6 text-center shadow-[0_18px_50px_var(--teachpad-shadowCard)] backdrop-blur-xl">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-teachpad-blue" />
+        <p className="mt-5 text-sm font-semibold text-teachpad-muted">Checking your session...</p>
       </div>
     </main>
   );
@@ -311,7 +311,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
           className="h-auto max-h-8 w-full object-contain"
         />
       ) : (
-        <p className="font-extrabold leading-tight tracking-tight text-lg text-slate-900">
+        <p className="font-extrabold leading-tight tracking-tight text-lg text-teachpad-ink">
           Teacher AI Tools
         </p>
       )}

@@ -156,20 +156,20 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             onFocus={syncDisplayFromHiddenSelect}
             onPointerDown={syncDisplayFromHiddenSelect}
             className={cn(
-              "flex h-10 w-full min-w-0 items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-white/70 bg-white/80 px-3.5 text-left text-base font-semibold text-slate-900 shadow-sm outline-none transition-all duration-300 hover:border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 data-[disabled]:cursor-not-allowed data-[disabled]:bg-slate-50 data-[disabled]:text-slate-400 sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
+              "flex h-10 w-full min-w-0 items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-all duration-300 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 data-[disabled]:cursor-not-allowed data-[disabled]:bg-teachpad-tag data-[disabled]:text-[var(--teachpad-placeholderText)] sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
               className
             )}
           >
             <SelectPrimitive.Value>
-              <span className={isLoading ? "block min-w-0 max-w-full truncate text-slate-500" : selectedOption ? "block min-w-0 max-w-full truncate text-slate-900" : "block min-w-0 max-w-full truncate text-slate-500"}>
+              <span className={isLoading ? "block min-w-0 max-w-full truncate text-teachpad-muted" : selectedOption ? "block min-w-0 max-w-full truncate text-teachpad-ink" : "block min-w-0 max-w-full truncate text-teachpad-muted"}>
                 {isLoading ? loadingLabel : selectedOption?.label || "Select an option"}
               </span>
             </SelectPrimitive.Value>
             {isLoading ? (
-              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-blue-500" />
+              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-teachpad-blue" />
             ) : (
               <SelectPrimitive.Icon asChild>
-                <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-teachpad-muted" />
               </SelectPrimitive.Icon>
             )}
           </SelectPrimitive.Trigger>
@@ -178,7 +178,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               position="popper"
               sideOffset={8}
               avoidCollisions
-              className="z-[100] max-h-[280px] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-white/70 bg-white/95 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.25)] backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+              className="z-[100] max-h-[280px] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-teachpad-cardBorder bg-white/95 shadow-[0_20px_50px_-28px_var(--teachpad-shadowCard)] backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
             >
               <SelectPrimitive.Viewport className="max-h-[260px] overflow-y-auto p-1.5">
                 {options.map((option) => (
@@ -186,13 +186,13 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     key={option.value}
                     value={toRadixValue(option.value)}
                     disabled={option.disabled}
-                    className="group relative flex min-h-9 cursor-pointer select-none items-start justify-between gap-2.5 rounded-lg px-2.5 py-2 text-base font-semibold text-slate-800 outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-45 sm:text-sm"
+                    className="group relative flex min-h-9 cursor-pointer select-none items-start justify-between gap-2.5 rounded-lg px-2.5 py-2 text-base font-semibold text-teachpad-ink outline-none transition data-[highlighted]:scale-[1.01] data-[highlighted]:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-teachpad-blue data-[disabled]:pointer-events-none data-[disabled]:opacity-45 sm:text-sm"
                   >
                     <SelectPrimitive.ItemText>
                       <span className="block min-w-0 whitespace-normal break-words leading-5">{option.label}</span>
                     </SelectPrimitive.ItemText>
                     <SelectPrimitive.ItemIndicator>
-                      <Check className="h-4 w-4 text-blue-600" />
+                      <Check className="h-4 w-4 text-teachpad-blue" />
                     </SelectPrimitive.ItemIndicator>
                   </SelectPrimitive.Item>
                 ))}

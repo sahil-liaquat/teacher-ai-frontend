@@ -111,18 +111,28 @@ export default function TeacherDashboard() {
   return (
     <div className="mx-auto grid w-full max-w-[1480px] gap-4 px-0 2xl:px-4">
       <header className="mx-auto flex w-full max-w-[1240px] flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            {greeting.text}, {firstName} <span className="inline-block">{greeting.emoji}</span>
-          </h1>
-          <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
-        </div>
-        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-start sm:flex sm:h-14 sm:w-[230px] sm:justify-end lg:w-[260px]">
+        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-start sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
           <img
             src="/assets/teachpad-logo.png"
             alt="Teachpad"
-            className="h-auto max-h-10 w-full object-contain object-left sm:max-h-11 sm:object-right"
+            className="h-auto max-h-10 w-full object-contain object-left sm:max-h-11"
           />
+        </div>
+        <div className="text-left sm:text-left">
+          <h1 className="flex flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:justify-end sm:text-3xl">
+            <span>{greeting.text}, {firstName}</span>
+            {greeting.icon ? (
+              <img
+                src={greeting.icon}
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_5px_8px_rgba(251,191,36,0.22)] sm:h-9 sm:w-9"
+              />
+            ) : (
+              <span className="inline-block">{greeting.emoji}</span>
+            )}
+          </h1>
+          <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
         </div>
       </header>
 
@@ -192,6 +202,7 @@ export default function TeacherDashboard() {
           button="Create Lesson Plan"
           icon={FileText}
           tone="blue"
+          illustrationSrc="/assets/illustrations/lesson-plan-card.png"
         />
         <ActionPanel
           title="Create Worksheet"
@@ -200,6 +211,7 @@ export default function TeacherDashboard() {
           button="Create Worksheet"
           icon={Sparkles}
           tone="green"
+          illustrationSrc="/assets/illustrations/worksheet-card.png"
         />
       </section>
 
@@ -220,7 +232,7 @@ export default function TeacherDashboard() {
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"
+                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
                 )}>
                   {item.type === "Worksheet" ? <FileText className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
                 </div>
@@ -230,7 +242,7 @@ export default function TeacherDashboard() {
                 </div>
                 <span className={cn(
                   "rounded-lg px-2.5 py-1 text-xs font-semibold",
-                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
+                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-[#eff6ff] text-[#1d4ed8]"
                 )}>
                   {item.type}
                 </span>
@@ -262,7 +274,7 @@ export default function TeacherDashboard() {
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-blue-500" />
+                    <span className="h-3 w-3 rounded-full bg-[#3b82f6]" />
                     <span className="text-sm font-medium text-slate-700">Lesson Plans</span>
                     <span className="text-sm font-bold text-slate-900">{lessonMonthlyTotal}</span>
                   </div>
@@ -288,13 +300,13 @@ export default function TeacherDashboard() {
                         style={{
                           height: `${pct}%`,
                           background: isLast
-                            ? "linear-gradient(180deg, #2563eb, #1d4ed8)"
+                            ? "linear-gradient(180deg, #3b82f6, #1d4ed8)"
                             : "linear-gradient(180deg, #60a5fa, #60a5fa)",
                           boxShadow: isLast ? "0 4px 16px rgba(37, 99, 235, 0.4)" : "0 2px 8px rgba(59, 130, 246, 0.2)",
                           animationDelay: `${i * 80}ms`
                         }}
                       />
-                      <span className={`text-[10px] font-semibold ${isLast ? "text-blue-600" : "text-slate-400"}`}>
+                      <span className={`text-[10px] font-semibold ${isLast ? "text-[#2563eb]" : "text-slate-400"}`}>
                         {bar.label}
                       </span>
                     </div>
@@ -314,12 +326,12 @@ export default function TeacherDashboard() {
                 <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI for accurate, board-aligned content.</p>
               </div>
             </div>
-            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                <Clock3 className="h-5 w-5 text-blue-600" />
+            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-[#dbeafe] bg-gradient-to-r from-[#eff6ff] to-[#f0f9ff] p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#dbeafe]">
+                <Clock3 className="h-5 w-5 text-[#2563eb]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-blue-800">Time Saved</p>
+                <p className="text-sm font-bold text-[#1e40af]">Time Saved</p>
                 <p className="mt-0.5 text-lg font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
               </div>
             </div>
@@ -381,10 +393,10 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
       glow: "bg-amber-200/30"
     },
     blue: {
-      card: "bg-gradient-to-br from-sky-50 via-blue-50 to-white",
-      iconBox: "bg-gradient-to-br from-sky-400 to-blue-600",
-      iconShadow: "shadow-blue-300/40",
-      glow: "bg-blue-200/30"
+      card: "bg-gradient-to-br from-sky-50 via-[#eff6ff] to-white",
+      iconBox: "bg-gradient-to-br from-[#38bdf8] to-[#2563eb]",
+      iconShadow: "shadow-[#93c5fd]/40",
+      glow: "bg-[#bfdbfe]/30"
     }
   };
   const g = gradients[tone as keyof typeof gradients] || gradients.pink;
@@ -473,20 +485,20 @@ function CountUpNumber({ value }: { value: number }) {
   return <>{displayValue}</>;
 }
 
-function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: string; desc: string; href: string; button: string; icon: any; tone: "blue" | "green" }) {
+function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustrationSrc }: { title: string; desc: string; href: string; button: string; icon: any; tone: "blue" | "green"; illustrationSrc?: string }) {
   const isGreen = tone === "green";
   const gradients = {
     card: isGreen
       ? "bg-gradient-to-br from-emerald-50 via-green-50 to-white"
-      : "bg-gradient-to-br from-blue-50 via-blue-50 to-white",
+      : "bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white",
     iconBox: isGreen
       ? "bg-gradient-to-br from-emerald-500 to-green-600"
-      : "bg-gradient-to-br from-blue-500 to-blue-600",
-    iconShadow: isGreen ? "shadow-emerald-300/40" : "shadow-blue-300/40",
-    glow: isGreen ? "bg-emerald-200/30" : "bg-blue-200/30",
+      : "bg-gradient-to-br from-[#3b82f6] to-[#2563eb]",
+    iconShadow: isGreen ? "shadow-emerald-300/40" : "shadow-[#93c5fd]/40",
+    glow: isGreen ? "bg-emerald-200/30" : "bg-[#bfdbfe]/30",
     button: isGreen
       ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
+      : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb] hover:from-[#2563eb] hover:to-[#1d4ed8]",
     accent: isGreen ? "#10b981" : "#3b82f6"
   };
 
@@ -542,35 +554,44 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone }: { title: s
         </Link>
       </div>
 
-      <div className="absolute bottom-4 right-4 hidden sm:block">
-        <div className={cn(
-          "relative h-[96px] w-[118px]",
-          "rotate-6"
-        )}>
+      {illustrationSrc ? (
+        <img
+          src={illustrationSrc}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 right-0 hidden h-[170px] w-[170px] translate-x-5 translate-y-5 object-contain drop-shadow-[0_16px_24px_rgba(37,99,235,0.24)] sm:block lg:h-[190px] lg:w-[190px]"
+        />
+      ) : (
+        <div className="absolute bottom-4 right-4 hidden sm:block">
           <div className={cn(
-            "absolute inset-0",
-            "rounded-2xl border border-white/60 bg-white/70",
-            "shadow-lg backdrop-blur-sm",
-            "flex flex-col items-center justify-center gap-1.5 p-3"
+            "relative h-[96px] w-[118px]",
+            "rotate-6"
           )}>
-            <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-blue-100")}>
-              <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-blue-600")} />
+            <div className={cn(
+              "absolute inset-0",
+              "rounded-2xl border border-white/60 bg-white/70",
+              "shadow-lg backdrop-blur-sm",
+              "flex flex-col items-center justify-center gap-1.5 p-3"
+            )}>
+              <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-[#dbeafe]")}>
+                <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-[#2563eb]")} />
+              </div>
+              <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-[#bfdbfe]")} />
+              <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-[#dbeafe]")} />
+              <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-[#bfdbfe]")} />
             </div>
-            <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
-            <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-blue-100")} />
-            <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
-          </div>
-          <div className={cn(
-            "absolute -top-3 -right-3",
-            "h-9 w-9",
-            "rounded-xl border border-white/60 bg-white/80",
-            "shadow-md backdrop-blur-sm",
-            "flex items-center justify-center"
-          )}>
-            <Check className={cn("h-5 w-5", isGreen ? "text-emerald-500" : "text-blue-500")} />
+            <div className={cn(
+              "absolute -top-3 -right-3",
+              "h-9 w-9",
+              "rounded-xl border border-white/60 bg-white/80",
+              "shadow-md backdrop-blur-sm",
+              "flex items-center justify-center"
+            )}>
+              <Check className={cn("h-5 w-5", isGreen ? "text-emerald-500" : "text-[#3b82f6]")} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -627,7 +648,7 @@ function getUsageGradient(lessonCount: number, worksheetCount: number) {
   const total = lessonCount + worksheetCount;
   if (!total) return "conic-gradient(#d7dae4 0 100%)";
   const lessonEnd = Math.round((lessonCount / total) * 100);
-  return `conic-gradient(#2563eb 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
+  return `conic-gradient(#3b82f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
 }
 
 function formatHours(hours: number) {
@@ -636,7 +657,7 @@ function formatHours(hours: number) {
 
 function toneClass(tone: string) {
   const tones: Record<string, string> = {
-    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg",
+    blue: "bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white shadow-lg",
     pink: "bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-lg",
     green: "bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg",
     orange: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg",
@@ -647,9 +668,9 @@ function toneClass(tone: string) {
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return { text: "Good morning", emoji: "☀️" };
-  if (hour >= 17) return { text: "Good evening", emoji: "🌙" };
-  return { text: "Good afternoon", emoji: "☀️" };
+  if (hour < 12) return { text: "Good morning", emoji: "☀️", icon: "" };
+  if (hour >= 17) return { text: "Good evening", emoji: "", icon: "/assets/icons/greeting-evening.png" };
+  return { text: "Good afternoon", emoji: "", icon: "/assets/icons/greeting-afternoon.png" };
 }
 
 function getLast6DaysBars(items: Array<{ created_at?: string; updated_at?: string }>) {

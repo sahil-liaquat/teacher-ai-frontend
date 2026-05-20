@@ -1,0 +1,210 @@
+[
+  {
+    "icon": "ArrowRight",
+    "lucide_react_import_name": "ArrowRight",
+    "pastel_background": "#e9f7ff",
+    "icon_color": "#1677ff",
+    "raw_svg": "icons/arrow-right.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/arrow-right-tile.svg"
+  },
+  {
+    "icon": "Bell",
+    "lucide_react_import_name": "Bell",
+    "pastel_background": "#f7f8fb",
+    "icon_color": "#6d6f78",
+    "raw_svg": "icons/bell.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/bell-tile.svg"
+  },
+  {
+    "icon": "BookOpen",
+    "lucide_react_import_name": "BookOpen",
+    "pastel_background": "#ffdce8",
+    "icon_color": "#ff5c8a",
+    "raw_svg": "icons/book-open.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/book-open-tile.svg"
+  },
+  {
+    "icon": "CalendarDays",
+    "lucide_react_import_name": "CalendarDays",
+    "pastel_background": "#fff0bf",
+    "icon_color": "#f4b400",
+    "raw_svg": "icons/calendar-days.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/calendar-days-tile.svg"
+  },
+  {
+    "icon": "CheckCircle2",
+    "lucide_react_import_name": "CheckCircle2",
+    "pastel_background": "#dffafa",
+    "icon_color": "#16c5d9",
+    "raw_svg": "icons/check-circle2.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/check-circle2-tile.svg"
+  },
+  {
+    "icon": "ChevronDown",
+    "lucide_react_import_name": "ChevronDown",
+    "pastel_background": "#f7f8fb",
+    "icon_color": "#7b7e89",
+    "raw_svg": "icons/chevron-down.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/chevron-down-tile.svg"
+  },
+  {
+    "icon": "ClipboardList",
+    "lucide_react_import_name": "ClipboardList",
+    "pastel_background": "#e5ffc6",
+    "icon_color": "#8ec63f",
+    "raw_svg": "icons/clipboard-list.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/clipboard-list-tile.svg"
+  },
+  {
+    "icon": "FileText",
+    "lucide_react_import_name": "FileText",
+    "pastel_background": "#fff0bf",
+    "icon_color": "#f4b400",
+    "raw_svg": "icons/file-text.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/file-text-tile.svg"
+  },
+  {
+    "icon": "FolderOpen",
+    "lucide_react_import_name": "FolderOpen",
+    "pastel_background": "#c7f7ed",
+    "icon_color": "#1ec8b7",
+    "raw_svg": "icons/folder-open.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/folder-open-tile.svg"
+  },
+  {
+    "icon": "GraduationCap",
+    "lucide_react_import_name": "GraduationCap",
+    "pastel_background": "#e9e1ff",
+    "icon_color": "#8b7cf6",
+    "raw_svg": "icons/graduation-cap.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/graduation-cap-tile.svg"
+  },
+  {
+    "icon": "ImageIcon",
+    "lucide_react_import_name": "ImageIcon",
+    "pastel_background": "#eee9ff",
+    "icon_color": "#8b7cf6",
+    "raw_svg": "icons/image-icon.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/image-icon-tile.svg"
+  },
+  {
+    "icon": "Layers3",
+    "lucide_react_import_name": "Layers3",
+    "pastel_background": "#c9f7fb",
+    "icon_color": "#16c5d9",
+    "raw_svg": "icons/layers3.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/layers3-tile.svg"
+  },
+  {
+    "icon": "LayoutDashboard",
+    "lucide_react_import_name": "LayoutDashboard",
+    "pastel_background": "#e9f7ff",
+    "icon_color": "#1677ff",
+    "raw_svg": "icons/layout-dashboard.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/layout-dashboard-tile.svg"
+  },
+  {
+    "icon": "Menu",
+    "lucide_react_import_name": "Menu",
+    "pastel_background": "#f7f8fb",
+    "icon_color": "#25262b",
+    "raw_svg": "icons/menu.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/menu-tile.svg"
+  },
+  {
+    "icon": "MessageCircle",
+    "lucide_react_import_name": "MessageCircle",
+    "pastel_background": "#c7f7ed",
+    "icon_color": "#1ec8b7",
+    "raw_svg": "icons/message-circle.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/message-circle-tile.svg"
+  },
+  {
+    "icon": "Mic",
+    "lucide_react_import_name": "Mic",
+    "pastel_background": "#f7e7ff",
+    "icon_color": "#c061ff",
+    "raw_svg": "icons/mic.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/mic-tile.svg"
+  },
+  {
+    "icon": "NotebookPen",
+    "lucide_react_import_name": "NotebookPen",
+    "pastel_background": "#fff0bf",
+    "icon_color": "#f4b400",
+    "raw_svg": "icons/notebook-pen.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/notebook-pen-tile.svg"
+  },
+  {
+    "icon": "PenLine",
+    "lucide_react_import_name": "PenLine",
+    "pastel_background": "#fff5dc",
+    "icon_color": "#f4a51c",
+    "raw_svg": "icons/pen-line.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/pen-line-tile.svg"
+  },
+  {
+    "icon": "Play",
+    "lucide_react_import_name": "Play",
+    "pastel_background": "#1677ff",
+    "icon_color": "#ffffff",
+    "raw_svg": "icons/play.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/play-tile.svg"
+  },
+  {
+    "icon": "Presentation",
+    "lucide_react_import_name": "Presentation",
+    "pastel_background": "#e9e1ff",
+    "icon_color": "#8b7cf6",
+    "raw_svg": "icons/presentation.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/presentation-tile.svg"
+  },
+  {
+    "icon": "Search",
+    "lucide_react_import_name": "Search",
+    "pastel_background": "#c9f7fb",
+    "icon_color": "#16c5d9",
+    "raw_svg": "icons/search.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/search-tile.svg"
+  },
+  {
+    "icon": "Settings",
+    "lucide_react_import_name": "Settings",
+    "pastel_background": "#f7f8fb",
+    "icon_color": "#6d6f78",
+    "raw_svg": "icons/settings.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/settings-tile.svg"
+  },
+  {
+    "icon": "ShieldCheck",
+    "lucide_react_import_name": "ShieldCheck",
+    "pastel_background": "#c7f7ed",
+    "icon_color": "#1ec8b7",
+    "raw_svg": "icons/shield-check.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/shield-check-tile.svg"
+  },
+  {
+    "icon": "Sparkles",
+    "lucide_react_import_name": "Sparkles",
+    "pastel_background": "#fff0bf",
+    "icon_color": "#f4b400",
+    "raw_svg": "icons/sparkles.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/sparkles-tile.svg"
+  },
+  {
+    "icon": "Target",
+    "lucide_react_import_name": "Target",
+    "pastel_background": "#c9f7fb",
+    "icon_color": "#16c5d9",
+    "raw_svg": "icons/target.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/target-tile.svg"
+  },
+  {
+    "icon": "WandSparkles",
+    "lucide_react_import_name": "WandSparkles",
+    "pastel_background": "#f2dcff",
+    "icon_color": "#c061ff",
+    "raw_svg": "icons/wand-sparkles.svg",
+    "pastel_tile_svg": "pastel-icon-tiles/wand-sparkles-tile.svg"
+  }
+]

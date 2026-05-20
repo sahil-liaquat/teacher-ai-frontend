@@ -3,17 +3,43 @@
 @tailwind utilities;
 
 :root {
-  --background: 270 100% 99%;
-  --foreground: 245 57% 14%;
-  --border: 264 34% 92%;
-  --primary: 262 86% 62%;
+  --teachpad-ink: #25262b;
+  --teachpad-muted: #6d6f78;
+  --teachpad-blue: #1677ff;
+  --teachpad-aqua: #dffafa;
+  --teachpad-pink: #ffdce8;
+  --teachpad-yellow: #fff0bf;
+  --teachpad-lavender: #e9e1ff;
+  --teachpad-lilac: #f2dcff;
+  --teachpad-green: #e5ffc6;
+  --teachpad-mint: #c7f7ed;
+  --teachpad-sky: #c9f7fb;
+  --teachpad-peach: #ffe1d2;
+  --teachpad-red: #ffd9de;
+  --teachpad-white: #ffffff;
+  --teachpad-cardBorder: #eceef3;
+  --teachpad-softPanel: #f8ffff;
+  --teachpad-inputBg: #f7f8fb;
+  --teachpad-tagBg: #f5f7fb;
+  --teachpad-placeholderText: #9ca0aa;
+  --teachpad-secondaryText: #7b7e89;
+  --teachpad-aquaAccent: #16a9b6;
+  --teachpad-errorRed: #eb3b5a;
+  --teachpad-hoverBlue: #0969e8;
+  --teachpad-shadowBlue: rgba(22,119,255,0.22);
+  --teachpad-shadowCard: rgba(30,80,90,0.08);
+  --teachpad-shadowToolCard: rgba(30,50,80,0.07);
+  --background: 180 72% 93%;
+  --foreground: 225 8% 16%;
+  --border: 225 24% 94%;
+  --primary: 213 100% 54%;
   --primary-foreground: 0 0% 100%;
-  --muted: 220 54% 96%;
-  --muted-foreground: 221 17% 52%;
-  --accent-cyan: 200 60% 50%;
-  --accent-pink: 280 50% 55%;
-  --accent-green: 150 45% 50%;
-  --accent-orange: 30 70% 55%;
+  --muted: 220 29% 97%;
+  --muted-foreground: 228 5% 45%;
+  --accent-cyan: 186 81% 45%;
+  --accent-pink: 341 100% 68%;
+  --accent-green: 85 54% 51%;
+  --accent-orange: 39 90% 53%;
 }
 
 * {
@@ -24,7 +50,7 @@ html {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  background: #eff6ff;
+  background: #ffffff;
 }
 
 body {
@@ -32,11 +58,8 @@ body {
   max-width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(152, 97, 255, 0.08), transparent 32rem),
-    radial-gradient(circle at 75% 15%, rgba(45, 143, 212, 0.06), transparent 28rem),
-    #eff6ff;
-  color: #101039;
+  background: #ffffff;
+  color: var(--teachpad-ink);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
@@ -48,7 +71,7 @@ canvas {
 }
 
 ::selection {
-  background: #2563eb;
+  background: var(--teachpad-blue);
   color: white;
 }
 
@@ -62,8 +85,8 @@ select {
 input,
 textarea,
 select {
-  color: #0b1538;
-  background: white;
+  color: var(--teachpad-ink);
+  background: var(--teachpad-inputBg);
 }
 
 @media (max-width: 640px) {
@@ -78,17 +101,17 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: #8a96b1;
+  color: var(--teachpad-placeholderText);
 }
 
 .print-shell {
-  background: #eff6ff;
+  background: #ffffff;
 }
 
 .tat-card {
-  border: 1px solid #dbeafe;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 50px rgba(39, 30, 91, 0.08);
+  border: 1px solid var(--teachpad-cardBorder);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 50px var(--teachpad-shadowCard);
   backdrop-filter: blur(20px);
 }
 
@@ -100,30 +123,56 @@ textarea::placeholder {
 
 .tat-soft-grid {
   background-image:
-    linear-gradient(rgba(37, 99, 235, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(22, 169, 182, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 119, 255, 0.1) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(16px);
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--teachpad-cardBorder);
 }
 
 .gradient-text-blue {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--teachpad-blue), var(--teachpad-aquaAccent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, var(--teachpad-blue), var(--teachpad-hoverBlue));
 }
 
 .btn-gradient:hover {
-  background: linear-gradient(135deg, #2563eb, #412cc9);
+  background: linear-gradient(135deg, var(--teachpad-hoverBlue), var(--teachpad-blue));
+}
+
+.teachpad-page {
+  background: #ffffff;
+}
+
+.teachpad-panel {
+  border: 1px solid var(--teachpad-cardBorder);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 48px var(--teachpad-shadowCard);
+  backdrop-filter: blur(18px);
+}
+
+.teachpad-icon-tile {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--teachpad-sky);
+  color: var(--teachpad-blue);
+  box-shadow: 0 12px 28px var(--teachpad-shadowToolCard);
+}
+
+.teachpad-tag {
+  border: 1px solid var(--teachpad-cardBorder);
+  background: var(--teachpad-tagBg);
+  color: var(--teachpad-muted);
 }
 
 @keyframes page-in {
@@ -169,10 +218,10 @@ textarea::placeholder {
 @keyframes glow-pulse {
   0%,
   100% {
-    box-shadow: 0 20px 50px rgba(37, 99, 235, 0.15), inset 0 1px 0 0 rgba(232, 236, 241, 0.08);
+    box-shadow: 0 20px 50px rgba(22,119,255,0.18), inset 0 1px 0 0 rgba(255,255,255,0.7);
   }
   50% {
-    box-shadow: 0 30px 70px rgba(59, 130, 246, 0.2), inset 0 1px 0 0 rgba(232, 236, 241, 0.12);
+    box-shadow: 0 30px 70px rgba(22, 197, 217, 0.22), inset 0 1px 0 0 rgba(255,255,255,0.78);
   }
 }
 
@@ -190,10 +239,10 @@ textarea::placeholder {
 
 @keyframes neon-glow {
   0%, 100% {
-    text-shadow: 0 0 10px rgba(37, 99, 235, 0.3), 0 0 20px rgba(37, 99, 235, 0.15);
+    text-shadow: 0 0 10px rgba(22,119,255,0.26), 0 0 20px rgba(22, 197, 217, 0.14);
   }
   50% {
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 30px rgba(37, 99, 235, 0.25);
+    text-shadow: 0 0 20px rgba(22, 197, 217, 0.34), 0 0 30px rgba(22,119,255,0.22);
   }
 }
 
@@ -237,13 +286,13 @@ textarea::placeholder {
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5);
+    box-shadow: 0 0 0 0 rgba(22,119,255,0.42);
   }
   70% {
-    box-shadow: 0 0 0 15px rgba(37, 99, 235, 0);
+    box-shadow: 0 0 0 15px rgba(22,119,255,0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+    box-shadow: 0 0 0 0 rgba(22,119,255,0);
   }
 }
 
@@ -481,7 +530,7 @@ textarea::placeholder {
   height: 58px;
   width: 58px;
   border-radius: 999px;
-  border: 5px solid #1d4ed8;
+  border: 5px solid #0969e8;
   background: radial-gradient(circle at 34% 32%, rgba(255, 255, 255, 0.8), rgba(141, 87, 246, 0.16));
   box-shadow: 0 0 28px rgba(78, 53, 221, 0.25);
 }
@@ -493,7 +542,7 @@ textarea::placeholder {
   height: 38px;
   width: 8px;
   border-radius: 999px;
-  background: #1d4ed8;
+  background: #0969e8;
   transform: rotate(-42deg);
   transform-origin: top center;
 }
@@ -509,7 +558,7 @@ textarea::placeholder {
 }
 
 .generation-particle:nth-child(3n) {
-  background: #2563eb;
+  background: #1677ff;
   box-shadow: 0 0 18px rgba(141, 87, 246, 0.7);
 }
 

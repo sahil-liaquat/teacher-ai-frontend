@@ -14,6 +14,8 @@ import {
   Copy,
   Download,
   FileText,
+  FlaskConical,
+  GraduationCap,
   GripVertical,
   Lightbulb,
   MoreVertical,
@@ -137,10 +139,10 @@ function LessonPlanDocumentOutput({
 
   return (
     <div className="w-full max-w-none">
-      <div className="flex flex-col gap-3 border-b border-[#dbeafe] bg-[#eff6ff]/90 pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[#dffafa] bg-[#f8ffff]/90 pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#4b6b9b]">
-            <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#2563eb]">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
+            <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#1677ff]">
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to Inputs
             </Link>
@@ -151,11 +153,11 @@ function LessonPlanDocumentOutput({
             <InlineTextInput
               value={draft.title}
               onChange={(value) => setDraft({ ...draft, title: value })}
-              className="mt-2 text-2xl font-black leading-tight text-[#17142f] sm:text-[28px]"
+              className="mt-2 text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]"
               ariaLabel="Lesson plan title"
             />
           ) : (
-            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#17142f] sm:text-[28px]">
+            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">
               {chapterDisplay}
             </h1>
           )}
@@ -178,12 +180,12 @@ function LessonPlanDocumentOutput({
       </div>
 
       <div className="mt-4 min-w-0">
-        <article className="min-w-0 rounded-[16px] border border-[#bfdbfe] bg-white shadow-[0_18px_48px_rgba(39,30,91,0.08)]">
-          <header className="border-b border-[#dbeafe] px-4 py-5 sm:px-6 sm:py-6 lg:px-7">
-            <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(220px,300px)] md:items-start">
+        <article className="min-w-0 rounded-[16px] border border-[#c9f7fb] bg-white shadow-[0_18px_48px_rgba(39,30,91,0.08)]">
+          <header className="border-b border-[#dffafa] px-4 py-5 sm:px-6 sm:py-6 lg:px-7">
+            <div className="grid gap-5 md:items-start">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-[#dbeafe] text-[#2563eb]">AI Generated</Badge>
+                  <Badge className="bg-[#dffafa] text-[#1677ff]">AI Generated</Badge>
                   <Badge className="bg-[#e9fff4] text-[#16865a]">Textbook Grounded</Badge>
                   {isEditing ? <Badge className="bg-[#fff4da] text-[#9a6818]">Editing</Badge> : null}
                 </div>
@@ -191,21 +193,15 @@ function LessonPlanDocumentOutput({
                   <InlineTextInput
                     value={draft.title}
                     onChange={(value) => setDraft({ ...draft, title: value })}
-                    className="mt-5 text-[30px] font-black leading-tight tracking-normal text-[#17142f] sm:text-[38px]"
+                    className="mt-5 text-[30px] font-black leading-tight tracking-normal text-[#25262b] sm:text-[38px]"
                     ariaLabel="Document title"
                   />
                 ) : (
-                  <h2 className="mt-5 break-words text-[30px] font-black leading-tight tracking-normal text-[#17142f] sm:text-[38px]">
+                  <h2 className="mt-5 break-words text-[30px] font-black leading-tight tracking-normal text-[#25262b] sm:text-[38px]">
                     {visibleDraft.title}
                   </h2>
                 )}
               </div>
-              <LessonHeaderMeta
-                metadata={visibleDraft.metadata}
-                draft={draft}
-                setDraft={setDraft}
-                isEditing={isEditing}
-              />
             </div>
           </header>
 
@@ -245,9 +241,39 @@ function LessonPlanDocumentOutput({
               />
             ))}
           </div>
+
+          <LessonMetadataFooter metadata={visibleDraft.metadata} generatedAt={documentOutput?.generated_at || documentOutput?.created_at || documentOutput?.updated_at} />
         </article>
       </div>
     </div>
+  );
+}
+
+function LessonMetadataFooter({ metadata, generatedAt }: { metadata: LessonDocumentMetadata; generatedAt?: string }) {
+  const items = [
+    { label: "Subject", value: metadata.subject, icon: FlaskConical },
+    { label: "Grade", value: formatGradeValue(metadata.class), icon: GraduationCap },
+    { label: "Chapter", value: metadata.chapter, icon: BookOpen },
+    { label: "Source", value: metadata.book, icon: FileText },
+    { label: "Generated on", value: formatGeneratedDate(generatedAt), icon: Download }
+  ];
+
+  return (
+    <footer className="border-t border-[#eceef3] bg-white px-4 pb-6 pt-2 sm:px-6 lg:px-7">
+      <div className="grid gap-3 rounded-[16px] bg-[#f5f7fb] px-4 py-4 md:grid-cols-2 xl:grid-cols-5">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.label} className="flex min-w-0 items-center gap-3">
+              <Icon className="h-5 w-5 shrink-0 text-[#2f89cc]" />
+              <p className="min-w-0 truncate text-sm font-black text-[#2f3548]">
+                {item.label}: <span className="ml-1 font-bold text-[#5f667a]">{formatMetadataValue(item.value)}</span>
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </footer>
   );
 }
 
@@ -282,7 +308,7 @@ function LessonSectionBlock({
       id={id}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      className={`grid gap-4 border-b border-[#f0edf7] py-6 transition last:border-b-0 ${isDragging ? "opacity-50" : ""}`}
+      className={`grid gap-4 border-b border-[#eceef3] py-6 transition last:border-b-0 ${isDragging ? "opacity-50" : ""}`}
     >
       <div className="min-w-0">
         {isEditing ? (
@@ -293,7 +319,7 @@ function LessonSectionBlock({
                 draggable
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
-                className="grid h-10 w-8 cursor-grab place-items-center rounded-[8px] border border-[#e5e1f1] bg-white text-[#4b6b9b] active:cursor-grabbing"
+                className="grid h-10 w-8 cursor-grab place-items-center rounded-[8px] border border-[#eceef3] bg-white text-[#6d6f78] active:cursor-grabbing"
                 title="Drag section"
                 aria-label={`Drag ${section.title}`}
               >
@@ -302,7 +328,7 @@ function LessonSectionBlock({
               <InlineTextInput
                 value={section.title}
                 onChange={(title) => onSectionChange?.({ ...section, title })}
-                className="text-lg font-black leading-7 text-[#17142f]"
+                className="text-lg font-black leading-7 text-[#25262b]"
                 ariaLabel={`Section ${index + 1} heading`}
               />
             </div>
@@ -313,7 +339,7 @@ function LessonSectionBlock({
             </div>
           </div>
         ) : (
-          <h3 className="break-words text-lg font-black leading-7 text-[#17142f]">{index + 1}. {section.title}</h3>
+          <h3 className="break-words text-lg font-black leading-7 text-[#25262b]">{index + 1}. {section.title}</h3>
         )}
         <div className="mt-4">
           {section.outline ? (
@@ -349,13 +375,13 @@ function LessonFlowBlock({
   return (
     <div className="overflow-hidden rounded-[12px] border border-[#e8e2f4]">
       {rows.map((row, index) => (
-        <div key={`${row.phase}-${index}`} className="grid gap-3 border-b border-[#f0edf7] p-4 last:border-b-0 lg:grid-cols-[120px_minmax(0,1fr)]">
-          <div className="text-xs font-black uppercase tracking-[0.08em] text-[#2563eb]">
+        <div key={`${row.phase}-${index}`} className="grid gap-3 border-b border-[#eceef3] p-4 last:border-b-0 lg:grid-cols-[120px_minmax(0,1fr)]">
+          <div className="text-xs font-black uppercase tracking-[0.08em] text-[#1677ff]">
             {isEditing ? (
               <InlineTextInput
                 value={row.time}
                 onChange={(time) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, time }))}
-                className="text-xs font-black uppercase tracking-[0.08em] text-[#2563eb]"
+                className="text-xs font-black uppercase tracking-[0.08em] text-[#1677ff]"
                 ariaLabel={`Step ${index + 1} time`}
               />
             ) : row.time || "Time"}
@@ -366,7 +392,7 @@ function LessonFlowBlock({
                 <InlineTextInput
                   value={row.phase}
                   onChange={(phase) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, phase }))}
-          className="text-base font-black text-[#17142f]"
+          className="text-base font-black text-[#25262b]"
                   ariaLabel={`Step ${index + 1} phase`}
                 />
                 <InlineTextArea
@@ -382,11 +408,11 @@ function LessonFlowBlock({
               </div>
             ) : (
               <>
-                <p className="break-words text-base font-black text-[#17142f]">{row.phase || `Step ${index + 1}`}</p>
+                <p className="break-words text-base font-black text-[#25262b]">{row.phase || `Step ${index + 1}`}</p>
                 {row.teacher_action ? <p className="mt-2 break-words text-base leading-7 text-[#4f4a66]">{row.teacher_action}</p> : null}
                 {row.student_action ? (
                   <p className="mt-2 break-words text-base leading-7 text-[#6b6680]">
-                    <span className="font-bold text-[#17142f]">Students: </span>{row.student_action}
+                    <span className="font-bold text-[#25262b]">Students: </span>{row.student_action}
                   </p>
                 ) : null}
               </>
@@ -438,7 +464,7 @@ function LessonBulletList({
 
 function LessonEmptyLine() {
   return (
-    <p className="rounded-[10px] border border-dashed border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 text-base font-semibold text-[#4b6b9b]">
+    <p className="rounded-[10px] border border-dashed border-[#c9f7fb] bg-[#f8ffff] px-4 py-3 text-base font-semibold text-[#6d6f78]">
       Not included in the generated output.
     </p>
   );
@@ -470,11 +496,11 @@ function LessonHeaderMeta({
             <InlineTextInput
               value={draft.metadata[row.field] || ""}
               onChange={(nextValue) => setDraft({ ...draft, metadata: { ...draft.metadata, [row.field]: nextValue } })}
-              className="ml-1 inline-block max-w-[190px] text-right text-xs font-bold text-[#17142f]"
+              className="ml-1 inline-block max-w-[190px] text-right text-xs font-bold text-[#25262b]"
               ariaLabel={row.label}
             />
           ) : (
-            <span className="font-bold text-[#17142f]">{formatMetadataValue(row.value)}</span>
+            <span className="font-bold text-[#25262b]">{formatMetadataValue(row.value)}</span>
           )}
         </div>
       ))}
@@ -498,17 +524,17 @@ function LessonDetailRow({
   isEditing: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-[12px] border border-[#eee9f7] bg-[#eff6ff] p-3">
+    <div className="min-w-0 rounded-[12px] border border-[#eee9f7] bg-[#f8ffff] p-3">
       <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
       {isEditing && draft ? (
         <InlineTextInput
           value={draft.metadata[field] || ""}
           onChange={(nextValue) => setDraft({ ...draft, metadata: { ...draft.metadata, [field]: nextValue } })}
-          className="mt-1 text-sm font-bold text-[#17142f]"
+          className="mt-1 text-sm font-bold text-[#25262b]"
           ariaLabel={label}
         />
       ) : (
-        <p className="mt-1 break-words text-sm font-bold text-[#17142f]">{formatMetadataValue(value)}</p>
+        <p className="mt-1 break-words text-sm font-bold text-[#25262b]">{formatMetadataValue(value)}</p>
       )}
     </div>
   );
@@ -516,9 +542,9 @@ function LessonDetailRow({
 
 function CompactDetail({ label, value }: { label: string; value?: unknown }) {
   return (
-    <div className="min-w-0 border-b border-[#f0edf7] pb-3 last:border-b-0 last:pb-0">
+    <div className="min-w-0 border-b border-[#eceef3] pb-3 last:border-b-0 last:pb-0">
       <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
-      <p className="mt-1 break-words text-sm font-bold text-[#17142f]">{formatMetadataValue(value)}</p>
+      <p className="mt-1 break-words text-sm font-bold text-[#25262b]">{formatMetadataValue(value)}</p>
     </div>
   );
 }
@@ -531,6 +557,22 @@ function formatMetadataValue(value: unknown, suffix = "") {
   const text = textOf(value);
   if (!text) return "Not provided";
   return suffix ? `${text} ${suffix}` : text;
+}
+
+function formatGradeValue(value: unknown) {
+  const text = textOf(value);
+  if (!text) return "";
+  return text.replace(/\b(class|grade)\b/gi, "").trim() || text;
+}
+
+function formatGeneratedDate(value?: string) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  }).format(date);
 }
 
 function formatChapterDisplay(metadata: Partial<LessonDocumentMetadata>) {
@@ -557,7 +599,7 @@ function InlineTextInput({
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className={`w-full min-w-0 rounded-[8px] border border-[#bfdbfe] bg-white px-2 py-1 text-base outline-none ring-[#3b82f6]/20 transition focus:ring-4 sm:text-sm ${className || ""}`}
+      className={`w-full min-w-0 rounded-[8px] border border-[#c9f7fb] bg-white px-2 py-1 text-base outline-none ring-[#1677ff]/20 transition focus:ring-4 sm:text-sm ${className || ""}`}
     />
   );
 }
@@ -577,7 +619,7 @@ function InlineTextArea({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       rows={Math.max(2, Math.min(7, value.split(/\n/).length + Math.ceil(value.length / 90)))}
-      className="w-full min-w-0 resize-y rounded-[10px] border border-[#bfdbfe] bg-white px-3 py-2 text-base leading-7 text-[#4f4a66] outline-none ring-[#3b82f6]/20 transition focus:ring-4 sm:text-sm"
+      className="w-full min-w-0 resize-y rounded-[10px] border border-[#c9f7fb] bg-white px-3 py-2 text-base leading-7 text-[#4f4a66] outline-none ring-[#1677ff]/20 transition focus:ring-4 sm:text-sm"
     />
   );
 }
@@ -853,20 +895,20 @@ export function LessonPlanOutput({
 
   return (
     <div className="mx-auto min-w-0 max-w-[1180px] 2xl:max-w-[1440px]">
-      <div className="overflow-hidden rounded-[24px] border border-[#dbeafe] bg-white shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#fbf6ff] to-white px-4 py-6 sm:px-8 sm:py-8">
+      <div className="overflow-hidden rounded-[24px] border border-[#dffafa] bg-white shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#f8ffff] to-white px-4 py-6 sm:px-8 sm:py-8">
           <Link href="/dashboard/lesson-plans/new">
-            <Button variant="outline" size="sm" className="mb-7 border-[#dac6f6] text-[#2563eb]">
+            <Button variant="outline" size="sm" className="mb-7 border-[#c9f7fb] text-[#1677ff]">
               Back to Inputs
             </Button>
           </Link>
           <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-lg font-black text-[#101039]">Generated Lesson Plan</h1>
-                <Badge className="bg-[#dbeafe] text-[#2563eb]">AI Generated</Badge>
+                <h1 className="text-lg font-black text-[#25262b]">Generated Lesson Plan</h1>
+                <Badge className="bg-[#dffafa] text-[#1677ff]">AI Generated</Badge>
               </div>
-              <h2 className="mt-4 max-w-4xl break-words text-[30px] font-black tracking-tight text-[#101039] 2xl:mt-5 2xl:text-4xl">
+              <h2 className="mt-4 max-w-4xl break-words text-[30px] font-black tracking-tight text-[#25262b] 2xl:mt-5 2xl:text-4xl">
                 {typedTitle}
                 {!stream.done("title") ? <TypingCursor /> : null}
               </h2>
@@ -1103,13 +1145,13 @@ export function WorksheetOutput({
         }
       `}</style>
 
-      <div className="no-print mb-5 border-b border-[#dbeafe] bg-white pb-4">
+      <div className="no-print mb-5 border-b border-[#dffafa] bg-white pb-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-black text-[#101039]">Generated Worksheet</h1>
+              <h1 className="text-2xl font-black text-[#25262b]">Generated Worksheet</h1>
             </div>
-            <p className="mt-2 text-sm font-medium text-[#67627d]">{grade} • {subject} • {chapter}</p>
+            <p className="mt-2 text-sm font-medium text-[#6d6f78]">{grade} • {subject} • {chapter}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={onCopy}><Copy className="h-4 w-4" /> Copy</Button>
@@ -1118,12 +1160,12 @@ export function WorksheetOutput({
           </div>
         </div>
 
-        <div className="mt-4 flex rounded-[12px] border border-[#dbeafe] bg-[#eff6ff] p-1">
+        <div className="mt-4 flex rounded-[12px] border border-[#dffafa] bg-[#f8ffff] p-1">
           {["Worksheet", "Answer Key", "Marking Scheme"].map((item) => (
             <button
               key={item}
               onClick={() => setTab(item)}
-              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item ? "bg-[#17142f] text-white shadow-sm" : "text-[#67627d]"}`}
+              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item ? "bg-[#25262b] text-white shadow-sm" : "text-[#6d6f78]"}`}
             >
               {item}
             </button>
@@ -1250,11 +1292,11 @@ function defaultAnswerLines(questionType: string) {
 function AnswerKeyView({ items }: { items: any[] }) {
   return (
     <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#101039]">Answer Key</h2>
+      <h2 className="text-xl font-black text-[#25262b]">Answer Key</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
-          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dbeafe] bg-white p-4">
-            <h3 className="font-black text-[#17142f]">{section.section_title || `Section ${index + 1}`}</h3>
+          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
+            <h3 className="font-black text-[#25262b]">{section.section_title || `Section ${index + 1}`}</h3>
             <ol className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
               {(section.answers || []).map((answer: any, answerIndex: number) => (
                 <li key={answerIndex} className="flex gap-2"><span className="font-black">{answerIndex + 1}.</span><span>{String(answer)}</span></li>
@@ -1270,17 +1312,17 @@ function AnswerKeyView({ items }: { items: any[] }) {
 function MarkingSchemeView({ items }: { items: any[] }) {
   return (
     <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#101039]">Marking Scheme</h2>
+      <h2 className="text-xl font-black text-[#25262b]">Marking Scheme</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
-          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dbeafe] bg-white p-4">
+          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-black text-[#17142f]">{section.section_title || `Section ${index + 1}`}</h3>
+              <h3 className="font-black text-[#25262b]">{section.section_title || `Section ${index + 1}`}</h3>
               {section.marks_per_question ? <Badge>{section.marks_per_question}</Badge> : null}
             </div>
             <ul className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
               {(section.guidelines || []).map((item: any, itemIndex: number) => (
-                <li key={itemIndex} className="flex gap-2"><span className="font-black text-[#17142f]">•</span><span>{String(item)}</span></li>
+                <li key={itemIndex} className="flex gap-2"><span className="font-black text-[#25262b]">•</span><span>{String(item)}</span></li>
               ))}
             </ul>
           </div>
@@ -1334,7 +1376,7 @@ function NumericCard({
 }) {
   const colors = numericCardTones[tone];
   return (
-    <section className={`rounded-[18px] border border-[#dbeafe] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-6 ${className || ""}`}>
+    <section className={`rounded-[18px] border border-[#dffafa] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-6 ${className || ""}`}>
       <div className="mb-5 flex items-center gap-3">
         <div className={`grid h-10 w-10 place-items-center rounded-full font-black text-white text-sm ${colors.badge}`}>
           {number}
@@ -1411,9 +1453,9 @@ function StructuredSectionContent({
 
 function StreamingPlaceholder({ title, className }: { title: string; className?: string }) {
   return (
-    <section className={`rounded-[18px] border border-[#dbeafe] bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
+    <section className={`rounded-[18px] border border-[#dffafa] bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
       <div className="mb-5 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-[#dbeafe] text-[#2563eb]">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-[#dffafa] text-[#1677ff]">
           <SparkleDot />
         </div>
         <h3 className="text-lg font-black text-[#081436]">{title}</h3>
@@ -1424,11 +1466,11 @@ function StreamingPlaceholder({ title, className }: { title: string; className?:
 }
 
 function SparkleDot() {
-  return <span className="h-2.5 w-2.5 animate-ping rounded-full bg-[#2563eb]" />;
+  return <span className="h-2.5 w-2.5 animate-ping rounded-full bg-[#1677ff]" />;
 }
 
 function TypingCursor() {
-  return <span className="ml-1 inline-block h-4 w-1 translate-y-0.5 animate-pulse rounded-full bg-[#2563eb]" />;
+  return <span className="ml-1 inline-block h-4 w-1 translate-y-0.5 animate-pulse rounded-full bg-[#1677ff]" />;
 }
 
 function textLength(value: unknown): number {
@@ -1536,17 +1578,17 @@ function streamLines(stream: ReturnType<typeof useProgressiveStream>, key: strin
 }
 
 const metaTones = {
-  blue: "bg-[#dbeafe] text-[#2563eb]",
+  blue: "bg-[#dffafa] text-[#1677ff]",
   cyan: "bg-[#e3f8ff] text-[#1482a8]",
-  emerald: "bg-[#dbfae6] text-[#218e55]",
-  amber: "bg-[#fff0d8] text-[#bc7619]"
+  emerald: "bg-[#e5ffc6] text-[#8ec63f]",
+  amber: "bg-[#fff0bf] text-[#f4b400]"
 };
 
 const numericCardTones = {
-  blue: { badge: "bg-[#2563eb]" },
+  blue: { badge: "bg-[#1677ff]" },
   pink: { badge: "bg-[#f05b7a]" },
-  emerald: { badge: "bg-[#24a760]" },
-  amber: { badge: "bg-[#d88920]" },
+  emerald: { badge: "bg-[#8ec63f]" },
+  amber: { badge: "bg-[#f4b400]" },
   cyan: { badge: "bg-[#2c75d0]" }
 };
 

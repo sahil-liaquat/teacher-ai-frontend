@@ -6,6 +6,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        teachpad: {
+          ink: "#25262b",
+          muted: "#6d6f78",
+          blue: "#1677ff",
+          aqua: "#dffafa",
+          pink: "#ffdce8",
+          yellow: "#fff0bf",
+          lavender: "#e9e1ff",
+          lilac: "#f2dcff",
+          green: "#e5ffc6",
+          mint: "#c7f7ed",
+          sky: "#c9f7fb",
+          peach: "#ffe1d2",
+          red: "#ffd9de",
+          panel: "#f8ffff",
+          input: "#f7f8fb",
+          tag: "#f5f7fb"
+        },
+        blue: {
+          50: "#e9f7ff",
+          100: "#dffafa",
+          200: "#c9f7fb",
+          300: "#8beef7",
+          400: "#4bdcec",
+          500: "#1677ff",
+          600: "#0969e8",
+          700: "#075ac7",
+          800: "#064a9f",
+          900: "#073b7c",
+          950: "#05264f"
+        },
         border: "hsl(var(--border))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -27,17 +58,17 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'neon-blue': 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-        'neon-cyan': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        'neon-pink': 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-        'neon-gradient': 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #10b981 100%)'
+        'neon-blue': 'linear-gradient(135deg, #1677ff 0%, #0969e8 100%)',
+        'neon-cyan': 'linear-gradient(135deg, #16c5d9 0%, #1677ff 100%)',
+        'neon-pink': 'linear-gradient(135deg, #ff5c8a 0%, #1677ff 100%)',
+        'neon-gradient': 'linear-gradient(135deg, #1677ff 0%, #16c5d9 52%, #8ec63f 100%)'
       },
       boxShadow: {
-        soft: "0 18px 45px rgba(37, 99, 235, 0.15)",
-        neon: "0 0 20px rgba(37, 99, 235, 0.3), 0 0 40px rgba(59, 130, 246, 0.2)",
-        glow: "0 0 30px rgba(37, 99, 235, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)",
-        'glow-cyan': "0 0 30px rgba(59, 130, 246, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)",
-        'glow-pink': "0 0 30px rgba(96, 165, 250, 0.4), inset 0 1px 0 0 rgba(232, 236, 241, 0.08)"
+        soft: "0 18px 45px rgba(30, 80, 90, 0.08)",
+        neon: "0 0 20px rgba(22,119,255,0.22), 0 0 40px rgba(22, 197, 217, 0.16)",
+        glow: "0 0 30px rgba(22,119,255,0.22), inset 0 1px 0 0 rgba(255,255,255,0.7)",
+        'glow-cyan': "0 0 30px rgba(22, 197, 217, 0.24), inset 0 1px 0 0 rgba(255,255,255,0.72)",
+        'glow-pink': "0 0 30px rgba(255, 92, 138, 0.22), inset 0 1px 0 0 rgba(255,255,255,0.72)"
       },
       animation: {
         'gradient-shift': 'gradient-shift 8s ease infinite',

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
 const kpis = [
-  { label: "Total Generations", value: "158", icon: Sparkles, tone: "bg-[#dbeafe] text-[#2563eb]" },
+  { label: "Total Generations", value: "158", icon: Sparkles, tone: "bg-[#dffafa] text-[#1677ff]" },
   { label: "Lesson Plans", value: "64", icon: BookOpen, tone: "bg-[#eaf4ff] text-[#1684f6]" },
   { label: "Worksheets", value: "56", icon: ClipboardCheck, tone: "bg-[#eafff3] text-emerald-700" },
   { label: "Exports", value: "38", icon: Download, tone: "bg-[#fff4df] text-orange-700" }
@@ -15,7 +15,7 @@ const kpis = [
 
 const usageBars = [34, 52, 46, 70, 62, 86, 74, 96, 78, 68, 88, 72];
 const books: [string, number, string][] = [
-  ["Science Class 8", 42, "bg-[#2563eb]"],
+  ["Science Class 8", 42, "bg-[#1677ff]"],
   ["Mathematics Class 7", 31, "bg-emerald-500"],
   ["English Reader", 24, "bg-blue-500"],
   ["Social Science", 18, "bg-orange-400"]

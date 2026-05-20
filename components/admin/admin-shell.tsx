@@ -93,27 +93,27 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="teachpad-page min-h-screen text-teachpad-ink">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-teachpad-cardBorder bg-white/92 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="border-b border-gray-100 px-6 py-5">
+          <div className="border-b border-teachpad-cardBorder px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <Link href="/admin" className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teachpad-blue to-blue-600 text-white shadow-[0_12px_24px_var(--teachpad-shadowBlue)]">
                   <Shield className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold text-gray-900">Teacher AI</span>
-                  <span className="block truncate text-xs text-gray-500">Admin Panel</span>
+                  <span className="block truncate text-sm font-bold text-teachpad-ink">Teacher AI</span>
+                  <span className="block truncate text-xs text-teachpad-muted">Admin Panel</span>
                 </span>
               </Link>
               <button 
-                className="grid h-8 w-8 place-items-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden" 
+                className="grid h-8 w-8 place-items-center rounded-lg text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink lg:hidden" 
                 onClick={() => setMobileOpen(false)} 
                 aria-label="Close navigation"
               >
@@ -130,20 +130,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
 
-          <div className="border-t border-gray-100 p-4">
-            <div className="rounded-xl bg-gray-50 p-3">
+          <div className="border-t border-teachpad-cardBorder p-4">
+            <div className="rounded-xl border border-teachpad-cardBorder bg-teachpad-panel p-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-teachpad-blue">
                   <Users className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900">{currentUser.full_name || currentUser.name || "Admin"}</p>
-                  <p className="truncate text-xs text-gray-500">{currentUser.email}</p>
+                  <p className="truncate text-sm font-semibold text-teachpad-ink">{currentUser.full_name || currentUser.name || "Admin"}</p>
+                  <p className="truncate text-xs text-teachpad-muted">{currentUser.email}</p>
                 </div>
               </div>
               <button 
                 onClick={logout} 
-                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-white hover:text-gray-900 transition-colors"
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-teachpad-cardBorder text-sm font-medium text-teachpad-muted transition-colors hover:bg-white hover:text-teachpad-ink"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out
@@ -155,25 +155,25 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       {mobileOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden" 
+          className="fixed inset-0 z-40 bg-teachpad-ink/40 backdrop-blur-sm lg:hidden" 
           aria-hidden="true" 
           onClick={() => setMobileOpen(false)} 
         />
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-teachpad-cardBorder bg-white/80 backdrop-blur-xl">
           <div className="flex h-16 items-center justify-between gap-4 px-6">
             <div className="flex items-center gap-3">
               <button 
-                className="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm lg:hidden" 
+                className="grid h-9 w-9 place-items-center rounded-lg border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm lg:hidden" 
                 onClick={() => setMobileOpen(true)} 
                 aria-label="Open navigation"
               >
                 <Menu className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-base font-semibold text-gray-900">{activeItem.label}</h1>
+                <h1 className="text-base font-semibold text-teachpad-ink">{activeItem.label}</h1>
               </div>
             </div>
           </div>
@@ -194,23 +194,23 @@ function AdminNavLink({ item, active }: { item: AdminNavItem; active: boolean })
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
         active 
-          ? "bg-blue-50 text-blue-600" 
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          ? "bg-blue-50 text-teachpad-blue" 
+          : "text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink"
       )}
     >
-      <Icon className={cn("h-5 w-5", active ? "text-blue-600" : "text-gray-400")} />
+      <Icon className={cn("h-5 w-5", active ? "text-teachpad-blue" : "text-teachpad-muted")} />
       <span className="flex-1">{item.label}</span>
-      {active && <ChevronRight className="h-4 w-4 text-blue-400" />}
+      {active && <ChevronRight className="h-4 w-4 text-teachpad-blue" />}
     </Link>
   );
 }
 
 function AdminAuthScreen() {
   return (
-    <main className="grid min-h-screen place-items-center bg-gray-50 px-4">
+    <main className="teachpad-page grid min-h-screen place-items-center px-4">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-        <p className="text-sm font-medium text-gray-600">Checking admin access...</p>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-teachpad-blue" />
+        <p className="text-sm font-medium text-teachpad-muted">Checking admin access...</p>
       </div>
     </main>
   );
