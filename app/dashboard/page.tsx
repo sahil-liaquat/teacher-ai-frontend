@@ -111,28 +111,28 @@ export default function TeacherDashboard() {
   return (
     <div className="mx-auto grid w-full max-w-[1480px] gap-4 px-0 2xl:px-4">
       <header className="mx-auto flex w-full max-w-[1240px] flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-start sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
-          <img
-            src="/assets/teachpad-logo.png"
-            alt="Teachpad"
-            className="h-auto max-h-10 w-full object-contain object-left sm:max-h-11"
-          />
-        </div>
-        <div className="text-left sm:text-left">
-          <h1 className="flex flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:justify-end sm:text-3xl">
+        <div className="text-left">
+          <h1 className="flex flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             <span>{greeting.text}, {firstName}</span>
             {greeting.icon ? (
               <img
                 src={greeting.icon}
                 alt=""
                 aria-hidden="true"
-                className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_5px_8px_rgba(251,191,36,0.22)] sm:h-9 sm:w-9"
+                className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-12 sm:w-12"
               />
             ) : (
-              <span className="inline-block">{greeting.emoji}</span>
+              <span className="inline-block text-[2.45rem] leading-none sm:text-[2.7rem]">{greeting.emoji}</span>
             )}
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
+        </div>
+        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-end sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
+          <img
+            src="/assets/teachpad-logo.png"
+            alt="Teachpad"
+            className="h-auto max-h-10 w-full object-contain object-right sm:max-h-11"
+          />
         </div>
       </header>
 
