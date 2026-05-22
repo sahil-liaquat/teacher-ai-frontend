@@ -1,228 +1,579 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { ComponentType } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Clock3,
-  Download,
-  Expand,
-  FileText,
-  Images,
-  LayoutTemplate,
-  Maximize2,
-  Palette,
-  Presentation,
-  X
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { FocusEvent } from "react";
+import { ArrowLeft, ArrowRight, Download, FileText, ImageIcon, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { buildDummyPresentationDeck, loadPresentationDeck, type PresentationDeck, type PresentationSlide } from "@/lib/presentation-generator";
+import { useToast } from "@/components/ui/toast";
+import { backendApi } from "@/lib/api";
+import {
+  loadLatestPresentationId,
+  presentationGenerationToDeck,
+  type PresentationDeck,
+  type PresentationSlide
+} from "@/lib/presentation-generator";
 import { cn } from "@/lib/utils";
 
-const fallbackDeck = buildDummyPresentationDeck({
-  topic: "Photosynthesis",
-  audience: "Class 8",
-  slideCount: "8",
-  language: "English",
-  style: "Clean classroom",
-  tone: "Simple",
-  detailLevel: "Balanced",
-  visualDensity: "Balanced visuals",
-  notes: "",
-  includeSpeakerNotes: true,
-  includeActivities: true,
-  includeQuiz: true,
-  includeImages: false
-});
+const slideTheme = {
+  page: "bg-[#f7f7f8]",
+  slide: "bg-white",
+  text: "text-[#171717]",
+  muted: "text-[#5f6368]",
+  border: "border-[#e7e7ea]"
+};
 
 export default function PresentationOutputPage() {
+  const { toast } = useToast();
   const [deck, setDeck] = useState<PresentationDeck | null>(null);
-  const [fullView, setFullView] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [presenting, setPresenting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    setDeck(loadPresentationDeck() || fallbackDeck);
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id") || loadLatestPresentationId();
+    if (!id) {
+      setErrorMessage("Generate a presentation first.");
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setErrorMessage("");
+    backendApi.presentation(id)
+      .then((generation) => {
+        if (cancelled) return;
+        const nextDeck = presentationGenerationToDeck(generation);
+        if (!nextDeck.slides.length) {
+          setErrorMessage("This presentation does not have any slides yet.");
+          return;
+        }
+        setDeck(nextDeck);
+        setActiveSlide(0);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : "Could not load presentation.";
+          setErrorMessage(message);
+          toast({ title: "Could not load presentation", description: message });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [toast]);
 
   useEffect(() => {
-    if (!fullView) return;
     function handleKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setFullView(false);
-      if (event.key === "ArrowRight") setActiveSlide((index) => Math.min((deck?.slides.length || 1) - 1, index + 1));
+      if (event.key === "Escape") void exitPresentMode();
+      if (event.key === "ArrowRight" || event.key === " ") setActiveSlide((index) => Math.min((deck?.slides.length || 1) - 1, index + 1));
       if (event.key === "ArrowLeft") setActiveSlide((index) => Math.max(0, index - 1));
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [deck?.slides.length, fullView]);
+  }, [deck?.slides.length]);
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement) setPresenting(false);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   const active = deck?.slides[activeSlide] || deck?.slides[0];
+  const slideCount = deck?.slides.length || 0;
+
+  function updateActiveSlide(patch: Partial<PresentationSlide>) {
+    setDeck((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        slides: current.slides.map((slide, index) => index === activeSlide ? { ...slide, ...patch } : slide)
+      };
+    });
+  }
+
+  function goToSlide(index: number) {
+    setActiveSlide(Math.max(0, Math.min(slideCount - 1, index)));
+  }
+
+  async function enterPresentMode() {
+    setPresenting(true);
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      // Some browsers block fullscreen requests; the fixed presenter view still fills the viewport.
+    }
+  }
+
+  async function exitPresentMode() {
+    setPresenting(false);
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // Ignore fullscreen exit errors so the close button always returns to edit mode.
+    }
+  }
+
+  function exportPdf() {
+    const currentDeck = deck;
+    if (!currentDeck) return;
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+      toast({ title: "Popup blocked", description: "Allow popups to export the PDF." });
+      return;
+    }
+    printWindow.document.write(buildPptHtml(currentDeck));
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => printWindow.print(), 250);
+  }
+
+  function exportPpt() {
+    const currentDeck = deck;
+    if (!currentDeck) return;
+    downloadTextFile(`${slugify(currentDeck.topic)}.ppt`, buildPptHtml(currentDeck), "application/vnd.ms-powerpoint;charset=utf-8");
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto grid min-h-[60vh] max-w-[860px] place-items-center rounded-[20px] border border-white/70 bg-white/90 p-8 shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
+        <div className="text-center">
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-[#e8e8ec] border-t-[#242424]" />
+          <p className="mt-4 text-sm font-bold text-[#6d6f78]">Loading presentation...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!deck || !active) {
     return (
-      <div className="grid min-h-[60vh] place-items-center">
-        <p className="text-sm font-bold text-teachpad-muted">Loading presentation...</p>
+      <div className="mx-auto max-w-[860px] rounded-[20px] border border-white/70 bg-white/90 p-8 text-center shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
+        <h1 className="text-xl font-black text-[#25262b]">Presentation not found</h1>
+        <p className="mt-2 text-sm font-medium text-[#6d6f78]">{errorMessage || "Generate a presentation again to open the output."}</p>
+        <Link href="/dashboard/presentation-generator" className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-[#25262b] px-4 text-sm font-bold text-white">
+          Create presentation
+        </Link>
       </div>
     );
   }
 
   return (
     <>
-      <div className="mx-auto max-w-[1280px]">
-        <div className="overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white shadow-[0_14px_34px_rgba(30,80,90,0.08)]">
-          <header className="border-b border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] via-white to-[#ffd9de]/60 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="min-w-0">
-                <Link href="/dashboard/presentation-generator" className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#ffd9de] bg-white/85 px-3 py-1.5 text-xs font-black text-[#eb3b5a] shadow-sm transition hover:bg-white">
-                  <ArrowLeft className="h-4 w-4" /> Edit inputs
-                </Link>
-                <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">{deck.topic}</h1>
-                <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">
-                  {deck.audience} - {deck.language} - {deck.style} - {deck.tone}
-                </p>
+      <main className={cn("min-h-[calc(100vh-80px)] rounded-[18px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[24px] sm:p-4", slideTheme.page)}>
+        <div className="mx-auto flex min-h-[calc(100vh-104px)] max-w-[1280px] flex-col gap-2 sm:min-h-[calc(100vh-128px)] sm:gap-3">
+          <Toolbar
+            deck={deck}
+            onPresent={enterPresentMode}
+            onExportPdf={exportPdf}
+            onExportPpt={exportPpt}
+          />
+          <section className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_180px] lg:gap-3">
+            <div className="flex min-w-0 flex-col gap-2 rounded-[18px] border border-white/70 bg-white/55 p-2 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:gap-3 sm:rounded-[22px] sm:p-5">
+              <div className="grid flex-1 place-items-center">
+                <EditableSlide slide={active} onChange={updateActiveSlide} />
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" className="border-[#ffd9de] text-[#eb3b5a] hover:border-[#eb3b5a] hover:text-[#eb3b5a]" onClick={() => setFullView(true)}>
-                  <Expand className="h-4 w-4" /> Full View
-                </Button>
-                <Button type="button" variant="outline" className="border-[#ffd9de] text-[#eb3b5a] hover:border-[#eb3b5a] hover:text-[#eb3b5a]">
-                  <Download className="h-4 w-4" /> PPTX
-                </Button>
-                <Button type="button" variant="outline" className="border-[#ffd9de] text-[#eb3b5a] hover:border-[#eb3b5a] hover:text-[#eb3b5a]">
-                  <FileText className="h-4 w-4" /> PDF
-                </Button>
-              </div>
+              <SlideControls
+                activeSlide={activeSlide}
+                slideCount={slideCount}
+                onPrevious={() => goToSlide(activeSlide - 1)}
+                onNext={() => goToSlide(activeSlide + 1)}
+              />
             </div>
-          </header>
-
-          <div className="grid gap-4 p-4 sm:p-5">
-            <div className="grid gap-3 md:grid-cols-4">
-              <Metric icon={LayoutTemplate} label="Slides" value={String(deck.slides.length)} />
-              <Metric icon={Clock3} label="Duration" value={`${Math.max(15, deck.slides.length * 3)} min`} />
-              <Metric icon={Palette} label="Theme" value="Light red" />
-              <Metric icon={Images} label="Visuals" value={deck.visualDensity} />
-            </div>
-
-            <section className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(360px,0.58fr)]">
-              <div className="grid gap-3 md:grid-cols-2">
-                {deck.slides.map((slide, index) => (
-                  <button
-                    key={slide.eyebrow}
-                    type="button"
-                    onClick={() => setActiveSlide(index)}
-                    className={cn(
-                      "rounded-[14px] border bg-white p-3 text-left shadow-[0_10px_20px_rgba(30,80,90,0.04)] transition hover:-translate-y-0.5",
-                      activeSlide === index ? "border-[#eb3b5a] ring-4 ring-[#ffd9de]/60" : "border-[#ffd9de]"
-                    )}
-                  >
-                    <SlideFrame slide={slide} compact />
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-black text-teachpad-ink">{slide.title}</p>
-                      <span className="shrink-0 rounded-full bg-[#fff7f8] px-2 py-1 text-[11px] font-black text-[#eb3b5a]">{slide.eyebrow}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <aside className="self-start rounded-[16px] border border-[#ffd9de] bg-[#fffafb] p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.12em] text-[#eb3b5a]">Selected Slide</p>
-                    <h2 className="mt-1 text-lg font-black text-teachpad-ink">{active.title}</h2>
-                  </div>
-                  <Button type="button" size="icon" variant="outline" className="border-[#ffd9de] text-[#eb3b5a]" onClick={() => setFullView(true)} aria-label="Open full view">
-                    <Maximize2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <SlideFrame slide={active} />
-                <div className="mt-4 rounded-[14px] border border-[#ffd9de] bg-white p-4">
-                  <h3 className="text-sm font-black text-teachpad-ink">Speaker Notes</h3>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">
-                    {deck.includeSpeakerNotes ? active.speakerNote : "Speaker notes are turned off for this deck."}
-                  </p>
-                  {deck.notes ? <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">Teacher instruction: {deck.notes}</p> : null}
-                </div>
-              </aside>
-            </section>
-          </div>
+            <SlidePreviewStrip
+              slides={deck.slides}
+              activeSlide={activeSlide}
+              onSelect={goToSlide}
+            />
+          </section>
         </div>
-      </div>
+      </main>
 
-      {fullView ? (
-        <div className="fixed inset-0 z-[100] bg-white p-4 text-teachpad-ink sm:p-6">
-          <div className="mx-auto flex h-full max-w-[1180px] flex-col">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#eb3b5a]">Full View</p>
-                <h2 className="truncate text-xl font-black">{deck.topic}</h2>
-              </div>
-              <button type="button" onClick={() => setFullView(false)} className="grid h-10 w-10 place-items-center rounded-xl border border-[#ffd9de] bg-[#fff7f8] text-[#eb3b5a]" aria-label="Close full view">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="grid flex-1 place-items-center rounded-[18px] border border-[#ffd9de] bg-[#fffafb] p-3">
-              <div className="w-full max-w-[980px]">
-                <SlideFrame slide={active} large />
-              </div>
-            </div>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-black text-teachpad-muted">{active.eyebrow} of {deck.slides.length}</p>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" disabled={activeSlide === 0} onClick={() => setActiveSlide((index) => Math.max(0, index - 1))} className="border-[#ffd9de] text-[#eb3b5a]">
-                  <ArrowLeft className="h-4 w-4" /> Previous
-                </Button>
-                <Button type="button" disabled={activeSlide === deck.slides.length - 1} onClick={() => setActiveSlide((index) => Math.min(deck.slides.length - 1, index + 1))} className="bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] shadow-[0_14px_28px_rgba(235,59,90,0.18)]">
-                  Next <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+      {presenting ? (
+        <div className={cn("fixed inset-0 z-[100] grid grid-rows-[auto_minmax(0,1fr)_auto] p-2 sm:p-6", slideTheme.page)}>
+          <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3 sm:gap-3">
+            <p className={cn("min-w-0 truncate text-xs font-black sm:text-sm", slideTheme.text)}>{deck.topic}</p>
+            <button type="button" onClick={exitPresentMode} className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl border bg-white/80 sm:h-10 sm:w-10", slideTheme.border, slideTheme.text)} aria-label="Back from present view">
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+          </div>
+          <div className="grid min-h-0 place-items-center">
+            <div className="w-full max-w-[1180px] overflow-hidden">
+              <EditableSlide slide={active} onChange={updateActiveSlide} large />
             </div>
           </div>
+          <SlideControls
+            activeSlide={activeSlide}
+            slideCount={slideCount}
+            onPrevious={() => goToSlide(activeSlide - 1)}
+            onNext={() => goToSlide(activeSlide + 1)}
+            className="mt-3"
+          />
         </div>
       ) : null}
     </>
   );
 }
 
-function SlideFrame({ slide, compact = false, large = false }: { slide: PresentationSlide; compact?: boolean; large?: boolean }) {
+function SlidePreviewStrip({
+  slides,
+  activeSlide,
+  onSelect
+}: {
+  slides: PresentationSlide[];
+  activeSlide: number;
+  onSelect: (index: number) => void;
+}) {
   return (
-    <div className={cn("aspect-[16/9] overflow-hidden rounded-[12px] border border-[#ffd9de] bg-white shadow-inner", large && "rounded-[18px]")}>
-      <div className="flex h-full">
-        <div className="w-[8%] bg-[#ffd9de]" />
-        <div className={cn("flex flex-1 flex-col justify-between bg-gradient-to-br from-white via-[#fff7f8] to-[#ffd9de]/55", compact ? "p-3" : large ? "p-10" : "p-5")}>
-          <div>
-            <p className={cn("font-black uppercase tracking-[0.14em] text-[#eb3b5a]", compact ? "text-[10px]" : large ? "text-sm" : "text-xs")}>{slide.eyebrow}</p>
-            <h3 className={cn("mt-3 font-black leading-tight text-teachpad-ink", compact ? "line-clamp-2 text-lg" : large ? "text-[clamp(2rem,5vw,4.5rem)]" : "text-2xl")}>{slide.title}</h3>
+    <aside className="min-h-0 rounded-[16px] border border-white/70 bg-white/80 p-1.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:rounded-[18px] sm:p-2">
+      <div className="flex max-h-[120px] gap-2 overflow-x-auto lg:max-h-[calc(100vh-210px)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
+        {slides.map((slide, index) => (
+          <button
+            key={slide.id}
+            type="button"
+            onClick={() => onSelect(index)}
+            className={cn(
+              "w-[118px] shrink-0 rounded-xl border bg-white p-1 text-left transition sm:w-[150px] sm:p-1.5 lg:w-full",
+              activeSlide === index ? "border-[#25262b] shadow-sm" : "border-[#e7e7ea] opacity-75 hover:opacity-100"
+            )}
+            aria-label={`Open slide ${index + 1}`}
+          >
+            <div className="aspect-video overflow-hidden rounded-lg bg-white">
+              <div className="grid h-full grid-cols-[0.9fr_1.1fr]">
+                <div className="min-w-0 p-2">
+                  <p className="line-clamp-3 text-[9px] font-black leading-tight text-[#171717] sm:text-[10px]">{slide.title}</p>
+                  <p className="mt-1 line-clamp-2 text-[7px] font-semibold leading-tight text-[#5f6368] sm:text-[8px]">{slide.points[0] || slide.subtitle || ""}</p>
+                </div>
+                <div className="grid place-items-center overflow-hidden p-1">
+                  {selectedSlideImage(slide) ? (
+                    <img src={selectedSlideImage(slide)} alt="" className="h-full w-full object-contain" />
+                  ) : (
+                    <ImageIcon className="h-4 w-4 text-[#8a8f98] sm:h-5 sm:w-5" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="mt-1 px-1 text-[9px] font-black text-[#55516e] sm:text-[10px]">{index + 1}</p>
+          </button>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function Toolbar({
+  deck,
+  onPresent,
+  onExportPdf,
+  onExportPpt
+}: {
+  deck: PresentationDeck;
+  onPresent: () => void;
+  onExportPdf: () => void;
+  onExportPpt: () => void;
+}) {
+  return (
+    <header className="flex flex-col gap-2 rounded-[16px] border border-white/70 bg-white/90 p-2.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:rounded-[18px] sm:p-3">
+      <div className="min-w-0">
+        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#55516e] hover:text-[#25262b] sm:gap-2 sm:text-sm">
+          <ArrowLeft className="h-4 w-4" />
+          Edit inputs
+        </Link>
+        <h1 className="mt-1 truncate text-base font-black text-[#25262b] sm:text-lg">{deck.topic}</h1>
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+        <Button type="button" onClick={onPresent} className="h-9 bg-[#25262b] px-2 text-xs text-white hover:bg-[#171717] sm:h-10 sm:px-4 sm:text-sm">
+          <Maximize2 className="h-4 w-4" />
+          Present
+        </Button>
+        <Button type="button" variant="outline" onClick={onExportPpt} className="h-9 px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+          <Download className="h-4 w-4" />
+          PPT
+        </Button>
+        <Button type="button" variant="outline" onClick={onExportPdf} className="h-9 px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+          <FileText className="h-4 w-4" />
+          PDF
+        </Button>
+      </div>
+    </header>
+  );
+}
+
+function SlideControls({
+  activeSlide,
+  slideCount,
+  onPrevious,
+  onNext,
+  className
+}: {
+  activeSlide: number;
+  slideCount: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3", className)}>
+      <Button type="button" variant="outline" disabled={activeSlide === 0} onClick={onPrevious} aria-label="Previous slide" className="h-9 justify-center px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">Previous</span>
+      </Button>
+      <p className={cn("text-sm font-black", slideTheme.muted)}>{activeSlide + 1} / {slideCount}</p>
+      <Button type="button" variant="outline" disabled={activeSlide === slideCount - 1} onClick={onNext} aria-label="Next slide" className="h-9 justify-center px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+        <span className="hidden sm:inline">Next</span>
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function EditableSlide({
+  slide,
+  onChange,
+  large = false
+}: {
+  slide: PresentationSlide;
+  onChange: (patch: Partial<PresentationSlide>) => void;
+  large?: boolean;
+}) {
+  const [titleDraft, setTitleDraft] = useState("");
+  const [contentDraft, setContentDraft] = useState("");
+  const [editingContent, setEditingContent] = useState(false);
+  const imageIndex = clampImageIndex(slide.selectedImageIndex, slide.imageUrls.length);
+  const currentImage = slide.imageUrls[imageIndex];
+  const contentText = useMemo(() => formatBulletText([slide.subtitle || "", ...slide.points].filter(Boolean)), [slide.id, slide.points, slide.subtitle]);
+  const displayBullets = useMemo(() => slideBullets(slide), [slide.id, slide.points, slide.subtitle]);
+  const hasMultipleImages = slide.imageUrls.length > 1;
+
+  useEffect(() => {
+    setTitleDraft(slide.title);
+    setContentDraft(contentText);
+    setEditingContent(false);
+  }, [slide.id]);
+
+  function autoSize(element: HTMLTextAreaElement) {
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }
+
+  function handleFocus(event: FocusEvent<HTMLTextAreaElement>) {
+    autoSize(event.currentTarget);
+  }
+
+  function updateTitle(value: string) {
+    setTitleDraft(value);
+    onChange({ title: value.trim() || "Untitled slide" });
+  }
+
+  function updateContent(value: string) {
+    setContentDraft(value);
+    onChange({ subtitle: null, points: parseBulletText(value) });
+  }
+
+  return (
+    <div
+      className={cn(
+        "aspect-[16/9] w-full overflow-hidden rounded-[12px] border shadow-sm sm:rounded-[16px]",
+        slideTheme.slide,
+        slideTheme.border,
+        large ? "max-h-[calc(100vh-118px)] sm:max-h-[calc(100vh-150px)]" : "max-h-[calc(100vh-320px)] sm:max-h-[calc(100vh-250px)]"
+      )}
+    >
+      <div className="grid h-full grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
+        <div className={cn("flex min-w-0 flex-col", large ? "p-4 pr-2 sm:p-12 sm:pr-6" : "p-3 pr-2 sm:p-8 sm:pr-5")}>
+          <textarea
+            value={titleDraft}
+            onChange={(event) => updateTitle(event.target.value)}
+            onInput={(event) => autoSize(event.currentTarget)}
+            onFocus={handleFocus}
+            rows={2}
+            spellCheck={false}
+            placeholder="Slide heading"
+            className={cn(
+              "w-full resize-none overflow-hidden rounded-lg border border-transparent bg-transparent p-1.5 font-black leading-[1.08] outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:rounded-xl sm:p-3",
+              slideTheme.text,
+              large ? "text-[clamp(1.15rem,5vw,4.2rem)] sm:text-[clamp(2rem,3.8vw,4.2rem)]" : "text-[clamp(0.95rem,5vw,3rem)] sm:text-[clamp(1.55rem,2.9vw,3rem)]"
+            )}
+            aria-label="Slide heading"
+          />
+          {editingContent ? (
+            <textarea
+              value={contentDraft}
+              onChange={(event) => updateContent(event.target.value)}
+              onBlur={() => setEditingContent(false)}
+              autoFocus
+              placeholder={"Slide content\nAdd one idea per line"}
+              className={cn(
+                "mt-2 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1.5 font-semibold leading-5 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
+                slideTheme.muted,
+                large ? "text-[clamp(0.68rem,2.8vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]" : "text-[clamp(0.58rem,2.7vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
+              )}
+              aria-label="Slide content"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditingContent(true)}
+              className={cn(
+                "mt-2 flex min-h-0 flex-1 flex-col justify-center rounded-lg border border-transparent p-1.5 text-left outline-none transition hover:bg-black/[0.02] focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-5 sm:rounded-xl sm:p-3",
+                slideTheme.muted
+              )}
+              aria-label="Edit slide content"
+            >
+              <ul className={cn("grid w-full list-none", large ? "gap-1.5 sm:gap-4" : "gap-1 sm:gap-2.5")}>
+                {displayBullets.map((point) => (
+                  <li key={point} className={cn("grid grid-cols-[0.58em_minmax(0,1fr)] items-start sm:grid-cols-[0.72em_minmax(0,1fr)]", large ? "gap-1.5 sm:gap-3" : "gap-1.5 sm:gap-2.5")}>
+                    <span className={cn("mt-[0.62em] rounded-full bg-current", large ? "h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" : "h-1.5 w-1.5 sm:h-2 sm:w-2")} />
+                    <span className={cn(
+                      "font-bold leading-snug text-[#5f6368]",
+                      large ? "text-[clamp(0.62rem,2.45vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]" : "text-[clamp(0.55rem,2.35vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
+                    )}>
+                      {point}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </button>
+          )}
+        </div>
+        <div className="relative m-2 ml-0 flex min-h-0 flex-col gap-1.5 overflow-hidden rounded-[8px] bg-transparent sm:m-4 sm:ml-0 sm:gap-3 sm:rounded-[10px]">
+          <div className="grid min-h-0 flex-1 place-items-center overflow-hidden">
+            {currentImage ? (
+              <img
+                src={currentImage}
+                alt={slide.title}
+                className="h-full w-full object-contain"
+                onError={() => onChange({ selectedImageIndex: Math.min(imageIndex + 1, slide.imageUrls.length - 1) })}
+              />
+            ) : (
+              <div className={cn("grid place-items-center gap-3 text-center", slideTheme.muted)}>
+                <ImageIcon className={large ? "h-10 w-10 sm:h-20 sm:w-20" : "h-8 w-8 sm:h-14 sm:w-14"} />
+                <span className="px-2 text-[8px] font-black uppercase tracking-[0.08em] sm:px-4 sm:text-xs sm:tracking-[0.12em]">{slide.visual || "Visual"}</span>
+              </div>
+            )}
           </div>
-          {!compact ? (
-            <ul className={cn("grid gap-2", large ? "max-w-3xl text-2xl" : "text-sm")}>
-              {slide.points.map((point) => (
-                <li key={point} className="flex gap-2 font-semibold leading-6 text-teachpad-muted">
-                  <CheckCircle2 className={cn("mt-1 shrink-0 text-[#eb3b5a]", large ? "h-6 w-6" : "h-4 w-4")} />
-                  <span>{point}</span>
-                </li>
+          {hasMultipleImages && !large ? (
+            <div className="grid shrink-0 grid-cols-4 gap-1 sm:grid-cols-5 sm:gap-2">
+              {slide.imageUrls.map((url, index) => (
+                <button
+                  key={`${url}-${index}`}
+                  type="button"
+                  onClick={() => onChange({ selectedImageIndex: index })}
+                  className={cn(
+                    "aspect-video overflow-hidden rounded-lg bg-white/70 p-0.5 shadow-sm outline-none transition focus:ring-2 focus:ring-[#55516e]",
+                    imageIndex === index ? "ring-2 ring-[#25262b]" : "opacity-75 hover:opacity-100"
+                  )}
+                  aria-label={`Use image ${index + 1}`}
+                >
+                  <img src={url} alt="" className="h-full w-full rounded-md object-cover" />
+                </button>
               ))}
-            </ul>
+            </div>
           ) : null}
-          <div className="flex items-center justify-between gap-3">
-            <span className={cn("rounded-full bg-white px-3 py-1 font-black text-[#eb3b5a] shadow-sm", compact ? "text-[10px]" : "text-xs")}>{slide.visual}</span>
-            <Presentation className={cn("text-[#eb3b5a]/55", compact ? "h-6 w-6" : large ? "h-14 w-14" : "h-8 w-8")} />
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: string }) {
-  return (
-    <div className="rounded-[14px] border border-[#ffd9de] bg-white p-3">
-      <div className="flex items-center gap-2 text-[#eb3b5a]">
-        <Icon className="h-4 w-4" />
-        <span className="text-xs font-black uppercase tracking-[0.12em]">{label}</span>
-      </div>
-      <p className="mt-2 truncate text-lg font-black text-teachpad-ink">{value}</p>
-    </div>
-  );
+function clampImageIndex(value: number | undefined, imageCount: number) {
+  if (!imageCount) return 0;
+  if (typeof value !== "number" || Number.isNaN(value)) return 0;
+  return Math.max(0, Math.min(imageCount - 1, value));
+}
+
+function selectedSlideImage(slide: PresentationSlide) {
+  return slide.imageUrls[clampImageIndex(slide.selectedImageIndex, slide.imageUrls.length)] || "";
+}
+
+function formatBulletText(items: string[]) {
+  return items.slice(0, 4).map((item) => `• ${cleanBullet(item)}`).join("\n");
+}
+
+function parseBulletText(value: string) {
+  return value.split("\n").map(cleanBullet).filter(Boolean).slice(0, 4);
+}
+
+function cleanBullet(value: string) {
+  return value.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim();
+}
+
+function slideBullets(slide: PresentationSlide) {
+  return [slide.subtitle || "", ...slide.points].map(cleanBullet).filter(Boolean).slice(0, 4);
+}
+
+function downloadTextFile(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function slugify(value: string) {
+  return (value || "presentation").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "presentation";
+}
+
+function buildPptHtml(deck: PresentationDeck) {
+  const slides = deck.slides.map((slide) => {
+    const selectedImage = selectedSlideImage(slide);
+    const image = selectedImage ? `<img src="${escapeHtml(selectedImage)}" alt="">` : "";
+    const points = slideBullets(slide).map((point) => `<li>${escapeHtml(point)}</li>`).join("");
+    return `
+      <section class="slide">
+        <div class="copy">
+          <h1>${escapeHtml(slide.title)}</h1>
+          ${slide.subtitle ? `<p class="subtitle">${escapeHtml(slide.subtitle)}</p>` : ""}
+          <ul>${points}</ul>
+        </div>
+        <div class="visual">${image}</div>
+      </section>
+    `;
+  }).join("");
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(deck.topic)}</title>
+  <style>
+    @page { size: 13.333in 7.5in; margin: 0; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #171717; background: #f7f7f8; }
+    .slide { page-break-after: always; width: 13.333in; height: 7.5in; box-sizing: border-box; display: grid; grid-template-columns: .9fr 1.1fr; gap: .2in; padding: .55in; background: #fff; }
+    h1 { margin: 0 0 .28in; font-size: 38pt; line-height: 1.08; }
+    .subtitle { margin: 0 0 .18in; font-size: 18pt; font-weight: 700; color: #555; }
+    ul { margin: .2in 0 0; padding-left: .28in; font-size: 18pt; line-height: 1.4; color: #555; }
+    li { margin: 0 0 .12in; }
+    .visual { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .visual img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  </style>
+</head>
+<body>${slides}</body>
+</html>`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char] || char));
 }

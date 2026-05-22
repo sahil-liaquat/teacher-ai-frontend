@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type GenerationKind = "lesson-plan" | "worksheet";
+type GenerationKind = "lesson-plan" | "worksheet" | "presentation";
 type GenerationState = "loading" | "error";
 
 export function GenerationLoadingScreen({
@@ -25,7 +25,9 @@ export function GenerationLoadingScreen({
   const fallbackMessages = useMemo(
     () => type === "worksheet"
       ? ["Reading your textbook...", "Finding key concepts...", "Building your worksheet...", "Preparing teacher-ready content..."]
-      : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
+      : type === "presentation"
+        ? ["Reading your textbook...", "Planning the slide flow...", "Writing clear classroom slides...", "Preparing teacher-ready content..."]
+        : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
     [type]
   );
   const [messageIndex, setMessageIndex] = useState(0);

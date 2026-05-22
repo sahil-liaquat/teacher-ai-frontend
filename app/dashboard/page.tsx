@@ -15,6 +15,7 @@ import {
   Lightbulb,
   MoreVertical,
   Plus,
+  Presentation,
   Settings2,
   Sparkles,
   TrendingUp
@@ -60,6 +61,16 @@ export default function TeacherDashboard() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
+  const presentations = useQuery({
+    queryKey: ["presentations-summary"],
+    queryFn: () => backendApi.presentations(0, 50),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
   const currentUser = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: () => getCurrentUser({ redirectOnUnauthorized: false }),
@@ -94,18 +105,33 @@ export default function TeacherDashboard() {
       created_at: item.created_at || ""
     };
   });
-  const recent = [...worksheetRecent, ...lessonRecent]
+  const presentationItems = presentations.data?.items || [];
+  const presentationRecent = presentationItems.map((item: any) => {
+    const output = item.output_json || {};
+    return {
+      id: item.id,
+      topic: output.title || item.topic || "Generated Presentation",
+      class_name: item.audience || "Class",
+      subject: item.style || "Presentation",
+      type: "Presentation",
+      href: `/dashboard/presentation-generator/output?id=${item.id}`,
+      created_at: item.created_at || item.updated_at || ""
+    };
+  });
+  const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   const displayRecent = recent;
   const worksheetTotal = worksheets.data?.total;
-  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0);
+  const presentationTotal = presentations.data?.total;
+  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0) + (presentationTotal || 0);
   const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
-  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal;
-  const allItems = [...(plans.data?.items || []), ...worksheetItems];
+  const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
+  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal;
+  const allItems = [...(plans.data?.items || []), ...worksheetItems, ...presentationItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
-  const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal);
+  const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal, presentationMonthlyTotal);
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
   return (
@@ -137,7 +163,7 @@ export default function TeacherDashboard() {
       </header>
 
       <section className="mx-auto grid w-full max-w-[1240px] grid-cols-2 gap-3 lg:grid-cols-4 xl:gap-4">
-        {(plans.isLoading || worksheets.isLoading) ? (
+        {(plans.isLoading || worksheets.isLoading || presentations.isLoading) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
@@ -152,7 +178,7 @@ export default function TeacherDashboard() {
               </div>
             ))}
           </>
-        ) : (plans.isError || worksheets.isError) ? (
+        ) : (plans.isError || worksheets.isError || presentations.isError) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
@@ -232,9 +258,17 @@ export default function TeacherDashboard() {
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                  item.type === "Worksheet"
+                    ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600"
+                    : item.type === "Presentation"
+                      ? "bg-gradient-to-br from-rose-100 to-pink-50 text-rose-600"
+                      : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
                 )}>
-                  {item.type === "Worksheet" ? <FileText className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+                  {item.type === "Worksheet"
+                    ? <FileText className="h-5 w-5" />
+                    : item.type === "Presentation"
+                      ? <Presentation className="h-5 w-5" />
+                      : <BookOpen className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
@@ -242,7 +276,11 @@ export default function TeacherDashboard() {
                 </div>
                 <span className={cn(
                   "rounded-lg px-2.5 py-1 text-xs font-semibold",
-                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-[#eff6ff] text-[#1d4ed8]"
+                  item.type === "Worksheet"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : item.type === "Presentation"
+                      ? "bg-rose-50 text-rose-700"
+                      : "bg-[#eff6ff] text-[#1d4ed8]"
                 )}>
                   {item.type}
                 </span>
@@ -266,7 +304,7 @@ export default function TeacherDashboard() {
               <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
               <div className="flex-1 flex items-center justify-center gap-4">
                 <div className="relative" style={{ width: "108px", height: "108px" }}>
-                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#3b82f6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
+                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: usageGradient }} />
                   <div className="absolute inset-[12px] rounded-full bg-white" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
@@ -282,6 +320,11 @@ export default function TeacherDashboard() {
                     <span className="h-3 w-3 rounded-full bg-emerald-500" />
                     <span className="text-sm font-medium text-slate-700">Worksheets</span>
                     <span className="text-sm font-bold text-slate-900">{worksheetMonthlyTotal}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-rose-500" />
+                    <span className="text-sm font-medium text-slate-700">Presentations</span>
+                    <span className="text-sm font-bold text-slate-900">{presentationMonthlyTotal}</span>
                   </div>
                 </div>
               </div>
@@ -646,11 +689,12 @@ function getDailyGenerationTicks(bars: Array<{ day: number; label: string; value
     .map((day) => bars[day - 1]);
 }
 
-function getUsageGradient(lessonCount: number, worksheetCount: number) {
-  const total = lessonCount + worksheetCount;
+function getUsageGradient(lessonCount: number, worksheetCount: number, presentationCount: number) {
+  const total = lessonCount + worksheetCount + presentationCount;
   if (!total) return "conic-gradient(#d7dae4 0 100%)";
   const lessonEnd = Math.round((lessonCount / total) * 100);
-  return `conic-gradient(#3b82f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
+  const worksheetEnd = lessonEnd + Math.round((worksheetCount / total) * 100);
+  return `conic-gradient(#3b82f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% ${worksheetEnd}%, #f43f5e ${worksheetEnd}% 100%)`;
 }
 
 function formatHours(hours: number) {
