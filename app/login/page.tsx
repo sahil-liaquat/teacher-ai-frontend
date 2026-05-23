@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, MailCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, login, requestPasswordReset } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -77,33 +77,60 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7fbff] lg:grid lg:h-screen lg:grid-cols-[minmax(0,1.01fr)_minmax(0,0.99fr)]">
-      <section
-        className="relative hidden min-h-screen overflow-hidden bg-[#061d59] bg-cover bg-left lg:block lg:min-h-0"
-        style={{ backgroundImage: "url('/assets/auth/login-hero-left.png')" }}
-        aria-label="teachpad illustration"
-      />
+    <main className="min-h-screen bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(0,0.95fr)_minmax(520px,0.75fr)] lg:gap-4 lg:overflow-hidden">
+      <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_18%_14%,#e9f4ff_0,transparent_34%),radial-gradient(circle_at_86%_82%,#f8fbff_0,transparent_38%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
+        <div className="flex items-center justify-between">
+          <Link href="/" aria-label="TeachPad home" className="inline-flex">
+            <TeachPadWordmark />
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Home
+          </Link>
+        </div>
 
-      <section className="relative grid min-h-screen place-items-center overflow-hidden px-5 py-7 sm:px-8 lg:min-h-0 lg:px-10 lg:py-6">
+        <div className="relative z-10 mx-auto flex max-w-2xl flex-1 flex-col justify-center">
+          <div className="mb-8 inline-grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-blue-600 shadow-[0_16px_34px_rgba(37,99,235,0.12)]">
+            <Quote className="h-8 w-8" />
+          </div>
+          <blockquote className="text-5xl font-black leading-[1.08] tracking-tight text-slate-950">
+            “Teaching is the art of turning curiosity into confidence.”
+          </blockquote>
+          <p className="mt-6 max-w-lg text-base font-semibold leading-7 text-slate-600">
+            Welcome back to the workspace built to make every class easier to plan and brighter to teach.
+          </p>
+        </div>
+      </section>
+
+      <section className="relative grid min-h-[calc(100vh-2rem)] place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
         <AuthDecorations />
-        <Link
-          href="/"
-          className="absolute left-5 top-5 z-20 inline-flex items-center gap-2 rounded-full border border-[#dfe7f4] bg-white/82 px-4 py-2 text-sm font-black text-[#66708c] shadow-[0_12px_28px_rgba(41,82,140,0.10)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white hover:text-[#071844] sm:left-8 sm:top-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Link>
-        <div className="relative z-10 w-full max-w-[500px] rounded-[30px] border border-[#dfe7f4] bg-white/88 px-6 py-7 shadow-[0_30px_90px_rgba(41,82,140,0.16)] backdrop-blur-xl sm:px-9 sm:py-8">
-          <div className="mb-5">
-            <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#edf6ff] text-[#147eff] shadow-[0_16px_36px_rgba(20,126,255,0.13)]">
-              {mode === "forgot" && resetSentEmail ? <MailCheck className="h-8 w-8" /> : <GraduationCap className="h-9 w-9" />}
+        <div className="absolute left-5 right-5 top-5 z-20 flex items-center justify-between sm:left-8 sm:right-8">
+          <Link href="/" aria-label="TeachPad home" className="inline-flex lg:hidden">
+            <TeachPadWordmark compact />
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600 lg:hidden"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Home
+          </Link>
+        </div>
+
+        <div className="relative z-10 mt-16 w-full max-w-[460px] lg:mt-0">
+          <div className="mb-7">
+            <div className="mb-5 inline-grid h-12 w-12 place-items-center rounded-lg bg-blue-50 text-blue-600">
+              {mode === "forgot" && resetSentEmail ? <MailCheck className="h-6 w-6" /> : <LockKeyhole className="h-6 w-6" />}
             </div>
-            <h1 className="text-[30px] font-black leading-tight tracking-[-0.02em] text-[#071844] sm:text-[34px]">
+            <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950">
               {mode === "login" ? "Welcome back" : resetSentEmail ? "Check your inbox" : "Reset password"}
             </h1>
-            <p className="mt-1.5 text-sm font-semibold leading-6 text-[#66708c] sm:text-base">
+            <p className="mt-3 text-base font-semibold leading-7 text-slate-600">
               {mode === "login"
-                ? "Sign in to your account to continue"
+                ? "Sign in and pick up your classroom work right where you left it."
                 : resetSentEmail
                   ? "We sent a password reset link to your email."
                   : "Enter your email and we will send you a reset link."}
@@ -141,7 +168,7 @@ export default function LoginPage() {
                     forgotPasswordForm.setValue("email", form.getValues("email"));
                     setMode("forgot");
                   }}
-                  className="text-base font-black text-[#087cff] transition hover:text-[#005ee0]"
+                  className="text-sm font-black text-blue-600 transition hover:text-blue-700"
                 >
                   Forgot password?
                 </button>
@@ -153,21 +180,21 @@ export default function LoginPage() {
                 </AuthButton>
               </form>
 
-              <p className="mt-6 text-center text-sm font-semibold text-[#66708c]">
-                New here? <Link className="font-black text-[#087cff] transition hover:text-[#005ee0]" href="/signup">Create an account</Link>
+              <p className="mt-6 text-center text-sm font-semibold text-slate-600">
+                New here? <Link className="font-black text-blue-600 transition hover:text-blue-700" href="/signup">Create an account</Link>
               </p>
             </>
           ) : resetSentEmail ? (
-            <div className="rounded-[24px] border border-[#dfe7f4] bg-[#f7fbff] p-5 text-center">
-              <p className="break-words text-base font-black text-[#071844]">{resetSentEmail}</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[#66708c]">Open the link from your inbox to create a new password.</p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-center">
+              <p className="break-words text-base font-black text-slate-950">{resetSentEmail}</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Open the link from your inbox to create a new password.</p>
               <button
                 type="button"
                 onClick={() => {
                   setResetSentEmail("");
                   forgotPasswordForm.reset({ email: resetSentEmail });
                 }}
-                className="mt-4 text-sm font-black text-[#087cff]"
+                className="mt-4 text-sm font-black text-blue-600"
               >
                 Send to a different email
               </button>
@@ -177,7 +204,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="mb-1 inline-flex items-center gap-2 text-sm font-black text-[#66708c] transition hover:text-[#071844]"
+                className="mb-1 inline-flex items-center gap-2 text-sm font-black text-slate-600 transition hover:text-slate-950"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login
@@ -202,6 +229,14 @@ export default function LoginPage() {
   );
 }
 
+function TeachPadWordmark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className={cn("font-black tracking-tight text-slate-950", compact ? "text-2xl" : "text-3xl")}>
+      teach<span className="text-blue-600">pad</span><span className={compact ? "text-sm" : "text-base"}>.in</span>
+    </span>
+  );
+}
+
 function AuthInput({
   label,
   icon,
@@ -217,15 +252,15 @@ function AuthInput({
 }) {
   return (
     <label className="grid gap-2">
-      <span className="text-sm font-black text-[#071844]">{label}</span>
+      <span className="text-sm font-black text-slate-900">{label}</span>
       <span className={cn(
-        "flex h-14 items-center gap-3 rounded-[18px] border bg-[#f9fbff] px-4 text-[#8e98b2] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition",
-        error ? "border-red-200 ring-4 ring-red-50" : "border-[#dce4f1] focus-within:border-[#147eff] focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70"
+        "flex h-[52px] min-h-[52px] items-center gap-3 rounded-lg border bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition",
+        error ? "border-red-200 ring-4 ring-red-50" : "border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70"
       )}>
         <span className="shrink-0">{icon}</span>
         <input
           {...inputProps}
-          className="min-w-0 flex-1 bg-transparent text-base font-bold text-[#071844] outline-none placeholder:text-[#8e98b2]"
+          className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
         />
         {action}
       </span>
@@ -239,7 +274,7 @@ function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButto
     <button
       {...props}
       className={cn(
-        "flex h-14 w-full items-center justify-center gap-3 rounded-[18px] bg-gradient-to-r from-[#087cff] to-[#0b4dff] px-5 text-lg font-black text-white shadow-[0_18px_36px_rgba(8,124,255,0.34)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(8,124,255,0.38)] disabled:pointer-events-none disabled:opacity-60",
+        "flex h-[52px] min-h-[52px] w-full items-center justify-center gap-3 rounded-lg bg-blue-600 px-5 text-base font-black text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_20px_42px_rgba(37,99,235,0.32)] disabled:pointer-events-none disabled:opacity-60",
         props.className
       )}
     >
@@ -251,14 +286,9 @@ function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButto
 function AuthDecorations() {
   return (
     <>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(195,225,255,0.72),transparent_16rem),radial-gradient(circle_at_78%_82%,rgba(195,225,255,0.7),transparent_18rem)]" />
-      <div className="absolute right-6 top-12 hidden h-28 w-44 rotate-[-18deg] rounded-[60%_40%_60%_40%] border-4 border-dashed border-[#b6d8ff] opacity-70 lg:block" />
-      <div className="absolute right-8 top-24 hidden h-0 w-0 rotate-[24deg] border-b-[30px] border-l-[48px] border-t-[30px] border-b-transparent border-l-[#79b8ff] border-t-transparent drop-shadow-[0_18px_24px_rgba(42,124,225,0.2)] lg:block" />
-      <div className="absolute bottom-10 right-12 hidden h-36 w-36 rounded-full bg-[radial-gradient(circle,#fff_0_35%,transparent_36%)] opacity-70 lg:block" />
-      <div className="absolute bottom-8 right-20 hidden h-24 w-40 rounded-full bg-white/70 blur-xl lg:block" />
-      <div className="absolute left-8 top-16 h-3 w-3 rounded-full bg-[#c4e5ff]" />
-      <div className="absolute bottom-16 left-16 h-4 w-4 rounded-full border-4 border-[#b6d8ff]" />
-      <div className="absolute right-20 top-1/3 h-4 w-4 rounded-full border-4 border-[#ffcf70]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(226,232,240,0.42)_1px,transparent_1px),linear-gradient(180deg,rgba(226,232,240,0.42)_1px,transparent_1px)] bg-[size:44px_44px]" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-50 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50 to-transparent" />
     </>
   );
 }
