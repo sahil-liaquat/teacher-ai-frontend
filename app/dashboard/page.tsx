@@ -20,7 +20,7 @@ import {
   Sparkles,
   TrendingUp
 } from "lucide-react";
-import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser } from "@/lib/api";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser, type LessonPlanDashboardSummary } from "@/lib/api";
 import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,7 @@ export default function TeacherDashboard() {
   const token = getToken();
   const lessonSummary = useQuery({
     queryKey: ["lesson-plans-summary"],
-    queryFn: () => backendApi.lessonPlanSummary(),
+    queryFn: loadLessonPlanDashboardSummary,
     enabled: !!token,
     retry: false,
     staleTime: 0,
@@ -854,4 +854,18 @@ function parseItemDate(item: { created_at?: string; updated_at?: string }) {
   if (!raw) return null;
   const parsed = new Date(raw);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function loadLessonPlanDashboardSummary(): Promise<LessonPlanDashboardSummary> {
+  try {
+    return await backendApi.lessonPlanSummary();
+  } catch {
+    const lessonPlans = await backendApi.lessonPlans(0, 100);
+    const items = lessonPlans.items || [];
+    return {
+      total: lessonPlans.total ?? items.length,
+      monthly_total: countItemsThisMonth(items),
+      recent: items.slice(0, 5).map(({ user_id, plan, ...item }) => item),
+    };
+  }
 }
