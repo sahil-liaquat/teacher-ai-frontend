@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, LoaderCircle, Presentation, Sparkles } from "lucide-react";
+import { BookOpen, Presentation, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, type PresentationGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,8 +180,8 @@ export default function PresentationGeneratorPage() {
     setIsLoadingChapters(Boolean(value));
   }
 
-  function toggleChapter(name: string) {
-    setChapterNames((items) => items.includes(name) ? items.filter((item) => item !== name) : [...items, name]);
+  function chooseChapter(value: string) {
+    setChapterNames(value ? [value] : []);
   }
 
   async function generate() {
@@ -308,6 +308,15 @@ export default function PresentationGeneratorPage() {
                   {filteredBooks.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
                 </Select>
               </FieldBox>
+              <FieldBox label="Chapter / Unit" required error={chaptersError}>
+                <Select value={chapterNames[0] || ""} onChange={(event) => chooseChapter(event.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
+                  <option value="">Select Chapter / Unit</option>
+                  {chapters.map((chapter) => {
+                    const name = chapter.chapter_title || chapter.title || "";
+                    return <option key={chapter.id} value={name}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{name}</option>;
+                  })}
+                </Select>
+              </FieldBox>
               <FieldBox label="Topic" required>
                 <Input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="e.g. Photosynthesis equation" maxLength={150} />
               </FieldBox>
@@ -318,43 +327,7 @@ export default function PresentationGeneratorPage() {
               </FieldBox>
             </div>
 
-            <div className="mt-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-black text-[#4f4b68]">Chapters / Units <span className="text-red-500">*</span></p>
-                <span className="rounded-full bg-[#fff7f8] px-3 py-1 text-xs font-black text-[#eb3b5a]">{chapterNames.length} selected</span>
-              </div>
-              {isLoadingChapters ? (
-                <div className="flex min-h-[64px] items-center justify-between gap-3 rounded-xl border border-[#ffd9de] bg-[#fffafb] px-4 text-sm font-bold text-[#6d6f78]">
-                  <span>Loading chapters...</span>
-                  <LoaderCircle className="h-5 w-5 animate-spin text-[#eb3b5a]" />
-                </div>
-              ) : chaptersError ? (
-                <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{chaptersError}</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {chapters.map((chapter) => {
-                    const name = chapter.chapter_title || chapter.title || "";
-                    const active = chapterNames.includes(name);
-                    return (
-                      <button
-                        key={chapter.id}
-                        type="button"
-                        disabled={!bookId}
-                        onClick={() => toggleChapter(name)}
-                        aria-pressed={active}
-                        className={`premium-hover-sm flex min-h-[60px] items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-[#ffb8c3] bg-[#fff7f8] text-[#c92d49] shadow-[0_10px_22px_rgba(235,59,90,0.10)]" : "border-[#ffd9de] bg-white text-[#4f4b68] hover:border-[#ffb8c3]"}`}
-                      >
-                        <span className={`mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-[#eb3b5a] bg-[#eb3b5a] text-white" : "border-slate-300 text-transparent"}`}>✓</span>
-                        <span className="min-w-0 text-sm font-black leading-5">
-                          {chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {!bookId ? <p className="mt-3 text-sm font-semibold text-[#6d6f78]">Select a textbook to load chapters.</p> : null}
-            </div>
+            {!bookId ? <p className="mt-3 text-sm font-semibold text-[#6d6f78]">Select a textbook to load chapters.</p> : null}
           </NumericSection>
 
           <NumericSection number="2" title="Deck Style" subtitle="Keep the deck simple and classroom-ready.">

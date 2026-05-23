@@ -172,17 +172,17 @@ export default function PresentationOutputPage() {
 
   return (
     <>
-      <main className={cn("min-h-[calc(100vh-80px)] rounded-[18px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[24px] sm:p-4", slideTheme.page)}>
-        <div className="mx-auto flex min-h-[calc(100vh-104px)] max-w-[1280px] flex-col gap-2 sm:min-h-[calc(100vh-128px)] sm:gap-3">
+      <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[18px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[24px] sm:p-4", slideTheme.page)}>
+        <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-2 sm:min-h-[calc(100vh-128px)] sm:gap-3">
           <Toolbar
             deck={deck}
             onPresent={enterPresentMode}
             onExportPdf={exportPdf}
             onExportPpt={exportPpt}
           />
-          <section className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_180px] lg:gap-3">
+          <section className="grid min-h-0 min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_180px] lg:gap-3">
             <div className="flex min-w-0 flex-col gap-2 rounded-[18px] border border-white/70 bg-white/55 p-2 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:gap-3 sm:rounded-[22px] sm:p-5">
-              <div className="grid flex-1 place-items-center">
+              <div className="grid min-w-0 flex-1 place-items-center">
                 <EditableSlide slide={active} onChange={updateActiveSlide} />
               </div>
               <SlideControls
@@ -210,7 +210,7 @@ export default function PresentationOutputPage() {
             </button>
           </div>
           <div className="grid min-h-0 place-items-center">
-            <div className="w-full max-w-[1180px] overflow-hidden">
+            <div className="w-full max-w-[1180px] min-w-0 overflow-hidden">
               <EditableSlide slide={active} onChange={updateActiveSlide} large />
             </div>
           </div>
@@ -237,7 +237,7 @@ function SlidePreviewStrip({
   onSelect: (index: number) => void;
 }) {
   return (
-    <aside className="min-h-0 rounded-[16px] border border-white/70 bg-white/80 p-1.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:rounded-[18px] sm:p-2">
+    <aside className="min-h-0 min-w-0 rounded-[16px] border border-white/70 bg-white/80 p-1.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:rounded-[18px] sm:p-2">
       <div className="flex max-h-[120px] gap-2 overflow-x-auto lg:max-h-[calc(100vh-210px)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
         {slides.map((slide, index) => (
           <button
@@ -385,14 +385,14 @@ function EditableSlide({
   return (
     <div
       className={cn(
-        "aspect-[16/9] w-full overflow-hidden rounded-[12px] border shadow-sm sm:rounded-[16px]",
+        "aspect-[16/9] w-full max-w-full overflow-hidden rounded-[12px] border shadow-sm sm:rounded-[16px]",
         slideTheme.slide,
         slideTheme.border,
-        large ? "max-h-[calc(100vh-118px)] sm:max-h-[calc(100vh-150px)]" : "max-h-[calc(100vh-320px)] sm:max-h-[calc(100vh-250px)]"
+        large ? "sm:max-h-[calc(100vh-150px)]" : "sm:max-h-[calc(100vh-250px)]"
       )}
     >
-      <div className="grid h-full grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
-        <div className={cn("flex min-w-0 flex-col", large ? "p-4 pr-2 sm:p-12 sm:pr-6" : "p-3 pr-2 sm:p-8 sm:pr-5")}>
+      <div className="grid h-full min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className={cn("flex min-w-0 flex-col", large ? "p-2 pr-1 sm:p-12 sm:pr-6" : "p-2 pr-1 sm:p-8 sm:pr-5")}>
           <textarea
             value={titleDraft}
             onChange={(event) => updateTitle(event.target.value)}
@@ -404,7 +404,7 @@ function EditableSlide({
             className={cn(
               "w-full resize-none overflow-hidden rounded-lg border border-transparent bg-transparent p-1.5 font-black leading-[1.08] outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:rounded-xl sm:p-3",
               slideTheme.text,
-              large ? "text-[clamp(1.15rem,5vw,4.2rem)] sm:text-[clamp(2rem,3.8vw,4.2rem)]" : "text-[clamp(0.95rem,5vw,3rem)] sm:text-[clamp(1.55rem,2.9vw,3rem)]"
+              large ? "text-[clamp(0.78rem,4.2vw,4.2rem)] sm:text-[clamp(2rem,3.8vw,4.2rem)]" : "text-[clamp(0.72rem,4vw,3rem)] sm:text-[clamp(1.55rem,2.9vw,3rem)]"
             )}
             aria-label="Slide heading"
           />
@@ -416,9 +416,9 @@ function EditableSlide({
               autoFocus
               placeholder={"Slide content\nAdd one idea per line"}
               className={cn(
-                "mt-2 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1.5 font-semibold leading-5 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
+                "mt-1 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1 font-semibold leading-4 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
                 slideTheme.muted,
-                large ? "text-[clamp(0.68rem,2.8vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]" : "text-[clamp(0.58rem,2.7vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
+                large ? "text-[clamp(0.5rem,2.6vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]" : "text-[clamp(0.48rem,2.45vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
               )}
               aria-label="Slide content"
             />
@@ -427,18 +427,18 @@ function EditableSlide({
               type="button"
               onClick={() => setEditingContent(true)}
               className={cn(
-                "mt-2 flex min-h-0 flex-1 flex-col justify-center rounded-lg border border-transparent p-1.5 text-left outline-none transition hover:bg-black/[0.02] focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-5 sm:rounded-xl sm:p-3",
+                "mt-1 flex min-h-0 flex-1 flex-col justify-center rounded-lg border border-transparent p-1 text-left outline-none transition hover:bg-black/[0.02] focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-5 sm:rounded-xl sm:p-3",
                 slideTheme.muted
               )}
               aria-label="Edit slide content"
             >
-              <ul className={cn("grid w-full list-none", large ? "gap-1.5 sm:gap-4" : "gap-1 sm:gap-2.5")}>
+              <ul className={cn("grid w-full list-none", large ? "gap-1 sm:gap-4" : "gap-0.5 sm:gap-2.5")}>
                 {displayBullets.map((point) => (
                   <li key={point} className={cn("grid grid-cols-[0.58em_minmax(0,1fr)] items-start sm:grid-cols-[0.72em_minmax(0,1fr)]", large ? "gap-1.5 sm:gap-3" : "gap-1.5 sm:gap-2.5")}>
                     <span className={cn("mt-[0.62em] rounded-full bg-current", large ? "h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" : "h-1.5 w-1.5 sm:h-2 sm:w-2")} />
                     <span className={cn(
                       "font-bold leading-snug text-[#5f6368]",
-                      large ? "text-[clamp(0.62rem,2.45vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]" : "text-[clamp(0.55rem,2.35vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
+                      large ? "text-[clamp(0.44rem,2.15vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]" : "text-[clamp(0.42rem,2.05vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
                     )}>
                       {point}
                     </span>
@@ -448,7 +448,7 @@ function EditableSlide({
             </button>
           )}
         </div>
-        <div className="relative m-2 ml-0 flex min-h-0 flex-col gap-1.5 overflow-hidden rounded-[8px] bg-transparent sm:m-4 sm:ml-0 sm:gap-3 sm:rounded-[10px]">
+        <div className="relative m-1 ml-0 flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden rounded-[8px] bg-transparent sm:m-4 sm:ml-0 sm:gap-3 sm:rounded-[10px]">
           <div className="grid min-h-0 flex-1 place-items-center overflow-hidden">
             {currentImage ? (
               <img

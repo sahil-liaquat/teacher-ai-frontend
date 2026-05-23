@@ -20,7 +20,7 @@ import {
   Sparkles,
   TrendingUp
 } from "lucide-react";
-import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser } from "@/lib/api";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser } from "@/lib/api";
 import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ const quickAccess = [
 ];
 
 export default function TeacherDashboard() {
-  const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
+  const token = getToken();
   const plans = useQuery({
     queryKey: ["lesson-plans-summary"],
     queryFn: () => backendApi.lessonPlans(0, 50),
@@ -79,7 +79,9 @@ export default function TeacherDashboard() {
   });
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
-  const lessonTotal = plans.data?.total;
+  const statsLoading = plans.isLoading || worksheets.isLoading || presentations.isLoading;
+  const statsError = plans.isError && worksheets.isError && presentations.isError;
+  const lessonTotal = plans.data?.total ?? 0;
   const lessonRecent = plans.data?.items?.length
     ? plans.data.items.map((item: any) => ({
         ...item,
@@ -121,9 +123,9 @@ export default function TeacherDashboard() {
   const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   const displayRecent = recent;
-  const worksheetTotal = worksheets.data?.total;
-  const presentationTotal = presentations.data?.total;
-  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0) + (presentationTotal || 0);
+  const worksheetTotal = worksheets.data?.total ?? 0;
+  const presentationTotal = presentations.data?.total ?? 0;
+  const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal;
   const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
@@ -162,7 +164,7 @@ export default function TeacherDashboard() {
       </header>
 
       <section className="mx-auto grid w-full max-w-[1240px] grid-cols-2 gap-3 lg:grid-cols-4 xl:gap-4">
-        {(plans.isLoading || worksheets.isLoading || presentations.isLoading) ? (
+        {statsLoading ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
@@ -177,7 +179,7 @@ export default function TeacherDashboard() {
               </div>
             ))}
           </>
-        ) : (plans.isError || worksheets.isError || presentations.isError) ? (
+        ) : statsError ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
@@ -193,28 +195,36 @@ export default function TeacherDashboard() {
           </>
         ) : (
           statCards.map((stat, index) => (
-            <StatCard
-              key={stat.label}
-              {...stat}
-              value={
-                index === 0
-                  ? formatNumber(lessonMonthlyTotal, stat.fallback)
-                  : index === 1
-                    ? formatNumber(worksheetMonthlyTotal, stat.fallback)
-                    : index === 2
-                      ? formatNumber(savedResourcesTotal, stat.fallback)
-                      : formatNumber(monthlyGenerationsTotal, stat.fallback)
-              }
-              numericValue={
-                index === 0
-                  ? lessonMonthlyTotal
-                  : index === 1
-                    ? worksheetMonthlyTotal
-                    : index === 2
-                      ? savedResourcesTotal
-                      : monthlyGenerationsTotal
-              }
-            />
+            index === 0 && plans.isError ? (
+              <StatsErrorCard key={stat.label} />
+            ) : index === 1 && worksheets.isError ? (
+              <StatsErrorCard key={stat.label} />
+            ) : index === 3 && (plans.isError || worksheets.isError || presentations.isError) ? (
+              <StatsErrorCard key={stat.label} />
+            ) : (
+              <StatCard
+                key={stat.label}
+                {...stat}
+                value={
+                  index === 0
+                    ? formatNumber(lessonMonthlyTotal, stat.fallback)
+                    : index === 1
+                      ? formatNumber(worksheetMonthlyTotal, stat.fallback)
+                      : index === 2
+                        ? formatNumber(savedResourcesTotal, stat.fallback)
+                        : formatNumber(monthlyGenerationsTotal, stat.fallback)
+                }
+                numericValue={
+                  index === 0
+                    ? lessonMonthlyTotal
+                    : index === 1
+                      ? worksheetMonthlyTotal
+                      : index === 2
+                        ? savedResourcesTotal
+                        : monthlyGenerationsTotal
+                }
+              />
+            )
           ))
         )}
       </section>
@@ -413,6 +423,20 @@ export default function TeacherDashboard() {
           })}
         </div>
       </section>
+    </div>
+  );
+}
+
+function StatsErrorCard() {
+  return (
+    <div className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 sm:h-14 sm:w-14">
+        <span className="text-xl text-red-400">!</span>
+      </div>
+      <div className="flex-1">
+        <p className="text-xs font-semibold text-red-700 sm:text-sm">Could not load stats</p>
+        <p className="mt-1 text-[10px] text-red-500 sm:text-xs">Refresh to try again</p>
+      </div>
     </div>
   );
 }

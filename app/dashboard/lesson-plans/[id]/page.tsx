@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { LessonPlanOutput } from "@/components/generation-output";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,8 +12,27 @@ import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } 
 export default function LessonPlanDetailPage() {
   const params = useParams<{ id: string }>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editedOutput, setEditedOutput] = useState<any>(null);
   const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
-  const output = lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null;
+  const output = editedOutput || (lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null);
+
+  useEffect(() => {
+    if (!editedOutput) return;
+    const timeout = window.setTimeout(() => {
+      saveEditedOutput(editedOutput, { silent: true }).catch(() => undefined);
+    }, 1200);
+    return () => window.clearTimeout(timeout);
+  }, [editedOutput]);
+
+  async function saveEditedOutput(currentOutput = output, options: { silent?: boolean } = {}) {
+    if (!currentOutput) return;
+    const saved = await backendApi.updateLessonPlan(params.id, { plan: currentOutput });
+    queryClient.setQueryData(["lesson-plan", params.id], saved);
+    if (!options.silent) {
+      toast({ title: "Changes saved", description: "Your edits are saved in this lesson plan." });
+    }
+  }
 
   async function copy(currentOutput = output) {
     await navigator.clipboard.writeText(formatLessonPlanForClipboard(currentOutput));
@@ -35,8 +55,12 @@ export default function LessonPlanDetailPage() {
       toast({ title: "Share failed", description: err instanceof Error ? err.message : "Try again" });
     }
   }
-  function editsSaved() {
-    toast({ title: "Changes saved", description: "Your edits are shown in this lesson plan view." });
+  async function editsSaved(currentOutput = output) {
+    try {
+      await saveEditedOutput(currentOutput);
+    } catch (err) {
+      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Try again" });
+    }
   }
 
   if (lesson.isLoading) return <LessonPlanLoadingState />;
@@ -44,7 +68,16 @@ export default function LessonPlanDetailPage() {
 
   return (
     <div className="print-shell">
-      <LessonPlanOutput output={output} streamKey={`lesson-plan-${params.id}`} streamSpeed="fast" onCopy={copy} onExport={exportPdf} onShare={share} onSave={editsSaved} />
+      <LessonPlanOutput
+        output={output}
+        streamKey={`lesson-plan-${params.id}`}
+        streamSpeed="fast"
+        onCopy={copy}
+        onExport={exportPdf}
+        onShare={share}
+        onSave={editsSaved}
+        onChange={setEditedOutput}
+      />
     </div>
   );
 }

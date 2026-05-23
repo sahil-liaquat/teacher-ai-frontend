@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { ComponentType, DragEvent, ReactNode } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
+import type { ComponentType, FocusEvent, KeyboardEvent, ReactNode } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -16,30 +16,23 @@ import {
   FileText,
   FlaskConical,
   GraduationCap,
-  GripVertical,
   Lightbulb,
   MoreVertical,
-  Pencil,
   PanelRight,
+  Pencil,
   Save,
   Share2,
-  Trash2,
   Target,
   Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  applyLessonPlanEdits,
   arrayOf,
   normalizeLessonPlan,
   textOf,
-  type LessonAssessment,
   type LessonOutlineRow,
-  type NormalizedLessonPlan
 } from "@/lib/lesson-plan-export";
 
 const differentiationLabels: Record<string, string> = {
@@ -83,58 +76,41 @@ type LessonDocumentDraft = {
 function LessonPlanDocumentOutput({
   output,
   onSave,
+  onChange,
   onExport,
   onCopy,
   onShare
 }: {
   output: any;
   onSave?: (output?: any) => void;
+  onChange?: (output?: any) => void;
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
   onShare?: (output?: any) => void;
 }) {
   const [documentOutput, setDocumentOutput] = useState(output);
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<LessonDocumentDraft | null>(null);
-  const [draggingSectionKey, setDraggingSectionKey] = useState<string | null>(null);
-  const documentDraft = useMemo(() => buildLessonDocumentDraft(documentOutput), [documentOutput]);
-  const visibleDraft = isEditing && draft ? draft : documentDraft;
-  const chapterDisplay = formatChapterDisplay(visibleDraft.metadata);
+  const [draft, setDraft] = useState<LessonDocumentDraft>(() => buildLessonDocumentDraft(output));
+  const chapterDisplay = formatChapterDisplay(draft.metadata);
 
   useEffect(() => {
     setDocumentOutput(output);
-    setIsEditing(false);
-    setDraft(null);
-    setDraggingSectionKey(null);
+    setDraft(buildLessonDocumentDraft(output));
   }, [output]);
 
-  function startEditing() {
-    setDraft(structuredCloneDraft(documentDraft));
-    setIsEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraft(null);
-    setIsEditing(false);
-    setDraggingSectionKey(null);
-  }
-
-  function saveEditing() {
-    if (!draft) return;
-    const nextOutput = applyLessonDocumentDraft(documentOutput, draft);
+  function commitDraft(nextDraft: LessonDocumentDraft, notifyChange = true) {
+    setDraft(nextDraft);
+    const nextOutput = applyLessonDocumentDraft(documentOutput, nextDraft);
     setDocumentOutput(nextOutput);
-    setDraft(null);
-    setIsEditing(false);
-    setDraggingSectionKey(null);
-    onSave?.(nextOutput);
+    if (notifyChange) onChange?.(nextOutput);
+    return nextOutput;
   }
 
-  function moveDraggedSection(targetKey: string) {
-    if (!draft || !draggingSectionKey || draggingSectionKey === targetKey) return;
-    const from = draft.sections.findIndex((section) => section.key === draggingSectionKey);
-    const to = draft.sections.findIndex((section) => section.key === targetKey);
-    if (from < 0 || to < 0) return;
-    setDraft({ ...draft, sections: moveSection(draft.sections, from, to) });
+  function updateDraft(updater: (current: LessonDocumentDraft) => LessonDocumentDraft) {
+    commitDraft(updater(draft));
+  }
+
+  function saveDocument() {
+    onSave?.(applyLessonDocumentDraft(documentOutput, draft));
   }
 
   return (
@@ -149,33 +125,15 @@ function LessonPlanDocumentOutput({
             <span>/</span>
             <span>Lesson Plan Output</span>
           </div>
-          {isEditing && draft ? (
-            <InlineTextInput
-              value={draft.title}
-              onChange={(value) => setDraft({ ...draft, title: value })}
-              className="mt-2 text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]"
-              ariaLabel="Lesson plan title"
-            />
-          ) : (
-            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">
-              {chapterDisplay}
-            </h1>
-          )}
+          <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">
+            {chapterDisplay}
+          </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isEditing ? (
-            <>
-              <Button size="sm" onClick={saveEditing}><Save className="h-4 w-4" /> Save Changes</Button>
-              <Button variant="outline" size="sm" onClick={cancelEditing}>Cancel</Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={() => onCopy?.(documentOutput)}><Copy className="h-4 w-4" /> Copy</Button>
-              <Button variant="outline" size="sm" onClick={() => onExport?.(documentOutput)}><Download className="h-4 w-4" /> PDF</Button>
-              {onShare ? <Button variant="outline" size="sm" onClick={() => onShare(documentOutput)}><Share2 className="h-4 w-4" /> Share</Button> : null}
-              <Button variant="outline" size="sm" onClick={startEditing}><Pencil className="h-4 w-4" /> Edit</Button>
-            </>
-          )}
+          <Button variant="outline" size="sm" onClick={() => onCopy?.(documentOutput)}><Copy className="h-4 w-4" /> Copy</Button>
+          <Button variant="outline" size="sm" onClick={() => onExport?.(documentOutput)}><Download className="h-4 w-4" /> PDF</Button>
+          {onShare ? <Button variant="outline" size="sm" onClick={() => onShare(documentOutput)}><Share2 className="h-4 w-4" /> Share</Button> : null}
+          {onSave ? <Button variant="outline" size="sm" onClick={saveDocument}><Save className="h-4 w-4" /> Save</Button> : null}
         </div>
       </div>
 
@@ -187,62 +145,36 @@ function LessonPlanDocumentOutput({
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="bg-[#dffafa] text-[#1677ff]">AI Generated</Badge>
                   <Badge className="bg-[#e9fff4] text-[#16865a]">Textbook Grounded</Badge>
-                  {isEditing ? <Badge className="bg-[#fff4da] text-[#9a6818]">Editing</Badge> : null}
                 </div>
-                {isEditing && draft ? (
-                  <InlineTextInput
-                    value={draft.title}
-                    onChange={(value) => setDraft({ ...draft, title: value })}
-                    className="mt-5 text-[30px] font-black leading-tight tracking-normal text-[#25262b] sm:text-[38px]"
-                    ariaLabel="Document title"
-                  />
-                ) : (
-                  <h2 className="mt-5 break-words text-[30px] font-black leading-tight tracking-normal text-[#25262b] sm:text-[38px]">
-                    {visibleDraft.title}
-                  </h2>
-                )}
+                <EditableText
+                  as="h2"
+                  value={draft.title}
+                  onCommit={(title) => updateDraft((current) => ({ ...current, title }))}
+                  className="mt-5 break-words text-[30px] font-black leading-tight tracking-normal text-[#25262b] sm:text-[38px]"
+                  ariaLabel="Document title"
+                  singleLine
+                />
               </div>
             </div>
           </header>
 
           <div className="grid gap-0 px-4 py-1 sm:px-6 lg:px-7">
-            {visibleDraft.sections.map((section, index) => (
+            {draft.sections.map((section, index) => (
               <LessonSectionBlock
                 key={section.key}
                 index={index}
                 section={section}
-                isEditing={isEditing}
                 onSectionChange={(nextSection) => {
-                  if (!draft) return;
-                  setDraft({
-                    ...draft,
-                    sections: draft.sections.map((item) => item.key === section.key ? nextSection : item)
-                  });
+                  updateDraft((current) => ({
+                    ...current,
+                    sections: current.sections.map((item) => item.key === section.key ? nextSection : item)
+                  }));
                 }}
-                onDelete={() => {
-                  if (!draft) return;
-                  setDraft({ ...draft, sections: draft.sections.filter((item) => item.key !== section.key) });
-                }}
-                isDragging={draggingSectionKey === section.key}
-                onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", section.key);
-                  event.dataTransfer.effectAllowed = "move";
-                  setDraggingSectionKey(section.key);
-                }}
-                onDragOver={(event) => {
-                  if (!isEditing) return;
-                  event.preventDefault();
-                }}
-                onDrop={() => {
-                  moveDraggedSection(section.key);
-                  setDraggingSectionKey(null);
-                }}
-                onDragEnd={() => setDraggingSectionKey(null)}
               />
             ))}
           </div>
 
-          <LessonMetadataFooter metadata={visibleDraft.metadata} generatedAt={documentOutput?.generated_at || documentOutput?.created_at || documentOutput?.updated_at} />
+          <LessonMetadataFooter metadata={draft.metadata} generatedAt={documentOutput?.generated_at || documentOutput?.created_at || documentOutput?.updated_at} />
         </article>
       </div>
     </div>
@@ -280,25 +212,11 @@ function LessonMetadataFooter({ metadata, generatedAt }: { metadata: LessonDocum
 function LessonSectionBlock({
   index,
   section,
-  isEditing,
   onSectionChange,
-  onDelete,
-  isDragging,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd
 }: {
   index: number;
   section: LessonDocumentSection;
-  isEditing?: boolean;
   onSectionChange?: (section: LessonDocumentSection) => void;
-  onDelete?: () => void;
-  isDragging?: boolean;
-  onDragStart?: (event: DragEvent<HTMLButtonElement>) => void;
-  onDragOver?: (event: DragEvent<HTMLElement>) => void;
-  onDrop?: () => void;
-  onDragEnd?: () => void;
 }) {
   const id = lessonSectionId(section.title);
   const hasContent = section.outline?.length || section.lines?.length;
@@ -306,52 +224,28 @@ function LessonSectionBlock({
   return (
     <section
       id={id}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className={`grid gap-4 border-b border-[#eceef3] py-6 transition last:border-b-0 ${isDragging ? "opacity-50" : ""}`}
+      className="grid gap-4 border-b border-[#eceef3] py-6 transition last:border-b-0"
     >
       <div className="min-w-0">
-        {isEditing ? (
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-            <div className="grid min-w-0 grid-cols-[34px_minmax(0,1fr)] gap-2">
-              <button
-                type="button"
-                draggable
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-                className="grid h-10 w-8 cursor-grab place-items-center rounded-[8px] border border-[#eceef3] bg-white text-[#6d6f78] active:cursor-grabbing"
-                title="Drag section"
-                aria-label={`Drag ${section.title}`}
-              >
-                <GripVertical className="h-4 w-4" />
-              </button>
-              <InlineTextInput
-                value={section.title}
-                onChange={(title) => onSectionChange?.({ ...section, title })}
-                className="text-lg font-black leading-7 text-[#25262b]"
-                ariaLabel={`Section ${index + 1} heading`}
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="danger" size="icon" onClick={onDelete} title="Delete section" aria-label="Delete section">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <h3 className="break-words text-lg font-black leading-7 text-[#25262b]">{index + 1}. {section.title}</h3>
-        )}
+        <h3 className="break-words text-lg font-black leading-7 text-[#25262b]">
+          <span>{index + 1}. </span>
+          <EditableText
+            as="span"
+            value={section.title}
+            onCommit={(title) => onSectionChange?.({ ...section, title })}
+            ariaLabel={`Section ${index + 1} heading`}
+            singleLine
+          />
+        </h3>
         <div className="mt-4">
           {section.outline ? (
             <LessonFlowBlock
               rows={section.outline}
-              isEditing={isEditing}
               onRowsChange={(outline) => onSectionChange?.({ ...section, outline })}
             />
           ) : (
             <LessonBulletList
               lines={section.lines || []}
-              isEditing={isEditing}
               onLinesChange={(lines) => onSectionChange?.({ ...section, lines })}
             />
           )}
@@ -364,11 +258,9 @@ function LessonSectionBlock({
 
 function LessonFlowBlock({
   rows,
-  isEditing,
   onRowsChange
 }: {
   rows: LessonOutlineRow[];
-  isEditing?: boolean;
   onRowsChange?: (rows: LessonOutlineRow[]) => void;
 }) {
   if (!rows.length) return null;
@@ -377,46 +269,44 @@ function LessonFlowBlock({
       {rows.map((row, index) => (
         <div key={`${row.phase}-${index}`} className="grid gap-3 border-b border-[#eceef3] p-4 last:border-b-0 lg:grid-cols-[120px_minmax(0,1fr)]">
           <div className="text-xs font-black uppercase tracking-[0.08em] text-[#1677ff]">
-            {isEditing ? (
-              <InlineTextInput
-                value={row.time}
-                onChange={(time) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, time }))}
-                className="text-xs font-black uppercase tracking-[0.08em] text-[#1677ff]"
-                ariaLabel={`Step ${index + 1} time`}
-              />
-            ) : row.time || "Time"}
+            <EditableText
+              as="span"
+              value={row.time || "Time"}
+              onCommit={(time) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, time }))}
+              ariaLabel={`Step ${index + 1} time`}
+              singleLine
+            />
           </div>
           <div className="min-w-0">
-            {isEditing ? (
-              <div className="grid gap-2">
-                <InlineTextInput
-                  value={row.phase}
-                  onChange={(phase) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, phase }))}
-          className="text-base font-black text-[#25262b]"
-                  ariaLabel={`Step ${index + 1} phase`}
-                />
-                <InlineTextArea
-                  value={row.teacher_action}
-                  onChange={(teacher_action) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, teacher_action }))}
-                  ariaLabel={`Step ${index + 1} teacher action`}
-                />
-                <InlineTextArea
+            <EditableText
+              as="p"
+              value={row.phase || `Step ${index + 1}`}
+              onCommit={(phase) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, phase }))}
+              className="break-words text-base font-black text-[#25262b]"
+              ariaLabel={`Step ${index + 1} phase`}
+              singleLine
+            />
+            {row.teacher_action ? (
+              <EditableText
+                as="p"
+                value={row.teacher_action}
+                onCommit={(teacher_action) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, teacher_action }))}
+                className="mt-2 whitespace-pre-wrap break-words text-base leading-7 text-[#4f4a66]"
+                ariaLabel={`Step ${index + 1} teacher action`}
+              />
+            ) : null}
+            {row.student_action ? (
+              <p className="mt-2 break-words text-base leading-7 text-[#6b6680]">
+                <span className="font-bold text-[#25262b]">Students: </span>
+                <EditableText
+                  as="span"
                   value={row.student_action}
-                  onChange={(student_action) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, student_action }))}
+                  onCommit={(student_action) => onRowsChange?.(replaceOutlineRow(rows, index, { ...row, student_action }))}
+                  className="whitespace-pre-wrap"
                   ariaLabel={`Step ${index + 1} student action`}
                 />
-              </div>
-            ) : (
-              <>
-                <p className="break-words text-base font-black text-[#25262b]">{row.phase || `Step ${index + 1}`}</p>
-                {row.teacher_action ? <p className="mt-2 break-words text-base leading-7 text-[#4f4a66]">{row.teacher_action}</p> : null}
-                {row.student_action ? (
-                  <p className="mt-2 break-words text-base leading-7 text-[#6b6680]">
-                    <span className="font-bold text-[#25262b]">Students: </span>{row.student_action}
-                  </p>
-                ) : null}
-              </>
-            )}
+              </p>
+            ) : null}
           </div>
         </div>
       ))}
@@ -426,36 +316,34 @@ function LessonFlowBlock({
 
 function LessonBulletList({
   lines,
-  isEditing,
   onLinesChange
 }: {
   lines: string[];
-  isEditing?: boolean;
   onLinesChange?: (lines: string[]) => void;
 }) {
   if (!lines.length) return null;
-  if (isEditing) {
-    return (
-      <div className="grid gap-3">
-        {lines.map((line, index) => (
-          <InlineTextArea
-            key={`${index}-${line.slice(0, 16)}`}
-            value={line}
-            onChange={(value) => onLinesChange?.(replaceLine(lines, index, value))}
-            ariaLabel={`Editable line ${index + 1}`}
-          />
-        ))}
-      </div>
-    );
-  }
   if (lines.length === 1) {
-    return <p className="whitespace-pre-wrap break-words text-base leading-8 text-[#4f4a66]">{lines[0]}</p>;
+    return (
+      <EditableText
+        as="p"
+        value={lines[0]}
+        onCommit={(value) => onLinesChange?.(replaceLine(lines, 0, value))}
+        className="whitespace-pre-wrap break-words text-base leading-8 text-[#4f4a66]"
+        ariaLabel="Editable lesson text"
+      />
+    );
   }
   return (
     <ul className="ml-5 grid list-disc gap-3">
       {lines.map((line, index) => (
         <li key={`${line}-${index}`} className="min-w-0 break-words pl-1 text-base leading-8 text-[#4f4a66]">
-          {line}
+          <EditableText
+            as="span"
+            value={line}
+            onCommit={(value) => onLinesChange?.(replaceLine(lines, index, value))}
+            className="whitespace-pre-wrap"
+            ariaLabel={`Editable bullet ${index + 1}`}
+          />
         </li>
       ))}
     </ul>
@@ -581,6 +469,50 @@ function formatChapterDisplay(metadata: Partial<LessonDocumentMetadata>) {
   if (!chapter) return "Chapter not provided";
   if (/^chapter\s+\d+/i.test(chapter)) return chapter;
   return chapterNumber ? `Chapter ${chapterNumber}: ${chapter}` : chapter;
+}
+
+function EditableText({
+  as = "span",
+  value,
+  onCommit,
+  className,
+  ariaLabel,
+  singleLine = false
+}: {
+  as?: keyof HTMLElementTagNameMap;
+  value: string;
+  onCommit: (value: string) => void;
+  className?: string;
+  ariaLabel: string;
+  singleLine?: boolean;
+}) {
+  const editableClassName = [
+    "min-w-0 rounded-[6px] outline-none ring-[#1677ff]/20 transition focus:bg-[#f8ffff] focus:ring-2",
+    className || ""
+  ].join(" ");
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!singleLine || event.key !== "Enter") return;
+    event.preventDefault();
+    event.currentTarget.blur();
+  }
+
+  return createElement(
+    as,
+    {
+      contentEditable: true,
+      suppressContentEditableWarning: true,
+      role: "textbox",
+      "aria-label": ariaLabel,
+      className: editableClassName,
+      onBlur: (event: FocusEvent<HTMLElement>) => {
+        const text = event.currentTarget.innerText.replace(/\u00a0/g, " ").trim();
+        if (text !== value) onCommit(text);
+      },
+      onKeyDown: handleKeyDown
+    },
+    value
+  );
 }
 
 function InlineTextInput({
@@ -828,6 +760,7 @@ export function LessonPlanOutput({
   streamKey,
   streamSpeed = "normal",
   onSave,
+  onChange,
   onExport,
   onCopy,
   onShare
@@ -836,11 +769,12 @@ export function LessonPlanOutput({
   streamKey?: string;
   streamSpeed?: "normal" | "fast" | "instant";
   onSave?: (output?: any) => void;
+  onChange?: (output?: any) => void;
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
   onShare?: (output?: any) => void;
 }) {
-  return <LessonPlanDocumentOutput output={output} onSave={onSave} onExport={onExport} onCopy={onCopy} onShare={onShare} />;
+  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} />;
 
   const metadata = output?.metadata || {};
   const outline = output?.lesson_outline || [];
@@ -1115,23 +1049,81 @@ export function WorksheetOutput({
   tab,
   setTab,
   onSave,
+  onChange,
   onExport,
   onCopy
 }: {
   output: any;
   tab: string;
   setTab: (tab: string) => void;
-  onSave?: () => void;
-  onExport?: () => void;
-  onCopy?: () => void;
+  onSave?: (output?: any) => void;
+  onChange?: (output?: any) => void;
+  onExport?: (output?: any) => void;
+  onCopy?: (output?: any) => void;
 }) {
-  const metadata = output?.metadata || {};
-  const sections = output?.student_worksheet?.sections || [];
-  const title = output?.title || "Worksheet";
+  const [worksheetOutput, setWorksheetOutput] = useState(output);
+  const metadata = worksheetOutput?.metadata || {};
+  const sections = worksheetOutput?.student_worksheet?.sections || [];
+  const title = worksheetOutput?.title || "Worksheet";
   const grade = metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class";
   const subject = metadata.subject || "Subject";
   const chapter = metadata.chapter || "Chapter";
   const topic = metadata.topic || title;
+
+  useEffect(() => {
+    setWorksheetOutput(output);
+  }, [output]);
+
+  function commitWorksheet(nextOutput: any) {
+    setWorksheetOutput(nextOutput);
+    onChange?.(nextOutput);
+  }
+
+  function updateWorksheet(updater: (current: any) => any) {
+    commitWorksheet(updater(worksheetOutput || {}));
+  }
+
+  function updateMetadata(field: string, value: string) {
+    const metadataValue = field === "grade" ? (value.replace(/\b(class|grade)\b/gi, "").trim() || value) : value;
+    updateWorksheet((current) => ({
+      ...current,
+      title: field === "topic" ? value : current.title,
+      metadata: {
+        ...(current.metadata || {}),
+        [field]: metadataValue,
+        ...(field === "grade" ? { class: metadataValue } : {}),
+        ...(field === "topic" ? { topic: value } : {})
+      }
+    }));
+  }
+
+  function updateSection(sectionIndex: number, updater: (section: any) => any) {
+    updateWorksheet((current) => {
+      const currentSections = current?.student_worksheet?.sections || [];
+      return {
+        ...current,
+        student_worksheet: {
+          ...(current.student_worksheet || {}),
+          sections: currentSections.map((section: any, index: number) => index === sectionIndex ? updater(section) : section)
+        }
+      };
+    });
+  }
+
+  function updateQuestion(sectionIndex: number, questionIndex: number, updater: (question: any) => any) {
+    updateSection(sectionIndex, (section) => ({
+      ...section,
+      questions: (section.questions || []).map((question: any, index: number) => index === questionIndex ? updater(question) : question)
+    }));
+  }
+
+  function updateAnswerKey(items: any[]) {
+    updateWorksheet((current) => ({ ...current, answer_key: items }));
+  }
+
+  function updateMarkingScheme(items: any[]) {
+    updateWorksheet((current) => ({ ...current, marking_scheme: items }));
+  }
 
   return (
     <div className="w-full max-w-none">
@@ -1154,9 +1146,9 @@ export function WorksheetOutput({
             <p className="mt-2 text-sm font-medium text-[#6d6f78]">{grade} • {subject} • {chapter}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={onCopy}><Copy className="h-4 w-4" /> Copy</Button>
-            <Button variant="outline" size="sm" onClick={onExport}><Download className="h-4 w-4" /> PDF</Button>
-            <Button size="sm" onClick={onSave}><Save className="h-4 w-4" /> Save</Button>
+            <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> Copy</Button>
+            <Button variant="outline" size="sm" onClick={() => onExport?.(worksheetOutput)}><Download className="h-4 w-4" /> PDF</Button>
+            <Button size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save</Button>
           </div>
         </div>
 
@@ -1177,10 +1169,28 @@ export function WorksheetOutput({
         <article className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]">
           <header className="grid min-w-0 gap-4 font-sans sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-6">
             <div className="min-w-0">
-              <h2 className="break-words text-[19px] font-black leading-tight text-black sm:text-[22px]">{grade} - {subject}</h2>
-              <p className="mt-1 break-words text-[16px] font-black leading-snug text-black sm:text-[18px]">{topic}</p>
-              <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-700">Chapter: {chapter}</p>
-              <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">{metadata.board || "Board"} • {metadata.book || "Textbook"}</p>
+              <h2 className="break-words text-[19px] font-black leading-tight text-black sm:text-[22px]">
+                <EditableText as="span" value={grade} onCommit={(value) => updateMetadata("grade", value)} ariaLabel="Worksheet grade" singleLine />
+                <span> - </span>
+                <EditableText as="span" value={subject} onCommit={(value) => updateMetadata("subject", value)} ariaLabel="Worksheet subject" singleLine />
+              </h2>
+              <EditableText
+                as="p"
+                value={topic}
+                onCommit={(value) => updateMetadata("topic", value)}
+                className="mt-1 break-words text-[16px] font-black leading-snug text-black sm:text-[18px]"
+                ariaLabel="Worksheet topic"
+                singleLine
+              />
+              <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-700">
+                <span>Chapter: </span>
+                <EditableText as="span" value={chapter} onCommit={(value) => updateMetadata("chapter", value)} ariaLabel="Worksheet chapter" singleLine />
+              </p>
+              <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
+                <EditableText as="span" value={metadata.board || "Board"} onCommit={(value) => updateMetadata("board", value)} ariaLabel="Worksheet board" singleLine />
+                <span> • </span>
+                <EditableText as="span" value={metadata.book || "Textbook"} onCommit={(value) => updateMetadata("book", value)} ariaLabel="Worksheet textbook" singleLine />
+              </p>
             </div>
           </header>
 
@@ -1192,21 +1202,38 @@ export function WorksheetOutput({
 
           <section className="mt-5 rounded-[8px] border border-slate-200 p-3 font-sans sm:p-4">
             <h3 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">Instructions</h3>
-            <p className="mt-1 break-words text-[13px] font-semibold italic leading-6 text-slate-700 sm:text-sm">
-              {output?.instructions || "Read each question carefully and answer in the space provided. For MCQs, choose the correct option. Answer all questions."}
-            </p>
+            <EditableText
+              as="p"
+              value={worksheetOutput?.instructions || "Read each question carefully and answer in the space provided. For MCQs, choose the correct option. Answer all questions."}
+              onCommit={(instructions) => updateWorksheet((current) => ({ ...current, instructions }))}
+              className="mt-1 break-words text-[13px] font-semibold italic leading-6 text-slate-700 sm:text-sm"
+              ariaLabel="Worksheet instructions"
+            />
           </section>
 
           <div className="mt-7 grid gap-6 sm:mt-8 sm:gap-7">
             {sections.map((section: any, sectionIndex: number) => (
               <section key={`${section.section_title}-${sectionIndex}`} className="break-inside-avoid">
                 <div className="mb-4 flex min-w-0 items-start gap-3 border-b border-slate-200 pb-2 font-sans">
-                  <h3 className="min-w-0 flex-1 break-words text-[15px] font-black leading-6 text-black sm:text-[17px]">{section.section_title}</h3>
+                  <EditableText
+                    as="h3"
+                    value={section.section_title || `Section ${sectionIndex + 1}`}
+                    onCommit={(section_title) => updateSection(sectionIndex, (currentSection) => ({ ...currentSection, section_title }))}
+                    className="min-w-0 flex-1 break-words text-[15px] font-black leading-6 text-black sm:text-[17px]"
+                    ariaLabel={`Worksheet section ${sectionIndex + 1} title`}
+                    singleLine
+                  />
                   {section.marks ? <span className="shrink-0 pt-1 text-xs font-black text-slate-500">{section.marks} marks</span> : null}
                 </div>
                 <div className="grid gap-4 sm:gap-5">
                   {(section.questions || []).map((question: any, index: number) => (
-                    <WorksheetQuestion key={index} question={question} index={index} questionType={section.question_type || section.section_title} />
+                    <WorksheetQuestion
+                      key={index}
+                      question={question}
+                      index={index}
+                      questionType={section.question_type || section.section_title}
+                      onQuestionChange={(nextQuestion) => updateQuestion(sectionIndex, index, () => nextQuestion)}
+                    />
                   ))}
                 </div>
               </section>
@@ -1219,31 +1246,68 @@ export function WorksheetOutput({
           </footer>
         </article>
       ) : tab === "Answer Key" ? (
-        <AnswerKeyView items={output?.answer_key || []} />
+        <AnswerKeyView items={worksheetOutput?.answer_key || []} onItemsChange={updateAnswerKey} />
       ) : (
-        <MarkingSchemeView items={output?.marking_scheme || []} />
+        <MarkingSchemeView items={worksheetOutput?.marking_scheme || []} onItemsChange={updateMarkingScheme} />
       )}
     </div>
   );
 }
 
-function WorksheetQuestion({ question, index, questionType }: { question: any; index: number; questionType: string }) {
+function WorksheetQuestion({
+  question,
+  index,
+  questionType,
+  onQuestionChange
+}: {
+  question: any;
+  index: number;
+  questionType: string;
+  onQuestionChange?: (question: any) => void;
+}) {
   const left = question.left_column || question.left || [];
   const right = question.right_column || question.right || [];
   const options = question.options || [];
   const lineCount = Number(question.answer_lines || defaultAnswerLines(questionType));
 
+  function updateOption(optionIndex: number, value: string) {
+    onQuestionChange?.({
+      ...question,
+      options: options.map((option: string, index: number) => index === optionIndex ? value : option)
+    });
+  }
+
+  function updateMatchColumn(column: "left_column" | "right_column", values: string[], rowIndex: number, value: string) {
+    onQuestionChange?.({
+      ...question,
+      [column]: values.map((item: string, index: number) => index === rowIndex ? value : item),
+      [column === "left_column" ? "left" : "right"]: values.map((item: string, index: number) => index === rowIndex ? value : item)
+    });
+  }
+
   return (
     <div className="min-w-0 break-inside-avoid">
       <p className="break-words font-serif text-[14px] leading-6 sm:text-[15px]">
-        <span className="mr-3 font-sans font-black">{index + 1}.</span>{question.question}
+        <span className="mr-3 font-sans font-black">{index + 1}.</span>
+        <EditableText
+          as="span"
+          value={question.question || ""}
+          onCommit={(value) => onQuestionChange?.({ ...question, question: value })}
+          ariaLabel={`Worksheet question ${index + 1}`}
+        />
       </p>
       {options.length ? (
         <div className="mt-2 grid gap-x-10 gap-y-2 pl-5 font-sans text-[13px] sm:grid-cols-2 sm:pl-9 sm:text-sm">
           {options.map((option: string, optionIndex: number) => (
             <span key={`${option}-${optionIndex}`} className="flex min-w-0 items-start gap-2">
               <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-slate-300" />
-              <span className="min-w-0 break-words">{option}</span>
+              <EditableText
+                as="span"
+                value={option}
+                onCommit={(value) => updateOption(optionIndex, value)}
+                className="min-w-0 break-words"
+                ariaLabel={`Question ${index + 1} option ${optionIndex + 1}`}
+              />
             </span>
           ))}
         </div>
@@ -1257,8 +1321,24 @@ function WorksheetQuestion({ question, index, questionType }: { question: any; i
             <tbody>
               {left.map((item: string, rowIndex: number) => (
                 <tr key={`${item}-${rowIndex}`} className="border-t border-slate-200">
-                  <td className="break-words border-r border-slate-200 px-3 py-2">{rowIndex + 1}. {item}</td>
-                  <td className="break-words px-3 py-2">{String.fromCharCode(65 + rowIndex)}. {right[rowIndex] || ""}</td>
+                  <td className="break-words border-r border-slate-200 px-3 py-2">
+                    <span>{rowIndex + 1}. </span>
+                    <EditableText
+                      as="span"
+                      value={item}
+                      onCommit={(value) => updateMatchColumn("left_column", left, rowIndex, value)}
+                      ariaLabel={`Question ${index + 1} column A row ${rowIndex + 1}`}
+                    />
+                  </td>
+                  <td className="break-words px-3 py-2">
+                    <span>{String.fromCharCode(65 + rowIndex)}. </span>
+                    <EditableText
+                      as="span"
+                      value={right[rowIndex] || ""}
+                      onCommit={(value) => updateMatchColumn("right_column", right, rowIndex, value)}
+                      ariaLabel={`Question ${index + 1} column B row ${rowIndex + 1}`}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1289,17 +1369,39 @@ function defaultAnswerLines(questionType: string) {
   return 1;
 }
 
-function AnswerKeyView({ items }: { items: any[] }) {
+function AnswerKeyView({ items, onItemsChange }: { items: any[]; onItemsChange?: (items: any[]) => void }) {
+  function updateSection(index: number, value: any) {
+    onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
+  }
+
   return (
     <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
       <h2 className="text-xl font-black text-[#25262b]">Answer Key</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
-            <h3 className="font-black text-[#25262b]">{section.section_title || `Section ${index + 1}`}</h3>
+            <EditableText
+              as="h3"
+              value={section.section_title || `Section ${index + 1}`}
+              onCommit={(section_title) => updateSection(index, { ...section, section_title })}
+              className="font-black text-[#25262b]"
+              ariaLabel={`Answer key section ${index + 1}`}
+              singleLine
+            />
             <ol className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
               {(section.answers || []).map((answer: any, answerIndex: number) => (
-                <li key={answerIndex} className="flex gap-2"><span className="font-black">{answerIndex + 1}.</span><span>{String(answer)}</span></li>
+                <li key={answerIndex} className="flex gap-2">
+                  <span className="font-black">{answerIndex + 1}.</span>
+                  <EditableText
+                    as="span"
+                    value={String(answer)}
+                    onCommit={(value) => updateSection(index, {
+                      ...section,
+                      answers: (section.answers || []).map((item: any, itemIndex: number) => itemIndex === answerIndex ? value : item)
+                    })}
+                    ariaLabel={`Answer ${answerIndex + 1}`}
+                  />
+                </li>
               ))}
             </ol>
           </div>
@@ -1309,7 +1411,11 @@ function AnswerKeyView({ items }: { items: any[] }) {
   );
 }
 
-function MarkingSchemeView({ items }: { items: any[] }) {
+function MarkingSchemeView({ items, onItemsChange }: { items: any[]; onItemsChange?: (items: any[]) => void }) {
+  function updateSection(index: number, value: any) {
+    onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
+  }
+
   return (
     <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
       <h2 className="text-xl font-black text-[#25262b]">Marking Scheme</h2>
@@ -1317,12 +1423,30 @@ function MarkingSchemeView({ items }: { items: any[] }) {
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-black text-[#25262b]">{section.section_title || `Section ${index + 1}`}</h3>
+              <EditableText
+                as="h3"
+                value={section.section_title || `Section ${index + 1}`}
+                onCommit={(section_title) => updateSection(index, { ...section, section_title })}
+                className="font-black text-[#25262b]"
+                ariaLabel={`Marking scheme section ${index + 1}`}
+                singleLine
+              />
               {section.marks_per_question ? <Badge>{section.marks_per_question}</Badge> : null}
             </div>
             <ul className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
               {(section.guidelines || []).map((item: any, itemIndex: number) => (
-                <li key={itemIndex} className="flex gap-2"><span className="font-black text-[#25262b]">•</span><span>{String(item)}</span></li>
+                <li key={itemIndex} className="flex gap-2">
+                  <span className="font-black text-[#25262b]">•</span>
+                  <EditableText
+                    as="span"
+                    value={String(item)}
+                    onCommit={(value) => updateSection(index, {
+                      ...section,
+                      guidelines: (section.guidelines || []).map((guideline: any, guidelineIndex: number) => guidelineIndex === itemIndex ? value : guideline)
+                    })}
+                    ariaLabel={`Marking guideline ${itemIndex + 1}`}
+                  />
+                </li>
               ))}
             </ul>
           </div>
