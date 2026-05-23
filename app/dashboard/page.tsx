@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -131,7 +131,6 @@ export default function TeacherDashboard() {
   const allItems = [...(plans.data?.items || []), ...worksheetItems, ...presentationItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
-  const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal, presentationMonthlyTotal);
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
   return (
@@ -304,8 +303,11 @@ export default function TeacherDashboard() {
               <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
               <div className="flex-1 flex items-center justify-center gap-4">
                 <div className="relative" style={{ width: "108px", height: "108px" }}>
-                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: usageGradient }} />
-                  <div className="absolute inset-[12px] rounded-full bg-white" />
+                  <UsageDonut
+                    lessonCount={lessonMonthlyTotal}
+                    worksheetCount={worksheetMonthlyTotal}
+                    presentationCount={presentationMonthlyTotal}
+                  />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
                   </div>
@@ -484,7 +486,7 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
 
 function CountUpNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const displayValueRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -493,15 +495,14 @@ function CountUpNumber({ value }: { value: number }) {
 
     if (prefersReducedMotion) {
       setDisplayValue(value);
-      setHasAnimated(true);
+      displayValueRef.current = value;
       return;
     }
 
-    if (hasAnimated) return;
-
     const duration = 1200;
     const startTime = performance.now();
-    const startValue = 0;
+    const startValue = displayValueRef.current;
+    let frameId = 0;
 
     function easeOutQuart(t: number): number {
       return 1 - Math.pow(1 - t, 4);
@@ -514,18 +515,75 @@ function CountUpNumber({ value }: { value: number }) {
       const currentValue = Math.round(startValue + (value - startValue) * easedProgress);
 
       setDisplayValue(currentValue);
+      displayValueRef.current = currentValue;
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frameId = requestAnimationFrame(animate);
       } else {
-        setHasAnimated(true);
+        displayValueRef.current = value;
       }
     }
 
-    requestAnimationFrame(animate);
-  }, [value, hasAnimated]);
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [value]);
 
   return <>{displayValue}</>;
+}
+
+function UsageDonut({
+  lessonCount,
+  worksheetCount,
+  presentationCount
+}: {
+  lessonCount: number;
+  worksheetCount: number;
+  presentationCount: number;
+}) {
+  const total = lessonCount + worksheetCount + presentationCount;
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const segments = total
+    ? [
+        { value: lessonCount, color: "#3b82f6" },
+        { value: worksheetCount, color: "#0db986" },
+        { value: presentationCount, color: "#f43f5e" }
+      ]
+    : [{ value: 1, color: "#d7dae4" }];
+  let offset = 0;
+
+  return (
+    <svg className="h-full w-full" viewBox="0 0 108 108" aria-hidden="true">
+      <defs>
+        <mask id="usage-donut-reveal">
+          <circle cx="54" cy="54" r={radius} fill="none" stroke="white" strokeWidth="12" pathLength="100" className="animate-usage-stroke-reveal" />
+        </mask>
+      </defs>
+      <g className="animate-usage-rotate-once origin-center" mask="url(#usage-donut-reveal)">
+        {segments.map((segment, index) => {
+          const length = total ? (segment.value / total) * circumference : circumference;
+          const dashOffset = -offset;
+          offset += length;
+          return (
+            <circle
+              key={`${segment.color}-${index}`}
+              cx="54"
+              cy="54"
+              r={radius}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth="12"
+              strokeDasharray={`${length} ${circumference - length}`}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="butt"
+              transform="rotate(-90 54 54)"
+            />
+          );
+        })}
+      </g>
+      <circle cx="54" cy="54" r="30" fill="white" />
+    </svg>
+  );
 }
 
 function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustrationSrc }: { title: string; desc: string; href: string; button: string; icon: any; tone: "blue" | "green"; illustrationSrc?: string }) {
@@ -687,14 +745,6 @@ function getDailyGenerationTicks(bars: Array<{ day: number; label: string; value
   return dailyGenerationTickDays
     .filter((day) => availableDays.has(day))
     .map((day) => bars[day - 1]);
-}
-
-function getUsageGradient(lessonCount: number, worksheetCount: number, presentationCount: number) {
-  const total = lessonCount + worksheetCount + presentationCount;
-  if (!total) return "conic-gradient(#d7dae4 0 100%)";
-  const lessonEnd = Math.round((lessonCount / total) * 100);
-  const worksheetEnd = lessonEnd + Math.round((worksheetCount / total) * 100);
-  return `conic-gradient(#3b82f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% ${worksheetEnd}%, #f43f5e ${worksheetEnd}% 100%)`;
 }
 
 function formatHours(hours: number) {

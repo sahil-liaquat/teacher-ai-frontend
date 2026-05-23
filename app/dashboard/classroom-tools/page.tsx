@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 
 const tools: Array<{
@@ -25,7 +26,7 @@ const tools: Array<{
   badge: string;
   status: "ready" | "soon";
   panel: string;
-  tone: "blue" | "green" | "orange" | "pink" | "red" | "aqua" | "lavender";
+  tone: "blue" | "green" | "yellow" | "pink" | "red" | "aqua" | "lavender";
   buttonLabel?: string;
 }> = [
   {
@@ -35,8 +36,8 @@ const tools: Array<{
     icon: BookOpen,
     badge: "Ready",
     status: "ready",
-    panel: "from-[#fff7fb] to-white",
-    tone: "pink"
+    panel: "from-[#eef6ff] to-white",
+    tone: "blue"
   },
   {
     title: "Create Worksheet",
@@ -45,19 +46,8 @@ const tools: Array<{
     icon: ClipboardCheck,
     badge: "Ready",
     status: "ready",
-    panel: "from-[#fffaf0] to-white",
+    panel: "from-[#ecfff6] to-white",
     tone: "green"
-  },
-  {
-    title: "Live Quiz Generator",
-    description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
-    href: "/dashboard/live-quiz/new",
-    icon: RadioTower,
-    badge: "Ready",
-    status: "ready",
-    panel: "from-[#fffaf0] to-white",
-    tone: "orange",
-    buttonLabel: "Create Live Quiz"
   },
   {
     title: "Presentation Generator",
@@ -68,6 +58,17 @@ const tools: Array<{
     status: "ready",
     panel: "from-[#fff1f3] to-white",
     tone: "red"
+  },
+  {
+    title: "Live Quiz Generator",
+    description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
+    href: "/dashboard/live-quiz/new",
+    icon: RadioTower,
+    badge: "Ready",
+    status: "ready",
+    panel: "from-[#fffaf0] to-white",
+    tone: "yellow",
+    buttonLabel: "Create Live Quiz"
   },
   {
     title: "Rubric Assistant",
@@ -93,25 +94,22 @@ const tools: Array<{
 
 export default function ClassroomToolsPage() {
   return (
-    <div className="mx-auto grid w-full max-w-[1240px] gap-4">
-      <header className="overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white/88 shadow-[0_18px_48px_var(--teachpad-shadowCard)] backdrop-blur-sm">
-        <div className="relative p-5 sm:p-6 lg:min-h-[220px]">
-          <div className="relative z-10 min-w-0 lg:max-w-[52%]">
-            <h1 className="max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] font-black leading-[1.02] tracking-tight text-transparent">
-              Choose the classroom tool you need.
-            </h1>
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[56%] overflow-hidden lg:block">
-            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white/95 to-transparent" />
+    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+      <PageHeader
+        title="Choose the classroom tool you need."
+        size="hero"
+        illustration={
+          <>
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white/95 to-transparent" />
             <img
               src="/assets/illustrations/classroom-tools-header.png"
               alt=""
               aria-hidden="true"
-              className="absolute right-0 top-1/2 w-[560px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:-right-2 xl:w-[680px]"
+              className="absolute right-10 top-1/2 w-[300px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-12 xl:w-[360px]"
             />
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {tools.map((tool) => {
@@ -156,14 +154,14 @@ function IconBubble({
   className
 }: {
   icon: ComponentType<{ className?: string }>;
-  tone: "blue" | "green" | "orange" | "pink" | "red" | "aqua" | "lavender";
+  tone: "blue" | "green" | "yellow" | "pink" | "red" | "aqua" | "lavender";
   className?: string;
 }) {
   const Icon = icon;
   const styles = {
     blue: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     green: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]",
-    orange: "bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
+    yellow: "bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     pink: "bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     red: "bg-[#fff7f8] text-[#eb3b5a] ring-[#ffd9de] shadow-[0_14px_30px_rgba(235,59,90,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     aqua: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",

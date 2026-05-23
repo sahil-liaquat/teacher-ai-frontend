@@ -255,8 +255,8 @@ export default function PresentationGeneratorPage() {
   return (
     <div className="mx-auto max-w-[1120px]">
       <div className="overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
-        <div className="relative border-b border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] via-white to-[#ffe5e9] px-5 py-6 sm:px-6">
-          <div className="max-w-[650px]">
+        <div className="relative min-h-[178px] border-b border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] via-white to-[#ffe5e9] px-5 py-6 sm:px-6">
+          <div className="relative z-10 max-w-[650px]">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-black text-[#eb3b5a] shadow-sm">
               <Presentation className="h-4 w-4" />
               Presentation Generator
@@ -269,6 +269,15 @@ export default function PresentationGeneratorPage() {
               <BookOpen className="h-4 w-4" />
               Textbook grounded
             </Button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white/80 to-transparent" />
+            <img
+              src="/assets/illustrations/create-presentation-header.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute -bottom-5 -right-8 w-[360px] select-none object-contain drop-shadow-[0_18px_18px_rgba(235,59,90,0.18)] xl:-right-4 xl:w-[440px]"
+            />
           </div>
         </div>
 

@@ -136,7 +136,19 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader title="Profile and usage settings" description="Manage your teacher profile, saved details, and monthly classroom activity." size="hero" />
+      <PageHeader
+        title="Profile and usage settings"
+        description="Manage your teacher profile, saved details, and monthly classroom activity."
+        size="hero"
+        illustration={
+          <img
+            src="/assets/illustrations/profile-settings-header.png"
+            alt=""
+            aria-hidden="true"
+            className="absolute right-10 top-1/2 w-[270px] -translate-y-1/2 select-none object-contain drop-shadow-[0_16px_16px_rgba(37,99,235,0.14)] xl:right-14 xl:w-[330px]"
+          />
+        }
+      />
 
       <section className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
