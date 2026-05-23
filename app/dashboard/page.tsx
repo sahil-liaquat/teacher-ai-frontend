@@ -21,7 +21,6 @@ import {
   TrendingUp
 } from "lucide-react";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser } from "@/lib/api";
-import { LESSON_PLAN_STORAGE_EVENT, listLessonPlanGenerations } from "@/lib/lesson-plan-storage";
 import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -78,31 +77,14 @@ export default function TeacherDashboard() {
     retry: false,
     staleTime: Infinity
   });
-  const [localLessonPlans, setLocalLessonPlans] = useState<any[]>([]);
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
-
-  useEffect(() => {
-    const userId = currentUser.data?.id;
-    function refreshLocalLessonPlans() {
-      setLocalLessonPlans(listLessonPlanGenerations(userId));
-    }
-    refreshLocalLessonPlans();
-    window.addEventListener(LESSON_PLAN_STORAGE_EVENT, refreshLocalLessonPlans);
-    window.addEventListener("storage", refreshLocalLessonPlans);
-    return () => {
-      window.removeEventListener(LESSON_PLAN_STORAGE_EVENT, refreshLocalLessonPlans);
-      window.removeEventListener("storage", refreshLocalLessonPlans);
-    };
-  }, [currentUser.data?.id]);
-
   const statsLoading = lessonSummary.isLoading || worksheets.isLoading || presentations.isLoading;
   const statsError = lessonSummary.isError && worksheets.isError && presentations.isError;
   const apiLessonRecent = lessonSummary.data?.recent || [];
-  const mergedLessonItems = mergeGenerationItems(apiLessonRecent, localLessonPlans);
-  const lessonTotal = Math.max(lessonSummary.data?.total ?? 0, localLessonPlans.length);
-  const lessonRecent = mergedLessonItems.length
-    ? mergedLessonItems.map((item: any) => ({
+  const lessonTotal = lessonSummary.data?.total ?? 0;
+  const lessonRecent = apiLessonRecent.length
+    ? apiLessonRecent.map((item: any) => ({
         ...item,
         topic: item.topic || item.chapter_name || "Generated Lesson Plan",
         class_name: item.class_name || "8th Grade",
@@ -145,11 +127,11 @@ export default function TeacherDashboard() {
   const worksheetTotal = worksheets.data?.total ?? 0;
   const presentationTotal = presentations.data?.total ?? 0;
   const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal;
-  const lessonMonthlyTotal = Math.max(lessonSummary.data?.monthly_total ?? 0, countItemsThisMonth(localLessonPlans));
+  const lessonMonthlyTotal = lessonSummary.data?.monthly_total ?? 0;
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
   const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal;
-  const allItems = [...mergedLessonItems, ...worksheetItems, ...presentationItems];
+  const allItems = [...apiLessonRecent, ...worksheetItems, ...presentationItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
@@ -872,16 +854,4 @@ function parseItemDate(item: { created_at?: string; updated_at?: string }) {
   if (!raw) return null;
   const parsed = new Date(raw);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function mergeGenerationItems<T extends { id?: string; created_at?: string; updated_at?: string }>(primary: T[], fallback: T[]) {
-  const seen = new Set<string>();
-  return [...primary, ...fallback]
-    .filter((item) => {
-      if (!item.id) return true;
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    })
-    .sort((a, b) => new Date(b.created_at || b.updated_at || 0).getTime() - new Date(a.created_at || a.updated_at || 0).getTime());
 }

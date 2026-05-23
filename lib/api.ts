@@ -234,7 +234,7 @@ function clearAccountStorage() {
 
   for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
     const key = window.localStorage.key(index);
-    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_") || key?.startsWith("teacher_ai_lesson_plan_")) {
+    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_")) {
       window.localStorage.removeItem(key);
     }
   }

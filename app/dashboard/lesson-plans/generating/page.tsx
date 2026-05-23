@@ -6,7 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { backendApi, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
-import { saveLessonPlanGeneration } from "@/lib/lesson-plan-storage";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 export default function GeneratingLessonPlanPage() {
@@ -55,7 +54,6 @@ export default function GeneratingLessonPlanPage() {
       const completed: LessonPlan = await backendApi.createLessonPlan(nextPayload);
       if (!completed) throw new Error("Generation finished without a saved lesson plan.");
       setStatus("Formatting output...");
-      saveLessonPlanGeneration(completed);
       clearPendingLessonPlan();
       queryClient.setQueryData<LessonPlanDashboardSummary>(["lesson-plans-summary"], (current) => {
         if (!current) return current;
