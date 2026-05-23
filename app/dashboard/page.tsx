@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -15,6 +15,7 @@ import {
   Lightbulb,
   MoreVertical,
   Plus,
+  Presentation,
   Settings2,
   Sparkles,
   TrendingUp
@@ -60,6 +61,16 @@ export default function TeacherDashboard() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
+  const presentations = useQuery({
+    queryKey: ["presentations-summary"],
+    queryFn: () => backendApi.presentations(0, 50),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
   const currentUser = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: () => getCurrentUser({ redirectOnUnauthorized: false }),
@@ -94,50 +105,64 @@ export default function TeacherDashboard() {
       created_at: item.created_at || ""
     };
   });
-  const recent = [...worksheetRecent, ...lessonRecent]
+  const presentationItems = presentations.data?.items || [];
+  const presentationRecent = presentationItems.map((item: any) => {
+    const output = item.output_json || {};
+    return {
+      id: item.id,
+      topic: output.title || item.topic || "Generated Presentation",
+      class_name: item.audience || "Class",
+      subject: item.style || "Presentation",
+      type: "Presentation",
+      href: `/dashboard/presentation-generator/output?id=${item.id}`,
+      created_at: item.created_at || item.updated_at || ""
+    };
+  });
+  const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   const displayRecent = recent;
   const worksheetTotal = worksheets.data?.total;
-  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0);
+  const presentationTotal = presentations.data?.total;
+  const savedResourcesTotal = (lessonTotal || 0) + (worksheetTotal || 0) + (presentationTotal || 0);
   const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
-  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal;
-  const allItems = [...(plans.data?.items || []), ...worksheetItems];
+  const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
+  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal;
+  const allItems = [...(plans.data?.items || []), ...worksheetItems, ...presentationItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
-  const usageGradient = getUsageGradient(lessonMonthlyTotal, worksheetMonthlyTotal);
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
   return (
     <div className="mx-auto grid w-full max-w-[1480px] gap-4 px-0 2xl:px-4">
       <header className="mx-auto flex w-full max-w-[1240px] flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-start sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
-          <img
-            src="/assets/teachpad-logo.png"
-            alt="Teachpad"
-            className="h-auto max-h-10 w-full object-contain object-left sm:max-h-11"
-          />
-        </div>
-        <div className="text-left sm:text-left">
-          <h1 className="flex flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:justify-end sm:text-3xl">
+        <div className="text-left">
+          <h1 className="flex flex-wrap items-center gap-x-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             <span>{greeting.text}, {firstName}</span>
             {greeting.icon ? (
               <img
                 src={greeting.icon}
                 alt=""
                 aria-hidden="true"
-                className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_5px_8px_rgba(251,191,36,0.22)] sm:h-9 sm:w-9"
+                className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-12 sm:w-12"
               />
             ) : (
-              <span className="inline-block">{greeting.emoji}</span>
+              <span className="inline-block text-[2.45rem] leading-none sm:text-[2.7rem]">{greeting.emoji}</span>
             )}
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
         </div>
+        <div className="hidden h-12 w-[190px] shrink-0 items-center justify-end sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
+          <img
+            src="/assets/teachpad-logo.png"
+            alt="Teachpad"
+            className="h-auto max-h-10 w-full object-contain object-right sm:max-h-11"
+          />
+        </div>
       </header>
 
       <section className="mx-auto grid w-full max-w-[1240px] grid-cols-2 gap-3 lg:grid-cols-4 xl:gap-4">
-        {(plans.isLoading || worksheets.isLoading) ? (
+        {(plans.isLoading || worksheets.isLoading || presentations.isLoading) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
@@ -152,7 +177,7 @@ export default function TeacherDashboard() {
               </div>
             ))}
           </>
-        ) : (plans.isError || worksheets.isError) ? (
+        ) : (plans.isError || worksheets.isError || presentations.isError) ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
@@ -232,9 +257,17 @@ export default function TeacherDashboard() {
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                  item.type === "Worksheet" ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600" : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                  item.type === "Worksheet"
+                    ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600"
+                    : item.type === "Presentation"
+                      ? "bg-gradient-to-br from-rose-100 to-pink-50 text-rose-600"
+                      : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
                 )}>
-                  {item.type === "Worksheet" ? <FileText className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+                  {item.type === "Worksheet"
+                    ? <FileText className="h-5 w-5" />
+                    : item.type === "Presentation"
+                      ? <Presentation className="h-5 w-5" />
+                      : <BookOpen className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
@@ -242,7 +275,11 @@ export default function TeacherDashboard() {
                 </div>
                 <span className={cn(
                   "rounded-lg px-2.5 py-1 text-xs font-semibold",
-                  item.type === "Worksheet" ? "bg-emerald-50 text-emerald-700" : "bg-[#eff6ff] text-[#1d4ed8]"
+                  item.type === "Worksheet"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : item.type === "Presentation"
+                      ? "bg-rose-50 text-rose-700"
+                      : "bg-[#eff6ff] text-[#1d4ed8]"
                 )}>
                   {item.type}
                 </span>
@@ -266,8 +303,11 @@ export default function TeacherDashboard() {
               <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
               <div className="flex-1 flex items-center justify-center gap-4">
                 <div className="relative" style={{ width: "108px", height: "108px" }}>
-                  <div className="absolute inset-0 rounded-full animate-chart-appear" style={{ background: `conic-gradient(#3b82f6 0% ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%, #10b981 ${lessonMonthlyTotal > 0 || worksheetMonthlyTotal > 0 ? Math.round((lessonMonthlyTotal / (monthlyGenerationsTotal || 1)) * 100) : 0}%)` }} />
-                  <div className="absolute inset-[12px] rounded-full bg-white" />
+                  <UsageDonut
+                    lessonCount={lessonMonthlyTotal}
+                    worksheetCount={worksheetMonthlyTotal}
+                    presentationCount={presentationMonthlyTotal}
+                  />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
                   </div>
@@ -282,6 +322,11 @@ export default function TeacherDashboard() {
                     <span className="h-3 w-3 rounded-full bg-emerald-500" />
                     <span className="text-sm font-medium text-slate-700">Worksheets</span>
                     <span className="text-sm font-bold text-slate-900">{worksheetMonthlyTotal}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-rose-500" />
+                    <span className="text-sm font-medium text-slate-700">Presentations</span>
+                    <span className="text-sm font-bold text-slate-900">{presentationMonthlyTotal}</span>
                   </div>
                 </div>
               </div>
@@ -441,7 +486,7 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
 
 function CountUpNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const displayValueRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -450,15 +495,14 @@ function CountUpNumber({ value }: { value: number }) {
 
     if (prefersReducedMotion) {
       setDisplayValue(value);
-      setHasAnimated(true);
+      displayValueRef.current = value;
       return;
     }
 
-    if (hasAnimated) return;
-
     const duration = 1200;
     const startTime = performance.now();
-    const startValue = 0;
+    const startValue = displayValueRef.current;
+    let frameId = 0;
 
     function easeOutQuart(t: number): number {
       return 1 - Math.pow(1 - t, 4);
@@ -471,18 +515,75 @@ function CountUpNumber({ value }: { value: number }) {
       const currentValue = Math.round(startValue + (value - startValue) * easedProgress);
 
       setDisplayValue(currentValue);
+      displayValueRef.current = currentValue;
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frameId = requestAnimationFrame(animate);
       } else {
-        setHasAnimated(true);
+        displayValueRef.current = value;
       }
     }
 
-    requestAnimationFrame(animate);
-  }, [value, hasAnimated]);
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [value]);
 
   return <>{displayValue}</>;
+}
+
+function UsageDonut({
+  lessonCount,
+  worksheetCount,
+  presentationCount
+}: {
+  lessonCount: number;
+  worksheetCount: number;
+  presentationCount: number;
+}) {
+  const total = lessonCount + worksheetCount + presentationCount;
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const segments = total
+    ? [
+        { value: lessonCount, color: "#3b82f6" },
+        { value: worksheetCount, color: "#0db986" },
+        { value: presentationCount, color: "#f43f5e" }
+      ]
+    : [{ value: 1, color: "#d7dae4" }];
+  let offset = 0;
+
+  return (
+    <svg className="h-full w-full" viewBox="0 0 108 108" aria-hidden="true">
+      <defs>
+        <mask id="usage-donut-reveal">
+          <circle cx="54" cy="54" r={radius} fill="none" stroke="white" strokeWidth="12" pathLength="100" className="animate-usage-stroke-reveal" />
+        </mask>
+      </defs>
+      <g className="animate-usage-rotate-once origin-center" mask="url(#usage-donut-reveal)">
+        {segments.map((segment, index) => {
+          const length = total ? (segment.value / total) * circumference : circumference;
+          const dashOffset = -offset;
+          offset += length;
+          return (
+            <circle
+              key={`${segment.color}-${index}`}
+              cx="54"
+              cy="54"
+              r={radius}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth="12"
+              strokeDasharray={`${length} ${circumference - length}`}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="butt"
+              transform="rotate(-90 54 54)"
+            />
+          );
+        })}
+      </g>
+      <circle cx="54" cy="54" r="30" fill="white" />
+    </svg>
+  );
 }
 
 function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustrationSrc }: { title: string; desc: string; href: string; button: string; icon: any; tone: "blue" | "green"; illustrationSrc?: string }) {
@@ -644,13 +745,6 @@ function getDailyGenerationTicks(bars: Array<{ day: number; label: string; value
   return dailyGenerationTickDays
     .filter((day) => availableDays.has(day))
     .map((day) => bars[day - 1]);
-}
-
-function getUsageGradient(lessonCount: number, worksheetCount: number) {
-  const total = lessonCount + worksheetCount;
-  if (!total) return "conic-gradient(#d7dae4 0 100%)";
-  const lessonEnd = Math.round((lessonCount / total) * 100);
-  return `conic-gradient(#3b82f6 0 ${lessonEnd}%, #0db986 ${lessonEnd}% 100%)`;
 }
 
 function formatHours(hours: number) {

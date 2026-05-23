@@ -2,21 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Filter, Search, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-
-type BoardWithData = Board & { classes: Array<ClassItem & { books: Book[] }> };
-
-type FilterMode = "all" | "ingested" | "pending";
 
 const statTiles = [
   { label: "Boards", key: "boards", icon: "layers", tone: "bg-[#e9e1ff]" },
@@ -27,116 +21,154 @@ const statTiles = [
 
 export default function TeacherTextbooksPage() {
   const { toast } = useToast();
-  const [data, setData] = useState<BoardWithData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [summary, setSummary] = useState({ classes: 0, books: 0, ready: 0, loading: false });
+  const [loadingBoards, setLoadingBoards] = useState(true);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [loadingBooks, setLoadingBooks] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      try {
-        const boards = await backendApi.boards(0, 50);
-        const withClasses = await Promise.all(
-          boards.items.map(async (board) => {
-            const classes = await backendApi.classesByBoard(board.id, 0, 50).catch(() => ({ items: [] as ClassItem[] }));
-            const classWithBooks = await Promise.all(
-              classes.items.map(async (cls) => {
-                const books = await backendApi.booksByClass(cls.id, 0, 50).catch(() => ({ items: [] as Book[] }));
-                return { ...cls, books: books.items };
-              })
-            );
-            return { ...board, classes: classWithBooks };
-          })
-        );
-        if (!cancelled) setData(withClasses);
-      } catch (err) {
-        toast({ title: "Could not load textbooks", description: err instanceof Error ? err.message : "Try again" });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
+    setLoadingBoards(true);
+    backendApi.boards(0, 100)
+      .then((res) => {
+        if (!cancelled) setBoards(res.items.filter((board) => board.is_active !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) toast({ title: "Could not load boards", description: err instanceof Error ? err.message : "Try again" });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingBoards(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [toast]);
 
-  const stats = useMemo(() => {
-    const classes = data.reduce((sum, board) => sum + board.classes.length, 0);
-    const books = data.reduce((sum, board) => sum + board.classes.reduce((classSum, cls) => classSum + cls.books.length, 0), 0);
-    const ready = data.reduce(
-      (sum, board) => sum + board.classes.reduce((classSum, cls) => classSum + cls.books.filter((book) => book.is_ingested).length, 0),
-      0
-    );
-    return { boards: data.length, classes, books, ready };
-  }, [data]);
+  useEffect(() => {
+    if (loadingBoards) return;
+    if (!boards.length) {
+      setSummary({ classes: 0, books: 0, ready: 0, loading: false });
+      return;
+    }
+    let cancelled = false;
+    setSummary((current) => ({ ...current, loading: true }));
 
-  const selectedBoard = useMemo(() => data.find((board) => board.id === selectedBoardId) || null, [data, selectedBoardId]);
-  const selectedClass = useMemo(
-    () => selectedBoard?.classes.find((classItem) => classItem.id === selectedClassId) || null,
-    [selectedBoard, selectedClassId]
-  );
+    async function loadSummary() {
+      try {
+        const classResponses = await Promise.all(boards.map((board) => backendApi.classesByBoard(board.id, 0, 100)));
+        const allClasses = classResponses.flatMap((response) => response.items).filter((item) => item.is_active !== false);
+        const bookResponses = await Promise.all(allClasses.map((classItem) => backendApi.booksByClass(classItem.id, 0, 100)));
+        const allBooks = bookResponses.flatMap((response) => response.items).filter((book) => book.is_active !== false);
+        if (!cancelled) {
+          setSummary({
+            classes: allClasses.length,
+            books: allBooks.length,
+            ready: allBooks.filter((book) => book.is_ingested).length,
+            loading: false
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSummary({ classes: 0, books: 0, ready: 0, loading: false });
+          toast({ title: "Could not load textbook summary", description: err instanceof Error ? err.message : "Try again" });
+        }
+      }
+    }
 
-  const visibleBoards = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return data;
-    return data.filter((board) => `${board.name} ${board.code || ""}`.toLowerCase().includes(query));
-  }, [data, searchQuery]);
+    loadSummary();
+    return () => {
+      cancelled = true;
+    };
+  }, [boards, loadingBoards, toast]);
 
-  const visibleClasses = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!selectedBoard) return [];
-    if (!query) return selectedBoard.classes;
-    return selectedBoard.classes.filter((classItem) => classItem.name.toLowerCase().includes(query));
-  }, [searchQuery, selectedBoard]);
+  useEffect(() => {
+    if (!selectedBoardId) {
+      setClasses([]);
+      setBooks([]);
+      setLoadingClasses(false);
+      return;
+    }
+    let cancelled = false;
+    setClasses([]);
+    setBooks([]);
+    setSelectedClassId(null);
+    setLoadingClasses(true);
+    backendApi.classesByBoard(selectedBoardId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) toast({ title: "Could not load classes", description: err instanceof Error ? err.message : "Try again" });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingClasses(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedBoardId, toast]);
+
+  useEffect(() => {
+    if (!selectedClassId) {
+      setBooks([]);
+      setLoadingBooks(false);
+      return;
+    }
+    let cancelled = false;
+    setBooks([]);
+    setLoadingBooks(true);
+    backendApi.booksByClass(selectedClassId, 0, 100)
+      .then((res) => {
+        if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false));
+      })
+      .catch((err) => {
+        if (!cancelled) toast({ title: "Could not load textbooks", description: err instanceof Error ? err.message : "Try again" });
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingBooks(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassId, toast]);
+
+  const selectedBoard = useMemo(() => boards.find((board) => board.id === selectedBoardId) || null, [boards, selectedBoardId]);
+  const selectedClass = useMemo(() => classes.find((classItem) => classItem.id === selectedClassId) || null, [classes, selectedClassId]);
 
   const subjectGroups = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!selectedClass) return [];
-
-    const groups = selectedClass.books.reduce<Record<string, Book[]>>((collection, book) => {
+    const groups = books.reduce<Record<string, Book[]>>((collection, book) => {
       const subject = book.subject || "General";
-      const statusMatches =
-        filterMode === "all" || (filterMode === "ingested" && book.is_ingested) || (filterMode === "pending" && !book.is_ingested);
-      const textMatches = !query || `${subject} ${book.title}`.toLowerCase().includes(query);
-      if (!statusMatches || !textMatches) return collection;
       collection[subject] = [...(collection[subject] || []), book];
       return collection;
     }, {});
 
     return Object.entries(groups)
-      .map(([subject, books]) => ({ subject, books }))
+      .map(([subject, items]) => ({ subject, books: items }))
       .sort((a, b) => a.subject.localeCompare(b.subject));
-  }, [filterMode, searchQuery, selectedClass]);
-
-  const hasActiveFilters = Boolean(searchQuery.trim()) || (Boolean(selectedClass) && filterMode !== "all");
-  const searchPlaceholder = selectedClass
-    ? "Search subject or textbook..."
-    : selectedBoard
-      ? "Search class..."
-      : "Search board...";
+  }, [books]);
 
   const goToBoards = () => {
     setSelectedBoardId(null);
     setSelectedClassId(null);
-    setSearchQuery("");
-    setFilterMode("all");
+    setClasses([]);
+    setBooks([]);
   };
 
   const goToClasses = () => {
     setSelectedClassId(null);
-    setSearchQuery("");
-    setFilterMode("all");
+    setBooks([]);
   };
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
       <PageHeader
         title="Textbook Library"
-        description="Browse every board, class, and textbook from one clean teaching library."
+        description="Browse boards first, then classes, then textbooks. This keeps the library fast and focused."
         size="hero"
         illustration={
           <>
@@ -152,152 +184,97 @@ export default function TeacherTextbooksPage() {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {statTiles.map((stat) => (
-          <div key={stat.key} className="rounded-[22px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
-            <div className="flex items-center gap-3">
-              <PastelIconTile name={stat.icon} className={cn("h-12 w-12 rounded-2xl", stat.tone)} />
-              <div>
-                <p className="text-2xl font-black tracking-tight text-teachpad-ink">{loading ? "..." : stats[stat.key]}</p>
-                <p className="text-sm font-bold text-teachpad-muted">{stat.label}</p>
+        {statTiles.map((stat) => {
+          const value = stat.key === "boards" ? boards.length : summary[stat.key];
+          return (
+            <div key={stat.key} className="rounded-[22px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
+              <div className="flex items-center gap-3">
+                <PastelIconTile name={stat.icon} className={cn("h-12 w-12 rounded-2xl", stat.tone)} />
+                <div>
+                  <p className="text-2xl font-black tracking-tight text-teachpad-ink">{loadingBoards || (stat.key !== "boards" && summary.loading) ? "..." : value}</p>
+                  <p className="text-sm font-bold text-teachpad-muted">{stat.label}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       <section className="rounded-[24px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative min-w-0 flex-1">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-teachpad-muted" />
-            <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-11 pl-10"
-              placeholder={searchPlaceholder}
-            />
-          </label>
-          <div className="flex flex-wrap items-center gap-2">
-            {selectedClass ? (
-              <div className="flex items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-teachpad-tag px-3 py-2 text-sm font-bold text-teachpad-muted">
-                <Filter className="h-4 w-4" />
-                <Select value={filterMode} onChange={(event) => setFilterMode(event.target.value as FilterMode)} className="h-7 w-[150px] border-0 bg-transparent p-0 shadow-none">
-                  <option value="all">All books</option>
-                  <option value="ingested">Ready only</option>
-                  <option value="pending">Pending only</option>
-                </Select>
-              </div>
-            ) : null}
-            {hasActiveFilters ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setFilterMode("all");
-                }}
-              >
-                Clear
-              </Button>
-            ) : null}
-          </div>
+        <div className="flex flex-wrap items-center gap-2 text-base font-bold text-teachpad-muted">
+          <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
+            Boards
+          </button>
+          {selectedBoard ? (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <button type="button" onClick={goToClasses} className={cn("transition hover:text-teachpad-blue", !selectedClass && "text-teachpad-blue")}>
+                {selectedBoard.name}
+              </button>
+            </>
+          ) : null}
+          {selectedClass ? (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-teachpad-blue">{selectedClass.name}</span>
+            </>
+          ) : null}
         </div>
       </section>
 
-      {loading ? <LibrarySkeleton /> : null}
+      {loadingBoards ? <LibrarySkeleton label="Loading boards..." /> : null}
 
-      {!loading && !data.length ? <EmptyLibrary /> : null}
+      {!loadingBoards && !boards.length ? <EmptyLibrary /> : null}
 
-      {!loading && data.length > 0 ? (
-        <section className="rounded-[24px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-teachpad-muted">
-            <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
-              Boards
-            </button>
-            {selectedBoard ? (
-              <>
-                <ChevronRight className="h-4 w-4" />
-                <button type="button" onClick={goToClasses} className={cn("transition hover:text-teachpad-blue", !selectedClass && "text-teachpad-blue")}>
-                  {selectedBoard.name}
-                </button>
-              </>
-            ) : null}
-            {selectedClass ? (
-              <>
-                <ChevronRight className="h-4 w-4" />
-                <span className="text-teachpad-blue">{selectedClass.name}</span>
-              </>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      {!loading && data.length > 0 && !selectedBoard ? (
-        visibleBoards.length ? (
+      {!loadingBoards && boards.length > 0 && !selectedBoard ? (
+        boards.length ? (
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {visibleBoards.map((board) => (
+            {boards.map((board) => (
               <BoardCard
                 key={board.id}
                 board={board}
-                onSelect={() => {
-                  setSelectedBoardId(board.id);
-                  setSelectedClassId(null);
-                  setSearchQuery("");
-                  setFilterMode("all");
-                }}
+                onSelect={() => setSelectedBoardId(board.id)}
               />
             ))}
           </section>
+        ) : null
+      ) : null}
+
+      {selectedBoard && !selectedClass ? (
+        loadingClasses ? (
+          <LibrarySkeleton label="Loading classes..." />
         ) : (
-          <NoMatchState onClear={() => setSearchQuery("")} />
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {classes.length ? (
+              classes.map((classItem) => (
+                <ClassCard
+                  key={classItem.id}
+                  cls={classItem}
+                  onSelect={() => setSelectedClassId(classItem.id)}
+                />
+              ))
+            ) : (
+              <div className="md:col-span-2 xl:col-span-3">
+                <EmptyState title="No classes found" description="Try another search term, or go back to choose another board." compact />
+              </div>
+            )}
+          </section>
         )
       ) : null}
 
-      {!loading && selectedBoard && !selectedClass ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {visibleClasses.length ? (
-            visibleClasses.map((classItem) => (
-              <ClassCard
-                key={classItem.id}
-                cls={classItem}
-                onSelect={() => {
-                  setSelectedClassId(classItem.id);
-                  setSearchQuery("");
-                  setFilterMode("all");
-                }}
-              />
-            ))
-          ) : (
-            <div className="md:col-span-2 xl:col-span-3">
-              <EmptyState title="No classes found" description="Try another search term, or go back to choose another board." compact />
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      {!loading && selectedClass ? (
+      {selectedClass ? (
         <section className="grid gap-4">
           <Button variant="ghost" size="sm" className="w-fit" onClick={goToClasses}>
             <ArrowLeft className="h-4 w-4" /> Back to classes
           </Button>
-          {subjectGroups.length ? (
+          {loadingBooks ? (
+            <LibrarySkeleton label="Loading textbooks..." />
+          ) : subjectGroups.length ? (
             subjectGroups.map((group) => <SubjectShelf key={group.subject} subject={group.subject} books={group.books} />)
           ) : (
             <EmptyState
               title="No subjects found"
-              description={hasActiveFilters ? "Try clearing your search or status filter." : "Subjects will appear here once textbooks are added for this class."}
-              action={
-                hasActiveFilters ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setFilterMode("all");
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                ) : undefined
-              }
+              description="Subjects will appear here once textbooks are added for this class."
             />
           )}
         </section>
@@ -306,10 +283,7 @@ export default function TeacherTextbooksPage() {
   );
 }
 
-function BoardCard({ board, onSelect }: { board: BoardWithData; onSelect: () => void }) {
-  const bookCount = board.classes.reduce((sum, cls) => sum + cls.books.length, 0);
-  const readyCount = board.classes.reduce((sum, cls) => sum + cls.books.filter((book) => book.is_ingested).length, 0);
-
+function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) {
   return (
     <button
       type="button"
@@ -317,35 +291,27 @@ function BoardCard({ board, onSelect }: { board: BoardWithData; onSelect: () => 
       className="group overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white text-left shadow-[0_18px_45px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)]"
     >
       <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <PastelIconTile name="layers" className="h-14 w-14 rounded-[20px]" />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-xl font-black tracking-tight text-teachpad-ink">{board.name}</h2>
-              <Badge className={board.is_active === false ? "border-[#ffd9de] bg-[#ffd9de] text-[#b4233f]" : "border-[#e5ffc6] bg-[#e5ffc6] text-[#3d7b0f]"}>
-                {board.is_active === false ? "Inactive" : "Active"}
-              </Badge>
+            <div className="flex flex-wrap items-start gap-2">
+              <h2 className="min-w-0 text-xl font-black leading-6 tracking-tight text-teachpad-ink">{board.name}</h2>
+              <Badge className="shrink-0 border-[#e5ffc6] bg-[#e5ffc6] text-[#3d7b0f]">Active</Badge>
             </div>
-            <p className="mt-1 text-sm font-semibold text-teachpad-muted">
-              {[board.code, `${board.classes.length} ${board.classes.length === 1 ? "class" : "classes"}`, `${bookCount} ${bookCount === 1 ? "book" : "books"}`]
-                .filter(Boolean)
-                .join(" • ")}
-            </p>
+            <p className="mt-1 text-sm font-semibold text-teachpad-muted">{board.code || "Curriculum board"}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:w-[220px]">
-          <MiniMetric label="Ready" value={readyCount} />
-          <MiniMetric label="Pending" value={Math.max(bookCount - readyCount, 0)} />
-        </div>
-        <div className="flex items-center justify-end text-sm font-black text-teachpad-blue">
-          View classes <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        <div className="mt-auto flex items-center justify-center">
+          <span className="inline-flex items-center gap-2 rounded-xl bg-teachpad-blue px-4 py-2 text-sm font-black text-white shadow-[0_10px_22px_rgba(22,119,255,0.20)] transition group-hover:bg-[#0f63d6]">
+            View classes <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          </span>
         </div>
       </div>
     </button>
   );
 }
 
-function ClassCard({ cls, onSelect }: { cls: ClassItem & { books: Book[] }; onSelect: () => void }) {
+function ClassCard({ cls, onSelect }: { cls: ClassItem; onSelect: () => void }) {
   return (
     <button
       type="button"
@@ -357,7 +323,7 @@ function ClassCard({ cls, onSelect }: { cls: ClassItem & { books: Book[] }; onSe
           <PastelIconTile name="graduationCap" className="h-11 w-11 rounded-2xl" />
           <div className="min-w-0">
             <h3 className="truncate text-base font-black text-teachpad-ink">{cls.name}</h3>
-            <p className="text-xs font-bold text-teachpad-muted">{cls.books.length} {cls.books.length === 1 ? "textbook" : "textbooks"}</p>
+            <p className="text-xs font-bold text-teachpad-muted">Open to load textbooks</p>
           </div>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-teachpad-muted transition group-hover:translate-x-0.5 group-hover:text-teachpad-blue" />
@@ -444,20 +410,6 @@ function EmptyLibrary() {
   );
 }
 
-function NoMatchState({ onClear }: { onClear: () => void }) {
-  return (
-    <EmptyState
-      title="No boards match your search"
-      description="Try another board name or clear the search."
-      action={
-        <Button variant="secondary" onClick={onClear}>
-          Clear search
-        </Button>
-      }
-    />
-  );
-}
-
 function EmptyState({
   title,
   description,
@@ -484,24 +436,22 @@ function EmptyState({
   );
 }
 
-function LibrarySkeleton() {
+function LibrarySkeleton({ label }: { label: string }) {
   return (
-    <div className="grid gap-5">
-      {[1, 2].map((item) => (
-        <div key={item} className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-          <div className="mb-5 flex items-center gap-3">
-            <Skeleton className="h-14 w-14 rounded-[20px]" />
-            <div className="grid flex-1 gap-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Skeleton className="h-44 rounded-[22px]" />
-            <Skeleton className="h-44 rounded-[22px]" />
-          </div>
+    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+      <div className="mb-5 flex items-center gap-3">
+        <Skeleton className="h-14 w-14 rounded-[20px]" />
+        <div className="grid flex-1 gap-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
-      ))}
+      </div>
+      <p className="mb-4 text-sm font-bold text-teachpad-muted">{label}</p>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Skeleton className="h-32 rounded-[22px]" />
+        <Skeleton className="h-32 rounded-[22px]" />
+        <Skeleton className="h-32 rounded-[22px]" />
+      </div>
     </div>
   );
 }

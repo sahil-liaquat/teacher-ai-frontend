@@ -86,6 +86,52 @@ export type WorksheetGeneration = {
   updated_at?: string;
 };
 
+export type PresentationGeneratePayload = {
+  topic: string;
+  audience: "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
+  slide_count: 6 | 8 | 10 | 12;
+  language: "English" | "Hindi" | "Urdu";
+  style: "Clean classroom" | "Visual story" | "Activity based" | "Exam revision";
+  tone: "Simple" | "Conversational" | "Academic" | "Revision focused";
+  detail_level: "Brief" | "Balanced" | "Detailed";
+  visual_density: "Light visuals" | "Balanced visuals" | "Image rich";
+  instructions?: string | null;
+  include_speaker_notes?: boolean;
+  include_activities?: boolean;
+  include_quiz?: boolean;
+  include_images?: boolean;
+  source?: {
+    board_id?: string | null;
+    class_id?: string | null;
+    book_id?: string | null;
+    chapter_names?: string[];
+  };
+};
+
+export type PresentationGeneration = {
+  id: string;
+  user_id?: string;
+  topic: string;
+  audience: string;
+  slide_count: number;
+  language: string;
+  style: string;
+  tone: string;
+  detail_level: string;
+  visual_density: string;
+  include_speaker_notes: boolean;
+  include_activities: boolean;
+  include_quiz: boolean;
+  include_images: boolean;
+  status?: "pending" | "processing" | "completed" | "failed" | null;
+  output_json: any;
+  error_message?: string | null;
+  pptx_file_url?: string | null;
+  pdf_file_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type AdminSummary = {
   total_users: number;
   active_users: number;
@@ -491,6 +537,11 @@ export const backendApi = {
     apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) }),
   worksheets: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<WorksheetGeneration>>(`/generate/worksheet?skip=${skip}&limit=${limit}`),
   worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
+  createPresentation: (payload: PresentationGeneratePayload) =>
+    apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
+  presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),
+  presentation: (id: string) => apiFetch<PresentationGeneration>(`/presentations/${id}`),
+  deletePresentation: (id: string) => apiFetch<void>(`/presentations/${id}`, { method: "DELETE" }),
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
   updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
