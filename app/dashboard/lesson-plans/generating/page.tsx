@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { backendApi, LessonPlan, LessonPlanGeneratePayload } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { backendApi, LessonPlan, LessonPlanGeneratePayload, type PaginatedResponse } from "@/lib/api";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 export default function GeneratingLessonPlanPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const started = useRef(false);
   const [status, setStatus] = useState("Finding textbook content...");
@@ -53,6 +55,17 @@ export default function GeneratingLessonPlanPage() {
       if (!completed) throw new Error("Generation finished without a saved lesson plan.");
       setStatus("Formatting output...");
       clearPendingLessonPlan();
+      queryClient.setQueryData<PaginatedResponse<LessonPlan>>(["lesson-plans-summary"], (current) => {
+        if (!current) return current;
+        const items = [completed, ...current.items.filter((item) => item.id !== completed.id)].slice(0, current.size);
+        return {
+          ...current,
+          items,
+          total: current.total + (current.items.some((item) => item.id === completed.id) ? 0 : 1),
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: ["lesson-plans-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["resources-lesson-plans"] });
       router.replace(`/dashboard/lesson-plans/${completed.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate the lesson plan.");

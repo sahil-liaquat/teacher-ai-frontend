@@ -177,7 +177,7 @@ type ApiRequestInit = RequestInit & {
 
 export function getToken() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem(LEGACY_ACCESS_TOKEN_KEY);
 }
 
 export function setToken(token: string) {
@@ -526,6 +526,8 @@ export const backendApi = {
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
+  updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
+    apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteLessonPlan: (id: string) => apiFetch<void>(`/lesson-plans/${id}`, { method: "DELETE" }),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) }),
@@ -537,6 +539,8 @@ export const backendApi = {
     apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) }),
   worksheets: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<WorksheetGeneration>>(`/generate/worksheet?skip=${skip}&limit=${limit}`),
   worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
+  updateWorksheet: (id: string, payload: Partial<Pick<WorksheetGeneration, "output_json">>) =>
+    apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   createPresentation: (payload: PresentationGeneratePayload) =>
     apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),

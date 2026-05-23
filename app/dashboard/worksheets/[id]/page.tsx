@@ -12,6 +12,7 @@ export default function WorksheetDetailPage() {
   const params = useParams<{ id: string }>();
   const [tab, setTab] = useState("Worksheet");
   const [generation, setGeneration] = useState<any>(null);
+  const [hasUnsavedWorksheetChanges, setHasUnsavedWorksheetChanges] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -36,14 +37,41 @@ export default function WorksheetDetailPage() {
     };
   }, [params.id]);
 
-  async function save() {
-    if (!generation?.output_json) return;
-    saveWorksheetGeneration(generation);
-    toast({ title: "Saved", description: "Worksheet saved locally." });
+  useEffect(() => {
+    if (!generation?.output_json || !hasUnsavedWorksheetChanges) return;
+    const timeout = window.setTimeout(() => {
+      saveEditedWorksheet(generation.output_json, { silent: true }).catch(() => undefined);
+    }, 1200);
+    return () => window.clearTimeout(timeout);
+  }, [generation?.output_json, hasUnsavedWorksheetChanges]);
+
+  function handleWorksheetChange(output: any) {
+    setGeneration((current: any) => current ? { ...current, output_json: output } : current);
+    setHasUnsavedWorksheetChanges(true);
   }
 
-  async function copy() {
-    const output = generation?.output_json;
+  async function saveEditedWorksheet(output = generation?.output_json, options: { silent?: boolean } = {}) {
+    if (!generation || !output) return;
+    const nextGeneration = { ...generation, output_json: output };
+    saveWorksheetGeneration(nextGeneration);
+    try {
+      const saved = await backendApi.updateWorksheet(params.id, { output_json: output });
+      setGeneration(saved);
+      saveWorksheetGeneration(saved);
+      setHasUnsavedWorksheetChanges(false);
+    } catch {
+      setGeneration(nextGeneration);
+    }
+    if (!options.silent) {
+      toast({ title: "Saved", description: "Worksheet saved." });
+    }
+  }
+
+  async function save(output = generation?.output_json) {
+    await saveEditedWorksheet(output);
+  }
+
+  async function copy(output = generation?.output_json) {
     const text = [
       output?.title,
       ...(output?.student_worksheet?.sections || []).flatMap((section: any) => [
@@ -55,8 +83,8 @@ export default function WorksheetDetailPage() {
     toast({ title: "Copied" });
   }
 
-  async function exportPdf() {
-    await downloadWorksheetPdf(generation.output_json);
+  async function exportPdf(output = generation?.output_json) {
+    await downloadWorksheetPdf(output);
     toast({ title: "PDF downloaded", description: "Exported as a proper text PDF." });
   }
 
@@ -80,7 +108,15 @@ export default function WorksheetDetailPage() {
 
   return (
     <div className="print-shell">
-      <WorksheetOutput output={generation.output_json} tab={tab} setTab={setTab} onSave={save} onCopy={copy} onExport={exportPdf} />
+      <WorksheetOutput
+        output={generation.output_json}
+        tab={tab}
+        setTab={setTab}
+        onSave={save}
+        onCopy={copy}
+        onExport={exportPdf}
+        onChange={handleWorksheetChange}
+      />
     </div>
   );
 }
