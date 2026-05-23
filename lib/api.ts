@@ -52,6 +52,12 @@ export type LessonPlan = {
   updated_at?: string;
 };
 
+export type LessonPlanDashboardSummary = {
+  total: number;
+  monthly_total: number;
+  recent: Array<Omit<LessonPlan, "user_id" | "plan">>;
+};
+
 export type LessonPlanGeneratePayload = {
   book_id: string;
   chapter_name: string;
@@ -525,6 +531,7 @@ export const backendApi = {
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
+  lessonPlanSummary: () => apiFetch<LessonPlanDashboardSummary>("/lesson-plans/summary"),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
   updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
     apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
