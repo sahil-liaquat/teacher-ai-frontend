@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { backendApi, LessonPlan, LessonPlanGeneratePayload, type PaginatedResponse } from "@/lib/api";
+import { backendApi, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
+import { saveLessonPlanGeneration } from "@/lib/lesson-plan-storage";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 export default function GeneratingLessonPlanPage() {
@@ -54,14 +55,16 @@ export default function GeneratingLessonPlanPage() {
       const completed: LessonPlan = await backendApi.createLessonPlan(nextPayload);
       if (!completed) throw new Error("Generation finished without a saved lesson plan.");
       setStatus("Formatting output...");
+      saveLessonPlanGeneration(completed);
       clearPendingLessonPlan();
-      queryClient.setQueryData<PaginatedResponse<LessonPlan>>(["lesson-plans-summary"], (current) => {
+      queryClient.setQueryData<LessonPlanDashboardSummary>(["lesson-plans-summary"], (current) => {
         if (!current) return current;
-        const items = [completed, ...current.items.filter((item) => item.id !== completed.id)].slice(0, current.size);
+        const recent = [completed, ...current.recent.filter((item) => item.id !== completed.id)].slice(0, 5);
         return {
           ...current,
-          items,
-          total: current.total + (current.items.some((item) => item.id === completed.id) ? 0 : 1),
+          recent,
+          total: current.total + (current.recent.some((item) => item.id === completed.id) ? 0 : 1),
+          monthly_total: current.monthly_total + (current.recent.some((item) => item.id === completed.id) ? 0 : 1),
         };
       });
       queryClient.invalidateQueries({ queryKey: ["lesson-plans-summary"] });

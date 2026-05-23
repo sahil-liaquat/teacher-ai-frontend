@@ -21,11 +21,12 @@ import {
   TrendingUp
 } from "lucide-react";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser } from "@/lib/api";
+import { LESSON_PLAN_STORAGE_EVENT, listLessonPlanGenerations } from "@/lib/lesson-plan-storage";
 import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const statCards = [
-  { label: "Lesson Plans Created", fallback: "0", sub: "This Month", icon: BookOpen, tone: "pink" },
+  { label: "Lesson Plans Created", fallback: "0", sub: "Total", icon: BookOpen, tone: "pink" },
   { label: "Worksheets Created", fallback: "0", sub: "This Month", icon: FileText, tone: "green" },
   { label: "Saved Resources", fallback: "0", sub: "Total", icon: FolderOpen, tone: "orange" },
   { label: "Monthly Generations", fallback: "0", sub: "Used This Month", icon: ClipboardCheck, tone: "blue" }
@@ -41,9 +42,9 @@ const quickAccess = [
 
 export default function TeacherDashboard() {
   const token = getToken();
-  const plans = useQuery({
+  const lessonSummary = useQuery({
     queryKey: ["lesson-plans-summary"],
-    queryFn: () => backendApi.lessonPlans(0, 50),
+    queryFn: () => backendApi.lessonPlanSummary(),
     enabled: !!token,
     retry: false,
     staleTime: 0,
@@ -53,7 +54,7 @@ export default function TeacherDashboard() {
   });
   const worksheets = useQuery({
     queryKey: ["worksheets-summary"],
-    queryFn: () => backendApi.worksheets(0, 50),
+    queryFn: () => backendApi.worksheets(0, 100),
     enabled: !!token,
     retry: false,
     staleTime: 0,
@@ -63,7 +64,7 @@ export default function TeacherDashboard() {
   });
   const presentations = useQuery({
     queryKey: ["presentations-summary"],
-    queryFn: () => backendApi.presentations(0, 50),
+    queryFn: () => backendApi.presentations(0, 100),
     enabled: !!token,
     retry: false,
     staleTime: 0,
@@ -77,13 +78,31 @@ export default function TeacherDashboard() {
     retry: false,
     staleTime: Infinity
   });
+  const [localLessonPlans, setLocalLessonPlans] = useState<any[]>([]);
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
-  const statsLoading = plans.isLoading || worksheets.isLoading || presentations.isLoading;
-  const statsError = plans.isError && worksheets.isError && presentations.isError;
-  const lessonTotal = plans.data?.total ?? 0;
-  const lessonRecent = plans.data?.items?.length
-    ? plans.data.items.map((item: any) => ({
+
+  useEffect(() => {
+    const userId = currentUser.data?.id;
+    function refreshLocalLessonPlans() {
+      setLocalLessonPlans(listLessonPlanGenerations(userId));
+    }
+    refreshLocalLessonPlans();
+    window.addEventListener(LESSON_PLAN_STORAGE_EVENT, refreshLocalLessonPlans);
+    window.addEventListener("storage", refreshLocalLessonPlans);
+    return () => {
+      window.removeEventListener(LESSON_PLAN_STORAGE_EVENT, refreshLocalLessonPlans);
+      window.removeEventListener("storage", refreshLocalLessonPlans);
+    };
+  }, [currentUser.data?.id]);
+
+  const statsLoading = lessonSummary.isLoading || worksheets.isLoading || presentations.isLoading;
+  const statsError = lessonSummary.isError && worksheets.isError && presentations.isError;
+  const apiLessonRecent = lessonSummary.data?.recent || [];
+  const mergedLessonItems = mergeGenerationItems(apiLessonRecent, localLessonPlans);
+  const lessonTotal = Math.max(lessonSummary.data?.total ?? 0, localLessonPlans.length);
+  const lessonRecent = mergedLessonItems.length
+    ? mergedLessonItems.map((item: any) => ({
         ...item,
         topic: item.topic || item.chapter_name || "Generated Lesson Plan",
         class_name: item.class_name || "8th Grade",
@@ -126,11 +145,11 @@ export default function TeacherDashboard() {
   const worksheetTotal = worksheets.data?.total ?? 0;
   const presentationTotal = presentations.data?.total ?? 0;
   const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal;
-  const lessonMonthlyTotal = countItemsThisMonth(plans.data?.items || []);
+  const lessonMonthlyTotal = Math.max(lessonSummary.data?.monthly_total ?? 0, countItemsThisMonth(localLessonPlans));
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
   const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal;
-  const allItems = [...(plans.data?.items || []), ...worksheetItems, ...presentationItems];
+  const allItems = [...mergedLessonItems, ...worksheetItems, ...presentationItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
@@ -195,11 +214,9 @@ export default function TeacherDashboard() {
           </>
         ) : (
           statCards.map((stat, index) => (
-            index === 0 && plans.isError ? (
+            index === 1 && worksheets.isError ? (
               <StatsErrorCard key={stat.label} />
-            ) : index === 1 && worksheets.isError ? (
-              <StatsErrorCard key={stat.label} />
-            ) : index === 3 && (plans.isError || worksheets.isError || presentations.isError) ? (
+            ) : index === 3 && statsError ? (
               <StatsErrorCard key={stat.label} />
             ) : (
               <StatCard
@@ -207,7 +224,7 @@ export default function TeacherDashboard() {
                 {...stat}
                 value={
                   index === 0
-                    ? formatNumber(lessonMonthlyTotal, stat.fallback)
+                    ? formatNumber(lessonTotal, stat.fallback)
                     : index === 1
                       ? formatNumber(worksheetMonthlyTotal, stat.fallback)
                       : index === 2
@@ -216,7 +233,7 @@ export default function TeacherDashboard() {
                 }
                 numericValue={
                   index === 0
-                    ? lessonMonthlyTotal
+                    ? lessonTotal
                     : index === 1
                       ? worksheetMonthlyTotal
                       : index === 2
@@ -740,7 +757,8 @@ function formatNumber(value: number | undefined, fallback: string) {
 function countItemsThisMonth(items: Array<{ created_at?: string; updated_at?: string }>) {
   const now = new Date();
   return items.filter((item) => {
-    const created = new Date(item.created_at || item.updated_at || 0);
+    const created = parseItemDate(item);
+    if (!created) return false;
     return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
   }).length;
 }
@@ -757,7 +775,8 @@ function getDailyGenerationBars(items: Array<{ created_at?: string; updated_at?:
   return Array.from({ length: daysInMonth }, (_, index) => {
     const dayOfMonth = index + 1;
     const value = items.filter((item) => {
-      const created = new Date(item.created_at || item.updated_at || 0);
+      const created = parseItemDate(item);
+      if (!created) return false;
       return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
     }).length;
     return { day: dayOfMonth, label: `${monthLabel} ${dayOfMonth}`, value };
@@ -802,7 +821,8 @@ function getLast6DaysBars(items: Array<{ created_at?: string; updated_at?: strin
   return Array.from({ length: 6 }, (_, index) => {
     const dayOfMonth = today - (5 - index);
     const value = items.filter((item) => {
-      const created = new Date(item.created_at || item.updated_at || 0);
+      const created = parseItemDate(item);
+      if (!created) return false;
       return created.getFullYear() === year && created.getMonth() === month && created.getDate() === dayOfMonth;
     }).length;
     return { day: dayOfMonth, label: `M${index + 1}`, value };
@@ -838,10 +858,30 @@ function getLast7DaysBars(items: Array<{ created_at?: string; updated_at?: strin
     }
 
     const value = items.filter((item) => {
-      const created = new Date(item.created_at || item.updated_at || 0);
+      const created = parseItemDate(item);
+      if (!created) return false;
       return created.getFullYear() === labelYear && created.getMonth() === labelMonth && created.getDate() === labelDay;
     }).length;
 
     return { day: labelDay, label: `${labelDay}`, value };
   });
+}
+
+function parseItemDate(item: { created_at?: string; updated_at?: string }) {
+  const raw = item.created_at || item.updated_at;
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function mergeGenerationItems<T extends { id?: string; created_at?: string; updated_at?: string }>(primary: T[], fallback: T[]) {
+  const seen = new Set<string>();
+  return [...primary, ...fallback]
+    .filter((item) => {
+      if (!item.id) return true;
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    })
+    .sort((a, b) => new Date(b.created_at || b.updated_at || 0).getTime() - new Date(a.created_at || a.updated_at || 0).getTime());
 }
