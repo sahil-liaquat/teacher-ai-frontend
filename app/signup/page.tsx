@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote, School, Sparkles, UserRound } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail, Quote, School, Sparkles, UserRound } from "lucide-react";
 import { signup } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -41,27 +42,17 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(520px,0.76fr)_minmax(0,0.94fr)] lg:gap-4 lg:overflow-hidden">
-      <section className="relative grid min-h-[calc(100vh-2rem)] place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
+    <main className="min-h-screen w-full max-w-full overflow-hidden bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(520px,0.76fr)_minmax(0,0.94fr)] lg:gap-4">
+      <section className="relative grid min-h-[calc(100vh-2rem)] w-full max-w-full place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
         <AuthDecorations />
-        <div className="absolute left-5 right-5 top-5 z-20 flex items-center justify-between sm:left-8 sm:right-8">
+        <div className="absolute left-5 right-5 top-5 z-20 flex min-w-0 items-center justify-between gap-3 sm:left-8 sm:right-8">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
             <TeachPadWordmark />
           </Link>
-          <Link
-            href="/"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Home
-          </Link>
         </div>
 
-        <div className="relative z-10 mt-16 w-full max-w-[460px] lg:mt-12">
+        <div className="relative z-10 mt-10 w-full max-w-[78vw] sm:max-w-[460px] lg:mt-0">
           <div className="mb-6">
-            <div className="mb-5 inline-grid h-12 w-12 place-items-center rounded-lg bg-blue-50 text-blue-600">
-              {confirmation ? <MailCheck className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
-            </div>
             <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950">
               {confirmation ? "Confirm your email" : "Create account"}
             </h1>
@@ -79,9 +70,6 @@ export default function SignupPage() {
               <Link href="/login" className="mt-5 block">
                 <AuthButton type="button">
                   Go to login
-                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/20">
-                    <ArrowRight className="h-5 w-5" />
-                  </span>
                 </AuthButton>
               </Link>
             </div>
@@ -124,9 +112,6 @@ export default function SignupPage() {
                 />
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
-                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/20">
-                    <ArrowRight className="h-5 w-5" />
-                  </span>
                 </AuthButton>
               </form>
 
@@ -138,7 +123,13 @@ export default function SignupPage() {
         </div>
       </section>
 
-      <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_82%_12%,#eef6ff_0,transparent_32%),radial-gradient(circle_at_12%_88%,#f8fbff_0,transparent_38%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
+      <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_82%_12%,#eef6ff_0,transparent_32%),radial-gradient(circle_at_16%_86%,#e7fff4_0,transparent_40%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
+        <img
+          src="/ai-tools/landscape-scene.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-1/2 w-[820px] -translate-x-1/2 select-none object-contain opacity-95"
+        />
         <div className="flex items-center justify-end">
           <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-600 shadow-[0_12px_26px_rgba(37,99,235,0.08)]">
             <Sparkles className="h-4 w-4" />
@@ -146,12 +137,12 @@ export default function SignupPage() {
           </span>
         </div>
 
-        <div className="relative z-10 mx-auto flex max-w-2xl flex-1 flex-col justify-center">
+        <div className="relative z-10 mx-auto flex max-w-2xl flex-1 -translate-y-20 flex-col justify-center">
           <div className="mb-8 inline-grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-blue-600 shadow-[0_16px_34px_rgba(37,99,235,0.12)]">
             <Quote className="h-8 w-8" />
           </div>
           <blockquote className="text-5xl font-black leading-[1.08] tracking-tight text-slate-950">
-            “Every great classroom starts with a teacher who believes the next question matters.”
+            “Every great classroom starts with a teacher who believes the <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">next question matters.</span>”
           </blockquote>
           <p className="mt-6 max-w-lg text-base font-semibold leading-7 text-slate-600">
             Create your TeachPad workspace and turn planning time into teaching momentum.
@@ -164,9 +155,14 @@ export default function SignupPage() {
 
 function TeachPadWordmark() {
   return (
-    <span className="text-2xl font-black tracking-tight text-slate-950 lg:text-3xl">
-      teach<span className="text-blue-600">pad</span><span className="text-sm lg:text-base">.in</span>
-    </span>
+    <Image
+      src="/assets/teachpad-logo.png"
+      alt="TeachPad.in"
+      width={1385}
+      height={279}
+      className="h-auto w-36 lg:w-44"
+      priority
+    />
   );
 }
 
@@ -219,9 +215,14 @@ function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButto
 function AuthDecorations() {
   return (
     <>
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(226,232,240,0.42)_1px,transparent_1px),linear-gradient(180deg,rgba(226,232,240,0.42)_1px,transparent_1px)] bg-[size:44px_44px]" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-50 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50 to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(219,239,255,0.78)_0,transparent_32%),radial-gradient(circle_at_86%_84%,rgba(220,255,238,0.72)_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]" />
+      <img
+        src="/ai-tools/tree-scene.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-8 left-1/2 w-[420px] max-w-[135%] -translate-x-1/2 select-none object-contain opacity-65 sm:w-[560px] lg:hidden"
+      />
+      <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-white via-white/80 to-transparent" />
     </>
   );
 }

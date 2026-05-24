@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type GenerationKind = "lesson-plan" | "worksheet" | "presentation";
+type GenerationKind = "lesson-plan" | "worksheet" | "presentation" | "live-quiz";
 type GenerationState = "loading" | "error";
 
 export function GenerationLoadingScreen({
@@ -27,7 +27,9 @@ export function GenerationLoadingScreen({
       ? ["Reading your textbook...", "Finding key concepts...", "Building your worksheet...", "Preparing teacher-ready content..."]
       : type === "presentation"
         ? ["Reading your textbook...", "Planning the slide flow...", "Writing clear classroom slides...", "Preparing teacher-ready content..."]
-        : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
+        : type === "live-quiz"
+          ? ["Reading your textbook...", "Preparing quiz questions...", "Adding marks and answers...", "Getting your live quiz ready..."]
+          : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
     [type]
   );
   const [messageIndex, setMessageIndex] = useState(0);
@@ -48,7 +50,7 @@ export function GenerationLoadingScreen({
         {state === "error" ? (
           <div className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 px-5 py-10 text-center">
             <div className="relative h-[200px] w-[280px] sm:h-[240px] sm:w-[340px]">
-              <TrailLoadingLoader />
+              <BookLoadingLoader />
             </div>
             <p className="max-w-[520px] text-base font-semibold leading-7 text-slate-600">
               {errorMessage || "Something interrupted the request. You can retry with the same inputs or go back and adjust them."}
@@ -70,7 +72,7 @@ export function GenerationLoadingScreen({
           <div className="relative mx-auto min-h-[480px] max-w-[800px] px-5 py-8 sm:px-8 sm:py-10">
             <div className="relative flex flex-col items-center justify-center">
               <div className="relative h-[220px] w-full max-w-[320px] sm:h-[260px] sm:max-w-[380px]">
-                <TrailLoadingLoader />
+                <BookLoadingLoader />
               </div>
 
               <div className="mt-8 text-center">
@@ -114,14 +116,17 @@ function AnimatedDotsText({ text }: { text: string }) {
   );
 }
 
-function TrailLoadingLoader() {
+function BookLoadingLoader() {
   return (
     <div className="relative flex h-full w-full items-center justify-center">
       <div className="absolute inset-8 rounded-full bg-sky-200/25 blur-3xl" />
-      <img
-        src="/assets/illustrations/trail-loading.svg"
-        alt=""
+      <video
+        src="/assets/illustrations/book-loader.webm"
         aria-hidden="true"
+        autoPlay
+        loop
+        muted
+        playsInline
         className="relative h-full w-full select-none object-contain"
       />
     </div>

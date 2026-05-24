@@ -1,4 +1,6 @@
 import type { LucideIcon } from "lucide-react";
+import { MarketingFooter } from "@/components/marketing-footer";
+import { MarketingHeader } from "@/components/marketing-header";
 import {
   ArrowRight,
   BookOpen,
@@ -85,8 +87,8 @@ const schoolBenefits = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-white text-[#07111f]">
-      <Navbar />
+    <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-white text-[#07111f]">
+      <MarketingHeader />
       <HeroSection />
       <ToolsSection />
       <TextbookSection />
@@ -95,52 +97,31 @@ export default function HomePage() {
       <ForSchoolsSection />
       <ResultsSection />
       <FinalCtaSection />
-      <Footer />
+      <MarketingFooter />
     </main>
-  );
-}
-
-function Navbar() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/86 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="teachpad.in home" className="shrink-0">
-          <TeachPadLogo />
-        </Link>
-
-        <div className="flex items-center gap-3 sm:gap-4">
-          <Link href="/login" className="hidden text-sm font-semibold text-slate-800 transition hover:text-blue-600 sm:inline">
-            Login
-          </Link>
-          <PrimaryLink href="/signup" size="sm">
-            Get Started Free
-          </PrimaryLink>
-        </div>
-      </div>
-    </header>
   );
 }
 
 function HeroSection() {
   return (
     <section className="relative bg-[radial-gradient(circle_at_16%_10%,#eef6ff_0,transparent_30%),radial-gradient(circle_at_90%_12%,#f5fbff_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 pt-10 sm:px-6 md:pb-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-24 lg:pt-16">
-        <div className="relative z-10 max-w-2xl">
-          <h1 className="text-5xl font-black leading-[1.02] tracking-tight text-slate-950 sm:text-6xl lg:text-[76px]">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-5 pb-12 pt-9 sm:px-6 md:pb-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-24 lg:pt-16">
+        <div className="relative z-10 w-full max-w-[350px] sm:max-w-2xl">
+          <h1 className="max-w-full text-[38px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[42px] sm:text-6xl lg:text-[76px]">
             Your textbook, <span className="text-blue-600">powered by AI.</span>
             <br />
             Your classroom, <span className="text-blue-600">powered by you.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
+          <p className="mt-5 max-w-full text-base leading-7 text-slate-600 sm:mt-6 sm:max-w-xl sm:text-lg sm:leading-8">
             Create lesson plans, worksheets, presentations, and live quizzes in minutes - all grounded in your textbooks and
             aligned to your curriculum.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
             <Link
               href="#features"
-              className="inline-flex h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
+              className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
             >
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-600">
                 <Play className="ml-0.5 h-4 w-4 fill-current" />
@@ -169,19 +150,19 @@ function HeroSection() {
 
 function ToolsSection() {
   return (
-    <section id="features" className="mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8 lg:py-24">
+    <section id="features" className="mx-auto w-full max-w-7xl overflow-hidden px-5 py-14 sm:px-6 lg:px-8 lg:py-24">
       <SectionHeading eyebrow="All-in-one AI tools" title="Powerful AI tools for every teaching need" />
-      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-10 grid w-full max-w-[350px] min-w-0 gap-5 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
         {tools.map((tool) => (
           <article
             key={tool.title}
-            className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_28px_70px_rgba(30,82,153,0.12)]"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_28px_70px_rgba(30,82,153,0.12)] sm:p-6"
           >
-            <div className="grid h-[230px] place-items-center overflow-visible">
-              <Image src={tool.image} alt="" width={380} height={380} className="h-60 w-60 object-contain transition duration-300 group-hover:scale-105" />
+            <div className="grid h-[180px] place-items-center overflow-visible sm:h-[230px]">
+              <Image src={tool.image} alt="" width={380} height={380} className="h-44 w-44 object-contain transition duration-300 group-hover:scale-105 sm:h-60 sm:w-60" />
             </div>
-            <h3 className="mt-5 text-xl font-black text-slate-950">{tool.title}</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{tool.description}</p>
+            <h3 className="mt-4 text-xl font-black text-slate-950 sm:mt-5">{tool.title}</h3>
+          <p className="mt-3 max-w-full text-sm leading-6 text-slate-600">{tool.description}</p>
           </article>
         ))}
       </div>
@@ -192,10 +173,10 @@ function ToolsSection() {
 function TextbookSection() {
   return (
     <section id="textbook-grounded" className="bg-gradient-to-b from-white to-[#f7fbff]">
-      <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-16">
+      <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-16">
         <div>
           <Badge icon={BookOpen}>Textbook grounded</Badge>
-          <h2 className="mt-5 text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
+          <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
             Textbook grounded.
             <br />
             Always curriculum <span className="text-blue-600">aligned.</span>
@@ -216,7 +197,7 @@ function TextbookSection() {
           </ul>
         </div>
 
-        <div className="relative -mr-4 lg:-mr-12">
+        <div className="relative mx-auto w-full max-w-[520px] lg:-mr-12 lg:max-w-none">
           <Image
             src="/landing/textbook-grounded-v2.png"
             alt="Open textbook with textbook analysis checklist"
@@ -233,14 +214,14 @@ function TextbookSection() {
 function HowItWorksSection() {
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8 lg:py-16">
         <SectionHeading eyebrow="How it works" title="From idea to impact in 3 simple steps" />
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {steps.map((step, index) => (
             <article key={step.title} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:border-blue-100 hover:shadow-[0_28px_70px_rgba(30,82,153,0.12)]">
               <div className="flex items-start justify-between gap-4">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-600 text-sm font-black text-white">{index + 1}</span>
-                <Image src={step.image} alt="" width={220} height={220} className="h-36 w-36 object-contain transition duration-300 group-hover:scale-105 lg:h-44 lg:w-44" />
+                <Image src={step.image} alt="" width={220} height={220} className="h-28 w-28 object-contain transition duration-300 group-hover:scale-105 sm:h-36 sm:w-36 lg:h-44 lg:w-44" />
               </div>
               <div className="mt-5 flex items-center gap-2 text-blue-600">
                 <step.Icon className="h-5 w-5" />
@@ -258,7 +239,7 @@ function HowItWorksSection() {
 function BeautifulContentSection() {
   return (
     <section className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
-      <div className="grid items-center gap-8 overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:px-10">
+      <div className="grid items-center gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:gap-8 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:px-10">
         <div className="-mx-5 -mb-8 sm:-mx-8 lg:-ml-10 lg:-mr-2">
           <Image
             src="/landing/lesson-ui-3d-v2.png"
@@ -271,7 +252,7 @@ function BeautifulContentSection() {
 
         <div>
           <Badge icon={Sparkles}>Beautiful outputs</Badge>
-          <h2 className="mt-5 text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
+          <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
             Beautiful content.
             <br />
             Every time.
@@ -366,10 +347,10 @@ function FinalCtaSection() {
     <section className="mx-auto max-w-7xl px-5 pb-12 pt-8 sm:px-6 lg:px-8">
       <div className="grid items-center gap-8 rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f5fbff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:grid-cols-[1fr_0.9fr] md:p-10 lg:p-12">
         <div>
-          <h2 className="max-w-2xl text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
+          <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
             Join thousands of teachers teaching brighter with TeachPad.
           </h2>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
             <SecondaryLink href="/signup">Book a Demo</SecondaryLink>
           </div>
@@ -396,35 +377,12 @@ function FinalCtaSection() {
   );
 }
 
-function Footer() {
-  return (
-    <footer id="resources" className="bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-center px-5 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <Image
-          src="/assets/teachpad-footer-logo-cropped.png"
-          alt="TeachPad"
-          width={1261}
-          height={252}
-          className="h-auto w-full max-w-6xl"
-          priority={false}
-        />
-      </div>
-    </footer>
-  );
-}
-
-function TeachPadLogo() {
-  return (
-    <Image src="/assets/teachpad-logo.png" alt="TeachPad.in" width={1385} height={279} className="h-auto w-36 sm:w-44" priority />
-  );
-}
-
 function PrimaryLink({ href, children, size = "md" }: { href: string; children: React.ReactNode; size?: "sm" | "md" }) {
   return (
     <Link
       href={href}
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 ${
-        size === "sm" ? "h-11 px-5 text-sm" : "h-12 px-6 text-sm"
+        size === "sm" ? "h-11 px-5 text-sm" : "h-12 px-5 text-sm sm:px-6"
       }`}
     >
       {children}
@@ -437,7 +395,7 @@ function SecondaryLink({ href, children }: { href: string; children: React.React
   return (
     <Link
       href={href}
-      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 text-sm font-black text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
+      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 sm:px-6"
     >
       <CirclePlay className="h-4 w-4" />
       {children}
@@ -464,9 +422,9 @@ function SectionHeading({
   align?: "center" | "left";
 }) {
   return (
-    <div className={align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-3xl"}>
+    <div className={align === "center" ? "mx-auto max-w-[350px] text-center sm:max-w-3xl" : "max-w-[350px] sm:max-w-3xl"}>
       <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">{title}</h2>
+      <h2 className="mt-3 text-2xl font-black leading-tight tracking-tight text-slate-950 min-[390px]:text-3xl sm:text-4xl lg:text-5xl">{title}</h2>
     </div>
   );
 }

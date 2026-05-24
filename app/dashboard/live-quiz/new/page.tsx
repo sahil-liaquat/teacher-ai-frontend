@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, LoaderCircle, RadioTower, Settings2, Sparkles, Users } from "lucide-react";
+import { BookOpen, ClipboardList, RadioTower, Settings2, Sparkles, Users } from "lucide-react";
+import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,13 +35,10 @@ export default function CreateLiveQuizPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto grid min-h-[70vh] max-w-[720px] place-items-center">
-        <div className="w-full rounded-[24px] border border-[#ffe9a8] bg-white p-8 text-center shadow-[0_18px_48px_var(--teachpad-shadowCard)]">
-          <LoaderCircle className="mx-auto h-12 w-12 animate-spin text-[#d99a00]" />
-          <h1 className="mt-5 text-2xl font-black text-teachpad-ink">Creating your live quiz from the selected textbook...</h1>
-          <p className="mt-2 text-sm font-semibold text-teachpad-muted">Preparing questions, marks, and live sharing settings.</p>
-        </div>
-      </div>
+      <GenerationLoadingScreen
+        type="live-quiz"
+        status="Creating your live quiz from the selected textbook"
+      />
     );
   }
 

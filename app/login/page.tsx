@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, login, requestPasswordReset } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ export default function LoginPage() {
       queryClient.clear();
       const user = await login(values.email, values.password);
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
-      toast({ title: "Welcome back", description: user.name });
+      toast({ title: "Welcome!", description: user.name });
       const next = new URLSearchParams(window.location.search).get("next");
       const destination = next?.startsWith("/") ? next : (user.role === "admin" ? "/admin" : "/dashboard");
       router.replace(destination);
@@ -77,56 +78,48 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(0,0.95fr)_minmax(520px,0.75fr)] lg:gap-4 lg:overflow-hidden">
-      <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_18%_14%,#e9f4ff_0,transparent_34%),radial-gradient(circle_at_86%_82%,#f8fbff_0,transparent_38%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
+    <main className="min-h-screen w-full max-w-full overflow-hidden bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(0,0.95fr)_minmax(520px,0.75fr)] lg:gap-4">
+      <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_18%_14%,#e9f4ff_0,transparent_34%),radial-gradient(circle_at_86%_82%,#e7fff4_0,transparent_38%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
+        <img
+          src="/ai-tools/tree-scene.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 right-[-6%] w-[620px] select-none object-contain opacity-95"
+        />
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
             <TeachPadWordmark />
           </Link>
-          <Link
-            href="/"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-600"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Home
-          </Link>
         </div>
 
-        <div className="relative z-10 mx-auto flex max-w-2xl flex-1 flex-col justify-center">
+        <div className="relative z-10 mx-auto flex max-w-2xl flex-1 -translate-y-20 flex-col justify-center">
           <div className="mb-8 inline-grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-blue-600 shadow-[0_16px_34px_rgba(37,99,235,0.12)]">
             <Quote className="h-8 w-8" />
           </div>
           <blockquote className="text-5xl font-black leading-[1.08] tracking-tight text-slate-950">
-            “Teaching is the art of turning curiosity into confidence.”
+            “<span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">Teaching</span> is the art of turning curiosity into confidence.”
           </blockquote>
           <p className="mt-6 max-w-lg text-base font-semibold leading-7 text-slate-600">
-            Welcome back to the workspace built to make every class easier to plan and brighter to teach.
+            Welcome to the workspace built to make every class easier to plan and brighter to teach.
           </p>
         </div>
       </section>
 
-      <section className="relative grid min-h-[calc(100vh-2rem)] place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
+      <section className="relative grid min-h-[calc(100vh-2rem)] w-full max-w-full place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
         <AuthDecorations />
-        <div className="absolute left-5 right-5 top-5 z-20 flex items-center justify-between sm:left-8 sm:right-8">
+        <div className="absolute left-5 right-5 top-5 z-20 flex min-w-0 items-center justify-between gap-3 sm:left-8 sm:right-8">
           <Link href="/" aria-label="TeachPad home" className="inline-flex lg:hidden">
             <TeachPadWordmark compact />
           </Link>
-          <Link
-            href="/"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600 lg:hidden"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Home
-          </Link>
         </div>
 
-        <div className="relative z-10 mt-16 w-full max-w-[460px] lg:mt-0">
+        <div className="relative z-10 mt-16 w-full max-w-[78vw] sm:max-w-[460px] lg:mt-0">
           <div className="mb-7">
             <div className="mb-5 inline-grid h-12 w-12 place-items-center rounded-lg bg-blue-50 text-blue-600">
               {mode === "forgot" && resetSentEmail ? <MailCheck className="h-6 w-6" /> : <LockKeyhole className="h-6 w-6" />}
             </div>
             <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950">
-              {mode === "login" ? "Welcome back" : resetSentEmail ? "Check your inbox" : "Reset password"}
+              {mode === "login" ? "Welcome!" : resetSentEmail ? "Check your inbox" : "Reset password"}
             </h1>
             <p className="mt-3 text-base font-semibold leading-7 text-slate-600">
               {mode === "login"
@@ -174,9 +167,6 @@ export default function LoginPage() {
                 </button>
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
-                  <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-white/20">
-                    <ArrowRight className="h-5 w-5" />
-                  </span>
                 </AuthButton>
               </form>
 
@@ -217,9 +207,6 @@ export default function LoginPage() {
               />
               <AuthButton type="submit" disabled={forgotPasswordForm.formState.isSubmitting}>
                 {forgotPasswordForm.formState.isSubmitting ? "Sending..." : "Send reset link"}
-                <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-white/20">
-                  <ArrowRight className="h-5 w-5" />
-                </span>
               </AuthButton>
             </form>
           )}
@@ -231,9 +218,14 @@ export default function LoginPage() {
 
 function TeachPadWordmark({ compact = false }: { compact?: boolean }) {
   return (
-    <span className={cn("font-black tracking-tight text-slate-950", compact ? "text-2xl" : "text-3xl")}>
-      teach<span className="text-blue-600">pad</span><span className={compact ? "text-sm" : "text-base"}>.in</span>
-    </span>
+    <Image
+      src="/assets/teachpad-logo.png"
+      alt="TeachPad.in"
+      width={1385}
+      height={279}
+      className={cn("h-auto", compact ? "w-36" : "w-44")}
+      priority
+    />
   );
 }
 
@@ -286,9 +278,14 @@ function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButto
 function AuthDecorations() {
   return (
     <>
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(226,232,240,0.42)_1px,transparent_1px),linear-gradient(180deg,rgba(226,232,240,0.42)_1px,transparent_1px)] bg-[size:44px_44px]" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-50 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50 to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(219,239,255,0.78)_0,transparent_32%),radial-gradient(circle_at_86%_84%,rgba(220,255,238,0.72)_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]" />
+      <img
+        src="/ai-tools/landscape-scene.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-8 left-1/2 w-[540px] max-w-[145%] -translate-x-1/2 select-none object-contain opacity-70 sm:w-[680px] lg:hidden"
+      />
+      <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-white via-white/80 to-transparent" />
     </>
   );
 }

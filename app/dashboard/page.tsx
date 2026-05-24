@@ -25,10 +25,10 @@ import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const statCards = [
-  { label: "Lesson Plans Created", fallback: "0", sub: "Total", icon: BookOpen, tone: "pink" },
+  { label: "Lesson Plans Created", fallback: "0", sub: "Total", icon: BookOpen, tone: "blue" },
   { label: "Worksheets Created", fallback: "0", sub: "This Month", icon: FileText, tone: "green" },
   { label: "Saved Resources", fallback: "0", sub: "Total", icon: FolderOpen, tone: "orange" },
-  { label: "Monthly Generations", fallback: "0", sub: "Used This Month", icon: ClipboardCheck, tone: "blue" }
+  { label: "Monthly Generations", fallback: "0", sub: "Used This Month", icon: ClipboardCheck, tone: "pink" }
 ];
 
 const quickAccess = [
