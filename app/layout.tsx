@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Teacher AI Tools",
+  title: "TeachPad",
   description: "Textbook-grounded lesson plans and worksheets for teachers"
 };
 

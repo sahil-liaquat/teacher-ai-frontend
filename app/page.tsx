@@ -88,7 +88,7 @@ const schoolBenefits = [
 export default function HomePage() {
   return (
     <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-white text-[#07111f]">
-      <MarketingHeader />
+      <MarketingHeader active="home" />
       <HeroSection />
       <ToolsSection />
       <TextbookSection />
@@ -213,7 +213,7 @@ function TextbookSection() {
 
 function HowItWorksSection() {
   return (
-    <section className="bg-white">
+    <section id="how-it-works" className="bg-white">
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8 lg:py-16">
         <SectionHeading eyebrow="How it works" title="From idea to impact in 3 simple steps" />
         <div className="mt-10 grid gap-5 lg:grid-cols-3">

@@ -87,7 +87,7 @@ const featureStrip = [
 export default function AiToolsPage() {
   return (
     <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-white text-[#111827]">
-      <MarketingHeader />
+      <MarketingHeader active="ai-tools" />
       <HeroSection />
       <ToolsGrid />
       <FeatureStrip />
