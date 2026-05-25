@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -47,6 +47,14 @@ export function MarketingHeader({ active }: { active?: string }) {
         <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-3">
           <Link href="/login" className="inline-flex h-10 shrink-0 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition hover:border-blue-200 hover:text-blue-600 sm:h-11 sm:px-4 sm:text-sm">
             Log In
+          </Link>
+          <Link
+            href="/signup"
+            className="hidden h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-xs font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:bg-blue-700 min-[390px]:inline-flex sm:h-11 sm:px-5 sm:text-sm"
+          >
+            <span className="sm:hidden">Sign Up</span>
+            <span className="hidden sm:inline">Sign Up Free</span>
+            <ArrowRight className="hidden h-4 w-4 sm:block" />
           </Link>
           <button
             type="button"

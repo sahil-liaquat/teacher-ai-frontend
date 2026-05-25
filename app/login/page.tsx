@@ -171,7 +171,7 @@ export default function LoginPage() {
               </form>
 
               <p className="mt-6 text-center text-sm font-semibold text-slate-600">
-                New accounts are temporarily paused.
+                New here? <Link className="font-black text-blue-600 transition hover:text-blue-700" href="/signup">Create an account</Link>
               </p>
             </>
           ) : resetSentEmail ? (

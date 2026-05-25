@@ -250,7 +250,7 @@ function BoardCard({ board }: { board: (typeof boards)[number] }) {
           ) : (
             <Link
               key={action}
-              href={action === "Request Access" ? "/login" : "/dashboard/textbooks"}
+              href={action === "Request Access" ? "/signup" : "/dashboard/textbooks"}
               className={`inline-flex h-11 flex-[1.35] items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 text-xs font-black transition sm:text-sm ${
                 action === "Request Access" ? "border border-blue-600 bg-white text-blue-600 hover:bg-blue-50" : "bg-blue-600 text-white shadow-[0_10px_20px_rgba(37,99,235,0.2)] hover:bg-blue-700"
               }`}
@@ -310,8 +310,8 @@ function CtaBand() {
           Join thousands of teachers who trust TeachPad for curriculum-aligned, textbook-grounded teaching.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700">
-            Log In
+          <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700">
+            Get Started Free
           </Link>
           <Link href="/#features" className="inline-flex h-12 items-center justify-center rounded-full border border-blue-200 bg-white px-6 text-sm font-black text-blue-600 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-300">
             Explore Features

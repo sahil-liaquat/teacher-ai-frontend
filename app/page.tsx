@@ -118,7 +118,7 @@ function HeroSection() {
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-            <PrimaryLink href="/login">Log In</PrimaryLink>
+            <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
             <Link
               href="#features"
               className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
@@ -295,7 +295,7 @@ function ForSchoolsSection() {
             Bring the power of TeachPad to your entire school. Simplify planning. Ensure consistency. Improve outcomes.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <PrimaryLink href="/login">Log In</PrimaryLink>
+            <PrimaryLink href="/signup">Book a Demo for Your School</PrimaryLink>
           </div>
         </div>
 
@@ -351,8 +351,8 @@ function FinalCtaSection() {
             Join thousands of teachers teaching brighter with TeachPad.
           </h2>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-            <PrimaryLink href="/login">Log In</PrimaryLink>
-            <SecondaryLink href="/#features">Explore Features</SecondaryLink>
+            <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
+            <SecondaryLink href="/signup">Book a Demo</SecondaryLink>
           </div>
           <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
             <span className="flex items-center gap-2">
