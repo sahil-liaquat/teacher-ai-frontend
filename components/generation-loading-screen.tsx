@@ -44,7 +44,7 @@ export function GenerationLoadingScreen({
   }, [state, status]);
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-gradient-to-br from-sky-50/50 via-white/80 to-blue-50/50 px-4 py-6 sm:px-5 lg:px-8">
+    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-white px-4 py-6 sm:px-5 lg:px-8">
       <section className="relative w-full overflow-hidden">
 
         {state === "error" ? (
@@ -71,7 +71,7 @@ export function GenerationLoadingScreen({
         ) : (
           <div className="relative mx-auto min-h-[480px] max-w-[800px] px-5 py-8 sm:px-8 sm:py-10">
             <div className="relative flex flex-col items-center justify-center">
-              <div className="relative h-[220px] w-full max-w-[320px] sm:h-[260px] sm:max-w-[380px]">
+              <div className="relative h-[130px] w-full max-w-[200px] sm:h-[165px] sm:max-w-[250px]">
                 <BookLoadingLoader />
               </div>
 
@@ -96,22 +96,9 @@ export function GenerationLoadingScreen({
 }
 
 function AnimatedDotsText({ text }: { text: string }) {
-  const [dots, setDots] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setDots((d) => (d + 1) % 4);
-    }, 500);
-    return () => window.clearInterval(timer);
-  }, []);
-
   return (
     <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
       {text}
-      <span className="inline-block w-6">
-        {".".repeat(dots)}
-        {" ".repeat(3 - dots)}
-      </span>
     </h2>
   );
 }
@@ -119,7 +106,6 @@ function AnimatedDotsText({ text }: { text: string }) {
 function BookLoadingLoader() {
   return (
     <div className="relative flex h-full w-full items-center justify-center">
-      <div className="absolute inset-8 rounded-full bg-sky-200/25 blur-3xl" />
       <video
         src="/assets/illustrations/book-loader.webm"
         aria-hidden="true"

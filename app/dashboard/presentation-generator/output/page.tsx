@@ -127,24 +127,36 @@ export default function PresentationOutputPage() {
     }
   }
 
-  function exportPdf() {
+  async function exportPdf() {
     const currentDeck = deck;
     if (!currentDeck) return;
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
-    if (!printWindow) {
-      toast({ title: "Popup blocked", description: "Allow popups to export the PDF." });
+    if (currentDeck.pdfFileUrl) {
+      downloadFromUrl(currentDeck.pdfFileUrl, `${slugify(currentDeck.topic)}.pdf`);
       return;
     }
-    printWindow.document.write(buildPptHtml(currentDeck));
-    printWindow.document.close();
-    printWindow.focus();
-    window.setTimeout(() => printWindow.print(), 250);
+    try {
+      await downloadPdf(currentDeck);
+      toast({ title: "PDF downloaded", description: "Exported as a slide-perfect PDF." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not export PDF.";
+      toast({ title: "PDF export failed", description: message });
+    }
   }
 
-  function exportPpt() {
+  async function exportPpt() {
     const currentDeck = deck;
     if (!currentDeck) return;
-    downloadTextFile(`${slugify(currentDeck.topic)}.ppt`, buildPptHtml(currentDeck), "application/vnd.ms-powerpoint;charset=utf-8");
+    if (currentDeck.pptxFileUrl) {
+      downloadFromUrl(currentDeck.pptxFileUrl, `${slugify(currentDeck.topic)}.pptx`);
+      return;
+    }
+    try {
+      await downloadPptx(currentDeck);
+      toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not export PPT.";
+      toast({ title: "PPT export failed", description: message });
+    }
   }
 
   if (loading) {
@@ -180,16 +192,14 @@ export default function PresentationOutputPage() {
             onExportPdf={exportPdf}
             onExportPpt={exportPpt}
           />
-          <section className="grid min-h-0 min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_180px] lg:gap-3">
+          <section className="grid min-h-0 min-w-0 flex-1 gap-2 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-3">
             <div className="flex min-w-0 flex-col gap-2 rounded-[18px] border border-white/70 bg-white/55 p-2 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:gap-3 sm:rounded-[22px] sm:p-5">
               <div className="grid min-w-0 flex-1 place-items-center">
                 <EditableSlide slide={active} onChange={updateActiveSlide} />
               </div>
-              <SlideControls
-                activeSlide={activeSlide}
-                slideCount={slideCount}
-                onPrevious={() => goToSlide(activeSlide - 1)}
-                onNext={() => goToSlide(activeSlide + 1)}
+              <SlideImageSelector
+                slide={active}
+                onSelect={(index) => updateActiveSlide({ selectedImageIndex: index })}
               />
             </div>
             <SlidePreviewStrip
@@ -202,25 +212,11 @@ export default function PresentationOutputPage() {
       </main>
 
       {presenting ? (
-        <div className={cn("fixed inset-0 z-[100] grid grid-rows-[auto_minmax(0,1fr)_auto] p-2 sm:p-6", slideTheme.page)}>
-          <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3 sm:gap-3">
-            <p className={cn("min-w-0 truncate text-xs font-black sm:text-sm", slideTheme.text)}>{deck.topic}</p>
-            <button type="button" onClick={exitPresentMode} className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl border bg-white/80 sm:h-10 sm:w-10", slideTheme.border, slideTheme.text)} aria-label="Back from present view">
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-          </div>
-          <div className="grid min-h-0 place-items-center">
-            <div className="w-full max-w-[1180px] min-w-0 overflow-hidden">
-              <EditableSlide slide={active} onChange={updateActiveSlide} large />
-            </div>
-          </div>
-          <SlideControls
-            activeSlide={activeSlide}
-            slideCount={slideCount}
-            onPrevious={() => goToSlide(activeSlide - 1)}
-            onNext={() => goToSlide(activeSlide + 1)}
-            className="mt-3"
-          />
+        <div className="fixed inset-0 z-[100] bg-white">
+          <EditableSlide slide={active} onChange={updateActiveSlide} fullBleed />
+          <button type="button" onClick={exitPresentMode} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white/75 text-slate-700 shadow-sm backdrop-blur-sm" aria-label="Back from present view">
+            <X className="h-5 w-5" />
+          </button>
         </div>
       ) : null}
     </>
@@ -237,35 +233,41 @@ function SlidePreviewStrip({
   onSelect: (index: number) => void;
 }) {
   return (
-    <aside className="min-h-0 min-w-0 rounded-[16px] border border-white/70 bg-white/80 p-1.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:rounded-[18px] sm:p-2">
-      <div className="flex max-h-[120px] gap-2 overflow-x-auto lg:max-h-[calc(100vh-210px)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto">
+    <aside
+      className="min-h-0 min-w-0 rounded-[22px] border border-white/80 bg-white/85 p-3 font-sans text-slate-700 antialiased shadow-[0_18px_42px_rgba(59,86,128,0.1)] backdrop-blur-sm"
+      style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[13px] font-semibold leading-none text-slate-700">Slides</p>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-500">{slides.length}</span>
+      </div>
+      <div className="flex max-h-[140px] gap-2 overflow-x-auto pr-1 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
             type="button"
             onClick={() => onSelect(index)}
             className={cn(
-              "w-[118px] shrink-0 rounded-xl border bg-white p-1 text-left transition sm:w-[150px] sm:p-1.5 lg:w-full",
-              activeSlide === index ? "border-[#25262b] shadow-sm" : "border-[#e7e7ea] opacity-75 hover:opacity-100"
+              "grid w-[200px] shrink-0 grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-[18px] border p-2.5 text-left transition md:w-full",
+              activeSlide === index
+                ? "border-blue-300 bg-blue-50/90 shadow-[0_14px_28px_rgba(37,99,235,0.14)]"
+                : "border-slate-200/80 bg-white shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_12px_24px_rgba(59,86,128,0.12)]"
             )}
             aria-label={`Open slide ${index + 1}`}
           >
-            <div className="aspect-video overflow-hidden rounded-lg bg-white">
-              <div className="grid h-full grid-cols-[0.9fr_1.1fr]">
-                <div className="min-w-0 p-2">
-                  <p className="line-clamp-3 text-[9px] font-black leading-tight text-[#171717] sm:text-[10px]">{slide.title}</p>
-                  <p className="mt-1 line-clamp-2 text-[7px] font-semibold leading-tight text-[#5f6368] sm:text-[8px]">{slide.points[0] || slide.subtitle || ""}</p>
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100">
+              {selectedSlideImage(slide) ? (
+                <img src={selectedSlideImage(slide)} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full place-items-center bg-gradient-to-br from-blue-50 to-amber-50">
+                  <ImageIcon className="h-5 w-5 text-slate-400" />
                 </div>
-                <div className="grid place-items-center overflow-hidden p-1">
-                  {selectedSlideImage(slide) ? (
-                    <img src={selectedSlideImage(slide)} alt="" className="h-full w-full object-contain" />
-                  ) : (
-                    <ImageIcon className="h-4 w-4 text-[#8a8f98] sm:h-5 sm:w-5" />
-                  )}
-                </div>
-              </div>
+              )}
             </div>
-            <p className="mt-1 px-1 text-[9px] font-black text-[#55516e] sm:text-[10px]">{index + 1}</p>
+            <div className="min-w-0 self-center">
+              <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-800">{slide.title}</p>
+              <p className="mt-1 line-clamp-1 text-[11px] font-medium leading-snug text-slate-500">{slide.points[0] || slide.subtitle || "Presentation slide"}</p>
+            </div>
           </button>
         ))}
       </div>
@@ -339,14 +341,47 @@ function SlideControls({
   );
 }
 
+function SlideImageSelector({
+  slide,
+  onSelect
+}: {
+  slide: PresentationSlide;
+  onSelect: (index: number) => void;
+}) {
+  if (slide.imageUrls.length <= 1) return <div className="h-10" />;
+
+  const imageIndex = clampImageIndex(slide.selectedImageIndex, slide.imageUrls.length);
+
+  return (
+    <div className="flex min-h-14 items-center justify-center gap-2 rounded-[16px] border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+      {slide.imageUrls.slice(0, 3).map((url, index) => (
+        <button
+          key={`${url}-${index}`}
+          type="button"
+          onClick={() => onSelect(index)}
+          className={cn(
+            "aspect-video w-24 overflow-hidden rounded-xl bg-white/85 p-0.5 shadow-sm outline-none transition focus:ring-2 focus:ring-[#55516e] sm:w-32",
+            imageIndex === index ? "ring-2 ring-[#25262b]" : "opacity-75 hover:opacity-100"
+          )}
+          aria-label={`Use image ${index + 1}`}
+        >
+          <img src={url} alt="" className="h-full w-full rounded-lg object-cover" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function EditableSlide({
   slide,
   onChange,
-  large = false
+  large = false,
+  fullBleed = false
 }: {
   slide: PresentationSlide;
   onChange: (patch: Partial<PresentationSlide>) => void;
   large?: boolean;
+  fullBleed?: boolean;
 }) {
   const [titleDraft, setTitleDraft] = useState("");
   const [contentDraft, setContentDraft] = useState("");
@@ -355,7 +390,6 @@ function EditableSlide({
   const currentImage = slide.imageUrls[imageIndex];
   const contentText = useMemo(() => formatBulletText([slide.subtitle || "", ...slide.points].filter(Boolean)), [slide.id, slide.points, slide.subtitle]);
   const displayBullets = useMemo(() => slideBullets(slide), [slide.id, slide.points, slide.subtitle]);
-  const hasMultipleImages = slide.imageUrls.length > 1;
 
   useEffect(() => {
     setTitleDraft(slide.title);
@@ -385,14 +419,23 @@ function EditableSlide({
   return (
     <div
       className={cn(
-        "aspect-[16/9] w-full max-w-full overflow-hidden rounded-[12px] border shadow-sm sm:rounded-[16px]",
+        "aspect-[16/9] w-full max-w-full overflow-hidden rounded-[12px] border font-sans antialiased shadow-sm sm:rounded-[16px]",
         slideTheme.slide,
         slideTheme.border,
-        large ? "sm:max-h-[calc(100vh-150px)]" : "sm:max-h-[calc(100vh-250px)]"
+        large ? "sm:max-h-[calc(100vh-150px)]" : "sm:max-h-[calc(100vh-250px)]",
+        fullBleed && "h-screen max-h-none rounded-none border-0 shadow-none sm:max-h-none sm:rounded-none"
       )}
+      style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
     >
-      <div className="grid h-full min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className={cn("flex min-w-0 flex-col", large ? "p-2 pr-1 sm:p-12 sm:pr-6" : "p-2 pr-1 sm:p-8 sm:pr-5")}>
+      <div className="relative grid h-full min-w-0 grid-cols-[minmax(0,40%)_minmax(0,60%)] bg-white">
+        <div className="pointer-events-none absolute left-[5%] top-[12%] h-2 w-2 rounded-full bg-sky-300/70 sm:h-3 sm:w-3" />
+        <div className="pointer-events-none absolute bottom-[14%] left-[32%] h-3 w-3 rounded-full bg-pink-300/60 sm:h-4 sm:w-4" />
+        <div className="pointer-events-none absolute left-[44%] top-0 h-full w-[10%] bg-gradient-to-r from-white/70 to-transparent" />
+        <div className={cn(
+          "relative z-10 flex min-w-0 flex-col bg-[radial-gradient(circle_at_18%_14%,rgba(219,234,254,0.72)_0,transparent_34%),radial-gradient(circle_at_86%_18%,rgba(252,231,243,0.58)_0,transparent_32%),linear-gradient(135deg,#ffffff_0%,#fbfdff_58%,#fff9fb_100%)]",
+          large ? "p-2 pr-1 sm:p-12 sm:pr-6" : "p-2 pr-1 sm:p-8 sm:pr-5"
+        )}>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-[22%] bg-gradient-to-r from-transparent to-white" />
           <textarea
             value={titleDraft}
             onChange={(event) => updateTitle(event.target.value)}
@@ -402,12 +445,13 @@ function EditableSlide({
             spellCheck={false}
             placeholder="Slide heading"
             className={cn(
-              "w-full resize-none overflow-hidden rounded-lg border border-transparent bg-transparent p-1.5 font-black leading-[1.08] outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:rounded-xl sm:p-3",
+              "w-full resize-none overflow-hidden rounded-lg border border-transparent bg-transparent p-1.5 font-semibold leading-[1.08] outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:rounded-xl sm:p-3",
               slideTheme.text,
               large ? "text-[clamp(0.78rem,4.2vw,4.2rem)] sm:text-[clamp(2rem,3.8vw,4.2rem)]" : "text-[clamp(0.72rem,4vw,3rem)] sm:text-[clamp(1.55rem,2.9vw,3rem)]"
             )}
             aria-label="Slide heading"
           />
+          <div className={cn("ml-1.5 mt-1 h-1 w-14 rounded-full bg-gradient-to-r from-sky-400 via-pink-300 to-amber-300 sm:ml-3", large ? "sm:mt-3 sm:h-2 sm:w-28" : "sm:mt-2 sm:w-24")} />
           {editingContent ? (
             <textarea
               value={contentDraft}
@@ -416,9 +460,13 @@ function EditableSlide({
               autoFocus
               placeholder={"Slide content\nAdd one idea per line"}
               className={cn(
-                "mt-1 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1 font-semibold leading-4 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
+                "mt-1 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1 font-medium leading-4 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
                 slideTheme.muted,
-                large ? "text-[clamp(0.5rem,2.6vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]" : "text-[clamp(0.48rem,2.45vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
+                fullBleed
+                  ? "text-[clamp(0.9rem,2.2vw,2.2rem)]"
+                  : large
+                    ? "text-[clamp(0.5rem,2.6vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]"
+                    : "text-[clamp(0.48rem,2.45vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
               )}
               aria-label="Slide content"
             />
@@ -433,12 +481,20 @@ function EditableSlide({
               aria-label="Edit slide content"
             >
               <ul className={cn("grid w-full list-none", large ? "gap-1 sm:gap-4" : "gap-0.5 sm:gap-2.5")}>
-                {displayBullets.map((point) => (
+                {displayBullets.map((point, index) => (
                   <li key={point} className={cn("grid grid-cols-[0.58em_minmax(0,1fr)] items-start sm:grid-cols-[0.72em_minmax(0,1fr)]", large ? "gap-1.5 sm:gap-3" : "gap-1.5 sm:gap-2.5")}>
-                    <span className={cn("mt-[0.62em] rounded-full bg-current", large ? "h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" : "h-1.5 w-1.5 sm:h-2 sm:w-2")} />
                     <span className={cn(
-                      "font-bold leading-snug text-[#5f6368]",
-                      large ? "text-[clamp(0.44rem,2.15vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]" : "text-[clamp(0.42rem,2.05vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
+                      "mt-[0.62em] rounded-full",
+                      index % 3 === 0 ? "bg-sky-400" : index % 3 === 1 ? "bg-pink-300" : "bg-amber-300",
+                      large ? "h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" : "h-1.5 w-1.5 sm:h-2 sm:w-2"
+                    )} />
+                    <span className={cn(
+                      "font-medium leading-snug text-[#5f6368]",
+                      fullBleed
+                        ? "text-[clamp(0.85rem,1.8vw,1.8rem)]"
+                        : large
+                          ? "text-[clamp(0.44rem,2.15vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]"
+                          : "text-[clamp(0.42rem,2.05vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
                     )}>
                       {point}
                     </span>
@@ -464,24 +520,6 @@ function EditableSlide({
               </div>
             )}
           </div>
-          {hasMultipleImages && !large ? (
-            <div className="grid shrink-0 grid-cols-4 gap-1 sm:grid-cols-5 sm:gap-2">
-              {slide.imageUrls.map((url, index) => (
-                <button
-                  key={`${url}-${index}`}
-                  type="button"
-                  onClick={() => onChange({ selectedImageIndex: index })}
-                  className={cn(
-                    "aspect-video overflow-hidden rounded-lg bg-white/70 p-0.5 shadow-sm outline-none transition focus:ring-2 focus:ring-[#55516e]",
-                    imageIndex === index ? "ring-2 ring-[#25262b]" : "opacity-75 hover:opacity-100"
-                  )}
-                  aria-label={`Use image ${index + 1}`}
-                >
-                  <img src={url} alt="" className="h-full w-full rounded-md object-cover" />
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
       </div>
     </div>
@@ -530,6 +568,246 @@ function slugify(value: string) {
   return (value || "presentation").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "presentation";
 }
 
+async function downloadPptx(deck: PresentationDeck) {
+  const { default: PptxGenJS } = await import("pptxgenjs");
+  const pptx = new PptxGenJS();
+  pptx.layout = "LAYOUT_WIDE";
+  pptx.author = "TeachPad";
+  pptx.company = "TeachPad";
+  pptx.subject = deck.topic;
+  pptx.title = deck.topic;
+  pptx.theme = {
+    headFontFace: "Aptos Display",
+    bodyFontFace: "Aptos"
+  };
+  pptx.defineLayout({ name: "TEACHPAD_WIDE", width: 13.333, height: 7.5 });
+  pptx.layout = "TEACHPAD_WIDE";
+
+  for (const slide of deck.slides) {
+    const pptSlide = pptx.addSlide();
+    const selectedImage = selectedSlideImage(slide);
+    const imageData = selectedImage ? await imageUrlToDataUri(selectedImage) : "";
+    const bullets = slideBullets(slide);
+
+    pptSlide.background = { color: "FFFFFF" };
+    pptSlide.addShape(pptx.ShapeType.rect, {
+      x: 0,
+      y: 0,
+      w: 5.35,
+      h: 7.5,
+      line: { color: "FFFFFF", transparency: 100 },
+      fill: { color: "F8FBFF" }
+    });
+    pptSlide.addShape(pptx.ShapeType.rect, {
+      x: 5.0,
+      y: 0,
+      w: 0.45,
+      h: 7.5,
+      line: { color: "FFFFFF", transparency: 100 },
+      fill: { color: "FFFFFF", transparency: 18 }
+    });
+    pptSlide.addShape(pptx.ShapeType.ellipse, {
+      x: 0.42,
+      y: 0.45,
+      w: 0.12,
+      h: 0.12,
+      line: { color: "7DD3FC", transparency: 100 },
+      fill: { color: "7DD3FC", transparency: 25 }
+    });
+    pptSlide.addShape(pptx.ShapeType.ellipse, {
+      x: 4.15,
+      y: 6.35,
+      w: 0.16,
+      h: 0.16,
+      line: { color: "F9A8D4", transparency: 100 },
+      fill: { color: "F9A8D4", transparency: 30 }
+    });
+
+    pptSlide.addText(slide.title || "Untitled slide", {
+      x: 0.58,
+      y: 0.82,
+      w: 4.18,
+      h: 1.62,
+      margin: 0,
+      breakLine: false,
+      fit: "shrink",
+      fontFace: "Aptos Display",
+      fontSize: 34,
+      bold: true,
+      color: "171717",
+      valign: "top"
+    });
+    pptSlide.addShape(pptx.ShapeType.rect, {
+      x: 0.66,
+      y: 2.5,
+      w: 1.05,
+      h: 0.05,
+      line: { color: "38BDF8", transparency: 100 },
+      fill: { color: "38BDF8" }
+    });
+
+    if (bullets.length) {
+      pptSlide.addText(bullets.join("\n"), {
+        x: 0.78,
+        y: 3.05,
+        w: 3.9,
+        h: 2.65,
+        margin: 0,
+        fit: "shrink",
+        fontFace: "Aptos",
+        fontSize: 18,
+        color: "5F6368",
+        breakLine: false,
+        valign: "middle",
+        bullet: { type: "bullet" },
+        paraSpaceAfter: 10
+      });
+    }
+
+    if (imageData) {
+      pptSlide.addImage({
+        data: imageData,
+        ...containImage(5.55, 0.38, 7.35, 6.74)
+      });
+    } else {
+      pptSlide.addShape(pptx.ShapeType.roundRect, {
+        x: 5.65,
+        y: 0.55,
+        w: 7.1,
+        h: 6.4,
+        rectRadius: 0.08,
+        line: { color: "E7E7EA", transparency: 0 },
+        fill: { color: "F8FAFC" }
+      });
+      pptSlide.addText(slide.visual || "Classroom visual", {
+        x: 6.0,
+        y: 3.35,
+        w: 6.4,
+        h: 0.45,
+        align: "center",
+        fontSize: 13,
+        bold: true,
+        color: "8A8F98",
+        margin: 0
+      });
+    }
+  }
+
+  await pptx.writeFile({ fileName: `${slugify(deck.topic)}.pptx` });
+}
+
+async function downloadPdf(deck: PresentationDeck) {
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "in",
+    format: [13.333, 7.5],
+    compress: true
+  });
+
+  for (let index = 0; index < deck.slides.length; index += 1) {
+    const slide = deck.slides[index];
+    if (index > 0) pdf.addPage([13.333, 7.5], "landscape");
+
+    const selectedImage = selectedSlideImage(slide);
+    const imageData = selectedImage ? await imageUrlToDataUri(selectedImage) : "";
+    const bullets = slideBullets(slide);
+
+    pdf.setFillColor("#FFFFFF");
+    pdf.rect(0, 0, 13.333, 7.5, "F");
+    pdf.setFillColor("#F8FBFF");
+    pdf.rect(0, 0, 5.35, 7.5, "F");
+    pdf.setFillColor("#FFFFFF");
+    pdf.rect(5.0, 0, 0.45, 7.5, "F");
+    pdf.setFillColor("#7DD3FC");
+    pdf.circle(0.48, 0.52, 0.055, "F");
+    pdf.setFillColor("#F9A8D4");
+    pdf.circle(4.23, 6.42, 0.075, "F");
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor("#171717");
+    pdf.setFontSize(34);
+    const titleLines = pdf.splitTextToSize(slide.title || "Untitled slide", 4.15).slice(0, 3);
+    pdf.text(titleLines, 0.58, 1.08, { lineHeightFactor: 1.08 });
+
+    pdf.setFillColor("#38BDF8");
+    pdf.roundedRect(0.66, 2.5, 1.05, 0.05, 0.025, 0.025, "F");
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(18);
+    pdf.setTextColor("#5F6368");
+    let y = 3.18;
+    for (let bulletIndex = 0; bulletIndex < bullets.length; bulletIndex += 1) {
+      const point = bullets[bulletIndex];
+      const lines = pdf.splitTextToSize(point, 3.55).slice(0, 2);
+      pdf.setFillColor(bulletIndex % 3 === 0 ? "#38BDF8" : bulletIndex % 3 === 1 ? "#F9A8D4" : "#FCD34D");
+      pdf.circle(0.82, y - 0.07, 0.045, "F");
+      pdf.setTextColor("#5F6368");
+      pdf.text(lines, 1.02, y, { lineHeightFactor: 1.25 });
+      y += 0.36 * lines.length + 0.16;
+      if (y > 6.35) break;
+    }
+
+    if (imageData) {
+      const props = pdf.getImageProperties(imageData);
+      const box = containRect(5.55, 0.38, 7.35, 6.74, props.width, props.height);
+      pdf.addImage(imageData, props.fileType, box.x, box.y, box.w, box.h);
+    } else {
+      pdf.setDrawColor("#E7E7EA");
+      pdf.setFillColor("#F8FAFC");
+      pdf.roundedRect(5.65, 0.55, 7.1, 6.4, 0.08, 0.08, "FD");
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(13);
+      pdf.setTextColor("#8A8F98");
+      pdf.text(slide.visual || "Classroom visual", 9.2, 3.6, { align: "center", maxWidth: 6.4 });
+    }
+  }
+
+  pdf.save(`${slugify(deck.topic)}.pdf`);
+}
+
+async function imageUrlToDataUri(url: string) {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) return "";
+    const blob = await response.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return "";
+  }
+}
+
+function containImage(x: number, y: number, w: number, h: number) {
+  return { x, y, w, h, sizing: { type: "contain" as const, x, y, w, h } };
+}
+
+function containRect(x: number, y: number, w: number, h: number, imageWidth: number, imageHeight: number) {
+  const imageRatio = imageWidth / imageHeight;
+  const boxRatio = w / h;
+  if (imageRatio > boxRatio) {
+    const nextH = w / imageRatio;
+    return { x, y: y + (h - nextH) / 2, w, h: nextH };
+  }
+  const nextW = h * imageRatio;
+  return { x: x + (w - nextW) / 2, y, w: nextW, h };
+}
+
+function downloadFromUrl(url: string, filename: string) {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 function buildPptHtml(deck: PresentationDeck) {
   const slides = deck.slides.map((slide) => {
     const selectedImage = selectedSlideImage(slide);
@@ -554,17 +832,60 @@ function buildPptHtml(deck: PresentationDeck) {
   <title>${escapeHtml(deck.topic)}</title>
   <style>
     @page { size: 13.333in 7.5in; margin: 0; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #171717; background: #f7f7f8; }
-    .slide { page-break-after: always; width: 13.333in; height: 7.5in; box-sizing: border-box; display: grid; grid-template-columns: .9fr 1.1fr; gap: .2in; padding: .55in; background: #fff; }
-    h1 { margin: 0 0 .28in; font-size: 38pt; line-height: 1.08; }
-    .subtitle { margin: 0 0 .18in; font-size: 18pt; font-weight: 700; color: #555; }
-    ul { margin: .2in 0 0; padding-left: .28in; font-size: 18pt; line-height: 1.4; color: #555; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Aptos, Arial, Helvetica, sans-serif; color: #171717; background: #ffffff; }
+    .slide {
+      page-break-after: always;
+      width: 13.333in;
+      height: 7.5in;
+      display: grid;
+      grid-template-columns: 40% 60%;
+      overflow: hidden;
+      background: #fff;
+    }
+    .copy {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: .62in .28in .62in .62in;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(219,234,254,.72) 0, transparent 34%),
+        radial-gradient(circle at 86% 18%, rgba(252,231,243,.58) 0, transparent 32%),
+        linear-gradient(135deg,#fff 0%,#fbfdff 58%,#fff9fb 100%);
+    }
+    .copy::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: 24%;
+      background: linear-gradient(90deg, transparent, #fff);
+      pointer-events: none;
+    }
+    h1 { position: relative; z-index: 1; margin: 0; font-size: 34pt; line-height: 1.08; font-weight: 700; letter-spacing: 0; }
+    h1::after { content: ""; display: block; width: 1.05in; height: .05in; margin-top: .22in; border-radius: 999px; background: linear-gradient(90deg,#38bdf8,#f9a8d4,#fcd34d); }
+    .subtitle { position: relative; z-index: 1; margin: .22in 0 0; font-size: 16pt; font-weight: 600; color: #5f6368; }
+    ul { position: relative; z-index: 1; margin: .34in 0 0; padding-left: .28in; font-size: 17pt; line-height: 1.35; color: #5f6368; font-weight: 500; }
     li { margin: 0 0 .12in; }
-    .visual { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    li::marker { color: #38bdf8; }
+    .visual { display: flex; align-items: center; justify-content: center; overflow: hidden; padding: .38in; }
     .visual img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    @media screen { body { display: grid; place-items: start center; background: #f7f7f8; } .slide { margin: 24px 0; box-shadow: 0 18px 42px rgba(39,30,91,.12); } }
   </style>
 </head>
-<body>${slides}</body>
+<body>${slides}
+<script>
+  async function printWhenReady() {
+    const images = Array.from(document.images);
+    await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
+      image.onload = resolve;
+      image.onerror = resolve;
+    })));
+    setTimeout(() => window.print(), 120);
+  }
+  printWhenReady();
+</script>
+</body>
 </html>`;
 }
 
