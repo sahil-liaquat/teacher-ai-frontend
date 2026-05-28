@@ -5,9 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  Activity,
   BookOpen,
   ClipboardList,
+  ImageIcon,
   LayoutList,
+  MessageCircle,
+  NotebookPen,
   Play,
   Presentation,
   Rocket,
@@ -17,7 +21,7 @@ import {
 
 export const metadata: Metadata = {
   title: "AI Tools | TeachPad",
-  description: "AI-powered lesson planners, worksheets, presentations, and live quizzes for teachers."
+  description: "AI-powered lesson planners, worksheets, presentations, notes, and activities for teachers."
 };
 
 const toolCards = [
@@ -48,18 +52,61 @@ const toolCards = [
     icon: Presentation,
     href: "/dashboard/presentation-generator",
     cta: "Create Presentation",
-    color: "purple",
+    color: "red",
     tags: ["Slide Outline", "Visual Flow", "Classroom Ready", "Topic Based"]
+  },
+  {
+    title: "Notes Generator",
+    description: "Create textbook-grounded notes with summaries, key terms, and revision questions.",
+    image: "/ai-tools/lesson-planner.png",
+    icon: NotebookPen,
+    href: "/dashboard/notes-generator",
+    cta: "Create Notes",
+    color: "pink",
+    tags: ["Chapter Notes", "Key Terms", "Blackboard Points", "Revision"]
+  },
+  {
+    title: "Activity Generator",
+    description: "Create textbook-grounded classroom activities with timing, grouping, and assessment prompts.",
+    image: "/ai-tools/tool-icons.png",
+    icon: Activity,
+    href: "/dashboard/activity-generator",
+    cta: "Create Activity",
+    color: "cyan",
+    tags: ["Group Tasks", "Materials", "Teacher Steps", "Exit Ticket"]
   },
   {
     title: "Live Quiz Generator",
     description: "Build interactive live quizzes for revision and student engagement.",
     image: "/ai-tools/live-quiz.png",
     icon: Trophy,
-    href: "/dashboard/live-quiz/new",
-    cta: "Create Live Quiz",
-    color: "orange",
+    href: "#",
+    cta: "Coming Soon",
+    color: "yellow",
+    status: "soon",
     tags: ["Fast Revision", "Interactive", "Instant Questions", "Engagement"]
+  },
+  {
+    title: "Rubric Assistant",
+    description: "Draft criteria, scoring bands, and feedback language for classroom tasks.",
+    image: "/ai-tools/tool-icons.png",
+    icon: MessageCircle,
+    href: "#",
+    cta: "Coming Soon",
+    color: "aqua",
+    status: "soon",
+    tags: ["Criteria", "Scoring", "Feedback", "Projects"]
+  },
+  {
+    title: "Visual Explainer",
+    description: "Turn difficult concepts into image-led explanations for classroom display.",
+    image: "/ai-tools/tool-icons.png",
+    icon: ImageIcon,
+    href: "#",
+    cta: "Coming Soon",
+    color: "lavender",
+    status: "soon",
+    tags: ["Concepts", "Display", "Visuals", "Explain"]
   }
 ] as const;
 
@@ -150,8 +197,9 @@ function ToolsGrid() {
 
 function ToolCard({ tool }: { tool: (typeof toolCards)[number] }) {
   const Icon = tool.icon;
+  const available = !("status" in tool && tool.status === "soon");
 
-  return (
+  const card = (
     <article className={`group grid min-w-0 items-center gap-2 overflow-hidden rounded-[24px] border bg-white p-5 shadow-[0_18px_50px_rgba(30,80,140,0.04)] transition duration-300 hover:-translate-y-1 ${cardBorder(tool.color)} sm:min-h-[440px] sm:grid-cols-[0.95fr_1.05fr] sm:gap-3 sm:p-7 lg:p-9`}>
       <div className="relative grid min-h-[220px] place-items-center sm:min-h-[300px]">
         <DecorDot className={`left-0 top-[58%] h-7 w-7 ${dotClass(tool.color)}`} />
@@ -178,16 +226,17 @@ function ToolCard({ tool }: { tool: (typeof toolCards)[number] }) {
             </span>
           ))}
         </div>
-        <Link
-          href={tool.href}
-          className={`mt-7 inline-flex h-[52px] w-full items-center justify-between rounded-[16px] border bg-white px-5 text-[14px] font-black transition hover:-translate-y-0.5 sm:h-14 sm:w-auto sm:min-w-[260px] sm:px-6 ${ctaClass(tool.color)}`}
+        <span
+          className={`mt-7 inline-flex h-[52px] w-full items-center justify-between rounded-[16px] border bg-white px-5 text-[14px] font-black transition sm:h-14 sm:w-auto sm:min-w-[260px] sm:px-6 ${ctaClass(tool.color)} ${available ? "hover:-translate-y-0.5" : "cursor-not-allowed opacity-70"}`}
         >
           {tool.cta}
-          <ArrowRight className="h-5 w-5" />
-        </Link>
+          {available ? <ArrowRight className="h-5 w-5" /> : null}
+        </span>
       </div>
     </article>
   );
+
+  return available ? <Link href={tool.href}>{card}</Link> : card;
 }
 
 function FeatureStrip() {
@@ -223,8 +272,13 @@ function cardBorder(color: string) {
   return {
     blue: "border-blue-200",
     green: "border-emerald-200",
-    purple: "border-violet-200",
-    orange: "border-orange-200"
+    red: "border-rose-200",
+    pink: "border-pink-200",
+    orange: "border-orange-200",
+    cyan: "border-cyan-200",
+    yellow: "border-amber-200",
+    aqua: "border-cyan-200",
+    lavender: "border-violet-200"
   }[color];
 }
 
@@ -232,8 +286,13 @@ function iconBg(color: string) {
   return {
     blue: "bg-gradient-to-br from-blue-400 to-blue-600",
     green: "bg-gradient-to-br from-emerald-300 to-emerald-600",
-    purple: "bg-gradient-to-br from-violet-400 to-violet-600",
-    orange: "bg-gradient-to-br from-orange-300 to-orange-500"
+    red: "bg-gradient-to-br from-rose-400 to-rose-600",
+    pink: "bg-gradient-to-br from-pink-300 to-pink-600",
+    orange: "bg-gradient-to-br from-orange-300 to-orange-500",
+    cyan: "bg-gradient-to-br from-cyan-300 to-cyan-600",
+    yellow: "bg-gradient-to-br from-amber-300 to-amber-500",
+    aqua: "bg-gradient-to-br from-cyan-300 to-cyan-600",
+    lavender: "bg-gradient-to-br from-violet-300 to-violet-600"
   }[color];
 }
 
@@ -241,8 +300,13 @@ function tagClass(color: string) {
   return {
     blue: "border-blue-200 bg-blue-50 text-blue-600",
     green: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    purple: "border-violet-200 bg-violet-50 text-violet-600",
-    orange: "border-orange-200 bg-orange-50 text-orange-600"
+    red: "border-rose-200 bg-rose-50 text-rose-600",
+    pink: "border-pink-200 bg-pink-50 text-pink-600",
+    orange: "border-orange-200 bg-orange-50 text-orange-600",
+    cyan: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    yellow: "border-amber-200 bg-amber-50 text-amber-700",
+    aqua: "border-cyan-200 bg-cyan-50 text-cyan-700",
+    lavender: "border-violet-200 bg-violet-50 text-violet-600"
   }[color];
 }
 
@@ -250,8 +314,13 @@ function ctaClass(color: string) {
   return {
     blue: "border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50",
     green: "border-emerald-200 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50",
-    purple: "border-violet-200 text-violet-600 hover:border-violet-300 hover:bg-violet-50",
-    orange: "border-orange-200 text-orange-600 hover:border-orange-300 hover:bg-orange-50"
+    red: "border-rose-200 text-rose-600 hover:border-rose-300 hover:bg-rose-50",
+    pink: "border-pink-200 text-pink-600 hover:border-pink-300 hover:bg-pink-50",
+    orange: "border-orange-200 text-orange-600 hover:border-orange-300 hover:bg-orange-50",
+    cyan: "border-cyan-200 text-cyan-700 hover:border-cyan-300 hover:bg-cyan-50",
+    yellow: "border-amber-200 text-amber-700 hover:border-amber-300 hover:bg-amber-50",
+    aqua: "border-cyan-200 text-cyan-700 hover:border-cyan-300 hover:bg-cyan-50",
+    lavender: "border-violet-200 text-violet-600 hover:border-violet-300 hover:bg-violet-50"
   }[color];
 }
 
@@ -259,8 +328,13 @@ function dotClass(color: string) {
   return {
     blue: "bg-blue-300",
     green: "bg-emerald-300",
-    purple: "bg-violet-300",
-    orange: "bg-orange-300"
+    red: "bg-rose-300",
+    pink: "bg-pink-300",
+    orange: "bg-orange-300",
+    cyan: "bg-cyan-300",
+    yellow: "bg-amber-300",
+    aqua: "bg-cyan-300",
+    lavender: "bg-violet-300"
   }[color];
 }
 

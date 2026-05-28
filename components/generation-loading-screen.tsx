@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type GenerationKind = "lesson-plan" | "worksheet" | "presentation" | "live-quiz";
+type GenerationKind = "lesson-plan" | "worksheet" | "presentation" | "notes" | "activity" | "live-quiz";
 type GenerationState = "loading" | "error";
 
 export function GenerationLoadingScreen({
@@ -27,6 +27,10 @@ export function GenerationLoadingScreen({
       ? ["Reading your textbook...", "Finding key concepts...", "Building your worksheet...", "Preparing teacher-ready content..."]
       : type === "presentation"
         ? ["Reading your textbook...", "Planning the slide flow...", "Writing clear classroom slides...", "Preparing teacher-ready content..."]
+        : type === "notes"
+          ? ["Reading your textbook...", "Finding key explanations...", "Writing classroom notes...", "Preparing revision sections..."]
+        : type === "activity"
+          ? ["Reading your textbook...", "Designing classroom steps...", "Adding teacher and student actions...", "Preparing activity prompts..."]
         : type === "live-quiz"
           ? ["Reading your textbook...", "Preparing quiz questions...", "Adding marks and answers...", "Getting your live quiz ready..."]
           : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
@@ -44,8 +48,8 @@ export function GenerationLoadingScreen({
   }, [state, status]);
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-white px-4 py-6 sm:px-5 lg:px-8">
-      <section className="relative w-full overflow-hidden">
+    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-[#ffffff] px-4 py-6 text-slate-900 [color-scheme:light] sm:px-5 lg:px-8">
+      <section className="relative w-full overflow-hidden bg-[#ffffff]">
 
         {state === "error" ? (
           <div className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 px-5 py-10 text-center">
@@ -105,7 +109,7 @@ function AnimatedDotsText({ text }: { text: string }) {
 
 function BookLoadingLoader() {
   return (
-    <div className="relative flex h-full w-full items-center justify-center">
+    <div className="relative flex h-full w-full items-center justify-center bg-[#ffffff] [color-scheme:light]">
       <video
         src="/assets/illustrations/book-loader.webm"
         aria-hidden="true"
@@ -113,7 +117,7 @@ function BookLoadingLoader() {
         loop
         muted
         playsInline
-        className="relative h-full w-full select-none object-contain"
+        className="relative h-full w-full select-none object-contain bg-[#ffffff]"
       />
     </div>
   );

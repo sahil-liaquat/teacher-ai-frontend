@@ -92,6 +92,51 @@ export type WorksheetGeneration = {
   updated_at?: string;
 };
 
+export type NotesGeneratePayload = {
+  book_id: string;
+  chapter_name?: string;
+  chapter_names?: string[];
+  topic?: string;
+  language?: string;
+  note_style?: string;
+  detail_level?: string;
+  include_key_terms?: boolean;
+  include_examples?: boolean;
+  include_summary?: boolean;
+  include_questions?: boolean;
+};
+
+export type NotesGeneration = {
+  id: string;
+  user_id?: string;
+  output_json: any;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ActivityGeneratePayload = {
+  book_id: string;
+  chapter_name?: string;
+  chapter_names?: string[];
+  topic?: string;
+  language?: string;
+  activity_type?: string;
+  duration_minutes?: number;
+  group_size?: string;
+  difficulty?: string;
+  include_assessment?: boolean;
+  include_materials?: boolean;
+  include_differentiation?: boolean;
+};
+
+export type ActivityGeneration = {
+  id: string;
+  user_id?: string;
+  output_json: any;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type PresentationGeneratePayload = {
   topic: string;
   audience: "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
@@ -548,6 +593,18 @@ export const backendApi = {
   worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
   updateWorksheet: (id: string, payload: Partial<Pick<WorksheetGeneration, "output_json">>) =>
     apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  createNotes: (payload: NotesGeneratePayload) =>
+    apiFetch<NotesGeneration>("/notes", { method: "POST", body: JSON.stringify(payload) }),
+  notesGenerations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<NotesGeneration>>(`/notes?skip=${skip}&limit=${limit}`),
+  notesGeneration: (id: string) => apiFetch<NotesGeneration>(`/notes/${id}`),
+  updateNotesGeneration: (id: string, payload: Partial<Pick<NotesGeneration, "output_json">>) =>
+    apiFetch<NotesGeneration>(`/notes/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  createActivity: (payload: ActivityGeneratePayload) =>
+    apiFetch<ActivityGeneration>("/activities", { method: "POST", body: JSON.stringify(payload) }),
+  activities: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<ActivityGeneration>>(`/activities?skip=${skip}&limit=${limit}`),
+  activity: (id: string) => apiFetch<ActivityGeneration>(`/activities/${id}`),
+  updateActivity: (id: string, payload: Partial<Pick<ActivityGeneration, "output_json">>) =>
+    apiFetch<ActivityGeneration>(`/activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   createPresentation: (payload: PresentationGeneratePayload) =>
     apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),

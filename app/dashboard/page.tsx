@@ -36,7 +36,7 @@ const quickAccess = [
   { title: "Worksheet Generator", desc: "Generate printable worksheets with answers.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green" },
   { title: "Explore Resources", desc: "Find high-quality teaching resources and materials.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
   { title: "AI Chat Assistant", desc: "Ask anything and get instant help from AI.", href: "/dashboard/classroom-tools", icon: Bot, tone: "red" },
-  { title: "Classroom Tools", desc: "Use tools like quiz maker and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
+  { title: "Classroom Tools", desc: "Use tools like notes, worksheets, and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
 ];
 
 export default function TeacherDashboard() {

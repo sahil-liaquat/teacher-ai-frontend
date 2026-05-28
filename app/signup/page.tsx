@@ -141,8 +141,8 @@ export default function SignupPage() {
           <div className="mb-8 inline-grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-blue-600 shadow-[0_16px_34px_rgba(37,99,235,0.12)]">
             <Quote className="h-8 w-8" />
           </div>
-          <blockquote className="text-5xl font-black leading-[1.08] tracking-tight text-slate-950">
-            “Every great classroom starts with a teacher who believes the <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">next question matters.</span>”
+          <blockquote className="text-3xl font-black leading-tight tracking-tight text-slate-950">
+            “Teaching begins when <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">curiosity feels possible.</span>”
           </blockquote>
           <p className="mt-6 max-w-lg text-base font-semibold leading-7 text-slate-600">
             Create your TeachPad workspace and turn planning time into teaching momentum.

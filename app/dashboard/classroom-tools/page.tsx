@@ -4,11 +4,12 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import {
   ArrowRight,
+  Activity,
   BookOpen,
   ClipboardCheck,
-  FileText,
   ImageIcon,
   MessageCircle,
+  NotebookPen,
   Plus,
   Presentation,
   RadioTower
@@ -60,15 +61,36 @@ const tools: Array<{
     tone: "red"
   },
   {
-    title: "Live Quiz Generator",
-    description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
-    href: "/dashboard/live-quiz/new",
-    icon: RadioTower,
+    title: "Notes Generator",
+    description: "Create textbook-grounded chapter notes with key terms, summaries, and revision questions.",
+    href: "/dashboard/notes-generator",
+    icon: NotebookPen,
     badge: "Ready",
     status: "ready",
+    panel: "from-[#fff1f7] to-white",
+    tone: "pink",
+    buttonLabel: "Create Notes"
+  },
+  {
+    title: "Activity Generator",
+    description: "Create hands-on classroom activities, group tasks, and quick engagement prompts.",
+    href: "/dashboard/activity-generator",
+    icon: Activity,
+    badge: "Ready",
+    status: "ready",
+    panel: "from-[#f0fdff] to-white",
+    tone: "aqua",
+    buttonLabel: "Create Activity"
+  },
+  {
+    title: "Live Quiz Generator",
+    description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
+    href: "#",
+    icon: RadioTower,
+    badge: "Coming soon",
+    status: "soon",
     panel: "from-[#fffaf0] to-white",
-    tone: "yellow",
-    buttonLabel: "Create Live Quiz"
+    tone: "yellow"
   },
   {
     title: "Rubric Assistant",
