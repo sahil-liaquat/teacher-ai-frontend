@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
+import { CompanionResourcesPanel } from "@/components/companion-resources-panel";
 import { LessonPlanOutput } from "@/components/generation-output";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
@@ -67,16 +68,26 @@ export default function LessonPlanDetailPage() {
   if (lesson.error) return <Card><CardContent className="p-7"><h1 className="text-2xl font-black text-red-700">Could not open lesson plan</h1><p className="mt-2 text-sm text-[#6d6f78]">{lesson.error instanceof Error ? lesson.error.message : "Request failed"}</p></CardContent></Card>;
 
   return (
-    <div className="print-shell">
-      <LessonPlanOutput
-        output={output}
-        streamKey={`lesson-plan-${params.id}`}
-        streamSpeed="fast"
-        onCopy={copy}
-        onExport={exportPdf}
-        onShare={share}
-        onSave={editsSaved}
-        onChange={setEditedOutput}
+    <div className="print-shell mx-auto w-full max-w-[1480px] xl:h-[calc(100vh-40px)] xl:overflow-hidden">
+      <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:pr-[384px] 2xl:pr-[408px]">
+        <LessonPlanOutput
+          output={output}
+          streamKey={`lesson-plan-${params.id}`}
+          streamSpeed="fast"
+          onCopy={copy}
+          onExport={exportPdf}
+          onShare={share}
+          onSave={editsSaved}
+          onChange={setEditedOutput}
+        />
+      </div>
+      <CompanionResourcesPanel
+        className="mt-6 xl:fixed xl:right-[max(1.5rem,calc((100vw-1480px)/2+1.5rem))] xl:top-5 xl:mt-0 xl:w-[360px] 2xl:w-[380px]"
+        topic={output?.metadata?.topic || output?.title || lesson.data?.topic}
+        classLabel={output?.metadata?.class || lesson.data?.class_name}
+        subject={output?.metadata?.subject || lesson.data?.subject}
+        board={output?.metadata?.board}
+        lessonPlanId={params.id}
       />
     </div>
   );

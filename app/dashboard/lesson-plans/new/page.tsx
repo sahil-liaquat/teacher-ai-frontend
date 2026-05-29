@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
+import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
 
 const lessonComponents = [
@@ -31,6 +32,22 @@ const defaultLessonComponents = [
   "Assessment",
   "Homework"
 ];
+const LESSON_PLAN_DRAFT_KEY = "lesson-plan";
+
+type LessonPlanFormDraft = {
+  boardId: string;
+  classId: string;
+  subject: string;
+  bookId: string;
+  chapterName: string;
+  topic: string;
+  duration: number;
+  language: string;
+  teachingStyle: string;
+  learningObjective: string;
+  selected: string[];
+  openSections: Record<string, boolean>;
+};
 
 export default function NewLessonPlanPage() {
   const router = useRouter();
@@ -63,6 +80,44 @@ export default function NewLessonPlanPage() {
   const [subjectsError, setSubjectsError] = useState("");
   const [booksError, setBooksError] = useState("");
   const [chaptersError, setChaptersError] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readToolDraft<LessonPlanFormDraft>(LESSON_PLAN_DRAFT_KEY);
+    if (draft) {
+      setBoardId(draft.boardId || "");
+      setClassId(draft.classId || "");
+      setSubject(draft.subject || "");
+      setBookId(draft.bookId || "");
+      setChapterName(draft.chapterName || "");
+      setTopic(draft.topic || "");
+      setDuration(draft.duration || 45);
+      setLanguage(draft.language || "English");
+      setTeachingStyle(draft.teachingStyle || "Interactive");
+      setLearningObjective(draft.learningObjective || "");
+      setSelected(draft.selected?.length ? draft.selected : defaultLessonComponents);
+      setOpenSections(draft.openSections || { objectives: false, customize: false });
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    saveToolDraft<LessonPlanFormDraft>(LESSON_PLAN_DRAFT_KEY, {
+      boardId,
+      classId,
+      subject,
+      bookId,
+      chapterName,
+      topic,
+      duration,
+      language,
+      teachingStyle,
+      learningObjective,
+      selected,
+      openSections
+    });
+  }, [draftReady, boardId, chapterName, classId, bookId, duration, language, learningObjective, openSections, selected, subject, teachingStyle, topic]);
 
   useEffect(() => {
     setFetching(true);

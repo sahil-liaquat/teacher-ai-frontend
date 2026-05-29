@@ -110,14 +110,11 @@ function AnimatedDotsText({ text }: { text: string }) {
 function BookLoadingLoader() {
   return (
     <div className="relative flex h-full w-full items-center justify-center bg-[#ffffff] [color-scheme:light]">
-      <video
-        src="/assets/illustrations/book-loader.webm"
+      <img
+        src="/assets/illustrations/book-loader-transparent.webp"
+        alt=""
         aria-hidden="true"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="relative h-full w-full select-none object-contain bg-[#ffffff]"
+        className="relative h-full w-full select-none object-contain"
       />
     </div>
   );

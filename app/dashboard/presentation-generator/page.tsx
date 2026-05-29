@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveLatestPresentationId } from "@/lib/presentation-generator";
 
 const slideCountOptions = [6, 8, 10, 12] as const;
@@ -19,6 +20,23 @@ const styleOptions = ["Clean classroom", "Visual story", "Activity based", "Exam
 const toneOptions = ["Simple", "Conversational", "Academic", "Revision focused"] as const;
 const detailOptions = ["Brief", "Balanced", "Detailed"] as const;
 const visualOptions = ["Light visuals", "Balanced visuals", "Image rich"] as const;
+const PRESENTATION_DRAFT_KEY = "presentation";
+
+type PresentationFormDraft = {
+  boardId: string;
+  classId: string;
+  subject: string;
+  bookId: string;
+  chapterNames: string[];
+  topic: string;
+  slideCount: (typeof slideCountOptions)[number];
+  language: (typeof languageOptions)[number];
+  style: (typeof styleOptions)[number];
+  tone: (typeof toneOptions)[number];
+  detailLevel: (typeof detailOptions)[number];
+  visualDensity: (typeof visualOptions)[number];
+  instructions: string;
+};
 
 export default function PresentationGeneratorPage() {
   const router = useRouter();
@@ -50,6 +68,46 @@ export default function PresentationGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readToolDraft<PresentationFormDraft>(PRESENTATION_DRAFT_KEY);
+    if (draft) {
+      setBoardId(draft.boardId || "");
+      setClassId(draft.classId || "");
+      setSubject(draft.subject || "");
+      setBookId(draft.bookId || "");
+      setChapterNames(draft.chapterNames || []);
+      setTopic(draft.topic || "");
+      setSlideCount(draft.slideCount || 8);
+      setLanguage(draft.language || "English");
+      setStyle(draft.style || "Clean classroom");
+      setTone(draft.tone || "Simple");
+      setDetailLevel(draft.detailLevel || "Balanced");
+      setVisualDensity(draft.visualDensity || "Balanced visuals");
+      setInstructions(draft.instructions || "");
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    saveToolDraft<PresentationFormDraft>(PRESENTATION_DRAFT_KEY, {
+      boardId,
+      classId,
+      subject,
+      bookId,
+      chapterNames,
+      topic,
+      slideCount,
+      language,
+      style,
+      tone,
+      detailLevel,
+      visualDensity,
+      instructions
+    });
+  }, [draftReady, boardId, chapterNames, classId, bookId, detailLevel, instructions, language, slideCount, subject, style, tone, topic, visualDensity]);
 
   useEffect(() => {
     setFetching(true);

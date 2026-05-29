@@ -289,9 +289,9 @@ function Toolbar({
   return (
     <header className="flex flex-col gap-2 rounded-[16px] border border-white/70 bg-white/90 p-2.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:rounded-[18px] sm:p-3">
       <div className="min-w-0">
-        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#55516e] hover:text-[#25262b] sm:gap-2 sm:text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Edit inputs
+        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#2563eb] transition hover:text-[#1d4ed8]">
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Inputs
         </Link>
         <h1 className="mt-1 truncate text-base font-black text-[#25262b] sm:text-lg">{deck.topic}</h1>
       </div>

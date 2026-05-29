@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveWorksheetGeneration } from "@/lib/worksheet-storage";
 
 const difficultyPresets = [
@@ -38,6 +39,19 @@ const defaultQuestionTypes = [
   "One Word Answer",
   "Short Answer"
 ];
+const WORKSHEET_DRAFT_KEY = "worksheet";
+
+type WorksheetFormDraft = {
+  boardId: string;
+  classId: string;
+  subject: string;
+  bookId: string;
+  chapterNames: string[];
+  questionCountInput: string;
+  language: string;
+  difficulty: DifficultyDistribution;
+  questionTypes: string[];
+};
 
 export default function NewWorksheetPage() {
   const router = useRouter();
@@ -67,6 +81,38 @@ export default function NewWorksheetPage() {
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readToolDraft<WorksheetFormDraft>(WORKSHEET_DRAFT_KEY);
+    if (draft) {
+      setBoardId(draft.boardId || "");
+      setClassId(draft.classId || "");
+      setSubject(draft.subject || "");
+      setBookId(draft.bookId || "");
+      setChapterNames(draft.chapterNames || []);
+      setQuestionCountInput(draft.questionCountInput || "16");
+      setLanguage(draft.language || "English");
+      setDifficulty(draft.difficulty || difficultyPresets[1].values);
+      setQuestionTypes(draft.questionTypes?.length ? draft.questionTypes : defaultQuestionTypes);
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    saveToolDraft<WorksheetFormDraft>(WORKSHEET_DRAFT_KEY, {
+      boardId,
+      classId,
+      subject,
+      bookId,
+      chapterNames,
+      questionCountInput,
+      language,
+      difficulty,
+      questionTypes
+    });
+  }, [draftReady, boardId, chapterNames, classId, bookId, difficulty, language, questionCountInput, questionTypes, subject]);
 
   useEffect(() => {
     setFetching(true);

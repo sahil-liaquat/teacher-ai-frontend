@@ -28,6 +28,13 @@ export type NormalizedLessonPlan = {
   finalChecklist: string[];
 };
 
+type RGB = [number, number, number];
+
+const PDF_BLUE: RGB = [0.04, 0.49, 1];
+const PDF_DARK: RGB = [0.05, 0.05, 0.16];
+const PDF_MUTED: RGB = [0.37, 0.4, 0.5];
+const PDF_LINE_BLUE: RGB = [0.72, 0.85, 1];
+
 export function normalizeLessonPlan(output: any): NormalizedLessonPlan {
   const metadata = output?.metadata || {};
   const richAssessments = output?.assessments || {};
@@ -150,20 +157,23 @@ export async function downloadLessonPlanPdf(output: any, includeAnswerKey = fals
 function createLessonPlanPdfBlob(output: any, includeAnswerKey = false) {
   const plan = normalizeLessonPlan(output);
   const metadata = output?.metadata || plan.metadata || {};
-  const documentTitle = `${plan.title}${metadata.class ? ` - Class ${metadata.class}` : ""}`;
-  const document = new TextPdfDocument(documentTitle);
+  const grade = formatGrade(metadata.class || metadata.grade || "Class");
+  const subject = textOf(metadata.subject || "Subject");
+  const topic = textOf(metadata.topic || plan.title);
+  const chapter = formatChapterDisplay(metadata);
+  const source = `${textOf(metadata.board || "Board")} • ${textOf(metadata.book || output?.textbook_source || "Textbook")}`;
+  const document = new TextPdfDocument();
   const sections = buildStructuredLessonPlanSections(output, plan, includeAnswerKey);
 
-  document.addLessonTitle(plan.title);
-  document.addLessonDetails([
-    ["Class", metadata.class || metadata.grade],
-    ["Subject", metadata.subject],
-    ["Duration", metadata.duration || metadata.duration_minutes],
-    ["Chapter", formatChapterDisplay(metadata)],
-    ["Topic", metadata.topic || plan.title],
-    ["Textbook", metadata.book || output?.textbook_source]
-  ]);
+  document.addHeader({
+    title: `${grade} - ${subject}`,
+    topic: topic || plan.title,
+    chapter,
+    source,
+    duration: metadata.duration || formatDuration(metadata.duration_minutes)
+  });
   sections.forEach((section) => document.addStructuredSection(section.title, section.lines));
+  document.addFooter();
   return document.toBlob();
 }
 
@@ -411,95 +421,72 @@ function formatDifferentiationLabel(value: string) {
 
 class TextPdfDocument {
   private pages: string[][] = [[]];
-  private y = 792;
-  private readonly marginX = 68;
+  private y = 780;
+  private readonly marginX = 50;
   private readonly pageHeight = 842;
-  private readonly bottom = 64;
-  private readonly usableWidth = 458;
-  private readonly headerTitle: string;
-  private readonly createdAt = new Date();
+  private readonly bottom = 56;
+  private readonly usableWidth = 495;
 
-  constructor(headerTitle: string) {
-    this.headerTitle = headerTitle;
-    this.addPageHeader();
-  }
-
-  addLessonTitle(title: string) {
-    this.write(title, { size: 22, bold: true, gapAfter: 22, maxChars: 40 });
-  }
-
-  addLessonDetails(rows: Array<[string, unknown]>) {
-    const visibleRows = rows
-      .map(([label, value]) => [label, textOf(value)] as [string, string])
-      .filter(([, value]) => Boolean(value) && value !== "-");
-    if (!visibleRows.length) return;
-
-    this.ensureSpace(42 + visibleRows.length * 14);
-    this.write("Lesson Details", { size: 14, bold: true, gapAfter: 6, maxChars: 42 });
-    for (const [label, value] of visibleRows) {
-      this.write(`${label}: ${value}`, { size: 10.8, gapAfter: 2, maxChars: 72 });
-    }
-    this.y -= 10;
+  addHeader({
+    title,
+    topic,
+    chapter,
+    source,
+    duration
+  }: {
+    title: string;
+    topic: string;
+    chapter: string;
+    source: string;
+    duration?: string;
+  }) {
+    this.write(title, { size: 17, bold: true, color: PDF_BLUE, gapAfter: 2 });
+    this.write(topic, { size: 13, bold: true, color: PDF_BLUE, gapAfter: 2 });
+    this.write(`Chapter: ${chapter || "-"}`, { size: 10, bold: true, color: PDF_MUTED, gapAfter: 2 });
+    if (duration) this.write(`Duration: ${duration}`, { size: 9, bold: true, color: PDF_MUTED, gapAfter: 2 });
+    this.write(source.toUpperCase(), { size: 8, bold: true, color: PDF_MUTED, gapAfter: 26 });
+    this.line(this.marginX, this.y + 8, 545, this.y + 8, PDF_LINE_BLUE, 1.4);
+    this.y -= 12;
   }
 
   addStructuredSection(title: string, lines: string[]) {
-    this.ensureSpace(72);
-    this.write(stripLeadingNumber(title), { size: 16, bold: true, gapBefore: 2, gapAfter: 7, maxChars: 44 });
+    this.ensureSpace(50);
+    this.writeAt("≡", this.marginX, this.y, { size: 14, bold: true, color: PDF_BLUE });
+    this.writeAt(cleanPdfText(stripLeadingNumber(title)), this.marginX + 22, this.y, { size: 12, bold: true, color: PDF_BLUE });
+    this.y -= 22;
     for (const line of lines) {
-      if (shouldNumberLine(line)) {
-        this.write(line, { size: 11.2, gapAfter: 4, maxChars: 70 });
+      if (shouldNumberLine(line) || /^Teacher:|^Students:/i.test(line)) {
+        this.write(line, { size: 10, bold: shouldNumberLine(line), color: PDF_DARK, indent: shouldNumberLine(line) ? 0 : 18, gapAfter: 2 });
       } else {
-        this.writeBullet(line, 0);
+        this.writeBulletText(line);
       }
     }
     this.y -= 8;
   }
 
-  addBackwardsSection(section: BackwardsPlanSection) {
-    this.ensureSpace(72);
-    this.write(section.title, { size: 18, bold: true, gapBefore: 2, gapAfter: 6, maxChars: 36 });
-    for (const paragraph of section.paragraphs || []) {
-      this.write(paragraph, { size: 11.2, gapAfter: 8 });
-    }
-    for (const bullet of section.bullets || []) {
-      this.writeBullet(bullet, 0);
-    }
-    if (section.subheading) {
-      this.write(section.subheading, { size: 15, bold: true, gapBefore: 4, gapAfter: 4, maxChars: 45 });
-    }
-    for (const bullet of section.subBullets || []) {
-      this.writeBullet(bullet, 0);
-    }
-    this.y -= 8;
+  addFooter() {
+    const pageCount = this.pages.length;
+    this.pages.forEach((page, index) => {
+      page.push(`${rgb(PDF_MUTED, "fill")} BT /F1 8 Tf ${this.marginX} 32 Td (Generated by TeachPad) Tj ET`);
+      page.push(`${rgb(PDF_MUTED, "fill")} BT /F1 8 Tf 492 32 Td (Page ${index + 1} of ${pageCount}) Tj ET`);
+    });
   }
 
-  private writeBullet(bullet: string | { text: string; children?: string[] }, level: number) {
-    const text = typeof bullet === "string" ? bullet : bullet.text;
-    const children = typeof bullet === "string" ? [] : bullet.children || [];
-    this.writeBulletText(text, level, children.length ? 2 : 4);
-    for (const child of children) {
-      this.writeBullet(child, level + 1);
-    }
-  }
-
-  private writeBulletText(text: string, level: number, gapAfter: number) {
-    const size = 11.2;
-    const bulletX = this.marginX + level * 18 + 6;
-    const textIndent = level * 18 + 18;
+  private writeBulletText(text: string) {
+    const size = 10;
+    const bulletX = this.marginX + 6;
+    const textIndent = 18;
     const lines = wrapText(cleanPdfText(text), this.maxChars(size, textIndent));
     for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
-      this.ensureSpace(size + 10);
-      if (index === 0) this.drawBulletMark(bulletX, this.y - 4, level);
-      const x = this.marginX + textIndent;
-      this.currentPage().push(`BT /F1 ${size} Tf 0 0 0 rg ${x} ${this.y} Td (${escapePdfText(line)}) Tj ET`);
-      this.y -= Math.ceil(size * 1.32);
+      this.ensureSpace(size + 8);
+      if (index === 0) this.drawBulletMark(bulletX, this.y - 4);
+      this.writeAt(lines[index], this.marginX + textIndent, this.y, { size, color: PDF_DARK });
+      this.y -= Math.ceil(size * 1.35);
     }
-    this.y -= gapAfter;
+    this.y -= 4;
   }
 
   toBlob() {
-    this.addPageFooters();
     const encoder = new TextEncoder();
     const objects: string[] = [];
     const pageObjectIds: number[] = [];
@@ -545,31 +532,35 @@ class TextPdfDocument {
     options: {
       size: number;
       bold?: boolean;
+      color?: RGB;
       indent?: number;
-      hangingIndent?: number;
-      gapBefore?: number;
       gapAfter?: number;
       maxChars?: number;
     }
   ) {
-    if (options.gapBefore) this.y -= options.gapBefore;
     const indent = options.indent || 0;
-    const hangingIndent = options.hangingIndent || 0;
     const lines = wrapText(cleanPdfText(text), options.maxChars || this.maxChars(options.size, indent));
-    for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
+    for (const line of lines) {
       this.ensureSpace(options.size + 10);
-      const x = this.marginX + indent + (index > 0 ? hangingIndent : 0);
-      this.currentPage().push(`BT /${options.bold ? "F2" : "F1"} ${options.size} Tf 0 0 0 rg ${x} ${this.y} Td (${escapePdfText(line)}) Tj ET`);
-      this.y -= Math.ceil(options.size * 1.32);
+      this.writeAt(line, this.marginX + indent, this.y, options);
+      this.y -= Math.ceil(options.size * 1.35);
     }
     if (options.gapAfter) this.y -= options.gapAfter;
+  }
+
+  private writeAt(text: string, x: number, y: number, options: { size?: number; bold?: boolean; color?: RGB } = {}) {
+    const size = options.size || 10;
+    this.currentPage().push(`${rgb(options.color || PDF_DARK, "fill")} BT /${options.bold ? "F2" : "F1"} ${size} Tf ${x} ${y} Td (${escapePdfText(cleanPdfText(text))}) Tj ET`);
+  }
+
+  private line(x1: number, y1: number, x2: number, y2: number, color: RGB, width = 1) {
+    this.currentPage().push(`${rgb(color, "stroke")} ${width} w ${x1} ${y1} m ${x2} ${y2} l S`);
   }
 
   private ensureSpace(height: number) {
     if (this.y - height >= this.bottom) return;
     this.pages.push([]);
-    this.addPageHeader();
+    this.y = this.pageHeight - 50;
   }
 
   private currentPage() {
@@ -577,33 +568,14 @@ class TextPdfDocument {
   }
 
   private maxChars(size: number, indent: number) {
-    return Math.max(26, Math.floor((this.usableWidth - indent) / (size * 0.48)));
+    return Math.max(42, Math.floor((this.usableWidth - indent) / (size * 0.5)));
   }
 
-  private addPageHeader() {
-    this.y = this.pageHeight - 24;
-    this.currentPage().push(`BT /F1 7.5 Tf 0 0 0 rg 23 ${this.y} Td (${escapePdfText(formatPdfDate(this.createdAt))}) Tj ET`);
-    this.currentPage().push(`BT /F1 7.5 Tf 0 0 0 rg 260 ${this.y} Td (${escapePdfText(this.headerTitle)}) Tj ET`);
-    this.y -= 26;
-  }
-
-  private drawBulletMark(x: number, y: number, level: number) {
-    const r = level > 0 ? 1.8 : 1.45;
+  private drawBulletMark(x: number, y: number) {
+    const r = 1.45;
     const c = r * 0.5522847498;
     const path = `${x} ${y + r} m ${x + c} ${y + r} ${x + r} ${y + c} ${x + r} ${y} c ${x + r} ${y - c} ${x + c} ${y - r} ${x} ${y - r} c ${x - c} ${y - r} ${x - r} ${y - c} ${x - r} ${y} c ${x - r} ${y + c} ${x - c} ${y + r} ${x} ${y + r} c`;
-    if (level > 0) {
-      this.currentPage().push(`q 0 0 0 RG 0.5 w ${path} S Q`);
-    } else {
-      this.currentPage().push(`q 0 0 0 rg ${path} f Q`);
-    }
-  }
-
-  private addPageFooters() {
-    const total = this.pages.length;
-    this.pages.forEach((page, index) => {
-      page.push(`BT /F1 7.5 Tf 0 0 0 rg 23 19 Td (${escapePdfText("about:blank")}) Tj ET`);
-      page.push(`BT /F1 7.5 Tf 0 0 0 rg 560 19 Td (${escapePdfText(`${index + 1}/${total}`)}) Tj ET`);
-    });
+    this.currentPage().push(`${rgb(PDF_DARK, "fill")} ${path} f`);
   }
 }
 
@@ -667,6 +639,11 @@ function cleanPdfText(value: string) {
     .replace(/[–—]/g, "-")
     .replace(/…/g, "...")
     .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "");
+}
+
+function rgb(value: RGB, mode: "fill" | "stroke") {
+  const [r, g, b] = value;
+  return `${r} ${g} ${b} ${mode === "fill" ? "rg" : "RG"}`;
 }
 
 function escapePdfText(value: string) {

@@ -10,9 +10,28 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { OutputMetadataFooter } from "@/components/output-metadata-footer";
+import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 
 const styleOptions = ["Exam revision", "Classroom blackboard", "Student notebook", "Quick recap"];
 const detailOptions = ["Brief", "Balanced", "Detailed"];
+const NOTES_DRAFT_KEY = "notes";
+
+type NotesFormDraft = {
+  boardId: string;
+  classId: string;
+  subject: string;
+  bookId: string;
+  chapterNames: string[];
+  topic: string;
+  language: string;
+  noteStyle: string;
+  detailLevel: string;
+  includeKeyTerms: boolean;
+  includeExamples: boolean;
+  includeSummary: boolean;
+  includeQuestions: boolean;
+};
 
 export default function NotesGeneratorPage() {
   const { toast } = useToast();
@@ -44,6 +63,46 @@ export default function NotesGeneratorPage() {
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
   const [notes, setNotes] = useState<any>(null);
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readToolDraft<NotesFormDraft>(NOTES_DRAFT_KEY);
+    if (draft) {
+      setBoardId(draft.boardId || "");
+      setClassId(draft.classId || "");
+      setSubject(draft.subject || "");
+      setBookId(draft.bookId || "");
+      setChapterNames(draft.chapterNames || []);
+      setTopic(draft.topic || "");
+      setLanguage(draft.language || "English");
+      setNoteStyle(draft.noteStyle || styleOptions[0]);
+      setDetailLevel(draft.detailLevel || detailOptions[1]);
+      setIncludeKeyTerms(draft.includeKeyTerms ?? true);
+      setIncludeExamples(draft.includeExamples ?? true);
+      setIncludeSummary(draft.includeSummary ?? true);
+      setIncludeQuestions(draft.includeQuestions ?? true);
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    saveToolDraft<NotesFormDraft>(NOTES_DRAFT_KEY, {
+      boardId,
+      classId,
+      subject,
+      bookId,
+      chapterNames,
+      topic,
+      language,
+      noteStyle,
+      detailLevel,
+      includeKeyTerms,
+      includeExamples,
+      includeSummary,
+      includeQuestions
+    });
+  }, [draftReady, boardId, chapterNames, classId, bookId, detailLevel, includeExamples, includeKeyTerms, includeQuestions, includeSummary, language, noteStyle, subject, topic]);
 
   useEffect(() => {
     setFetching(true);
@@ -387,14 +446,20 @@ export default function NotesGeneratorPage() {
 }
 
 function NotesOutput({ notes, onCopy, onDownload, onBack }: { notes: any; onCopy: () => void; onDownload: () => void; onBack: () => void }) {
+  const metadata = notes.metadata || {};
+
   return (
     <aside className="rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
       <div className="flex flex-col gap-3 border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Button type="button" variant="outline" size="sm" onClick={onBack} className="mb-3 border-[#ffd9e8] text-[#be185d] hover:border-pink-200 hover:text-[#d9467d]">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <h2 className="text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
+        <div className="min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
+          </button>
+          <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
           <p className="mt-1 text-sm font-semibold text-[#6d6f78]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
         </div>
         <div className="flex gap-2">
@@ -419,6 +484,13 @@ function NotesOutput({ notes, onCopy, onDownload, onBack }: { notes: any; onCopy
         <NotesList title="Revision Questions" items={notes.revision_questions} />
         <NotesBlock title="Student Summary" body={notes.student_summary} />
         <NotesBlock title="Teacher Notes" body={notes.teacher_notes} />
+        <OutputMetadataFooter
+          subject={metadata.subject}
+          grade={metadata.grade || metadata.class}
+          chapter={metadata.chapter || metadata.topic || notes.title}
+          source={metadata.book || metadata.textbook || notes.textbook_source}
+          generatedAt={notes.generated_at || notes.created_at || notes.updated_at}
+        />
       </div>
     </aside>
   );

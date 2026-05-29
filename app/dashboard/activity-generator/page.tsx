@@ -10,10 +10,30 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { OutputMetadataFooter } from "@/components/output-metadata-footer";
+import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 
 const activityTypes = ["Group activity", "Hands-on activity", "Discussion activity", "Quick recap", "Project task"];
 const groupSizes = ["Whole class", "Pairs", "Small groups", "Individual"];
 const difficultyOptions = ["Easy", "Balanced", "Challenging"];
+const ACTIVITY_DRAFT_KEY = "activity";
+
+type ActivityFormDraft = {
+  boardId: string;
+  classId: string;
+  subject: string;
+  bookId: string;
+  chapterNames: string[];
+  topic: string;
+  language: string;
+  activityType: string;
+  durationInput: string;
+  groupSize: string;
+  difficulty: string;
+  includeAssessment: boolean;
+  includeMaterials: boolean;
+  includeDifferentiation: boolean;
+};
 
 export default function ActivityGeneratorPage() {
   const { toast } = useToast();
@@ -46,6 +66,48 @@ export default function ActivityGeneratorPage() {
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
   const [activity, setActivity] = useState<any>(null);
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const draft = readToolDraft<ActivityFormDraft>(ACTIVITY_DRAFT_KEY);
+    if (draft) {
+      setBoardId(draft.boardId || "");
+      setClassId(draft.classId || "");
+      setSubject(draft.subject || "");
+      setBookId(draft.bookId || "");
+      setChapterNames(draft.chapterNames || []);
+      setTopic(draft.topic || "");
+      setLanguage(draft.language || "English");
+      setActivityType(draft.activityType || activityTypes[0]);
+      setDurationInput(draft.durationInput || "20");
+      setGroupSize(draft.groupSize || groupSizes[2]);
+      setDifficulty(draft.difficulty || difficultyOptions[1]);
+      setIncludeAssessment(draft.includeAssessment ?? true);
+      setIncludeMaterials(draft.includeMaterials ?? true);
+      setIncludeDifferentiation(draft.includeDifferentiation ?? true);
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    saveToolDraft<ActivityFormDraft>(ACTIVITY_DRAFT_KEY, {
+      boardId,
+      classId,
+      subject,
+      bookId,
+      chapterNames,
+      topic,
+      language,
+      activityType,
+      durationInput,
+      groupSize,
+      difficulty,
+      includeAssessment,
+      includeMaterials,
+      includeDifferentiation
+    });
+  }, [draftReady, activityType, boardId, chapterNames, classId, bookId, difficulty, durationInput, groupSize, includeAssessment, includeDifferentiation, includeMaterials, language, subject, topic]);
 
   useEffect(() => {
     setFetching(true);
@@ -417,14 +479,20 @@ function ChapterPicker({ chapters, chapterNames, bookId, loading, error, onToggl
 }
 
 function ActivityOutput({ activity, onCopy, onDownload, onBack }: { activity: any; onCopy: () => void; onDownload: () => void; onBack: () => void }) {
+  const metadata = activity.metadata || {};
+
   return (
     <aside className="rounded-[18px] border border-[#c9f7fb] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
       <div className="flex flex-col gap-3 border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Button type="button" variant="outline" size="sm" onClick={onBack} className="mb-3 border-[#c9f7fb] text-[#087c86] hover:border-cyan-200 hover:text-[#16a9b6]">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <h2 className="text-xl font-black text-[#25262b]">{activity.title || "Generated Activity"}</h2>
+        <div className="min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#087c86] transition hover:text-[#16a9b6]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
+          </button>
+          <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{activity.title || "Generated Activity"}</h2>
           <p className="mt-1 text-sm font-semibold text-[#6d6f78]">{activity.metadata?.chapter || "Textbook grounded activity"}</p>
         </div>
         <div className="flex gap-2">
@@ -457,6 +525,13 @@ function ActivityOutput({ activity, onCopy, onDownload, onBack }: { activity: an
         ) : null}
         <ListBlock title="Exit Ticket" items={activity.exit_ticket} />
         <TextBlock title="Teacher Notes" body={activity.teacher_notes} />
+        <OutputMetadataFooter
+          subject={metadata.subject}
+          grade={metadata.grade || metadata.class}
+          chapter={metadata.chapter || metadata.topic || activity.title}
+          source={metadata.book || metadata.textbook || activity.textbook_source}
+          generatedAt={activity.generated_at || activity.created_at || activity.updated_at}
+        />
       </div>
     </aside>
   );
