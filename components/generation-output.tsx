@@ -23,7 +23,6 @@ import {
   Target,
   Users
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { OutputMetadataFooter } from "@/components/output-metadata-footer";
@@ -33,6 +32,7 @@ import {
   textOf,
   type LessonOutlineRow,
 } from "@/lib/lesson-plan-export";
+import { Badge } from "@/components/ui/badge";
 
 const differentiationLabels: Record<string, string> = {
   below_grade_level: "Below Grade Level",
@@ -64,6 +64,7 @@ type LessonDocumentSection = {
   title: string;
   lines?: string[];
   outline?: LessonOutlineRow[];
+  children?: LessonDocumentSection[];
 };
 
 type LessonDocumentDraft = {
@@ -156,15 +157,11 @@ function LessonPlanDocumentOutput({
           <header className="grid min-w-0 gap-4 border-b border-slate-300 pb-5 font-sans sm:gap-6">
             <div className="grid gap-5">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-slate-200 bg-slate-50 text-slate-700">AI Generated</Badge>
-                  <Badge className="border-slate-200 bg-slate-50 text-slate-700">Textbook Grounded</Badge>
-                </div>
                 <EditableText
                   as="h2"
                   value={draft.title}
                   onCommit={(title) => updateDraft((current) => ({ ...current, title }))}
-                  className="mt-4 break-words text-[20px] font-black leading-tight tracking-normal text-black sm:text-[24px]"
+                  className="break-words text-[20px] font-black leading-tight tracking-normal text-black sm:text-[24px]"
                   ariaLabel="Document title"
                   singleLine
                 />
@@ -226,7 +223,7 @@ function LessonSectionBlock({
   onSectionChange?: (section: LessonDocumentSection) => void;
 }) {
   const id = lessonSectionId(section.title);
-  const hasContent = section.outline?.length || section.lines?.length;
+  const hasContent = section.outline?.length || section.lines?.length || section.children?.length;
 
   return (
     <section
@@ -250,17 +247,77 @@ function LessonSectionBlock({
               rows={section.outline}
               onRowsChange={(outline) => onSectionChange?.({ ...section, outline })}
             />
-          ) : (
+          ) : section.children?.length ? null : (
             <LessonBulletList
               lines={section.lines || []}
               onLinesChange={(lines) => onSectionChange?.({ ...section, lines })}
             />
           )}
+          {section.children?.length ? (
+            <div className="mt-5 grid gap-4 border-l-2 border-slate-200 pl-4">
+              {section.children.map((child, childIndex) => (
+                <div key={child.key || `${child.title}-${childIndex}`}>
+                  <div className="flex items-start gap-2">
+                    <span className="pt-0.5 font-sans text-[14px] font-black text-black sm:text-[15px]">
+                      {toRoman(childIndex + 1)}.
+                    </span>
+                    <EditableText
+                      as="h4"
+                      value={child.title}
+                      onCommit={(title) => onSectionChange?.({
+                        ...section,
+                        children: section.children?.map((item, index) => index === childIndex ? { ...item, title } : item)
+                      })}
+                      className="font-sans text-[14px] font-black text-black sm:text-[15px]"
+                      ariaLabel={`Subheading ${childIndex + 1}`}
+                      singleLine
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <LessonBulletList
+                      lines={child.lines || []}
+                      onLinesChange={(lines) => onSectionChange?.({
+                        ...section,
+                        children: section.children?.map((item, index) => index === childIndex ? { ...item, lines } : item)
+                      })}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
           {!hasContent ? <LessonEmptyLine /> : null}
         </div>
       </div>
     </section>
   );
+}
+
+function toRoman(value: number) {
+  const numerals: Array<[number, string]> = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"]
+  ];
+  let remaining = value;
+  let result = "";
+  for (const [amount, label] of numerals) {
+    while (remaining >= amount) {
+      result += label;
+      remaining -= amount;
+    }
+  }
+  return result.toLowerCase();
 }
 
 function LessonFlowBlock({
@@ -566,8 +623,9 @@ function InlineTextArea({
 function buildLessonDocumentDraft(output: any): LessonDocumentDraft {
   const plan = normalizeLessonPlan(output);
   const metadata = plan.metadata || {};
+  const schoolFormatEnabled = Boolean(output?.school_format?.requested && output?.school_format?.available);
   const existingDocumentSections = normalizeDocumentSections(output?.lesson_document_sections);
-  if (existingDocumentSections.length) {
+  if (existingDocumentSections.length && (output?.document_format === "custom" || output?.document_format === "school_format")) {
     return {
       title: plan.title || output?.title || "Generated Lesson Plan",
       metadata: {
@@ -585,6 +643,7 @@ function buildLessonDocumentDraft(output: any): LessonDocumentDraft {
   }
   const keyPoints = plan.keyPoints.length ? plan.keyPoints : arrayOf(output?.physical_properties_key_features);
   const selectedComponents = arrayOf(output?.selected_components);
+  const schoolFormatSections = schoolFormatEnabled ? normalizeSchoolFormatSections(output?.school_format_sections) : [];
   const differentiationLines = Object.entries(plan.differentiation || {}).map(
     ([key, value]) => `${formatDifferentiationLabel(key)}: ${value}`
   );
@@ -606,7 +665,7 @@ function buildLessonDocumentDraft(output: any): LessonDocumentDraft {
       topic: textOf(metadata.topic || plan.title),
       board: textOf(metadata.board)
     },
-    sections: filterLessonSectionsBySelection([
+    sections: schoolFormatSections.length ? schoolFormatSections : filterLessonSectionsBySelection([
       { key: "objectives", title: "Learning Objectives", lines: plan.objectives },
       { key: "previous_knowledge", title: "Previous Knowledge", lines: valueToLines(output?.previous_knowledge) },
       { key: "key_points", title: "Key Textbook Points", lines: keyPoints },
@@ -707,12 +766,28 @@ function applyLessonDocumentDraft(baseOutput: any, draft: LessonDocumentDraft) {
     learning_outcome: joined("learning_outcome"),
     teacher_notes: joined("teacher_notes"),
     textbook_source: draft.metadata.book,
+    document_format: baseOutput?.school_format?.requested && baseOutput?.school_format?.available ? "school_format" : "custom",
     lesson_document_sections: draft.sections.map((section) => ({
       key: section.key,
       title: section.title,
       lines: section.lines ? section.lines.map((line) => line.trim()).filter(Boolean) : undefined,
-      outline: section.outline ? section.outline.map((row) => ({ ...row })) : undefined
-    }))
+      outline: section.outline ? section.outline.map((row) => ({ ...row })) : undefined,
+      children: section.children?.map((child) => ({
+        key: child.key,
+        title: child.title,
+        lines: child.lines ? child.lines.map((line) => line.trim()).filter(Boolean) : undefined
+      }))
+    })),
+    school_format_sections: baseOutput?.school_format?.requested && baseOutput?.school_format?.available
+      ? draft.sections.map((section) => ({
+        title: section.title,
+        content: (section.lines || []).join("\n"),
+        children: section.children?.map((child) => ({
+          title: child.title,
+          content: (child.lines || []).join("\n")
+        }))
+      }))
+      : baseOutput?.school_format_sections
   };
 }
 
@@ -730,8 +805,24 @@ function normalizeDocumentSections(value: any): LessonDocumentSection[] {
         student_action: textOf(row?.student_action),
         notes: textOf(row?.notes)
       }))
-      : undefined
+      : undefined,
+    children: normalizeDocumentSections(section?.children)
   })).filter((section) => section.lines?.length || section.outline?.length || section.title);
+}
+
+function normalizeSchoolFormatSections(value: any): LessonDocumentSection[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((section, index) => {
+    const record = typeof section === "object" && section !== null ? section : {};
+    const title = textOf(record.title || record.heading || record.name);
+    const content = record.content ?? record.lines ?? record.text ?? "";
+    return {
+      key: textOf(record.key) || `school_format_${index + 1}`,
+      title: title || `Section ${index + 1}`,
+      lines: valueToLines(content),
+      children: normalizeSchoolFormatSections(record.children)
+    };
+  }).filter((section) => section.title && (section.lines.length || section.children?.length));
 }
 
 function structuredCloneDraft(draft: LessonDocumentDraft): LessonDocumentDraft {
@@ -741,7 +832,8 @@ function structuredCloneDraft(draft: LessonDocumentDraft): LessonDocumentDraft {
     sections: draft.sections.map((section) => ({
       ...section,
       lines: section.lines ? [...section.lines] : undefined,
-      outline: section.outline ? section.outline.map((row) => ({ ...row })) : undefined
+      outline: section.outline ? section.outline.map((row) => ({ ...row })) : undefined,
+      children: section.children ? structuredCloneDraft({ title: "", metadata: draft.metadata, sections: section.children }).sections : undefined
     }))
   };
 }
@@ -847,7 +939,6 @@ export function LessonPlanOutput({
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-lg font-black text-[#25262b]">Generated Lesson Plan</h1>
-                <Badge className="bg-[#dffafa] text-[#1677ff]">AI Generated</Badge>
               </div>
               <h2 className="mt-4 max-w-4xl break-words text-[30px] font-black tracking-tight text-[#25262b] 2xl:mt-5 2xl:text-4xl">
                 {typedTitle}

@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  School,
   Users,
   Activity,
   X,
@@ -31,6 +32,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
+  { href: "/admin/schools", label: "Schools", icon: School },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/generations", label: "Generations", icon: BarChart3 },
   { href: "/admin/system", label: "System", icon: Activity }

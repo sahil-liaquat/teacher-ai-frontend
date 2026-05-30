@@ -357,7 +357,18 @@ function buildStructuredLessonPlanSections(output: any, plan: NormalizedLessonPl
 }
 
 function customLessonDocumentSections(output: any): Array<{ title: string; lines: string[] }> {
-  if (!Array.isArray(output?.lesson_document_sections)) return [];
+  const schoolFormatEnabled = Boolean(output?.school_format?.requested && output?.school_format?.available);
+  if (schoolFormatEnabled && Array.isArray(output?.school_format_sections)) {
+    return output.school_format_sections.map((section: any, index: number) => ({
+      title: textOf(section?.title || section?.heading || section?.name) || `Section ${index + 1}`,
+      lines: [
+        ...(Array.isArray(section?.children) && section.children.length ? [] : valueToLines(section?.content ?? section?.lines ?? section?.text)),
+        ...nestedSectionLines(section?.children)
+      ]
+    })).filter((section: { title: string; lines: string[] }) => section.title && section.lines.length);
+  }
+
+  if (!Array.isArray(output?.lesson_document_sections) || output?.document_format !== "custom") return [];
   return output.lesson_document_sections.map((section: any, index: number) => {
     const outlineLines = Array.isArray(section?.outline)
       ? section.outline.flatMap((item: any, itemIndex: number) => [
@@ -366,12 +377,61 @@ function customLessonDocumentSections(output: any): Array<{ title: string; lines
         textOf(item?.student_action) ? `Students: ${textOf(item.student_action)}` : ""
       ]).filter(Boolean)
       : [];
-    const lines = outlineLines.length ? outlineLines : Array.isArray(section?.lines) ? section.lines.map(textOf).filter(Boolean) : [];
+    const lines = outlineLines.length ? outlineLines : [
+      ...(Array.isArray(section?.lines) ? section.lines.map(textOf).filter(Boolean) : []),
+      ...nestedSectionLines(section?.children)
+    ];
     return {
       title: textOf(section?.title) || `Section ${index + 1}`,
       lines
     };
   }).filter((section: { title: string; lines: string[] }) => section.title && section.lines.length);
+}
+
+function nestedSectionLines(children: any): string[] {
+  if (!Array.isArray(children)) return [];
+  return children.flatMap((child: any, index: number) => {
+    const title = textOf(child?.title || child?.heading || child?.name);
+    const lines = compactPdfContentLines(valueToLines(child?.content ?? child?.lines ?? child?.text));
+    return [
+      title ? `${toRoman(index + 1)}. ${title}:` : "",
+      ...lines.map((line) => `  ${line}`),
+      ...nestedSectionLines(child?.children)
+    ].filter(Boolean);
+  });
+}
+
+function compactPdfContentLines(lines: string[]) {
+  const cleaned = lines.map((line) => line.trim()).filter(Boolean);
+  if (cleaned.length <= 2) return cleaned;
+  return [cleaned.slice(0, 4).join(" ")];
+}
+
+function toRoman(value: number) {
+  const numerals: Array<[number, string]> = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"]
+  ];
+  let remaining = value;
+  let result = "";
+  for (const [amount, label] of numerals) {
+    while (remaining >= amount) {
+      result += label;
+      remaining -= amount;
+    }
+  }
+  return result.toLowerCase();
 }
 
 function stripLeadingNumber(value: string) {
@@ -455,7 +515,11 @@ class TextPdfDocument {
     this.writeAt(cleanPdfText(stripLeadingNumber(title)), this.marginX + 22, this.y, { size: 12, bold: true, color: PDF_BLUE });
     this.y -= 22;
     for (const line of lines) {
-      if (shouldNumberLine(line) || /^Teacher:|^Students:/i.test(line)) {
+      if (isRomanSubheadingLine(line)) {
+        this.write(stripTrailingColon(line.trim()), { size: 10.5, bold: true, color: PDF_DARK, indent: 6, gapAfter: 2 });
+      } else if (/^\s{2,}/.test(line)) {
+        this.write(line.trim(), { size: 10, color: PDF_DARK, indent: 20, gapAfter: 5 });
+      } else if (shouldNumberLine(line) || /^Teacher:|^Students:/i.test(line)) {
         this.write(line, { size: 10, bold: shouldNumberLine(line), color: PDF_DARK, indent: shouldNumberLine(line) ? 0 : 18, gapAfter: 2 });
       } else {
         this.writeBulletText(line);
@@ -630,6 +694,14 @@ function formatChapterDisplay(metadata: Record<string, any>) {
 
 function shouldNumberLine(value: string) {
   return /^\s*\d+[.)]/.test(value);
+}
+
+function isRomanSubheadingLine(value: string) {
+  return /^\s*[ivxlcdm]+\.\s+.+:\s*$/i.test(value);
+}
+
+function stripTrailingColon(value: string) {
+  return value.replace(/:\s*$/, "");
 }
 
 function cleanPdfText(value: string) {
