@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Presentation, Sparkles } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, type PresentationGeneratePayload } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, type PresentationGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -283,9 +283,10 @@ export default function PresentationGeneratorPage() {
       toast({ title: "Presentation generated", description: "Opening the output page." });
       router.push(`/dashboard/presentation-generator/output?id=${generation.id}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not generate presentation.";
+      const rateLimit = getRateLimitNotice(error);
+      const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate presentation.");
       setGenerationError(message);
-      toast({ title: "Generation failed", description: message });
+      toast(rateLimit ?? { title: "Generation failed", description: message });
       setGenerating(false);
       setGenerationStatus("");
     } finally {

@@ -323,6 +323,31 @@ async function parseError(res: Response) {
   return Object.assign(new Error(normalizeError(error)), { status: res.status });
 }
 
+export type RateLimitNotice = { title: string; description: string };
+
+/**
+ * If `error` is a rate-limit response — HTTP 429 (per-user burst/hourly/daily
+ * limit) or 503 (global kill-switch) — return a user-facing notice, else null.
+ * The backend's `detail` (surfaced as `error.message` by parseError) already
+ * names which limit was hit and roughly when to retry, so we use it as the
+ * description and add a clear title so it doesn't read as a generic failure.
+ */
+export function getRateLimitNotice(error: unknown): RateLimitNotice | null {
+  const status = (error as { status?: number } | null)?.status;
+  if (status !== 429 && status !== 503) return null;
+  const detail = error instanceof Error && error.message ? error.message : "";
+  if (status === 503) {
+    return {
+      title: "Service is busy right now",
+      description: detail || "We've reached overall generation capacity for the moment. Please try again in a little while.",
+    };
+  }
+  return {
+    title: "Generation limit reached",
+    description: detail || "You've generated several times in quick succession. Please wait a moment and try again.",
+  };
+}
+
 export async function refreshSession() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;

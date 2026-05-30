@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ClipboardList, LoaderCircle, Sparkles } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -309,8 +309,10 @@ export default function NewWorksheetPage() {
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
       router.push(`/dashboard/worksheets/${generation.id}`);
     } catch (error) {
-      setGenerationError(error instanceof Error ? error.message : "Could not generate worksheet.");
-      toast({ title: "Generation failed", description: error instanceof Error ? error.message : "Could not generate worksheet." });
+      const rateLimit = getRateLimitNotice(error);
+      const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate worksheet.");
+      setGenerationError(message);
+      toast(rateLimit ?? { title: "Generation failed", description: message });
       setGenerating(false);
       setGenerationStatus("");
     } finally {
