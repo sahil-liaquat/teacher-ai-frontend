@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Boxes, Brain, ChevronDown, ClipboardCheck, FileText, GraduationCap, Lightbulb, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload, type SchoolFormatAvailability } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
+import { cn } from "@/lib/utils";
 
 const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, tone: "orange" },
@@ -81,6 +82,8 @@ export default function NewLessonPlanPage() {
   const [booksError, setBooksError] = useState("");
   const [chaptersError, setChaptersError] = useState("");
   const [draftReady, setDraftReady] = useState(false);
+  const [schoolFormat, setSchoolFormat] = useState<SchoolFormatAvailability | null>(null);
+  const [useSchoolFormat, setUseSchoolFormat] = useState(false);
 
   useEffect(() => {
     const draft = readToolDraft<LessonPlanFormDraft>(LESSON_PLAN_DRAFT_KEY);
@@ -123,6 +126,22 @@ export default function NewLessonPlanPage() {
     setFetching(true);
     backendApi.boards(0, 100).then((res) => setBoards(res.items.filter((b) => b.is_active !== false))).catch((err) => toast({ title: "Could not load boards", description: err.message })).finally(() => setFetching(false));
   }, [toast]);
+
+  useEffect(() => {
+    let cancelled = false;
+    backendApi.mySchoolFormat("lesson_plan")
+      .then((res) => {
+        if (cancelled) return;
+        setSchoolFormat(res);
+        setUseSchoolFormat(false);
+      })
+      .catch(() => {
+        if (!cancelled) setSchoolFormat({ available: false, template_available: false, message: "School format not available yet." });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!boardId) {
@@ -207,7 +226,8 @@ export default function NewLessonPlanPage() {
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
   const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
-  const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && selected.length);
+  const usingSchoolFormat = Boolean(schoolFormat?.available && useSchoolFormat);
+  const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && (usingSchoolFormat || selected.length));
 
   function chooseBoard(value: string) {
     setBoardId(value);
@@ -267,10 +287,12 @@ export default function NewLessonPlanPage() {
   }
 
   function toggleComponent(title: string) {
+    if (usingSchoolFormat) return;
     setSelected((items) => items.includes(title) ? items.filter((item) => item !== title) : [...items, title]);
   }
 
   function suggestObjectives() {
+    if (usingSchoolFormat) return;
     const chapter = chapterName || "the selected chapter";
     setLearningObjective(`Students will explain ${topic || chapter} using textbook evidence, identify key concepts, and apply them through a short classroom activity.`);
     toast({ title: "Objectives added", description: "You can edit them before generating." });
@@ -289,7 +311,9 @@ export default function NewLessonPlanPage() {
       lesson_components: selected,
       learning_objectives_hint: learningObjective.trim() || undefined,
       language,
-      teaching_style: teachingStyle
+      teaching_style: teachingStyle,
+      use_school_format: usingSchoolFormat,
+      format_type: usingSchoolFormat ? "school_format" : "teachpad_standard"
     };
     savePendingLessonPlan(payload);
     router.push("/dashboard/lesson-plans/generating");
@@ -318,7 +342,13 @@ export default function NewLessonPlanPage() {
 
         <div className="grid gap-4 p-4 sm:p-5">
           <div className="grid gap-4">
-            <NumericSection number="1" title="Plan Details" subtitle="Provide basic information about your lesson.">
+            <NumericSection
+              number="1"
+              title="Plan Details"
+              subtitle="Provide basic information about your lesson."
+              action={<SchoolFormatToggle available={Boolean(schoolFormat?.available)} checked={useSchoolFormat} onChange={setUseSchoolFormat} />}
+              actionMobilePlacement="below"
+            >
               <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
                 <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
                 <FieldBox label="Class / Grade" required error={classesError}><Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes..."><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
@@ -339,9 +369,10 @@ export default function NewLessonPlanPage() {
               expandable
               open={openSections.objectives}
               onToggle={() => setOpenSections((sections) => ({ ...sections, objectives: !sections.objectives }))}
-              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
+              disabled={usingSchoolFormat}
+              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} disabled={usingSchoolFormat} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
             >
-              <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} />
+              <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} disabled={usingSchoolFormat} />
               <div className="mt-2 flex justify-end text-xs text-slate-500">{learningObjective.length}/300</div>
             </NumericSection>
 
@@ -352,6 +383,7 @@ export default function NewLessonPlanPage() {
               expandable
               open={openSections.customize}
               onToggle={() => setOpenSections((sections) => ({ ...sections, customize: !sections.customize }))}
+              disabled={usingSchoolFormat}
             >
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {lessonComponents.map((component) => {
@@ -363,7 +395,8 @@ export default function NewLessonPlanPage() {
                       type="button"
                       onClick={() => toggleComponent(component.title)}
                       aria-pressed={active}
-                      className={`group rounded-xl border bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_12px_28px_rgba(37,99,235,0.12)] ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_10px_22px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
+                      disabled={usingSchoolFormat}
+                      className={`group rounded-xl border bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_12px_28px_rgba(37,99,235,0.12)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60 ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_10px_22px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
                     >
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div className={`grid h-10 w-10 place-items-center rounded-lg ${toneClass(component.tone)}`}><Icon className="h-5 w-5" /></div>
@@ -397,6 +430,8 @@ function NumericSection({
   title,
   subtitle,
   action,
+  actionMobilePlacement = "header",
+  disabled = false,
   children,
   expandable = false,
   open = true,
@@ -406,16 +441,21 @@ function NumericSection({
   title: string;
   subtitle: string;
   action?: ReactNode;
+  actionMobilePlacement?: "header" | "below";
+  disabled?: boolean;
   children: ReactNode;
   expandable?: boolean;
   open?: boolean;
   onToggle?: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-[16px] border border-white/70 bg-white/80 shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+    <div className={cn(
+      "overflow-hidden rounded-[16px] border border-white/70 bg-white/80 shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-sm transition",
+      disabled && "border-slate-200 bg-slate-50/70 opacity-60 grayscale-[0.15]"
+    )}>
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
         {expandable ? (
-          <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-4 text-left" aria-expanded={open}>
+          <button type="button" onClick={onToggle} disabled={disabled} className="flex min-w-0 flex-1 items-start gap-4 text-left" aria-expanded={open} aria-disabled={disabled}>
             <SectionTitle number={number} title={title} subtitle={subtitle} />
           </button>
         ) : (
@@ -423,12 +463,13 @@ function NumericSection({
             <SectionTitle number={number} title={title} subtitle={subtitle} />
           </div>
         )}
-        <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">
+        <div className={cn("w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end", actionMobilePlacement === "below" ? "hidden sm:flex" : "flex")}>
           {action ? <div className="min-w-0 flex-1 sm:flex-none">{action}</div> : <span />}
           {expandable ? (
             <button
               type="button"
               onClick={onToggle}
+              disabled={disabled}
               aria-label={`${open ? "Collapse" : "Expand"} ${title}`}
               className="grid h-9 w-9 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
             >
@@ -441,10 +482,39 @@ function NumericSection({
         <div className="min-h-0 overflow-hidden">
           <div className="px-4 pb-4">
             {children}
+            {action && actionMobilePlacement === "below" ? (
+              <div className="mt-4 flex sm:hidden">
+                {action}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function SchoolFormatToggle({ available, checked, onChange }: { available: boolean; checked: boolean; onChange: (checked: boolean) => void }) {
+  const enabled = available && checked;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      disabled={!available}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "inline-flex h-9 items-center gap-2 rounded-full border px-2.5 text-xs font-black transition",
+        available ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" : "border-slate-200 bg-slate-50 text-slate-400",
+        !available ? "cursor-not-allowed opacity-70" : ""
+      )}
+      title={available ? "Use school format" : "School format not available"}
+    >
+      <span>Use school format</span>
+      <span className={cn("relative h-5 w-9 rounded-full transition", enabled ? "bg-blue-600" : "bg-slate-300")}>
+        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition", enabled ? "left-4" : "left-0.5")} />
+      </span>
+    </button>
   );
 }
 

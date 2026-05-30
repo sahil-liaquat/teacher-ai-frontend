@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Quote, School, Sparkles, UserRound } from "lucide-react";
-import { signup } from "@/lib/api";
+import { backendApi, signup, type School as SchoolItem } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -15,26 +15,41 @@ const schema = z.object({
   name: z.string().min(2, "Enter your full name."),
   email: z.string().email("Enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
-  school_name: z.string().optional()
+  school_id: z.string().optional(),
+  pending_school_name: z.string().optional()
 });
 
 export default function SignupPage() {
   const { toast } = useToast();
   const [confirmation, setConfirmation] = useState<{ email: string; message: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [schools, setSchools] = useState<SchoolItem[]>([]);
+  const [schoolMode, setSchoolMode] = useState<"listed" | "unlisted">("listed");
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "", school_name: "" }
+    defaultValues: { name: "", email: "", password: "", school_id: "", pending_school_name: "" }
   });
+  const selectedSchoolId = form.watch("school_id");
+
+  useEffect(() => {
+    backendApi.schools("", 0, 100)
+      .then((res) => setSchools(res.items))
+      .catch(() => setSchools([]));
+  }, []);
+
+  const schoolOptions = useMemo(() => schools.filter((school) => school.status !== "inactive"), [schools]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
-      const created = await signup(values.name, values.email, values.password, values.school_name);
+      const created = await signup(values.name, values.email, values.password, {
+        school_id: schoolMode === "listed" ? values.school_id || undefined : undefined,
+        pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined
+      });
       const message = created.email_confirmed
         ? "Your account is ready. You can log in now."
         : created.message || "Check your email to confirm your account before logging in.";
       setConfirmation({ email: created.email, message });
-      form.reset({ name: "", email: "", password: "", school_name: "" });
+      form.reset({ name: "", email: "", password: "", school_id: "", pending_school_name: "" });
       toast({ title: "Account created", description: message });
     } catch (error) {
       toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
@@ -104,12 +119,45 @@ export default function SignupPage() {
                     </button>
                   }
                 />
-                <AuthInput
-                  label="School name"
-                  icon={<School className="h-5 w-5" />}
-                  error={form.formState.errors.school_name?.message}
-                  inputProps={{ ...form.register("school_name"), placeholder: "Your school" }}
-                />
+                <label className="grid gap-2">
+                  <span className="text-sm font-black text-slate-900">Which school do you teach at?</span>
+                  <span className="flex min-h-[50px] items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70">
+                    <School className="h-5 w-5 shrink-0" />
+                    <select
+                      {...form.register("school_id")}
+                      disabled={schoolMode === "unlisted"}
+                      className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none disabled:text-slate-400"
+                    >
+                      <option value="">Select school</option>
+                      {schoolOptions.map((school) => (
+                        <option key={school.id} value={school.id}>
+                          {[school.name, school.city].filter(Boolean).join(", ")}
+                        </option>
+                      ))}
+                    </select>
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">TeachPad can use your school format when available.</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = schoolMode === "listed" ? "unlisted" : "listed";
+                    setSchoolMode(next);
+                    form.setValue("school_id", "");
+                    form.setValue("pending_school_name", "");
+                  }}
+                  className="text-left text-sm font-black text-blue-600 transition hover:text-blue-700"
+                >
+                  {schoolMode === "listed" ? "My school is not listed" : "Choose from listed schools"}
+                </button>
+                {schoolMode === "unlisted" ? (
+                  <AuthInput
+                    label="Enter school name"
+                    icon={<School className="h-5 w-5" />}
+                    error={form.formState.errors.pending_school_name?.message}
+                    inputProps={{ ...form.register("pending_school_name"), placeholder: "Your school" }}
+                  />
+                ) : selectedSchoolId ? null : null}
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
                 </AuthButton>

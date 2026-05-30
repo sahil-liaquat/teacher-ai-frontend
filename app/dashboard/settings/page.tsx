@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, ClipboardCheck, FolderOpen, KeyRound, Mail, Save, School, Sparkles, UserRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Save, School, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [schoolId, setSchoolId] = useState("");
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
 
   const currentUser = useQuery<ApiUser>({
@@ -45,6 +46,24 @@ export default function SettingsPage() {
     retry: false,
     staleTime: 0
   });
+  const schools = useQuery({
+    queryKey: ["settings-schools"],
+    queryFn: () => backendApi.schools("", 0, 100),
+    enabled: !!token,
+    retry: false
+  });
+  const schoolProfile = useQuery({
+    queryKey: ["settings-my-school"],
+    queryFn: () => backendApi.mySchool(),
+    enabled: !!token,
+    retry: false
+  });
+  const schoolFormat = useQuery({
+    queryKey: ["settings-school-format", schoolProfile.data?.school_id],
+    queryFn: () => backendApi.mySchoolFormat("lesson_plan"),
+    enabled: !!token,
+    retry: false
+  });
 
   useEffect(() => {
     if (!currentUser.data?.id) return;
@@ -54,6 +73,10 @@ export default function SettingsPage() {
       name: currentUser.data.full_name || currentUser.data.name || ""
     });
   }, [currentUser.data]);
+
+  useEffect(() => {
+    setSchoolId(schoolProfile.data?.school_id || "");
+  }, [schoolProfile.data]);
 
   const usage = useMemo(() => {
     const lessonItems = plans.data?.items || [];
@@ -73,6 +96,8 @@ export default function SettingsPage() {
   const displayName = profile.name || currentUser.data?.full_name || currentUser.data?.name || "Teacher";
   const email = currentUser.data?.email || "No email available";
   const isLoadingUsage = plans.isLoading || worksheets.isLoading;
+  const selectedSchool = schools.data?.items.find((school) => school.id === schoolId);
+  const lessonPlanFormatAvailable = Boolean(selectedSchool?.templates_count || schoolFormat.data?.available);
 
   function updateProfile(field: keyof TeacherProfile, value: string) {
     setProfile((current) => ({ ...current, [field]: value }));
@@ -82,8 +107,8 @@ export default function SettingsPage() {
     event.preventDefault();
     const next = {
       name: profile.name.trim(),
-      school: profile.school.trim(),
-      subjects: profile.subjects.trim()
+      school: selectedSchool?.name || profile.school.trim(),
+      subjects: ""
     };
     if (!next.name) {
       toast({ title: "Name is required", description: "Please enter the name for this account." });
@@ -98,8 +123,13 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await backendApi.updateUser(currentUserId, { full_name: next.name });
+      if (schoolId) {
+        await backendApi.updateMySchool({ school_id: schoolId, pending_school_name: null });
+      }
       const savedUser = await getCurrentUser({ redirectOnUnauthorized: false });
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, savedUser);
+      await schoolProfile.refetch();
+      await schoolFormat.refetch();
 
       const savedProfile = {
         ...next,
@@ -165,8 +195,7 @@ export default function SettingsPage() {
           <div className="mt-6 grid gap-3">
             <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value="Teacher" />
             <AccountLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} />
-            <AccountLine icon={<School className="h-4 w-4" />} label="School" value={profile.school || "Not added"} />
-            <AccountLine icon={<ClipboardCheck className="h-4 w-4" />} label="Subjects" value={profile.subjects || "Not added"} />
+            <AccountLine icon={<School className="h-4 w-4" />} label="School" value={schoolProfile.data?.school?.name || schoolProfile.data?.pending_school_name || profile.school || "Not added"} />
           </div>
         </aside>
 
@@ -187,11 +216,20 @@ export default function SettingsPage() {
               <Input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="Teacher name" />
             </ProfileField>
             <ProfileField label="School" icon={<School className="h-4 w-4" />}>
-              <Input value={profile.school} onChange={(event) => updateProfile("school", event.target.value)} placeholder="School name" />
+              <select
+                value={schoolId}
+                onChange={(event) => setSchoolId(event.target.value)}
+                className="h-11 rounded-md border border-input bg-background px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Select school</option>
+                {schools.data?.items.map((school) => (
+                  <option key={school.id} value={school.id}>{[school.name, school.city].filter(Boolean).join(", ")}</option>
+                ))}
+              </select>
             </ProfileField>
-            <ProfileField label="Subjects taught" icon={<ClipboardCheck className="h-4 w-4" />} className="md:col-span-2">
-              <Input value={profile.subjects} onChange={(event) => updateProfile("subjects", event.target.value)} placeholder="Science, Mathematics" />
-            </ProfileField>
+            <div className="md:col-span-2">
+              <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Lesson plan format" value={lessonPlanFormatAvailable ? "Available" : "Not available"} />
+            </div>
           </div>
         </form>
       </section>

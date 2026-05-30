@@ -39,6 +39,55 @@ export type Board = { id: string; code: string; name: string; description?: stri
 export type ClassItem = { id: string; board_id: string; grade_number?: number; name: string; description?: string; is_active?: boolean };
 export type Book = { id: string; class_id: string; title: string; subject: string; is_ingested?: boolean; is_active?: boolean; pinecone_index?: string };
 export type Chapter = { id: string; book_id: string; chapter_number?: number; chapter_title: string; title?: string };
+export type School = {
+  id: string;
+  name: string;
+  board_id?: string | null;
+  board_name?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  status: string;
+  templates_count?: number;
+  teachers_count?: number;
+};
+export type UserSchoolProfile = {
+  id: string;
+  user_id?: string;
+  school_id?: string | null;
+  pending_school_name?: string | null;
+  role_in_school?: string | null;
+  school?: School | null;
+};
+export type SchoolFormatAvailability = {
+  available: boolean;
+  template_available: boolean;
+  school_name?: string | null;
+  template_name?: string | null;
+  template_type?: string | null;
+  message?: string | null;
+};
+export type SchoolFormatSection = {
+  key: string;
+  title: string;
+  required: boolean;
+  children?: SchoolFormatSection[];
+};
+export type SchoolFormatTemplate = {
+  id: string;
+  school_id: string;
+  template_type: "lesson_plan" | "worksheet" | "notes" | "presentation";
+  template_name: string;
+  description?: string | null;
+  required_sections: SchoolFormatSection[];
+  output_schema?: Record<string, any> | null;
+  prompt_instructions?: string | null;
+  sample_output?: string | null;
+  is_default: boolean;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
 export type LessonPlan = {
   id: string;
   user_id?: string;
@@ -67,6 +116,8 @@ export type LessonPlanGeneratePayload = {
   learning_objectives_hint?: string;
   language?: string;
   teaching_style?: string;
+  use_school_format?: boolean;
+  format_type?: "teachpad_standard" | "school_format";
 };
 
 export type WorksheetGeneratePayload = {
@@ -561,10 +612,10 @@ export async function ensureSession() {
   return true;
 }
 
-export async function signup(name: string, email: string, password: string, school_name?: string) {
+export async function signup(name: string, email: string, password: string, school?: { school_id?: string; pending_school_name?: string }) {
   const created = await apiFetch<SignupResponse>("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ full_name: name, email, password })
+    body: JSON.stringify({ full_name: name, email, password, ...school })
   });
   return { ...created, full_name: name, name };
 }
@@ -600,6 +651,21 @@ export const backendApi = {
   booksByClass: (classId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<Book>>(`/books/class/${classId}?skip=${skip}&limit=${limit}`),
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
+  schools: (q = "", skip = 0, limit = 100) => apiFetch<PaginatedResponse<School>>(`/schools?q=${encodeURIComponent(q)}&skip=${skip}&limit=${limit}`),
+  mySchool: () => apiFetch<UserSchoolProfile | null>("/schools/me"),
+  updateMySchool: (payload: { school_id?: string | null; pending_school_name?: string | null; role_in_school?: string | null }) =>
+    apiFetch<UserSchoolProfile>("/schools/me", { method: "PUT", body: JSON.stringify(payload) }),
+  mySchoolFormat: (type = "lesson_plan") => apiFetch<SchoolFormatAvailability>(`/schools/my-format?type=${encodeURIComponent(type)}`),
+  createSchool: (payload: Partial<School> & { name: string }) =>
+    apiFetch<School>("/schools/admin", { method: "POST", body: JSON.stringify(payload) }),
+  updateSchool: (id: string, payload: Partial<School>) =>
+    apiFetch<School>(`/schools/admin/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteSchool: (id: string) => apiFetch<void>(`/schools/admin/${id}`, { method: "DELETE" }),
+  schoolTemplates: (schoolId: string) => apiFetch<SchoolFormatTemplate[]>(`/schools/admin/${schoolId}/templates`),
+  createSchoolTemplate: (schoolId: string, payload: Omit<SchoolFormatTemplate, "id" | "school_id" | "created_at" | "updated_at">) =>
+    apiFetch<SchoolFormatTemplate>(`/schools/admin/${schoolId}/templates`, { method: "POST", body: JSON.stringify(payload) }),
+  updateSchoolTemplate: (id: string, payload: Partial<Omit<SchoolFormatTemplate, "id" | "school_id" | "created_at" | "updated_at">>) =>
+    apiFetch<SchoolFormatTemplate>(`/schools/admin/templates/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
   lessonPlanSummary: () => apiFetch<LessonPlanDashboardSummary>("/lesson-plans/summary"),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
@@ -695,6 +761,8 @@ export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
     homework: plan.homework,
     learning_outcome: plan.learning_outcome,
     selected_components: toArray(plan.selected_components),
+    school_format: plan.school_format,
+    school_format_sections: Array.isArray(plan.school_format_sections) ? plan.school_format_sections : [],
     teacher_notes: plan.teacher_notes
   };
 }
