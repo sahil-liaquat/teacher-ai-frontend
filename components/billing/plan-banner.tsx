@@ -34,7 +34,10 @@ export function PlanBanner() {
       : null;
 
     const isGift = gift.granted;
-    const isTrial = status === "trial" || (days_left !== null && days_left <= 7);
+    // "trialing" is the backend SubscriptionStatus value for a trial period.
+    // Never use days_left alone — a paying Pro subscriber nearing renewal must
+    // not be shown as "Trial".
+    const isTrial = status === "trialing";
 
     return (
       <div

@@ -93,18 +93,35 @@ declare global {
   }
 }
 
+// Cache the in-flight (or already-resolved) load promise at module scope so
+// repeated opens never append a second <script> tag.
+let razorpayScriptPromise: Promise<boolean> | null = null;
+
 function loadRazorpayScript(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (typeof window !== "undefined" && window.Razorpay) {
-      resolve(true);
-      return;
-    }
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  if (razorpayScriptPromise) return razorpayScriptPromise;
+
+  // Check if a <script> tag was already added (e.g. by a previous render).
+  const existing = document.querySelector<HTMLScriptElement>(
+    'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+  );
+  if (existing) {
+    razorpayScriptPromise = new Promise((resolve) => {
+      existing.addEventListener("load", () => resolve(true), { once: true });
+      existing.addEventListener("error", () => resolve(false), { once: true });
+    });
+    return razorpayScriptPromise;
+  }
+
+  razorpayScriptPromise = new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.onerror = () => { razorpayScriptPromise = null; resolve(false); };
     document.body.appendChild(script);
   });
+  return razorpayScriptPromise;
 }
 
 function UpgradeModalUI({
@@ -121,6 +138,11 @@ function UpgradeModalUI({
 
   async function handleUpgrade() {
     setLoading(true);
+    // Tracks whether we successfully handed off to Razorpay. If true, loading
+    // is reset by rzp's ondismiss callback (user closed the sheet). If false,
+    // we reset loading in the finally block so the button is never permanently
+    // stuck.
+    let handedOff = false;
     try {
       const loaded = await loadRazorpayScript();
       if (!loaded) {
@@ -136,10 +158,20 @@ function UpgradeModalUI({
         name: "TeachPad",
         description: selected === "pro_annual" ? "TeachPad Pro — Annual" : "TeachPad Pro — Monthly",
         theme: { color: "#1677ff" },
-        handler: async () => {
-          await refetch();
-          toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
-          onClose();
+        handler: () => {
+          // Razorpay does not await this callback — wrap async work in a
+          // fire-and-forget so any rejection is caught and swallowed here.
+          refetch()
+            .then(() => {
+              toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
+              onClose();
+            })
+            .catch((err) => {
+              console.error("Billing refetch after payment failed:", err);
+              // Still close the modal; the user paid successfully.
+              toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
+              onClose();
+            });
         },
         modal: {
           ondismiss: () => {
@@ -148,13 +180,20 @@ function UpgradeModalUI({
         },
       });
 
+      handedOff = true;
       rzp.open();
+      // Loading is owned by Razorpay from here: ondismiss resets it.
     } catch (err) {
       toast({
         title: "Could not start checkout",
         description: err instanceof Error ? err.message : "Please try again.",
       });
-      setLoading(false);
+    } finally {
+      // Only reset loading when we did NOT hand off to Razorpay. If we did,
+      // ondismiss (or onClose) will reset it.
+      if (!handedOff) {
+        setLoading(false);
+      }
     }
   }
 

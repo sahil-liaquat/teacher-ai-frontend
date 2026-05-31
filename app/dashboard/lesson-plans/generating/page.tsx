@@ -73,6 +73,7 @@ export default function GeneratingLessonPlanPage() {
     } catch (err) {
       if (isPaymentRequiredError(err)) {
         openUpgrade("Lesson plan generation requires a Pro plan.");
+        setError("A Pro plan is required to generate lesson plans.");
         return;
       }
       const rateLimit = getRateLimitNotice(err);

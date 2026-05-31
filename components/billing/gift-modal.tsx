@@ -36,14 +36,14 @@ export function GiftModal() {
 
   if (!visible || !data?.gift.granted) return null;
 
-  const expiryLabel = data.gift.until
+  const expiryLabel = data.access_until
     ? new Intl.DateTimeFormat(undefined, {
         day: "numeric",
         month: "long",
         year: "numeric",
         hour: "numeric",
         minute: "2-digit",
-      }).format(new Date(data.gift.until))
+      }).format(new Date(data.access_until))
     : null;
 
   return (
