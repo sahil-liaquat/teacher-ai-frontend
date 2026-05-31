@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ClipboardList, LoaderCircle, Sparkles } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveWorksheetGeneration } from "@/lib/worksheet-storage";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 
 const difficultyPresets = [
   { key: "easy", label: "Easy", values: { easy: 60, medium: 30, hard: 10 } },
@@ -56,6 +57,7 @@ type WorksheetFormDraft = {
 export default function NewWorksheetPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -309,6 +311,12 @@ export default function NewWorksheetPage() {
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
       router.push(`/dashboard/worksheets/${generation.id}`);
     } catch (error) {
+      if (isPaymentRequiredError(error)) {
+        setGenerating(false);
+        setGenerationStatus("");
+        openUpgrade("Worksheet generation requires a Pro plan.");
+        return;
+      }
       const rateLimit = getRateLimitNotice(error);
       const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate worksheet.");
       setGenerationError(message);

@@ -1,5 +1,10 @@
 import { AppShell } from "@/components/app-shell";
+import { DashboardBillingShell } from "@/components/billing/dashboard-billing-shell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <DashboardBillingShell>{children}</DashboardBillingShell>
+    </AppShell>
+  );
 }

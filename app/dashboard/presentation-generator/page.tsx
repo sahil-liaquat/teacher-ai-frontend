@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Presentation, Sparkles } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, type PresentationGeneratePayload } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveLatestPresentationId } from "@/lib/presentation-generator";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 
 const slideCountOptions = [6, 8, 10, 12] as const;
 const languageOptions = ["English", "Hindi", "Urdu"] as const;
@@ -41,6 +42,7 @@ type PresentationFormDraft = {
 export default function PresentationGeneratorPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -283,6 +285,12 @@ export default function PresentationGeneratorPage() {
       toast({ title: "Presentation generated", description: "Opening the output page." });
       router.push(`/dashboard/presentation-generator/output?id=${generation.id}`);
     } catch (error) {
+      if (isPaymentRequiredError(error)) {
+        setGenerating(false);
+        setGenerationStatus("");
+        openUpgrade("Presentation generation requires a Pro plan.");
+        return;
+      }
       const rateLimit = getRateLimitNotice(error);
       const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate presentation.");
       setGenerationError(message);
