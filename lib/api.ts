@@ -374,6 +374,80 @@ async function parseError(res: Response) {
   return Object.assign(new Error(normalizeError(error)), { status: res.status });
 }
 
+// ─── Billing types ────────────────────────────────────────────────────────────
+
+export type BillingMe = {
+  status: string;
+  plan_code: string;
+  is_pro: boolean;
+  access_until: string | null;
+  days_left: number | null;
+  monthly_used: number;
+  monthly_quota: number | null;
+  gift: {
+    granted: boolean;
+    until: string | null;
+    acknowledged: boolean;
+  };
+};
+
+export type CheckoutPayload = {
+  plan_code: string;
+  promo_code?: string;
+};
+
+export type CheckoutResponse = {
+  razorpay_subscription_id: string;
+  key_id: string;
+  [key: string]: unknown;
+};
+
+/**
+ * Shape of the HTTP 402 Payment Required body the backend returns when a
+ * free user attempts a Pro-only feature (e.g. presentations, export).
+ */
+export type PaymentRequiredBody = {
+  detail: string;
+  upgrade_url?: string;
+  plan_prices?: unknown;
+};
+
+/**
+ * An Error subclass that carries the structured 402 body so UI code can
+ * display a contextual upgrade prompt instead of a generic error message.
+ * It is consistent with how `parseError` attaches `.status` to plain errors —
+ * callers can use `isPaymentRequiredError` to narrow the type.
+ */
+export class PaymentRequiredError extends Error {
+  readonly status = 402;
+  readonly upgrade_url: string | undefined;
+  readonly plan_prices: unknown;
+
+  constructor(body: PaymentRequiredBody) {
+    super(body.detail || "This feature requires a Pro subscription.");
+    this.name = "PaymentRequiredError";
+    this.upgrade_url = body.upgrade_url;
+    this.plan_prices = body.plan_prices;
+  }
+}
+
+/**
+ * Type guard: narrows `unknown` to `PaymentRequiredError`.
+ * Use in catch blocks to show an upgrade prompt.
+ *
+ * @example
+ * } catch (err) {
+ *   if (isPaymentRequiredError(err)) {
+ *     // show <UpgradePrompt url={err.upgrade_url} />
+ *   }
+ * }
+ */
+export function isPaymentRequiredError(error: unknown): error is PaymentRequiredError {
+  return error instanceof PaymentRequiredError;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type RateLimitNotice = { title: string; description: string };
 
 /**
@@ -478,6 +552,10 @@ async function requestWithSession(path: string, init: ApiRequestInit = {}, retry
 export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
   const res = await requestWithSession(path, init);
   if (!res.ok) {
+    if (res.status === 402) {
+      const body: PaymentRequiredBody = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new PaymentRequiredError(body);
+    }
     throw await parseError(res);
   }
   if (res.status === 204) return undefined as T;
@@ -711,7 +789,19 @@ export const backendApi = {
     apiFetch<Book>(`/books/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteBook: (id: string) => apiFetch<void>(`/books/${id}`, { method: "DELETE" }),
   uploadBook: (classId: string, form: FormData) =>
-    apiFetch<Book>(`/books?class_id=${encodeURIComponent(classId)}`, { method: "POST", body: form })
+    apiFetch<Book>(`/books?class_id=${encodeURIComponent(classId)}`, { method: "POST", body: form }),
+
+  // ─── Billing ────────────────────────────────────────────────────────────────
+  billingMe: () =>
+    apiFetch<BillingMe>("/billing/me"),
+  billingCheckout: (payload: CheckoutPayload) =>
+    apiFetch<CheckoutResponse>("/billing/checkout", { method: "POST", body: JSON.stringify(payload) }),
+  billingCancel: () =>
+    apiFetch<{ ok: boolean }>("/billing/cancel", { method: "POST" }),
+  billingRedeem: (code: string) =>
+    apiFetch<BillingMe>("/billing/redeem", { method: "POST", body: JSON.stringify({ code }) }),
+  billingGiftAcknowledge: () =>
+    apiFetch<{ ok: boolean }>("/billing/gift/acknowledge", { method: "POST" }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
