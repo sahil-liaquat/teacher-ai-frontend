@@ -89,7 +89,10 @@ export function PlanBanner() {
                     : "Trial active"
                   : "TeachPad Pro"}
             </p>
-            {accessLabel && (
+            {/* For an upgraded-during-trial user, access_until is still the trial
+                end (= first-billing date), so don't label it "Active until" — the
+                billing page shows "First payment on" instead. */}
+            {accessLabel && !hasUpgraded && (
               <p
                 className={cn(
                   "text-xs font-semibold",

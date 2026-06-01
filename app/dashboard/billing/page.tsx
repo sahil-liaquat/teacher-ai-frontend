@@ -298,7 +298,8 @@ function PlanCard({
           />
         )}
 
-        {/* Renews on — active paying subscribers only */}
+        {/* Renews on — active paying subscribers only; an upgraded-during-trial
+            user sees "First payment on" above instead of this date. */}
         {isActivePaid && access_until && (
           <InfoRow
             icon={<CalendarDays className="h-4 w-4" />}
