@@ -270,6 +270,7 @@ type SignupResponse = {
   email: string;
   email_confirmed: boolean;
   message: string;
+  coupon_message?: string | null;
 };
 
 let refreshRequest: Promise<boolean> | null = null;
@@ -391,6 +392,37 @@ export type BillingMe = {
     until: string | null;
     acknowledged: boolean;
   };
+};
+
+export type PromoKind = "trial" | "comp" | "discount";
+
+export type PromoCodeOut = {
+  id: string;
+  code: string;
+  kind: PromoKind;
+  duration_days: number | null;
+  target_plan_code: string | null;
+  max_redemptions: number | null;
+  times_redeemed: number;
+  expires_at: string | null;
+  is_active: boolean;
+  note: string | null;
+};
+
+export type PromoCodeCreatePayload = {
+  kind: PromoKind;
+  duration_days?: number | null;
+  target_plan_code?: string | null;
+  max_redemptions?: number | null;
+  expires_at?: string | null;
+  note?: string | null;
+  code?: string | null;
+};
+
+export type PromoRedemptionOut = {
+  user_id: string;
+  resulting_access_until: string | null;
+  created_at: string;
 };
 
 export type CheckoutPayload = {
@@ -692,10 +724,15 @@ export async function ensureSession() {
   return true;
 }
 
-export async function signup(name: string, email: string, password: string, school?: { school_id?: string; pending_school_name?: string }) {
+export async function signup(
+  name: string,
+  email: string,
+  password: string,
+  opts?: { school_id?: string; pending_school_name?: string; promo_code?: string }
+) {
   const created = await apiFetch<SignupResponse>("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ full_name: name, email, password, ...school })
+    body: JSON.stringify({ full_name: name, email, password, ...opts })
   });
   return { ...created, full_name: name, name };
 }
@@ -808,6 +845,18 @@ export const backendApi = {
     apiFetch<BillingMe>("/billing/redeem", { method: "POST", body: JSON.stringify({ code }) }),
   billingGiftAcknowledge: () =>
     apiFetch<{ ok: boolean }>("/billing/gift/acknowledge", { method: "POST" }),
+  adminPromoCodes: (skip = 0, limit = 100) =>
+    apiFetch<PromoCodeOut[]>(`/admin/promo-codes?skip=${skip}&limit=${limit}`),
+  adminCreatePromoCode: (payload: PromoCodeCreatePayload) =>
+    apiFetch<PromoCodeOut>("/admin/promo-codes", { method: "POST", body: JSON.stringify(payload) }),
+  adminSetPromoActive: (id: string, isActive: boolean) =>
+    apiFetch<PromoCodeOut>(`/admin/promo-codes/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }),
+  adminPromoRedemptions: (id: string) =>
+    apiFetch<PromoRedemptionOut[]>(`/admin/promo-codes/${id}/redemptions`),
+  adminExtendUser: (userId: string, days: number) =>
+    apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/extend`, { method: "POST", body: JSON.stringify({ days }) }),
+  adminCompUser: (userId: string, days: number) =>
+    apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/comp`, { method: "POST", body: JSON.stringify({ days }) }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
