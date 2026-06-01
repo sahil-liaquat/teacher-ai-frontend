@@ -21,7 +21,7 @@ export function PlanBanner() {
 
   if (isLoading || isError || !data) return null;
 
-  const { is_pro, status, days_left, access_until, monthly_used, monthly_quota, gift } = data;
+  const { is_pro, status, days_left, access_until, monthly_used, monthly_quota, gift, paid_starts_at } = data;
 
   // ── Pro / Gift / Trial ─────────────────────────────────────────────────────
   if (is_pro || gift.granted) {
@@ -34,10 +34,11 @@ export function PlanBanner() {
       : null;
 
     const isGift = gift.granted;
+    const hasUpgraded = Boolean(paid_starts_at);
     // "trialing" is the backend SubscriptionStatus value for a trial period.
-    // Never use days_left alone — a paying Pro subscriber nearing renewal must
-    // not be shown as "Trial".
-    const isTrial = status === "trialing";
+    // Once the user has upgraded (paid plan scheduled) we drop the trial wording
+    // and present them as Pro.
+    const isTrial = status === "trialing" && !hasUpgraded;
 
     return (
       <div
