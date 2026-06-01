@@ -35,14 +35,48 @@ if (!existsSync(MASTER)) {
   process.exit(1);
 }
 
+// Knock out the (near-white) background: flood-fill transparency inward from all
+// four borders. Only white CONNECTED TO AN EDGE is removed, so an enclosed white
+// shape — e.g. the knockout "t" inside the blue mark — is preserved. The hard
+// mask edge is smoothed by the downscale in square(). A master that is already
+// transparent is unaffected (its border pixels aren't near-white & opaque).
+const NEAR_WHITE = 238;
+const buildTransparentMaster = async () => {
+  const { data, info } = await sharp(MASTER).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info; // RGBA → channels === 4
+  const isBg = (p) => {
+    const i = p * channels;
+    return data[i + 3] !== 0 && data[i] >= NEAR_WHITE && data[i + 1] >= NEAR_WHITE && data[i + 2] >= NEAR_WHITE;
+  };
+  const visited = new Uint8Array(width * height);
+  const stack = [];
+  const seed = (p) => { if (!visited[p] && isBg(p)) { visited[p] = 1; stack.push(p); } };
+  for (let x = 0; x < width; x++) { seed(x); seed((height - 1) * width + x); }
+  for (let y = 0; y < height; y++) { seed(y * width); seed(y * width + (width - 1)); }
+  while (stack.length) {
+    const p = stack.pop();
+    data[p * channels + 3] = 0; // background → fully transparent
+    const x = p % width, y = (p / width) | 0;
+    if (x > 0) seed(p - 1);
+    if (x < width - 1) seed(p + 1);
+    if (y > 0) seed(p - width);
+    if (y < height - 1) seed(p + width);
+  }
+  return sharp(data, { raw: { width, height, channels } }).png({ force: true }).toBuffer();
+};
+
+// The master with its outer background knocked out — source for every icon below.
+const SOURCE = await buildTransparentMaster();
+
 // Square PNG buffer at `size`. `fit: contain` defends against a slightly
-// non-square master; `flatten` paints transparency onto white (iOS/maskable).
+// non-square master; `flatten` paints transparency onto white for the platforms
+// that DON'T support it (iOS apple-icon → black otherwise; Android maskable
+// needs a full-bleed background under the OS mask).
 const square = (size, { flatten = false } = {}) => {
-  let pipe = sharp(MASTER).resize(size, size, { fit: "contain", background: TRANSPARENT });
+  let pipe = sharp(SOURCE).resize(size, size, { fit: "contain", background: TRANSPARENT });
   if (flatten) pipe = pipe.flatten({ background: WHITE });
   // ensureAlpha() → 4-channel RGBA PNG. Next's metadata image/.ico processor
-  // rejects non-RGBA PNGs ("The PNG is not in RGBA format!"), and a master
-  // exported without an alpha channel (e.g. a flattened JPEG/PNG) is RGB.
+  // rejects non-RGBA PNGs ("The PNG is not in RGBA format!").
   return pipe.ensureAlpha().png({ force: true }).toBuffer();
 };
 
