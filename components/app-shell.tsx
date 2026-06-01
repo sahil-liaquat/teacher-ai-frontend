@@ -25,6 +25,7 @@ import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logo
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TrialStatusPill } from "@/components/billing/trial-status-pill";
 
 type NavItem = {
   href: string;
@@ -145,6 +146,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <main className="min-h-screen pt-16 lg:pt-0">
         <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
+          {!admin && <TrialStatusPill />}
           {children}
         </div>
       </main>
