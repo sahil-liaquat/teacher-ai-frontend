@@ -3,15 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { backendApi, getRateLimitNotice, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
+import { backendApi, getRateLimitNotice, isPaymentRequiredError, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 
 export default function GeneratingLessonPlanPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const started = useRef(false);
   const [status, setStatus] = useState("Finding textbook content...");
   const [payload, setPayload] = useState<LessonPlanGeneratePayload | null>(null);
@@ -69,6 +71,11 @@ export default function GeneratingLessonPlanPage() {
       queryClient.invalidateQueries({ queryKey: ["resources-lesson-plans"] });
       router.replace(`/dashboard/lesson-plans/${completed.id}`);
     } catch (err) {
+      if (isPaymentRequiredError(err)) {
+        openUpgrade("Lesson plan generation requires a Pro plan.");
+        setError("A Pro plan is required to generate lesson plans.");
+        return;
+      }
       const rateLimit = getRateLimitNotice(err);
       if (rateLimit) {
         setError(rateLimit.description);

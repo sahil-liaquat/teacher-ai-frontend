@@ -10,6 +10,7 @@ import {
   BookmarkCheck,
   BookMarked,
   BookOpen,
+  CreditCard,
   GraduationCap,
   Home,
   LogOut,
@@ -35,6 +36,7 @@ const teacherNav: NavItem[] = [
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
   { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
 ];
 

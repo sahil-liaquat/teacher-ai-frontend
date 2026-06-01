@@ -6,7 +6,8 @@ import type { FocusEvent } from "react";
 import { ArrowLeft, ArrowRight, Download, FileText, ImageIcon, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { backendApi } from "@/lib/api";
+import { backendApi, isPaymentRequiredError } from "@/lib/api";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import {
   loadLatestPresentationId,
   presentationGenerationToDeck,
@@ -25,6 +26,7 @@ const slideTheme = {
 
 export default function PresentationOutputPage() {
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const [deck, setDeck] = useState<PresentationDeck | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [presenting, setPresenting] = useState(false);
@@ -138,6 +140,10 @@ export default function PresentationOutputPage() {
       await downloadPdf(currentDeck);
       toast({ title: "PDF downloaded", description: "Exported as a slide-perfect PDF." });
     } catch (error) {
+      if (isPaymentRequiredError(error)) {
+        openUpgrade("PDF export requires a Pro plan.");
+        return;
+      }
       const message = error instanceof Error ? error.message : "Could not export PDF.";
       toast({ title: "PDF export failed", description: message });
     }
@@ -154,6 +160,10 @@ export default function PresentationOutputPage() {
       await downloadPptx(currentDeck);
       toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
     } catch (error) {
+      if (isPaymentRequiredError(error)) {
+        openUpgrade("PPTX export requires a Pro plan.");
+        return;
+      }
       const message = error instanceof Error ? error.message : "Could not export PPT.";
       toast({ title: "PPT export failed", description: message });
     }
