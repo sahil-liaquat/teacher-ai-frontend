@@ -295,8 +295,27 @@ function UpgradeModalUI({
             {loading ? "Opening payment..." : "Continue to payment"}
           </Button>
 
-          <p className="mt-3 text-center text-xs font-medium text-teachpad-muted">
-            Secure payment via Razorpay. Cancel anytime from billing settings.
+          <p className="mt-3 text-center text-xs font-medium leading-5 text-teachpad-muted">
+            Secure payment via Razorpay. Cancel anytime from billing settings. By
+            continuing you agree to our{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-teachpad-blue underline underline-offset-2"
+            >
+              Terms
+            </a>{" "}
+            and{" "}
+            <a
+              href="/refund"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-teachpad-blue underline underline-offset-2"
+            >
+              Refund Policy
+            </a>
+            .
           </p>
         </div>
       </div>

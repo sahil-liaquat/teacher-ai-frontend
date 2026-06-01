@@ -161,6 +161,17 @@ export default function SignupPage() {
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
                 </AuthButton>
+                <p className="text-center text-xs font-semibold leading-5 text-slate-500">
+                  By creating an account, you agree to our{" "}
+                  <Link href="/terms" className="font-bold text-blue-600 transition hover:text-blue-700">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="font-bold text-blue-600 transition hover:text-blue-700">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
               </form>
 
               <p className="mt-5 text-center text-sm font-semibold text-slate-600">
