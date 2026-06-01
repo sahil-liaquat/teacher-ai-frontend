@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PauseCircle, PlayCircle, Search, ShieldCheck, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { backendApi, type ApiUser } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDate } from "@/components/admin/admin-ui";
@@ -21,8 +21,20 @@ export default function AdminUsersPage() {
   });
   const [statusChange, setStatusChange] = useState<{ user: ApiUser; isActive: boolean } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [grant, setGrant] = useState<{ user: ApiUser; mode: "extend" | "comp" } | null>(null);
+  const [grantDays, setGrantDays] = useState(30);
   const client = useQueryClient();
   const { toast } = useToast();
+  const grantMutation = useMutation({
+    mutationFn: () => grant!.mode === "comp"
+      ? backendApi.adminCompUser(grant!.user.id!, grantDays)
+      : backendApi.adminExtendUser(grant!.user.id!, grantDays),
+    onSuccess: () => {
+      toast({ title: grant!.mode === "comp" ? "Comp granted" : "Access extended", description: `${grantDays} days for ${grant!.user.email}` });
+      setGrant(null);
+    },
+    onError: (e) => toast({ title: "Grant failed", description: e instanceof Error ? e.message : "Try again." })
+  });
   const totalPages = users.data?.pages || 1;
   const totalUsers = users.data?.total || 0;
   const activeUsers = users.data?.items?.filter((user) => user.is_active).length || 0;
@@ -99,12 +111,12 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} />)}
+                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} />)}
                 </tbody>
               </table>
             </div>
             <div className="grid gap-3 p-4 lg:hidden">
-              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} />)}
+              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} />)}
             </div>
           </>
         ) : null}
@@ -152,11 +164,30 @@ export default function AdminUsersPage() {
           </div>
         </div>
       ) : null}
+
+      {grant ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-gray-900">{grant.mode === "comp" ? "Comp free access" : "Extend access"}</h2>
+            <p className="mt-2 text-sm text-gray-600">{displayName(grant.user)} ({grant.user.email})</p>
+            <label className="mt-4 grid gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Days</span>
+              <Input type="number" min={1} value={grantDays} onChange={(e) => setGrantDays(Number(e.target.value))} />
+            </label>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setGrant(null)} disabled={grantMutation.isPending}>Cancel</Button>
+              <Button onClick={() => grantMutation.mutate()} disabled={grantMutation.isPending || grantDays < 1}>
+                {grantMutation.isPending ? "Granting..." : "Grant"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
 
-function UserTableRow({ user, onStatusChange }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void }) {
+function UserTableRow({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
   return (
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4">
@@ -170,13 +201,13 @@ function UserTableRow({ user, onStatusChange }: { user: ApiUser; onStatusChange:
       <td className="px-6 py-4 text-gray-600">{formatDate(user.updated_at)}</td>
       <td className="px-6 py-4"><StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill></td>
       <td className="px-6 py-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} />
       </td>
     </tr>
   );
 }
 
-function UserCard({ user, onStatusChange }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void }) {
+function UserCard({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
@@ -191,13 +222,13 @@ function UserCard({ user, onStatusChange }: { user: ApiUser; onStatusChange: (va
         <Info label="Joined" value={formatDate(user.created_at)} />
       </div>
       <div className="mt-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} />
       </div>
     </div>
   );
 }
 
-function StatusButtons({ user, onStatusChange }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void }) {
+function StatusButtons({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" disabled={!user.is_active} onClick={() => onStatusChange({ user, isActive: false })}>
@@ -208,6 +239,8 @@ function StatusButtons({ user, onStatusChange }: { user: ApiUser; onStatusChange
         <PlayCircle className="h-4 w-4" />
         Activate
       </Button>
+      <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "extend" })}>Extend</Button>
+      <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "comp" })}>Comp</Button>
     </div>
   );
 }
