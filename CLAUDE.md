@@ -20,12 +20,30 @@ npm run dev        # next dev on http://localhost:3000
 npm run build      # next build
 npm run lint       # ⚠ this is `tsc --noEmit` (typecheck), NOT eslint
 npm run test       # ⚠ this is `next build` — there is no real test suite
+npm run icons      # regenerate the favicon/PWA icon set from the master (see below)
 ```
 
 Set `NEXT_PUBLIC_API_URL` in `.env` to point at the backend. If unset, the
 client falls back to the **Render dev backend**
 (`https://teacher-ai-backend-dev.onrender.com/api/v1`) — so the app can appear to
 "work" against a remote server even with no local backend.
+
+## Favicon / PWA icons
+
+The favicon + PWA icon set is **generated, not hand-made.** Drop a single square
+master PNG at `public/assets/teachpad-icon.png` (≥512×512, the brand play-button
+"t" mark, brand blue `#0165fd`) and run `npm run icons`
+(`scripts/generate-icons.mjs`, uses `sharp`). It emits the full set, all committed:
+
+- `app/favicon.ico` (16/32/48), `app/icon.png` (512), `app/apple-icon.png` (180)
+- `public/icons/icon-{192,512}.png` + `icon-maskable-512.png` (Android adaptive)
+
+Next's file conventions auto-inject the `<link>` tags; the web manifest is
+`app/manifest.ts`, and `theme-color`/`appleWebApp` metadata live in
+`app/layout.tsx`. **⚠ Gotcha:** Next's icon/`.ico` processor rejects non-RGBA
+PNGs (`The PNG is not in RGBA format!`), so the generator forces an alpha channel
+(`.ensureAlpha()`) — keep that if you edit it. Re-run `npm run icons` whenever the
+master changes.
 
 ## Structure
 
