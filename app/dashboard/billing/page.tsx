@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   BadgeCheck,
   CalendarDays,
-  CheckCircle2,
   CreditCard,
   Gift,
   Loader2,
@@ -172,8 +171,8 @@ export default function BillingPage() {
             {/* Account / usage details */}
             <UsageCard data={data} />
 
-            {/* Cancel subscription */}
-            {data.is_pro && (
+            {/* Cancel subscription — paying subscribers only (never during a trial) */}
+            {data.is_pro && data.status !== "trialing" && (
               <CancelCard
                 confirm={cancelConfirm}
                 loading={cancelLoading}
@@ -197,18 +196,37 @@ function PlanCard({
   data: ReturnType<typeof useBilling>["data"] & object;
   onUpgrade: () => void;
 }) {
-  const { is_pro, status, plan_code, access_until, days_left, gift } = data;
+  const { is_pro, status, plan_code, access_until, gift, paid_starts_at } = data;
 
-  const isPro = is_pro || gift.granted;
   const isGift = gift.granted;
-  const isTrial = status === "trial";
-  const statusLabel = isGift
-    ? "Gift"
-    : isTrial
-      ? "Trial"
-      : isPro
-        ? "Active"
-        : "Free";
+  const isTrial = status === "trialing";
+  const hasUpgraded = Boolean(paid_starts_at);
+  // An un-upgraded trial is presented purely as an upgrade surface: no trial
+  // badge, no expiry, no days-remaining — only the value prop + Upgrade button.
+  const trialPending = isTrial && !hasUpgraded;
+  const isActivePaid = is_pro && !isTrial && !isGift;
+  // Show the upgrade CTA for free/expired users AND during an active (un-upgraded) trial.
+  const showUpgrade = trialPending || (!is_pro && !isGift);
+  // "Pro" visual treatment for genuine paid access, a scheduled upgrade, or a gift.
+  const proLook = isActivePaid || hasUpgraded || isGift;
+
+  const title = isGift
+    ? "TeachPad Pro"
+    : trialPending
+      ? "Upgrade to TeachPad Pro"
+      : proLook
+        ? "TeachPad Pro"
+        : "Free plan";
+
+  const subtitle = isGift
+    ? "Gifted Pro access — enjoy all features"
+    : hasUpgraded
+      ? "You're all set — Pro is scheduled to begin"
+      : trialPending
+        ? "Get unlimited access to every TeachPad AI feature"
+        : isActivePaid
+          ? "Full access to all TeachPad AI features"
+          : "Basic access with monthly generation limits";
 
   return (
     <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
@@ -219,14 +237,14 @@ function PlanCard({
             "grid h-14 w-14 shrink-0 place-items-center rounded-[18px]",
             isGift
               ? "bg-purple-100 text-purple-600"
-              : isPro
+              : proLook
                 ? "bg-[#dbeafe] text-teachpad-blue"
                 : "bg-teachpad-tag text-teachpad-muted"
           )}
         >
           {isGift ? (
             <Gift className="h-7 w-7" />
-          ) : isPro ? (
+          ) : proLook ? (
             <BadgeCheck className="h-7 w-7" />
           ) : (
             <Zap className="h-7 w-7" />
@@ -236,36 +254,28 @@ function PlanCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-xl font-black tracking-tight text-teachpad-ink">
-              {isPro ? "TeachPad Pro" : "Free plan"}
+              {title}
             </h2>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide",
-                isGift
-                  ? "bg-purple-100 text-purple-700"
-                  : isTrial
-                    ? "bg-amber-100 text-amber-700"
-                    : isPro
-                      ? "bg-[#dbeafe] text-[#1e40af]"
-                      : "bg-teachpad-tag text-teachpad-muted"
-              )}
-            >
-              {statusLabel}
-            </span>
+            {/* Badge: only gift or genuine active paid — never reveals trial status */}
+            {isGift ? (
+              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-purple-700">
+                Gift
+              </span>
+            ) : isActivePaid ? (
+              <span className="rounded-full bg-[#dbeafe] px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-[#1e40af]">
+                Active
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-sm font-semibold text-teachpad-muted">
-            {isPro
-              ? isGift
-                ? "Gifted Pro access — enjoy all features"
-                : "Full access to all TeachPad AI features"
-              : "Basic access with monthly generation limits"}
+            {subtitle}
           </p>
         </div>
       </div>
 
       <div className="mt-5 space-y-3">
-        {/* Plan code */}
-        {plan_code && plan_code !== "free" && (
+        {/* Plan code — only for a real paid plan the user is committed to */}
+        {(isActivePaid || hasUpgraded) && plan_code && plan_code !== "free" && (
           <InfoRow
             icon={<CreditCard className="h-4 w-4" />}
             label="Plan"
@@ -279,47 +289,37 @@ function PlanCard({
           />
         )}
 
-        {/* Status */}
-        <InfoRow
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          label="Status"
-          value={statusLabel}
-        />
-
-        {/* Renewal / expiry */}
-        {access_until && (
+        {/* Scheduled first payment (upgraded during trial) */}
+        {hasUpgraded && (
           <InfoRow
             icon={<CalendarDays className="h-4 w-4" />}
-            label={
-              status === "cancelled" || isTrial || isGift
-                ? "Expires on"
-                : "Renews on"
-            }
+            label="First payment on"
+            value={formatDate(paid_starts_at)}
+          />
+        )}
+
+        {/* Renews on — active paying subscribers only; an upgraded-during-trial
+            user sees "First payment on" above instead of this date. */}
+        {isActivePaid && access_until && (
+          <InfoRow
+            icon={<CalendarDays className="h-4 w-4" />}
+            label="Renews on"
             value={formatDate(access_until)}
           />
         )}
 
-        {/* Days left */}
-        {days_left !== null && days_left !== undefined && (
-          <InfoRow
-            icon={<CalendarDays className="h-4 w-4" />}
-            label="Days remaining"
-            value={`${days_left} day${days_left === 1 ? "" : "s"}`}
-          />
-        )}
-
         {/* Gift expiry */}
-        {isGift && data.gift.until && (
+        {isGift && gift.until && (
           <InfoRow
             icon={<Gift className="h-4 w-4" />}
             label="Gift active until"
-            value={formatDatetime(data.gift.until)}
+            value={formatDatetime(gift.until)}
           />
         )}
       </div>
 
-      {/* Upgrade CTA for free users */}
-      {!isPro && (
+      {/* Upgrade CTA */}
+      {showUpgrade && (
         <Button className="mt-5 h-11 w-full rounded-[14px] text-sm" onClick={onUpgrade}>
           <Zap className="h-4 w-4" />
           Upgrade to Pro

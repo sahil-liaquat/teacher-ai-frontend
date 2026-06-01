@@ -382,6 +382,7 @@ export type BillingMe = {
   plan_code: string;
   is_pro: boolean;
   access_until: string | null;
+  paid_starts_at: string | null;
   days_left: number | null;
   monthly_used: number;
   monthly_quota: number | null;

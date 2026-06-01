@@ -35,15 +35,16 @@ export function TrialStatusPill() {
   if (pathname?.startsWith("/dashboard/billing")) return null;
   if (isLoading || isError || !data) return null;
 
-  const { status, is_pro, days_left, gift } = data;
+  const { status, is_pro, days_left, gift, paid_starts_at } = data;
   const days = days_left ?? 0;
+  const hasUpgraded = Boolean(paid_starts_at);
 
   let tone: Tone = "info";
   let Icon: ComponentType<{ className?: string }> = Sparkles;
   let label = "";
   let cta = "Upgrade";
 
-  if (status === "trialing") {
+  if (status === "trialing" && !hasUpgraded) {
     Icon = Sparkles;
     if (days_left != null && days_left <= 2) {
       tone = "warn";
