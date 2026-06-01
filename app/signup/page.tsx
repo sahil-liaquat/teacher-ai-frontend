@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Quote, School, Sparkles, UserRound } from "lucide-react";
-import { backendApi, signup, type School as SchoolItem } from "@/lib/api";
+import { backendApi, signup, type PublicSchool } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [confirmation, setConfirmation] = useState<{ email: string; message: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [schools, setSchools] = useState<SchoolItem[]>([]);
+  const [schools, setSchools] = useState<PublicSchool[]>([]);
   const [schoolMode, setSchoolMode] = useState<"listed" | "unlisted">("listed");
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -32,12 +32,12 @@ export default function SignupPage() {
   const selectedSchoolId = form.watch("school_id");
 
   useEffect(() => {
-    backendApi.schools("", 0, 100)
+    // Public endpoint (no auth) returns active schools only, so no client-side
+    // status filter is needed and a 401 can never bounce the visitor to /login.
+    backendApi.publicSchools("", 0, 100)
       .then((res) => setSchools(res.items))
       .catch(() => setSchools([]));
   }, []);
-
-  const schoolOptions = useMemo(() => schools.filter((school) => school.status !== "inactive"), [schools]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
@@ -129,7 +129,7 @@ export default function SignupPage() {
                       className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none disabled:text-slate-400"
                     >
                       <option value="">Select school</option>
-                      {schoolOptions.map((school) => (
+                      {schools.map((school) => (
                         <option key={school.id} value={school.id}>
                           {[school.name, school.city].filter(Boolean).join(", ")}
                         </option>

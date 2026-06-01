@@ -51,6 +51,7 @@ export type School = {
   templates_count?: number;
   teachers_count?: number;
 };
+export type PublicSchool = { id: string; name: string; city?: string | null };
 export type UserSchoolProfile = {
   id: string;
   user_id?: string;
@@ -730,6 +731,10 @@ export const backendApi = {
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
   schools: (q = "", skip = 0, limit = 100) => apiFetch<PaginatedResponse<School>>(`/schools?q=${encodeURIComponent(q)}&skip=${skip}&limit=${limit}`),
+  // Public, unauthenticated school list for the signup picker. redirectOnUnauthorized:false
+  // so a logged-out visitor is never bounced to /login if this 401s.
+  publicSchools: (q = "", skip = 0, limit = 100) =>
+    apiFetch<PaginatedResponse<PublicSchool>>(`/schools/public?q=${encodeURIComponent(q)}&skip=${skip}&limit=${limit}`, { redirectOnUnauthorized: false }),
   mySchool: () => apiFetch<UserSchoolProfile | null>("/schools/me"),
   updateMySchool: (payload: { school_id?: string | null; pending_school_name?: string | null; role_in_school?: string | null }) =>
     apiFetch<UserSchoolProfile>("/schools/me", { method: "PUT", body: JSON.stringify(payload) }),
