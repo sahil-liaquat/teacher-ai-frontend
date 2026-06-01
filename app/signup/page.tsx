@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Quote, School, Sparkles, UserRound } from "lucide-react";
 import { backendApi, signup, type PublicSchool } from "@/lib/api";
+import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -162,6 +163,13 @@ export default function SignupPage() {
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
                 </AuthButton>
               </form>
+
+              <div className="my-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-400">or</span>
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+              <GoogleButton />
 
               <p className="mt-5 text-center text-sm font-semibold text-slate-600">
                 Already have an account? <Link className="font-black text-blue-600 transition hover:text-blue-700" href="/login">Login</Link>
