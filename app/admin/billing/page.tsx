@@ -30,7 +30,8 @@ export default function AdminBillingPage() {
 
   const toggle = useMutation({
     mutationFn: (c: PromoCodeOut) => backendApi.adminSetPromoActive(c.id, !c.is_active),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["admin-promo-codes"] })
+    onSuccess: () => client.invalidateQueries({ queryKey: ["admin-promo-codes"] }),
+    onError: (e) => toast({ title: "Could not update code", description: e instanceof Error ? e.message : "Try again." })
   });
 
   const isDiscount = form.kind === "discount";
@@ -49,7 +50,16 @@ export default function AdminBillingPage() {
             <select
               className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
               value={form.kind}
-              onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value as PromoKind }))}
+              onChange={(e) => {
+                const kind = e.target.value as PromoKind;
+                // Clear the field that doesn't apply to the new kind so we never
+                // POST a stale duration_days on a discount (or target_plan_code on trial/comp).
+                setForm((f) =>
+                  kind === "discount"
+                    ? { ...f, kind, duration_days: null }
+                    : { ...f, kind, target_plan_code: null }
+                );
+              }}
             >
               {KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
             </select>
