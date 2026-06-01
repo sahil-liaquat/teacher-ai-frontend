@@ -24,9 +24,10 @@ export function GoogleButton({
   if (!supabase) return null;
 
   async function handleGoogle() {
+    if (!supabase) return; // narrows the type inside this async closure
     setLoading(true);
     try {
-      const { error } = await supabase!.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       });

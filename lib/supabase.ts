@@ -20,6 +20,9 @@ let client: SupabaseClient | null = null;
  * the Google button gracefully instead of throwing.
  */
 export function getSupabaseClient(): SupabaseClient | null {
+  // Browser-only: the PKCE verifier must live in localStorage to survive the
+  // OAuth redirect, so never hand back an instance during SSR.
+  if (typeof window === "undefined") return null;
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   if (!client) {
     client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

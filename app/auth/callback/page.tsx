@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,14 @@ export default function GoogleCallbackPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<State>({ status: "checking" });
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
+    // Exchange the OAuth code exactly once. The ref guard makes this resilient to
+    // React Strict Mode's dev double-invoke of effects — without it the first run
+    // would consume the single-use ?code and the second would error.
+    if (ranRef.current) return;
+    ranRef.current = true;
 
     async function run() {
       const params = new URLSearchParams(window.location.search);
@@ -31,21 +36,17 @@ export default function GoogleCallbackPage() {
       window.history.replaceState(null, "", window.location.pathname);
 
       if (errorDescription) {
-        if (!cancelled) setState({ status: "error", message: errorDescription.replace(/\+/g, " ") });
+        setState({ status: "error", message: errorDescription.replace(/\+/g, " ") });
         return;
       }
 
       const supabase = getSupabaseClient();
       if (!supabase) {
-        if (!cancelled) {
-          setState({ status: "error", message: "Google sign-in is not configured. Please use email and password." });
-        }
+        setState({ status: "error", message: "Google sign-in is not configured. Please use email and password." });
         return;
       }
       if (!code) {
-        if (!cancelled) {
-          setState({ status: "error", message: "This sign-in link is missing its authorization code. Please try again." });
-        }
+        setState({ status: "error", message: "This sign-in link is missing its authorization code. Please try again." });
         return;
       }
 
@@ -63,14 +64,10 @@ export default function GoogleCallbackPage() {
           refresh_token: session.refresh_token,
         });
 
-        // Drop the transient Supabase session — the app's own token system owns auth now.
-        try {
-          await supabase.auth.signOut({ scope: "local" });
-        } catch {
-          /* best-effort */
-        }
+        // Drop the transient Supabase session (fire-and-forget — the local storage
+        // cleanup is unconditional; no need to wait on the server round-trip).
+        void supabase.auth.signOut({ scope: "local" }).catch(() => {});
 
-        if (cancelled) return;
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
         setState({ status: "success", user });
 
@@ -79,19 +76,14 @@ export default function GoogleCallbackPage() {
           router.refresh();
         }, 800);
       } catch (err) {
-        if (!cancelled) {
-          setState({
-            status: "error",
-            message: err instanceof Error ? err.message : "We could not complete Google sign-in. Please try again.",
-          });
-        }
+        setState({
+          status: "error",
+          message: err instanceof Error ? err.message : "We could not complete Google sign-in. Please try again.",
+        });
       }
     }
 
     run();
-    return () => {
-      cancelled = true;
-    };
   }, [queryClient, router]);
 
   const content = useMemo(() => {
