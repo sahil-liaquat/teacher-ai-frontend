@@ -14,6 +14,7 @@ import {
   Menu,
   Shield,
   School,
+  Ticket,
   Users,
   Activity,
   X,
@@ -31,6 +32,7 @@ type AdminNavItem = {
 const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/billing", label: "Billing", icon: Ticket },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
   { href: "/admin/schools", label: "Schools", icon: School },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
