@@ -17,7 +17,8 @@ const schema = z.object({
   email: z.string().email("Enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
   school_id: z.string().optional(),
-  pending_school_name: z.string().optional()
+  pending_school_name: z.string().optional(),
+  promo_code: z.string().optional()
 });
 
 export default function SignupPage() {
@@ -28,7 +29,7 @@ export default function SignupPage() {
   const [schoolMode, setSchoolMode] = useState<"listed" | "unlisted">("listed");
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "", school_id: "", pending_school_name: "" }
+    defaultValues: { name: "", email: "", password: "", school_id: "", pending_school_name: "", promo_code: "" }
   });
   const selectedSchoolId = form.watch("school_id");
 
@@ -44,13 +45,15 @@ export default function SignupPage() {
     try {
       const created = await signup(values.name, values.email, values.password, {
         school_id: schoolMode === "listed" ? values.school_id || undefined : undefined,
-        pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined
+        pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined,
+        promo_code: values.promo_code?.trim() || undefined
       });
-      const message = created.email_confirmed
+      const baseMessage = created.email_confirmed
         ? "Your account is ready. You can log in now."
         : created.message || "Check your email to confirm your account before logging in.";
+      const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
-      form.reset({ name: "", email: "", password: "", school_id: "", pending_school_name: "" });
+      form.reset({ name: "", email: "", password: "", school_id: "", pending_school_name: "", promo_code: "" });
       toast({ title: "Account created", description: message });
     } catch (error) {
       toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
@@ -159,6 +162,12 @@ export default function SignupPage() {
                     inputProps={{ ...form.register("pending_school_name"), placeholder: "Your school" }}
                   />
                 ) : selectedSchoolId ? null : null}
+                <AuthInput
+                  label="Coupon code (optional)"
+                  icon={<Sparkles className="h-5 w-5" />}
+                  error={form.formState.errors.promo_code?.message}
+                  inputProps={{ ...form.register("promo_code"), placeholder: "e.g. DIWALI" }}
+                />
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
                 </AuthButton>
