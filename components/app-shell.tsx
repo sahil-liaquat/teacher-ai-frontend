@@ -24,6 +24,8 @@ import {
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TrialStatusPill } from "@/components/billing/trial-status-pill";
 
 type NavItem = {
   href: string;
@@ -144,6 +146,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <main className="min-h-screen pt-16 lg:pt-0">
         <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
+          {!admin && <TrialStatusPill />}
           {children}
         </div>
       </main>
@@ -159,29 +162,36 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
 
   return (
     <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
-      <nav className="flex h-full flex-col items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
-          {nav.map((item) => (
-            <FloatingNavItem
-              key={item.href}
-              item={item}
-              active={isActive(item.href, activePath)}
-              onClick={onNavigate}
-            />
-          ))}
+      <TooltipProvider delayDuration={0} skipDelayDuration={0}>
+        <nav className="flex h-full flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
+            {nav.map((item) => (
+              <FloatingNavItem
+                key={item.href}
+                item={item}
+                active={isActive(item.href, activePath)}
+                onClick={onNavigate}
+              />
+            ))}
 
-          <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
+            <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
 
-          <a
-            href="#"
-            onClick={logout}
-            title="Logout"
-            className="group flex h-10 w-10 items-center justify-center rounded-xl text-teachpad-muted transition-all duration-300 hover:scale-105 hover:bg-teachpad-red hover:text-[#eb3b5a]"
-          >
-            <LogOut className="h-5 w-5" />
-          </a>
-        </div>
-      </nav>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href="#"
+                  onClick={logout}
+                  aria-label="Logout"
+                  className="group flex h-10 w-10 items-center justify-center rounded-xl text-teachpad-muted transition-all duration-300 hover:scale-105 hover:bg-teachpad-red hover:text-[#eb3b5a]"
+                >
+                  <LogOut className="h-5 w-5" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent side="right">Logout</TooltipContent>
+            </Tooltip>
+          </div>
+        </nav>
+      </TooltipProvider>
     </aside>
   );
 }
@@ -190,31 +200,36 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
   const Icon = item.icon;
 
   return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      title={item.label}
-      className={cn(
-        "group relative flex items-center justify-center transition-all duration-300 hover:scale-105",
-        active ? "scale-105" : ""
-      )}
-    >
-      <span
-        className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
-          active
-            ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
-            : "group-hover:bg-blue-50"
-        )}
-      >
-        <Icon
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Link
+          href={item.href}
+          onClick={onClick}
+          aria-label={item.label}
           className={cn(
-            "h-5 w-5 transition-colors duration-300",
-            active ? "text-teachpad-blue" : "text-teachpad-muted group-hover:text-teachpad-blue"
+            "group relative flex items-center justify-center transition-all duration-300 hover:scale-105",
+            active ? "scale-105" : ""
           )}
-        />
-      </span>
-    </Link>
+        >
+          <span
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
+              active
+                ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
+                : "group-hover:bg-blue-50"
+            )}
+          >
+            <Icon
+              className={cn(
+                "h-5 w-5 transition-colors duration-300",
+                active ? "text-teachpad-blue" : "text-teachpad-muted group-hover:text-teachpad-blue"
+              )}
+            />
+          </span>
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent side="right">{item.label}</TooltipContent>
+    </Tooltip>
   );
 }
 
