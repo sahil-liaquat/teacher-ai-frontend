@@ -2,14 +2,9 @@
  * Single source of truth for TeachPad's legal / policy pages
  * (Privacy Policy, Terms of Service, Refund & Cancellation, Contact).
  *
- * ⚠️  REVIEW BEFORE GO-LIVE
- * The values tagged `[REVIEW: …]` below are placeholders. They must be confirmed
- * by TeachPad (and ideally a lawyer) before these documents are relied upon.
- * Search this file for "REVIEW" to find every blank in one place. The policy
- * pages all read from here, so filling these in updates every page at once.
- *
- * These documents are customary templates grounded in TeachPad's actual stack;
- * they are NOT legal advice.
+ * All policy pages read from here, so editing a value updates every page at once.
+ * The documents are customary templates grounded in TeachPad's actual stack and
+ * are NOT a substitute for legal advice — have them reviewed before relying on them.
  */
 
 export const LEGAL = {
@@ -19,15 +14,12 @@ export const LEGAL = {
   /** Primary marketing domain (no trailing slash). */
   website: "https://teachpad.in",
 
-  /**
-   * The legal entity that operates TeachPad. Required by both the DPDP Act and
-   * Razorpay's merchant activation. Confirm the exact registered name and type
-   * (e.g. "TeachPad Technologies Private Limited", a sole proprietorship, etc.).
-   */
-  company: "[REVIEW: Registered legal entity name]",
+  /** The legal entity that operates TeachPad (DPDP + Razorpay). */
+  company: "ONE-SKOOL EDGETECH PRIVATE LIMITED",
 
   /** Registered place of business — required for DPDP + Razorpay. */
-  address: "[REVIEW: Registered business address, City, State, PIN], India",
+  address:
+    "C/o Liaqat Ali, Near Govt Primary School, Kathua, Kathua, Kathua, Jammu & Kashmir, India, 184101",
 
   country: "India",
 
@@ -38,10 +30,10 @@ export const LEGAL = {
    */
   paymentProcessors: ["Razorpay"],
 
-  /** General support / business contact. Ensure this mailbox exists. */
+  /** General support / business contact (catch-all @teachpad.in). */
   contactEmail: "support@teachpad.in",
 
-  /** Privacy / data-protection contact. Ensure this mailbox exists. */
+  /** Privacy / data-protection contact. */
   privacyEmail: "privacy@teachpad.in",
 
   /**
@@ -49,12 +41,12 @@ export const LEGAL = {
    * data principals can address grievances.
    */
   grievanceOfficer: {
-    name: "[REVIEW: Grievance Officer name]",
-    email: "privacy@teachpad.in",
+    name: "Shreyas Jamkhandi",
+    email: "grievance@teachpad.in",
   },
 
   /** Courts with exclusive jurisdiction for the Terms of Service. */
-  jurisdiction: "[REVIEW: City, State], India",
+  jurisdiction: "Kathua, Jammu & Kashmir, India",
 
   /**
    * Document dates. Keep these in sync whenever the policy text is revised — they
@@ -63,18 +55,8 @@ export const LEGAL = {
   effectiveDate: "1 June 2026",
   lastUpdated: "1 June 2026",
 
-  /**
-   * Free-trial length, in days. Surfaced in the Terms and Refund policy. Set to
-   * 0 if there is no trial. (TeachPad currently shows a trial-status pill.)
-   */
-  trialDays: "[REVIEW: trial length in days, e.g. 14]",
-
-  /**
-   * Refund window (in days) for first-time subscription purchases, if you offer
-   * one. Set to 0 / "no refunds" if subscriptions are non-refundable once the
-   * billing period starts. This is a business decision — confirm it.
-   */
-  refundWindowDays: "[REVIEW: refund window in days for first purchase, or 0]",
+  /** Free-trial length, in days. Surfaced in the Terms and Refund policy. */
+  trialDays: "7",
 } as const;
 
 export type Subprocessor = {
@@ -134,12 +116,6 @@ export const SUBPROCESSORS: Subprocessor[] = [
     purpose: "Payment processing for subscriptions (India)",
     location: "India",
     url: "https://razorpay.com/privacy/",
-  },
-  {
-    name: "Stripe",
-    purpose: "Payment processing for international subscriptions",
-    location: "United States / Global",
-    url: "https://stripe.com/privacy",
   },
   {
     name: "Cloudflare",
