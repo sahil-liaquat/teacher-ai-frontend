@@ -385,6 +385,7 @@ export type BillingMe = {
   access_until: string | null;
   paid_starts_at: string | null;
   days_left: number | null;
+  billing_phone: string | null;
   monthly_used: number;
   monthly_quota: number | null;
   gift: {
@@ -428,11 +429,13 @@ export type PromoRedemptionOut = {
 export type CheckoutPayload = {
   plan_code: string;
   promo_code?: string;
+  contact?: string;
 };
 
 export type CheckoutResponse = {
   razorpay_subscription_id: string;
   key_id: string;
+  prefill?: { name?: string | null; email?: string | null; contact?: string | null };
   [key: string]: unknown;
 };
 
