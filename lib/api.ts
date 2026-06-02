@@ -26,7 +26,7 @@ export type ApiUser = {
   created_at?: string;
   updated_at?: string;
   phone?: string | null;
-  phone_prompt_state?: "required" | "optional" | "hidden";
+  phone_prompt_state?: "required" | "hidden";
   needs_school?: boolean;
 };
 
@@ -733,10 +733,6 @@ export async function updateProfile(payload: {
     method: "PATCH",
     body: JSON.stringify(payload)
   });
-}
-
-export async function snoozePhonePrompt(): Promise<ApiUser> {
-  return apiFetch<ApiUser>("/auth/me/snooze-phone-prompt", { method: "POST" });
 }
 
 export async function ensureSession() {

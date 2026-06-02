@@ -7,7 +7,6 @@ import {
   CURRENT_USER_QUERY_KEY,
   backendApi,
   getCurrentUser,
-  snoozePhonePrompt,
   updateProfile,
   type ApiUser,
   type PublicSchool
@@ -27,10 +26,8 @@ export function ProfileCompletionModal() {
     retry: false
   });
 
-  const state = user?.phone_prompt_state ?? "hidden";
+  const visible = user?.phone_prompt_state === "required";
   const needsSchool = Boolean(user?.needs_school);
-  const required = state === "required";
-  const visible = state === "required" || state === "optional";
 
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -95,30 +92,14 @@ export function ProfileCompletionModal() {
     }
   }
 
-  async function handleSkip() {
-    setSubmitting(true);
-    try {
-      const updated = await snoozePhonePrompt();
-      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updated);
-    } catch {
-      // If snooze fails, just close locally; it will re-prompt next load.
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 py-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="profile-modal-title"
-      onClick={required ? undefined : handleSkip}
     >
-      <div
-        className="relative flex max-h-[90dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-[28px] border border-teachpad-cardBorder bg-white p-6 shadow-[0_32px_80px_rgba(22,119,255,0.18)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative flex max-h-[90dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-[28px] border border-teachpad-cardBorder bg-white p-6 shadow-[0_32px_80px_rgba(22,119,255,0.18)]">
         <div>
           <h2 id="profile-modal-title" className="text-lg font-black text-slate-900">
             {needsSchool ? "Complete your profile" : "Add your mobile number"}
@@ -199,11 +180,6 @@ export function ProfileCompletionModal() {
         ) : null}
 
         <div className="mt-2 flex items-center justify-end gap-3">
-          {!required ? (
-            <Button variant="ghost" onClick={handleSkip} disabled={submitting}>
-              Skip for now
-            </Button>
-          ) : null}
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Saving…" : "Save"}
           </Button>
