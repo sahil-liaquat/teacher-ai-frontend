@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Check, Sparkles, X, Zap } from "lucide-react";
+import { Check, ShieldCheck, Sparkles, X, Zap } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import { useBilling } from "@/lib/use-billing";
 import { cn } from "@/lib/utils";
@@ -132,7 +132,7 @@ function UpgradeModalUI({
   contextLine?: string;
 }) {
   const { toast } = useToast();
-  const { refetch } = useBilling();
+  const { data: billing, refetch } = useBilling();
   const [selected, setSelected] = useState<"pro_monthly" | "pro_annual">("pro_annual");
   const [loading, setLoading] = useState(false);
 
@@ -165,6 +165,18 @@ function UpgradeModalUI({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The small Razorpay mandate-auth token only appears for trial users (the
+  // checkout uses a future-dated start), so show the explanation only then —
+  // never to expired-trial / immediate-charge users.
+  const showTrialNote = billing?.status === "trialing" && (billing?.days_left ?? 0) > 0;
+  const priceLabel = selected === "pro_annual" ? "₹1,699/year" : "₹199/month";
+  const trialEnds = (() => {
+    if (!billing?.access_until) return "when your trial ends";
+    const d = new Date(billing.access_until);
+    if (Number.isNaN(d.getTime())) return "when your trial ends";
+    return `on ${d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`;
+  })();
 
   async function handleUpgrade() {
     setLoading(true);
@@ -318,6 +330,17 @@ function UpgradeModalUI({
               </button>
             ))}
           </div>
+
+          {showTrialNote && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teachpad-blue" />
+              <p className="text-sm font-medium leading-5 text-teachpad-ink">
+                <span className="font-bold">You won&apos;t be charged today.</span> A small,
+                fully refundable amount (~₹5) may be placed to verify your card — your{" "}
+                <span className="font-bold">{priceLabel}</span> plan starts {trialEnds}.
+              </p>
+            </div>
+          )}
 
           {/* CTA */}
           <Button
