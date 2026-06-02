@@ -7,6 +7,7 @@ import { backendApi } from "@/lib/api";
 import { useBilling } from "@/lib/use-billing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -178,6 +179,16 @@ function UpgradeModalUI({
     return `on ${d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`;
   })();
 
+  const [contact, setContact] = useState("");
+  const needsPhone = !billing?.billing_phone;
+
+  function normalizeIndianMobile(raw: string): string | null {
+    let d = raw.replace(/\D/g, "");
+    if (d.startsWith("91") && d.length === 12) d = d.slice(2);
+    else if (d.startsWith("0") && d.length === 11) d = d.slice(1);
+    return /^[6-9]\d{9}$/.test(d) ? `+91${d}` : null;
+  }
+
   async function handleUpgrade() {
     setLoading(true);
     // Tracks whether we successfully handed off to Razorpay. If true, loading
@@ -192,13 +203,31 @@ function UpgradeModalUI({
         return;
       }
 
-      const checkout = await backendApi.billingCheckout({ plan_code: selected });
+      let contactToSend: string | undefined;
+      if (needsPhone) {
+        const normalized = normalizeIndianMobile(contact);
+        if (!normalized) {
+          toast({
+            title: "Enter a valid mobile number",
+            description: "Please enter a 10-digit Indian mobile number to set up your subscription.",
+          });
+          return; // finally{} resets loading since handedOff is still false
+        }
+        contactToSend = normalized;
+      }
+
+      const checkout = await backendApi.billingCheckout({ plan_code: selected, contact: contactToSend });
 
       const rzp = new window.Razorpay({
         key: checkout.key_id,
         subscription_id: checkout.razorpay_subscription_id,
         name: "TeachPad",
         description: selected === "pro_annual" ? "TeachPad Pro — Annual" : "TeachPad Pro — Monthly",
+        prefill: {
+          name: checkout.prefill?.name ?? undefined,
+          email: checkout.prefill?.email ?? undefined,
+          contact: checkout.prefill?.contact ?? undefined,
+        },
         theme: { color: "#1677ff" },
         handler: () => {
           // Razorpay does not await this callback — wrap async work in a
@@ -330,6 +359,29 @@ function UpgradeModalUI({
               </button>
             ))}
           </div>
+
+          {needsPhone && (
+            <div className="mb-4">
+              <label
+                htmlFor="checkout-phone"
+                className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-teachpad-muted"
+              >
+                Mobile number
+              </label>
+              <Input
+                id="checkout-phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="10-digit mobile number"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+              />
+              <p className="mt-1.5 text-xs font-medium text-teachpad-muted">
+                Used only to set up your subscription with Razorpay.
+              </p>
+            </div>
+          )}
 
           {showTrialNote && (
             <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
