@@ -25,6 +25,9 @@ export type ApiUser = {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  phone?: string | null;
+  phone_prompt_state?: "required" | "optional" | "hidden";
+  needs_school?: boolean;
 };
 
 export type PaginatedResponse<T> = {
@@ -721,6 +724,21 @@ export async function getCurrentUser(options: { redirectOnUnauthorized?: boolean
   return apiFetch<ApiUser>("/auth/me", { redirectOnUnauthorized: options.redirectOnUnauthorized ?? true });
 }
 
+export async function updateProfile(payload: {
+  phone: string;
+  school_id?: string;
+  pending_school_name?: string;
+}): Promise<ApiUser> {
+  return apiFetch<ApiUser>("/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function snoozePhonePrompt(): Promise<ApiUser> {
+  return apiFetch<ApiUser>("/auth/me/snooze-phone-prompt", { method: "POST" });
+}
+
 export async function ensureSession() {
   if (!getToken() && !getRefreshToken()) return false;
   if (isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) return refreshSession();
@@ -731,11 +749,12 @@ export async function signup(
   name: string,
   email: string,
   password: string,
+  phone: string,
   opts?: { school_id?: string; pending_school_name?: string; promo_code?: string }
 ) {
   const created = await apiFetch<SignupResponse>("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ full_name: name, email, password, ...opts })
+    body: JSON.stringify({ full_name: name, email, password, phone, ...opts })
   });
   return { ...created, full_name: name, name };
 }
