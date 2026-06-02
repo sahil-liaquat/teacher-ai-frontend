@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -181,13 +182,6 @@ function UpgradeModalUI({
 
   const [contact, setContact] = useState("");
   const needsPhone = !billing?.billing_phone;
-
-  function normalizeIndianMobile(raw: string): string | null {
-    let d = raw.replace(/\D/g, "");
-    if (d.startsWith("91") && d.length === 12) d = d.slice(2);
-    else if (d.startsWith("0") && d.length === 11) d = d.slice(1);
-    return /^[6-9]\d{9}$/.test(d) ? `+91${d}` : null;
-  }
 
   async function handleUpgrade() {
     setLoading(true);

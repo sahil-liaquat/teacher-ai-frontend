@@ -846,6 +846,8 @@ export const backendApi = {
     apiFetch<{ ok: boolean }>("/billing/cancel", { method: "POST" }),
   billingRedeem: (code: string) =>
     apiFetch<BillingMe>("/billing/redeem", { method: "POST", body: JSON.stringify({ code }) }),
+  billingUpdatePhone: (contact: string) =>
+    apiFetch<BillingMe>("/billing/phone", { method: "PATCH", body: JSON.stringify({ contact }) }),
   billingGiftAcknowledge: () =>
     apiFetch<{ ok: boolean }>("/billing/gift/acknowledge", { method: "POST" }),
   adminPromoCodes: (skip = 0, limit = 100) =>
