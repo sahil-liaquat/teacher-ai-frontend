@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Save, School, UserRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Phone, Save, School, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,17 @@ import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/pro
 import { useToast } from "@/components/ui/toast";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, requestPasswordReset, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
+import { normalizeIndianMobile } from "@/lib/phone";
 
 const usageLimit = 100;
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: billing } = useBilling();
   const [profile, setProfile] = useState<TeacherProfile>({ name: "", school: "", subjects: "" });
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -78,6 +82,11 @@ export default function SettingsPage() {
     setSchoolId(schoolProfile.data?.school_id || "");
   }, [schoolProfile.data]);
 
+  useEffect(() => {
+    // Stored value is E.164 (+91XXXXXXXXXX); show the local 10 digits for editing.
+    setPhone((billing?.billing_phone ?? "").replace(/^\+91/, ""));
+  }, [billing?.billing_phone]);
+
   const usage = useMemo(() => {
     const lessonItems = plans.data?.items || [];
     const worksheetItems = worksheets.data?.items || [];
@@ -120,6 +129,15 @@ export default function SettingsPage() {
       return;
     }
 
+    // Phone is optional; if entered it must be a valid Indian mobile. Validate
+    // up front so we don't half-save the profile before rejecting a bad number.
+    const trimmedPhone = phone.trim();
+    const normalizedPhone = trimmedPhone ? normalizeIndianMobile(trimmedPhone) : null;
+    if (trimmedPhone && !normalizedPhone) {
+      toast({ title: "Invalid mobile number", description: "Enter a 10-digit Indian mobile number, or leave it blank." });
+      return;
+    }
+
     setSaving(true);
     try {
       await backendApi.updateUser(currentUserId, { full_name: next.name });
@@ -137,6 +155,12 @@ export default function SettingsPage() {
       };
       saveTeacherProfile(savedProfile, savedUser.id || currentUserId);
       setProfile(savedProfile);
+
+      if (normalizedPhone && normalizedPhone !== (billing?.billing_phone ?? "")) {
+        const updatedBilling = await backendApi.billingUpdatePhone(normalizedPhone);
+        queryClient.setQueryData(BILLING_QUERY_KEY, updatedBilling);
+      }
+
       toast({ title: "Profile saved", description: "Your profile details are up to date." });
     } catch (error) {
       toast({ title: "Could not save profile", description: error instanceof Error ? error.message : "Please try again." });
@@ -196,6 +220,7 @@ export default function SettingsPage() {
             <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value="Teacher" />
             <AccountLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} />
             <AccountLine icon={<School className="h-4 w-4" />} label="School" value={schoolProfile.data?.school?.name || schoolProfile.data?.pending_school_name || profile.school || "Not added"} />
+            <AccountLine icon={<Phone className="h-4 w-4" />} label="Mobile" value={billing?.billing_phone || "Not added"} />
           </div>
         </aside>
 
@@ -226,6 +251,16 @@ export default function SettingsPage() {
                   <option key={school.id} value={school.id}>{[school.name, school.city].filter(Boolean).join(", ")}</option>
                 ))}
               </select>
+            </ProfileField>
+            <ProfileField label="Mobile number" icon={<Phone className="h-4 w-4" />}>
+              <Input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="10-digit mobile number"
+              />
             </ProfileField>
             <div className="md:col-span-2">
               <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Lesson plan format" value={lessonPlanFormatAvailable ? "Available" : "Not available"} />
