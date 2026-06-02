@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, LockKeyhole, Mail, Quote, School, Sparkles, UserRound } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, School, Sparkles, UserRound } from "lucide-react";
 import { backendApi, signup, type PublicSchool } from "@/lib/api";
+import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   name: z.string().min(2, "Enter your full name."),
   email: z.string().email("Enter a valid email address."),
+  phone: phoneSchema,
   password: z.string().min(8, "Password must be at least 8 characters."),
   school_id: z.string().optional(),
   pending_school_name: z.string().optional(),
@@ -29,7 +31,7 @@ export default function SignupPage() {
   const [schoolMode, setSchoolMode] = useState<"listed" | "unlisted">("listed");
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "", school_id: "", pending_school_name: "", promo_code: "" }
+    defaultValues: { name: "", email: "", phone: "", password: "", school_id: "", pending_school_name: "", promo_code: "" }
   });
   const selectedSchoolId = form.watch("school_id");
 
@@ -43,7 +45,7 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
-      const created = await signup(values.name, values.email, values.password, {
+      const created = await signup(values.name, values.email, values.password, values.phone, {
         school_id: schoolMode === "listed" ? values.school_id || undefined : undefined,
         pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined,
         promo_code: values.promo_code?.trim() || undefined
@@ -53,7 +55,7 @@ export default function SignupPage() {
         : created.message || "Check your email to confirm your account before logging in.";
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
-      form.reset({ name: "", email: "", password: "", school_id: "", pending_school_name: "", promo_code: "" });
+      form.reset({ name: "", email: "", phone: "", password: "", school_id: "", pending_school_name: "", promo_code: "" });
       toast({ title: "Account created", description: message });
     } catch (error) {
       toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
@@ -106,6 +108,12 @@ export default function SignupPage() {
                   icon={<Mail className="h-5 w-5" />}
                   error={form.formState.errors.email?.message}
                   inputProps={{ ...form.register("email"), placeholder: "you@school.edu", type: "email" }}
+                />
+                <AuthInput
+                  label="Mobile number"
+                  icon={<Phone className="h-5 w-5" />}
+                  error={form.formState.errors.phone?.message}
+                  inputProps={{ ...form.register("phone"), type: "tel", inputMode: "numeric", placeholder: "9876543210" }}
                 />
                 <AuthInput
                   label="Password"
