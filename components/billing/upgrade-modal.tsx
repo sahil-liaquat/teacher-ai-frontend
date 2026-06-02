@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, Sparkles, X, Zap } from "lucide-react";
 import { backendApi } from "@/lib/api";
@@ -136,6 +136,36 @@ function UpgradeModalUI({
   const [selected, setSelected] = useState<"pro_monthly" | "pro_annual">("pro_annual");
   const [loading, setLoading] = useState(false);
 
+  // Dismissal hardening: lock background scroll, ESC to close, and make the
+  // hardware/browser back button close the modal instead of navigating the app
+  // behind it. onClose (from the provider) is useCallback-stable, so run once.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+
+    window.history.pushState({ tpUpgradeModal: true }, "");
+    const onPop = () => onClose();
+    window.addEventListener("popstate", onPop);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPop);
+      // Closed via the X/backdrop/ESC (our history entry is still present) -> pop
+      // it so the user's back button isn't "used up". If closed via Back, it's
+      // already gone and this is skipped.
+      if (window.history.state?.tpUpgradeModal) {
+        window.history.back();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleUpgrade() {
     setLoading(true);
     // Tracks whether we successfully handed off to Razorpay. If true, loading
@@ -199,23 +229,27 @@ function UpgradeModalUI({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 py-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="upgrade-modal-title"
+      onClick={onClose}
     >
-      <div className="relative w-full max-w-lg rounded-[28px] border border-teachpad-cardBorder bg-white shadow-[0_32px_80px_rgba(22,119,255,0.18)]">
+      <div
+        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-[28px] border border-teachpad-cardBorder bg-white shadow-[0_32px_80px_rgba(22,119,255,0.18)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close */}
         <button
           onClick={onClose}
           aria-label="Close upgrade dialog"
-          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-xl border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm transition-all hover:bg-teachpad-tag hover:text-teachpad-ink"
+          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-xl border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm transition-all hover:bg-teachpad-tag hover:text-teachpad-ink"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
 
         {/* Header */}
-        <div className="relative overflow-hidden rounded-t-[28px] bg-gradient-to-br from-[#1677ff] to-[#0040d9] px-6 py-7">
+        <div className="relative shrink-0 overflow-hidden rounded-t-[28px] bg-gradient-to-br from-[#1677ff] to-[#0040d9] px-6 py-7">
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full bg-white/5" />
           <div className="relative flex items-center gap-3">
@@ -233,7 +267,7 @@ function UpgradeModalUI({
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="overflow-y-auto p-6">
           {/* Context line (e.g. "Presentations require a Pro plan") */}
           {contextLine && (
             <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
