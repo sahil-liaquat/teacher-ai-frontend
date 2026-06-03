@@ -41,6 +41,7 @@ type ActivityFormDraft = {
 export default function ActivityGeneratorPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const generationId = searchParams.get("id");
   const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
   const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
   const [boards, setBoards] = useState<Board[]>([]);
@@ -71,8 +72,38 @@ export default function ActivityGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
+  const [savedGenerationLoading, setSavedGenerationLoading] = useState(false);
+  const [savedGenerationError, setSavedGenerationError] = useState("");
   const [activity, setActivity] = useState<any>(null);
   const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    if (!generationId) {
+      setSavedGenerationError("");
+      setSavedGenerationLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSavedGenerationLoading(true);
+    setSavedGenerationError("");
+    backendApi.activity(generationId)
+      .then((generation) => {
+        if (!cancelled) setActivity(generation.output_json);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : "Could not load saved activity.";
+          setSavedGenerationError(message);
+          toast({ title: "Could not load activity", description: message });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSavedGenerationLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [generationId, toast]);
 
   useEffect(() => {
     const draft = readToolDraft<ActivityFormDraft>(ACTIVITY_DRAFT_KEY);
@@ -402,16 +433,25 @@ export default function ActivityGeneratorPage() {
     }
   }
 
-  if (generating || generationError) {
+  if (generating || generationError || savedGenerationLoading || savedGenerationError) {
     return (
       <GenerationLoadingScreen
         type="activity"
-        state={generationError ? "error" : "loading"}
-        status={generating ? generationStatus : undefined}
-        errorMessage={generationError}
-        onRetry={generate}
+        state={generationError || savedGenerationError ? "error" : "loading"}
+        status={generating ? generationStatus : "Loading saved activity..."}
+        errorMessage={generationError || savedGenerationError}
+        onRetry={generationError ? generate : () => {
+          if (!generationId) return;
+          setSavedGenerationError("");
+          setSavedGenerationLoading(true);
+          backendApi.activity(generationId)
+            .then((generation) => setActivity(generation.output_json))
+            .catch((error) => setSavedGenerationError(error instanceof Error ? error.message : "Could not load saved activity."))
+            .finally(() => setSavedGenerationLoading(false));
+        }}
         onBack={() => {
           setGenerationError("");
+          setSavedGenerationError("");
           setGenerating(false);
           setGenerationStatus("");
         }}

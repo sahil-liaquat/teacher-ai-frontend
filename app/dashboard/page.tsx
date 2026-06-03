@@ -175,7 +175,7 @@ export default function TeacherDashboard() {
       class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
       subject: metadata.subject || "Notes",
       type: "Notes",
-      href: "/dashboard/notes-generator",
+      href: `/dashboard/notes-generator?id=${item.id}`,
       created_at: item.created_at || item.updated_at || ""
     };
   });
@@ -189,7 +189,7 @@ export default function TeacherDashboard() {
       class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
       subject: metadata.subject || "Activity",
       type: "Activity",
-      href: "/dashboard/activity-generator",
+      href: `/dashboard/activity-generator?id=${item.id}`,
       created_at: item.created_at || item.updated_at || ""
     };
   });
