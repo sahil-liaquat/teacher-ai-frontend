@@ -20,69 +20,69 @@ import Link from "next/link";
 const tools = [
   {
     title: "Lesson Planner",
-    description: "Create structured, engaging lesson plans in seconds.",
+    description: "Create structured lesson plans from your selected textbook chapter, including objectives, activities, assessment, homework, and teacher notes.",
     image: "/landing/lesson-planner-3d-v2.png",
     accent: "blue"
   },
   {
     title: "Worksheet Generator",
-    description: "Generate custom worksheets tailored to any topic or grade.",
+    description: "Generate chapter-based worksheets with questions that match the topic, class level, and textbook content.",
     image: "/landing/worksheet-3d-v2.png",
     accent: "green"
   },
   {
     title: "Presentation Generator",
-    description: "Build polished presentations that make concepts stick.",
+    description: "Turn textbook concepts into clean classroom presentations that help students understand the lesson visually.",
     image: "/landing/presentation-3d-v2.png",
     accent: "purple"
   },
   {
     title: "Live Quiz Generator",
-    description: "Create interactive quizzes for live or remote classrooms.",
+    description: "Create quick quizzes from the chapter to check understanding during class or after teaching.",
     image: "/landing/live-quiz-3d-v2.png",
     accent: "orange"
   }
 ];
 
 const textbookPoints = [
-  "Supports NCERT and state board textbooks",
-  "Respects chapter flow and learning objectives",
-  "Includes key diagrams, examples, and question banks",
-  "Built for Indian classrooms"
+  "Uses the selected board or curriculum",
+  "Uses the selected class, subject, textbook, and chapter",
+  "Follows chapter flow, key concepts, examples, and exercises",
+  "Creates more accurate, syllabus-aligned classroom content"
 ];
 
 const steps = [
   {
-    title: "Choose your topic or textbook",
-    description: "Start with a chapter, topic, grade, or learning objective.",
-    image: "/landing/checklist-3d-v2.png",
+    title: "Select your textbook",
+    description: "Choose the board, class, subject, book, and chapter you want to teach.",
+    image: "/assets/illustrations/textbook-library-header.png",
     Icon: BookOpen
   },
   {
-    title: "Generate instantly with AI",
-    description: "TeachPad creates classroom-ready content in minutes.",
-    image: "/landing/ai-books-3d-v2.png",
+    title: "Choose what you want to create",
+    description: "Pick a lesson plan, worksheet, presentation, notes, classroom activity, or quiz.",
+    image: "/ai-tools/tool-icons.png",
     Icon: WandSparkles
   },
   {
-    title: "Review, customize and teach",
-    description: "Edit, save, download, and bring it into your classroom.",
-    image: "/landing/rocket-3d-v2.png",
+    title: "Review, edit, and use",
+    description: "TeachPad generates from the chapter, then you can customize, save, download, or use it directly in class.",
+    image: "/landing/beautiful-content-lesson-plan.png",
     Icon: GraduationCap
   }
 ];
 
 const contentPoints = [
-  "Editable and customizable",
-  "Download in multiple formats",
-  "Save and organize in your library"
+  "Clear headings and sections",
+  "Editable, download-ready output",
+  "Saved resource library"
 ];
 
 const schoolBenefits = [
-  "Save teacher planning time",
-  "Ensure curriculum consistency",
-  "Track usage and outcomes",
-  "Boost engagement and results"
+  "Reducing teacher planning time",
+  "Maintaining syllabus and chapter alignment",
+  "Improving consistency across classes",
+  "Creating reusable teaching resources"
 ];
 
 export default function HomePage() {
@@ -105,20 +105,19 @@ export default function HomePage() {
 function HeroSection() {
   return (
     <section className="relative bg-[radial-gradient(circle_at_16%_10%,#eef6ff_0,transparent_30%),radial-gradient(circle_at_90%_12%,#f5fbff_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-5 pb-12 pt-9 sm:px-6 md:pb-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-24 lg:pt-16">
-        <div className="relative z-10 w-full max-w-[350px] sm:max-w-2xl">
-          <h1 className="max-w-full text-[38px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[42px] sm:text-6xl lg:text-[76px]">
-            Your textbook, <span className="text-blue-600">powered by AI.</span>
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-10 pt-9 text-center sm:px-6 md:pb-16 lg:px-8 lg:pb-20 lg:pt-14">
+        <div className="relative z-10 flex w-full max-w-5xl flex-col items-center">
+          <h1 className="max-w-full text-[38px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[42px] sm:text-6xl lg:text-[72px]">
+            Teach from your <span className="text-blue-600">textbook.</span>
             <br />
-            Your classroom, <span className="text-blue-600">powered by you.</span>
+            Let AI do the <span className="text-blue-600">preparation.</span>
           </h1>
-          <p className="mt-5 max-w-full text-base leading-7 text-slate-600 sm:mt-6 sm:max-w-xl sm:text-lg sm:leading-8">
-            Create lesson plans, worksheets, presentations, and live quizzes in minutes - all grounded in your textbooks and
-            aligned to your curriculum.
+          <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
+            TeachPad helps teachers create lesson plans, worksheets, presentations, notes, activities, and quizzes directly from the textbook chapter they are teaching.
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-            <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
+          <div className="mt-7 flex w-full max-w-[420px] flex-col justify-center gap-3 sm:mt-8 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <PrimaryLink href="/signup">Start Creating Free</PrimaryLink>
             <Link
               href="#features"
               className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
@@ -126,21 +125,19 @@ function HeroSection() {
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-600">
                 <Play className="ml-0.5 h-4 w-4 fill-current" />
               </span>
-              Watch Demo
+              See How It Works
             </Link>
           </div>
         </div>
 
-        <div className="relative -mr-4 hidden min-h-[360px] sm:min-h-[480px] lg:block lg:-mr-12 lg:min-h-[590px]">
-          <div className="absolute left-[7%] top-[12%] h-12 w-12 rounded-full bg-gradient-to-br from-white to-slate-200 shadow-[inset_0_8px_18px_rgba(255,255,255,0.8),0_18px_35px_rgba(15,23,42,0.12)]" />
-          <div className="absolute right-[2%] top-[18%] h-8 w-8 rounded-full bg-gradient-to-br from-white to-slate-200 shadow-[inset_0_8px_18px_rgba(255,255,255,0.8),0_18px_35px_rgba(15,23,42,0.12)]" />
+        <div className="relative z-0 mx-auto mt-8 w-full max-w-7xl sm:mt-10 lg:mt-8">
           <Image
-            src="/landing/hero-dashboard-v3.png"
-            alt="TeachPad dashboard on a laptop with classroom desk objects"
-            width={1600}
-            height={1120}
+            src="/landing/teachpad-main-hero-centered.png"
+            alt="TeachPad dashboard showing textbook-based lesson planning, worksheet generation, notes, presentations, and classroom activities."
+            width={1672}
+            height={941}
             priority
-            className="relative z-10 h-auto w-full scale-[1.03] drop-shadow-[0_34px_54px_rgba(47,79,129,0.18)] lg:scale-110"
+            className="mx-auto h-auto w-full drop-shadow-[0_34px_54px_rgba(47,79,129,0.18)]"
           />
         </div>
       </div>
@@ -151,20 +148,30 @@ function HeroSection() {
 function ToolsSection() {
   return (
     <section id="features" className="mx-auto w-full max-w-7xl overflow-hidden px-5 py-14 sm:px-6 lg:px-8 lg:py-24">
-      <SectionHeading eyebrow="All-in-one AI tools" title="Powerful AI tools for every teaching need" />
-      <div className="mx-auto mt-10 grid w-full max-w-[350px] min-w-0 gap-5 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
+      <SectionHeading
+        eyebrow="AI tools"
+        title={
+          <>
+            <span className="text-blue-600">One textbook.</span> Many classroom resources.
+          </>
+        }
+      />
+      <div className="mx-auto mt-10 grid w-full max-w-[350px] min-w-0 gap-8 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
         {tools.map((tool) => (
           <article
             key={tool.title}
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_28px_70px_rgba(30,82,153,0.12)] sm:p-6"
+            className="group min-w-0 text-center transition duration-300 hover:-translate-y-2"
           >
             <div className="grid h-[180px] place-items-center overflow-visible sm:h-[230px]">
-              <Image src={tool.image} alt="" width={380} height={380} className="h-44 w-44 object-contain transition duration-300 group-hover:scale-105 sm:h-60 sm:w-60" />
+              <Image src={tool.image} alt="" width={380} height={380} className="h-44 w-44 object-contain drop-shadow-[0_22px_38px_rgba(47,79,129,0.12)] transition duration-300 group-hover:scale-105 sm:h-60 sm:w-60" />
             </div>
             <h3 className="mt-4 text-xl font-black text-slate-950 sm:mt-5">{tool.title}</h3>
-          <p className="mt-3 max-w-full text-sm leading-6 text-slate-600">{tool.description}</p>
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">{tool.description}</p>
           </article>
         ))}
+      </div>
+      <div className="mt-10 flex justify-center">
+        <PrimaryLink href="/ai-tools">View All Tools</PrimaryLink>
       </div>
     </section>
   );
@@ -177,13 +184,12 @@ function TextbookSection() {
         <div>
           <Badge icon={BookOpen}>Textbook grounded</Badge>
           <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-            Textbook grounded.
+            The textbook is the source.
             <br />
-            Always curriculum <span className="text-blue-600">aligned.</span>
+            AI is only the <span className="text-blue-600">assistant.</span>
           </h2>
           <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">
-            TeachPad uses your selected textbook as the foundation to generate accurate, relevant, and syllabus-aligned classroom
-            content.
+            TeachPad uses the selected textbook chapter as the foundation before generating any classroom material, so the output is created from the book your school actually follows.
           </p>
           <ul className="mt-7 space-y-4">
             {textbookPoints.map((point) => (
@@ -215,19 +221,26 @@ function HowItWorksSection() {
   return (
     <section id="how-it-works" className="bg-white">
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8 lg:py-16">
-        <SectionHeading eyebrow="How it works" title="From idea to impact in 3 simple steps" />
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+        <SectionHeading
+          eyebrow="How it works"
+          title={
+            <>
+              From textbook to teaching material in <span className="text-blue-600">seconds.</span>
+            </>
+          }
+        />
+        <div className="mt-10 grid gap-10 lg:grid-cols-3">
           {steps.map((step, index) => (
-            <article key={step.title} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:border-blue-100 hover:shadow-[0_28px_70px_rgba(30,82,153,0.12)]">
-              <div className="flex items-start justify-between gap-4">
+            <article key={step.title} className="group text-center transition duration-300 hover:-translate-y-2">
+              <div className="relative grid min-h-[230px] place-items-center sm:min-h-[280px] lg:min-h-[320px]">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-600 text-sm font-black text-white">{index + 1}</span>
-                <Image src={step.image} alt="" width={220} height={220} className="h-28 w-28 object-contain transition duration-300 group-hover:scale-105 sm:h-36 sm:w-36 lg:h-44 lg:w-44" />
+                <Image src={step.image} alt="" width={360} height={360} className="h-48 w-48 object-contain drop-shadow-[0_24px_42px_rgba(47,79,129,0.14)] transition duration-300 group-hover:scale-105 sm:h-64 sm:w-64 lg:h-72 lg:w-72" />
               </div>
-              <div className="mt-5 flex items-center gap-2 text-blue-600">
+              <div className="mt-5 flex items-center justify-center gap-2 text-blue-600">
                 <step.Icon className="h-5 w-5" />
                 <h3 className="text-lg font-black text-slate-950">{step.title}</h3>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{step.description}</p>
+              <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">{step.description}</p>
             </article>
           ))}
         </div>
@@ -242,23 +255,23 @@ function BeautifulContentSection() {
       <div className="grid items-center gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:gap-8 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:px-10">
         <div className="-mx-5 -mb-8 sm:-mx-8 lg:-ml-10 lg:-mr-2">
           <Image
-            src="/landing/lesson-ui-3d-v2.png"
+            src="/landing/output-quality-presentation.png"
             alt="Lesson plan editor interface mockup"
-            width={1500}
-            height={1010}
+            width={1448}
+            height={1086}
             className="h-auto w-full translate-y-5 drop-shadow-[0_24px_42px_rgba(47,79,129,0.12)]"
           />
         </div>
 
         <div>
-          <Badge icon={Sparkles}>Beautiful outputs</Badge>
+          <Badge icon={Sparkles}>Output quality</Badge>
           <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
             Beautiful content.
             <br />
             Every time.
           </h2>
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-600">
-            AI-generated classroom content that is structured, engaging, and ready to use.
+            TeachPad outputs are designed for real teachers, not just for looking good on screen. Every resource is structured, editable, and easy to use in daily teaching.
           </p>
           <ul className="mt-7 space-y-4">
             {contentPoints.map((point) => (
@@ -287,12 +300,12 @@ function ForSchoolsSection() {
         <div id="pricing">
           <Badge icon={School}>For schools</Badge>
           <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">
-            Empower every teacher.
+            Keep every classroom aligned
             <br />
-            Elevate every classroom.
+            with the textbook.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">
-            Bring the power of TeachPad to your entire school. Simplify planning. Ensure consistency. Improve outcomes.
+            TeachPad helps schools make teaching preparation faster, more consistent, and more curriculum-aligned.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <PrimaryLink href="/signup">Book a Demo for Your School</PrimaryLink>
@@ -328,13 +341,12 @@ function ResultsSection() {
               ))}
             </div>
             <p className="mt-4 max-w-3xl text-xl font-bold leading-8 text-slate-900">
-              "TeachPad helps our teachers prepare faster while keeping lessons aligned to the chapter flow. It feels simple,
-              thoughtful, and built for real classrooms."
+              "TeachPad helps teachers prepare faster without moving away from the textbook. The content follows the chapter, feels easy to edit, and works well for real classroom teaching."
             </p>
           </div>
           <div className="shrink-0 rounded-xl bg-white px-5 py-4 shadow-sm">
-            <p className="font-black text-slate-950">Ananya Rao</p>
-            <p className="mt-1 text-sm text-slate-500">Academic Coordinator</p>
+            <p className="font-black text-slate-950">Academic Coordinator</p>
+            <p className="mt-1 text-sm text-slate-500">Partner School</p>
           </div>
         </div>
       </article>
@@ -348,11 +360,11 @@ function FinalCtaSection() {
       <div className="grid items-center gap-8 rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f5fbff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:grid-cols-[1fr_0.9fr] md:p-10 lg:p-12">
         <div>
           <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-            Join thousands of teachers teaching brighter with TeachPad.
+            Start with your textbook. Create everything you need to teach.
           </h2>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-            <PrimaryLink href="/signup">Get Started Free</PrimaryLink>
-            <SecondaryLink href="/signup">Book a Demo</SecondaryLink>
+            <PrimaryLink href="/signup">Start Free</PrimaryLink>
+            <SecondaryLink href="/signup">Book a School Demo</SecondaryLink>
           </div>
           <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
             <span className="flex items-center gap-2">
@@ -361,7 +373,7 @@ function FinalCtaSection() {
             </span>
             <span className="flex items-center gap-2">
               <Clock3 className="h-4 w-4 text-blue-600" />
-              Setup in 30 seconds
+              Built for Indian teachers and schools
             </span>
           </div>
         </div>
@@ -418,7 +430,7 @@ function SectionHeading({
   align = "center"
 }: {
   eyebrow: string;
-  title: string;
+  title: React.ReactNode;
   align?: "center" | "left";
 }) {
   return (
