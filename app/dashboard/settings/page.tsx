@@ -3,8 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Phone, Save, School, UserRound } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
-import { PastelIconTile } from "@/components/pastel-icon-tile";
+import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
+import { PastelIconTile, type PastelIconTileName } from "@/components/pastel-icon-tile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/profile";
@@ -15,6 +15,7 @@ import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
 import { normalizeIndianMobile } from "@/lib/phone";
 
 const usageLimit = 100;
+const OTHER_SCHOOL_VALUE = "__other_school__";
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -26,6 +27,7 @@ export default function SettingsPage() {
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [schoolId, setSchoolId] = useState("");
+  const [pendingSchoolName, setPendingSchoolName] = useState("");
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
 
   const currentUser = useQuery<ApiUser>({
@@ -46,6 +48,27 @@ export default function SettingsPage() {
   const worksheets = useQuery({
     queryKey: ["settings-worksheets-summary"],
     queryFn: () => backendApi.worksheets(0, 100),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0
+  });
+  const presentations = useQuery({
+    queryKey: ["settings-presentations-summary"],
+    queryFn: () => backendApi.presentations(0, 100),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0
+  });
+  const notesGenerations = useQuery({
+    queryKey: ["settings-notes-summary"],
+    queryFn: () => backendApi.notesGenerations(0, 100),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0
+  });
+  const activities = useQuery({
+    queryKey: ["settings-activities-summary"],
+    queryFn: () => backendApi.activities(0, 100),
     enabled: !!token,
     retry: false,
     staleTime: 0
@@ -79,7 +102,8 @@ export default function SettingsPage() {
   }, [currentUser.data]);
 
   useEffect(() => {
-    setSchoolId(schoolProfile.data?.school_id || "");
+    setSchoolId(schoolProfile.data?.school_id || (schoolProfile.data?.pending_school_name ? OTHER_SCHOOL_VALUE : ""));
+    setPendingSchoolName(schoolProfile.data?.pending_school_name || "");
   }, [schoolProfile.data]);
 
   useEffect(() => {
@@ -90,22 +114,43 @@ export default function SettingsPage() {
   const usage = useMemo(() => {
     const lessonItems = plans.data?.items || [];
     const worksheetItems = worksheets.data?.items || [];
+    const presentationItems = presentations.data?.items || [];
+    const notesItems = notesGenerations.data?.items || [];
+    const activityItems = activities.data?.items || [];
     const monthlyLessons = countItemsThisMonth(lessonItems);
     const monthlyWorksheets = countItemsThisMonth(worksheetItems);
-    const total = monthlyLessons + monthlyWorksheets;
+    const monthlyPresentations = countItemsThisMonth(presentationItems);
+    const monthlyNotes = countItemsThisMonth(notesItems);
+    const monthlyActivities = countItemsThisMonth(activityItems);
+    const total = monthlyLessons + monthlyWorksheets + monthlyPresentations + monthlyNotes + monthlyActivities;
     return {
       monthlyLessons,
       monthlyWorksheets,
+      monthlyPresentations,
+      monthlyNotes,
+      monthlyActivities,
       total,
-      savedResources: (plans.data?.total || 0) + (worksheets.data?.total || 0),
+      savedResources: (plans.data?.total || 0) + (worksheets.data?.total || 0) + (presentations.data?.total || 0) + (notesGenerations.data?.total || 0) + (activities.data?.total || 0),
       percent: Math.min(100, Math.round((total / usageLimit) * 100))
     };
-  }, [plans.data?.items, plans.data?.total, worksheets.data?.items, worksheets.data?.total]);
+  }, [
+    activities.data?.items,
+    activities.data?.total,
+    notesGenerations.data?.items,
+    notesGenerations.data?.total,
+    plans.data?.items,
+    plans.data?.total,
+    presentations.data?.items,
+    presentations.data?.total,
+    worksheets.data?.items,
+    worksheets.data?.total
+  ]);
 
   const displayName = profile.name || currentUser.data?.full_name || currentUser.data?.name || "Teacher";
   const email = currentUser.data?.email || "No email available";
-  const isLoadingUsage = plans.isLoading || worksheets.isLoading;
-  const selectedSchool = schools.data?.items.find((school) => school.id === schoolId);
+  const isLoadingUsage = plans.isLoading || worksheets.isLoading || presentations.isLoading || notesGenerations.isLoading || activities.isLoading;
+  const isOtherSchool = schoolId === OTHER_SCHOOL_VALUE;
+  const selectedSchool = isOtherSchool ? undefined : schools.data?.items.find((school) => school.id === schoolId);
   const lessonPlanFormatAvailable = Boolean(selectedSchool?.templates_count || schoolFormat.data?.available);
 
   function updateProfile(field: keyof TeacherProfile, value: string) {
@@ -114,9 +159,13 @@ export default function SettingsPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isOtherSchool && !pendingSchoolName.trim()) {
+      toast({ title: "Enter school name", description: "Please enter your school name or choose a listed school." });
+      return;
+    }
     const next = {
       name: profile.name.trim(),
-      school: selectedSchool?.name || profile.school.trim(),
+      school: selectedSchool?.name || pendingSchoolName.trim() || profile.school.trim(),
       subjects: ""
     };
     if (!next.name) {
@@ -141,7 +190,9 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await backendApi.updateUser(currentUserId, { full_name: next.name });
-      if (schoolId) {
+      if (isOtherSchool) {
+        await backendApi.updateMySchool({ school_id: null, pending_school_name: pendingSchoolName.trim() });
+      } else if (schoolId) {
         await backendApi.updateMySchool({ school_id: schoolId, pending_school_name: null });
       }
       const savedUser = await getCurrentUser({ redirectOnUnauthorized: false });
@@ -190,18 +241,10 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader
-        title="Profile and usage settings"
-        description="Manage your teacher profile, saved details, and monthly classroom activity."
-        size="hero"
-        illustration={
-          <img
-            src="/assets/illustrations/profile-settings-header.png"
-            alt=""
-            aria-hidden="true"
-            className="absolute right-10 top-1/2 w-[270px] -translate-y-1/2 select-none object-contain drop-shadow-[0_16px_16px_rgba(37,99,235,0.14)] xl:right-14 xl:w-[330px]"
-          />
-        }
+      <DashboardBannerHeader
+        titleTop="Profile and"
+        titleHighlight="usage settings"
+        imageSrc="/assets/illustrations/profile-settings-header.png"
       />
 
       <section className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
@@ -243,10 +286,14 @@ export default function SettingsPage() {
             <ProfileField label="School" icon={<School className="h-4 w-4" />}>
               <select
                 value={schoolId}
-                onChange={(event) => setSchoolId(event.target.value)}
+                onChange={(event) => {
+                  setSchoolId(event.target.value);
+                  if (event.target.value !== OTHER_SCHOOL_VALUE) setPendingSchoolName("");
+                }}
                 className="h-11 rounded-md border border-input bg-background px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">Select school</option>
+                <option value={OTHER_SCHOOL_VALUE}>Other school</option>
                 {schools.data?.items.map((school) => (
                   <option key={school.id} value={school.id}>{[school.name, school.city].filter(Boolean).join(", ")}</option>
                 ))}
@@ -262,6 +309,11 @@ export default function SettingsPage() {
                 placeholder="10-digit mobile number"
               />
             </ProfileField>
+            {isOtherSchool ? (
+              <ProfileField label="Other school name" icon={<School className="h-4 w-4" />}>
+                <Input value={pendingSchoolName} onChange={(event) => setPendingSchoolName(event.target.value)} placeholder="Enter school name" />
+              </ProfileField>
+            ) : null}
             <div className="md:col-span-2">
               <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Lesson plan format" value={lessonPlanFormatAvailable ? "Available" : "Not available"} />
             </div>
@@ -285,9 +337,12 @@ export default function SettingsPage() {
             <div className="h-full rounded-full bg-gradient-to-r from-teachpad-blue via-[#16c5d9] to-[#8ec63f]" style={{ width: `${isLoadingUsage ? 0 : usage.percent}%` }} />
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <UsageMetric icon="bookOpen" label="Lesson plans" value={isLoadingUsage ? "..." : usage.monthlyLessons} tone="bg-[#ffdce8]" />
             <UsageMetric icon="clipboardList" label="Worksheets" value={isLoadingUsage ? "..." : usage.monthlyWorksheets} tone="bg-[#e5ffc6]" />
+            <UsageMetric icon="presentation" label="Presentations" value={isLoadingUsage ? "..." : usage.monthlyPresentations} tone="bg-[#ffe1e8]" />
+            <UsageMetric icon="notebookPen" label="Notes" value={isLoadingUsage ? "..." : usage.monthlyNotes} tone="bg-[#f1e8ff]" />
+            <UsageMetric icon="sparkles" label="Activities" value={isLoadingUsage ? "..." : usage.monthlyActivities} tone="bg-[#dffafa]" />
             <UsageMetric icon="folderOpen" label="Saved resources" value={isLoadingUsage ? "..." : usage.savedResources} tone="bg-[#fff0bf]" />
           </div>
         </div>
@@ -353,7 +408,7 @@ function AccountLine({ icon, label, value }: { icon: React.ReactNode; label: str
   );
 }
 
-function UsageMetric({ icon, label, value, tone }: { icon: "bookOpen" | "clipboardList" | "folderOpen"; label: string; value: number | string; tone: string }) {
+function UsageMetric({ icon, label, value, tone }: { icon: PastelIconTileName; label: string; value: number | string; tone: string }) {
   return (
     <div className="rounded-[22px] border border-teachpad-cardBorder bg-white/86 p-4">
       <PastelIconTile name={icon} className={cn("h-12 w-12 rounded-2xl", tone)} />

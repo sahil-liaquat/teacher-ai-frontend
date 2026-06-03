@@ -358,13 +358,14 @@ export default function NotesGeneratorPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function downloadNotesPdf() {
+  async function downloadNotesPdf(handwritten = false) {
     try {
       await downloadGeneratedTextPdf({
         title: notes?.title || "Classroom Notes",
         subtitle: notes?.metadata?.chapter || "Textbook grounded notes",
         text: notesText(),
-        filenamePrefix: "classroom-notes"
+        filenamePrefix: "classroom-notes",
+        handwritten
       });
       toast({ title: "PDF downloaded", description: "Your notes were exported as a PDF." });
     } catch (error) {
@@ -417,8 +418,8 @@ export default function NotesGeneratorPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px]">
       <section className="overflow-hidden rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
-        <div className="relative min-h-[166px] border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-5 py-6">
-          <div className="relative z-10 max-w-[620px]">
+        <div className="relative min-h-[166px] overflow-hidden border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-5 py-6">
+          <div className="relative z-10 max-w-[620px] lg:max-w-[58%]">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#d9467d] shadow-sm">
               <NotebookPen className="h-4 w-4" /> Textbook notes
             </div>
@@ -426,6 +427,14 @@ export default function NotesGeneratorPage() {
             <p className="mt-2.5 max-w-[560px] text-sm font-medium leading-6 text-[#55516e]">
               Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.
             </p>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
+            <img
+              src="/assets/illustrations/create-notes-header.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute bottom-0 right-0 max-h-full w-[390px] select-none object-contain object-bottom drop-shadow-[0_18px_18px_rgba(217,70,125,0.18)] xl:right-2 xl:w-[470px]"
+            />
           </div>
         </div>
 
@@ -521,7 +530,7 @@ export default function NotesGeneratorPage() {
   );
 }
 
-function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes: any; onCopy: () => void; onPdf: () => void; onShare: () => void; onSave: () => void; onBack: () => void }) {
+function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes: any; onCopy: () => void; onPdf: (handwritten?: boolean) => void; onShare: () => void; onSave: () => void; onBack: () => void }) {
   const metadata = notes.metadata || {};
   const [handwritten, setHandwritten] = useState(false);
 
@@ -550,7 +559,7 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes:
             <PenLine className="h-4 w-4" /> Handwritten
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={onCopy}><ClipboardCopy className="h-4 w-4" /> Copy</Button>
-          <Button type="button" variant="outline" size="sm" onClick={onPdf}><Download className="h-4 w-4" /> PDF</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => onPdf(handwritten)}><Download className="h-4 w-4" /> PDF</Button>
           <Button type="button" variant="outline" size="sm" onClick={onShare}><Share2 className="h-4 w-4" /> Share</Button>
           <Button type="button" variant="outline" size="sm" onClick={onSave}><Save className="h-4 w-4" /> Save</Button>
         </div>

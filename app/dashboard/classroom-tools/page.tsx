@@ -5,9 +5,9 @@ import type { ComponentType } from "react";
 import {
   ArrowRight,
   Activity,
-  BookOpen,
-  ClipboardCheck,
+  ClipboardList,
   ImageIcon,
+  LayoutList,
   MessageCircle,
   NotebookPen,
   Plus,
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/page-header";
+import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { cn } from "@/lib/utils";
 
 const tools: Array<{
@@ -34,7 +34,7 @@ const tools: Array<{
     title: "Create Lesson Plan",
     description: "Generate complete textbook-grounded lesson plans with objectives, timeline, assessment, and notes.",
     href: "/dashboard/lesson-plans/new",
-    icon: BookOpen,
+    icon: LayoutList,
     badge: "Ready",
     status: "ready",
     panel: "from-[#eef6ff] to-white",
@@ -44,7 +44,7 @@ const tools: Array<{
     title: "Create Worksheet",
     description: "Create printable worksheets, answer keys, and marking schemes from your selected chapter.",
     href: "/dashboard/worksheets/new",
-    icon: ClipboardCheck,
+    icon: ClipboardList,
     badge: "Ready",
     status: "ready",
     panel: "from-[#ecfff6] to-white",
@@ -117,20 +117,11 @@ const tools: Array<{
 export default function ClassroomToolsPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader
-        title="Choose the classroom tool you need."
-        size="hero"
-        illustration={
-          <>
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white/95 to-transparent" />
-            <img
-              src="/assets/illustrations/classroom-tools-header.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute right-10 top-1/2 w-[300px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-12 xl:w-[360px]"
-            />
-          </>
-        }
+      <DashboardBannerHeader
+        titleTop="Choose the"
+        titleHighlight="classroom tool"
+        titleSuffix="you need."
+        imageSrc="/ai-tools/classroom-tools-header-illustration.png"
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

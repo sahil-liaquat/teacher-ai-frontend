@@ -26,7 +26,7 @@ import {
   saveWorksheetGeneration,
   WORKSHEET_STORAGE_EVENT,
 } from "@/lib/worksheet-storage";
-import { PageHeader } from "@/components/page-header";
+import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -233,21 +233,10 @@ export default function ResourcesPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader
-        title="Saved Resources"
-        description="Find your saved lesson plans and worksheets by class and subject."
-        size="hero"
-        illustration={
-          <>
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white/95 to-transparent" />
-            <img
-              src="/assets/illustrations/saved-resources-header.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute right-8 top-1/2 w-[220px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-10 xl:w-[270px]"
-            />
-          </>
-        }
+      <DashboardBannerHeader
+        titleTop="Saved"
+        titleHighlight="Resources"
+        imageSrc="/assets/illustrations/saved-resources-header.png"
       />
 
       <div className="rounded-[22px] border border-teachpad-cardBorder bg-white/86 p-3 shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm sm:p-4">

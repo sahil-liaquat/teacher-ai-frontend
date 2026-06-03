@@ -430,8 +430,8 @@ export default function ActivityGeneratorPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px]">
       <section className="overflow-hidden rounded-[18px] border border-[#c9f7fb] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
-        <div className="border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white px-5 py-6">
-          <div className="max-w-[640px]">
+        <div className="relative overflow-hidden border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white px-5 py-6">
+          <div className="relative z-10 max-w-[640px] lg:max-w-[58%]">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-black text-[#16a9b6] shadow-sm">
               <Activity className="h-4 w-4" /> Classroom activity
             </div>
@@ -439,6 +439,15 @@ export default function ActivityGeneratorPage() {
             <p className="mt-2.5 max-w-[580px] text-sm font-medium leading-6 text-[#55516e]">
               Generate textbook-grounded classroom activities with timing, materials, teacher actions, and assessment prompts.
             </p>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#f0fdff] to-transparent" />
+            <img
+              src="/assets/illustrations/create-activity-header.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute bottom-0 right-0 max-h-full w-[390px] select-none object-contain object-bottom drop-shadow-[0_18px_18px_rgba(22,169,182,0.18)] xl:right-2 xl:w-[470px]"
+            />
           </div>
         </div>
 

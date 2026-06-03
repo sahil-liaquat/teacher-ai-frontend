@@ -12,7 +12,7 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
+import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -117,10 +117,11 @@ export default function BillingPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader
-        title="Billing & subscription"
-        description="Manage your TeachPad plan, redeem codes, and subscription settings."
-        size="hero"
+      <DashboardBannerHeader
+        titleTop="Billing &"
+        titleHighlight="subscription"
+        imageSrc="/landing/rocket-3d-v2.png"
+        imageClassName="object-center"
       />
 
       {isLoading && (

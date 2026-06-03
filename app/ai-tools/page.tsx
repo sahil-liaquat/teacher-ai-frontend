@@ -12,9 +12,9 @@ import {
   LayoutList,
   MessageCircle,
   NotebookPen,
-  Play,
   Presentation,
   Rocket,
+  Sparkles,
   Trophy,
   UserRound
 } from "lucide-react";
@@ -145,39 +145,38 @@ export default function AiToolsPage() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[radial-gradient(circle_at_12%_8%,#f7fbff_0,transparent_28%),radial-gradient(circle_at_86%_20%,#eff7ff_0,transparent_32%),linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)]">
-      <div className="mx-auto grid w-full max-w-[1440px] items-center gap-6 px-5 pb-12 pt-8 sm:gap-10 sm:px-10 lg:grid-cols-[0.82fr_1fr] lg:px-16 lg:pb-20 lg:pt-12">
-        <div className="relative z-10 w-full max-w-[350px] sm:max-w-[620px]">
-          <h1 className="text-[48px] font-black leading-[1.02] tracking-normal text-slate-950 sm:text-[70px] lg:text-[84px]">
-            Create ready-to-teach content in <span className="text-blue-600">seconds</span>
-          </h1>
-          <p className="mt-5 max-w-full text-[22px] font-semibold leading-[1.32] text-slate-700 sm:max-w-[560px] sm:text-[28px] sm:leading-[1.35]">
-            Everything teachers need to create classroom-ready content with AI.
-          </p>
+    <section className="bg-white px-3 pb-6 pt-2 sm:px-6 lg:px-8">
+      <div className="relative mx-auto min-h-[300px] w-full max-w-[1440px] overflow-hidden rounded-[26px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_52%,#f4f9ff_100%)] shadow-[0_18px_48px_rgba(37,99,235,0.06)] sm:min-h-[360px] lg:min-h-[408px]">
+        <div className="relative z-10 flex min-h-[300px] flex-col justify-center px-6 py-8 sm:min-h-[360px] sm:px-12 lg:min-h-[408px] lg:px-16">
+          <div className="absolute right-5 top-5 hidden items-center gap-2 rounded-full bg-[#eaf3ff] px-5 py-2 text-sm font-black text-[#1d68d8] shadow-[0_10px_24px_rgba(29,104,216,0.08)] sm:inline-flex lg:right-7 lg:top-6">
+            <Sparkles className="h-4 w-4 fill-current" />
+            Built for educators, designed for impact.
+          </div>
 
-          <Link
-            href="#tools"
-            className="mt-8 inline-flex h-[52px] items-center justify-center gap-3 rounded-[18px] border border-slate-200 bg-white px-4 text-[14px] font-black text-slate-800 shadow-[0_15px_38px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 sm:mt-9 sm:h-14 sm:gap-4 sm:px-5 sm:pr-7 sm:text-[15px]"
-          >
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
-              <Play className="ml-0.5 h-4 w-4 fill-current" />
-            </span>
-            Watch How It Works
-          </Link>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-[760px]">
-          <div className="relative mx-auto h-[240px] max-w-[320px] overflow-hidden sm:h-[520px] sm:max-w-[760px] lg:h-[560px]">
-            <Image
-              src="/ai-tools/tool-icons.png"
-              alt=""
-              width={1536}
-              height={1024}
-              priority
-              className="absolute left-1/2 top-1/2 h-auto w-[295px] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_28px_48px_rgba(49,84,138,0.15)] sm:w-[760px] lg:w-[820px]"
-            />
+          <div className="max-w-[690px] pr-0 lg:pr-[410px] xl:pr-0">
+            <h1 className="text-[44px] font-black leading-[1.08] tracking-normal text-[#071b49] sm:text-[64px] lg:text-[72px]">
+              Choose the <span className="text-[#126de8]">classroom tool</span> you need.
+            </h1>
+            <p className="mt-5 max-w-[620px] text-lg font-semibold leading-8 text-[#5b6478] sm:text-[22px] sm:leading-9">
+              Powerful tools to plan, create, and engage&mdash;so you can focus on what matters most: your students.
+            </p>
           </div>
         </div>
+
+        <div className="pointer-events-none relative z-10 mx-auto -mt-12 h-[210px] w-full max-w-[460px] sm:-mt-20 sm:h-[300px] sm:max-w-[610px] lg:absolute lg:bottom-1 lg:right-8 lg:mt-0 lg:h-[360px] lg:w-[51%] lg:max-w-[680px] xl:right-16 xl:h-[382px] xl:max-w-[720px]">
+          <Image
+            src="/ai-tools/classroom-tools-header-illustration.png"
+            alt=""
+            width={1448}
+            height={1086}
+            priority
+            className="h-full w-full object-contain object-bottom drop-shadow-[0_26px_38px_rgba(40,78,130,0.12)]"
+          />
+        </div>
+
+        <div className="pointer-events-none absolute left-[56%] top-[88px] hidden h-2 w-2 rounded-full bg-[#93a7c5] opacity-75 lg:block" />
+        <div className="pointer-events-none absolute left-[60%] top-[132px] hidden text-2xl font-black text-[#8bb8f5] lg:block">*</div>
+        <div className="pointer-events-none absolute right-[30%] top-[62px] hidden text-3xl font-black text-[#b5c5df] lg:block">*</div>
       </div>
     </section>
   );

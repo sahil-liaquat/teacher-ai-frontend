@@ -23,6 +23,8 @@ const schema = z.object({
   promo_code: z.string().optional()
 });
 
+const OTHER_SCHOOL_VALUE = "__other_school__";
+
 export default function SignupPage() {
   const { toast } = useToast();
   const [confirmation, setConfirmation] = useState<{ email: string; message: string } | null>(null);
@@ -44,9 +46,13 @@ export default function SignupPage() {
   }, []);
 
   async function onSubmit(values: z.infer<typeof schema>) {
+    if (schoolMode === "unlisted" && !values.pending_school_name?.trim()) {
+      toast({ title: "Enter school name", description: "Please enter your school name or choose a listed school." });
+      return;
+    }
     try {
       const created = await signup(values.name, values.email, values.password, values.phone, {
-        school_id: schoolMode === "listed" ? values.school_id || undefined : undefined,
+        school_id: schoolMode === "listed" && values.school_id !== OTHER_SCHOOL_VALUE ? values.school_id || undefined : undefined,
         pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined,
         promo_code: values.promo_code?.trim() || undefined
       });
@@ -56,6 +62,7 @@ export default function SignupPage() {
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
       form.reset({ name: "", email: "", phone: "", password: "", school_id: "", pending_school_name: "", promo_code: "" });
+      setSchoolMode("listed");
       toast({ title: "Account created", description: message });
     } catch (error) {
       toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
@@ -136,11 +143,23 @@ export default function SignupPage() {
                   <span className="flex min-h-[50px] items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70">
                     <School className="h-5 w-5 shrink-0" />
                     <select
-                      {...form.register("school_id")}
+                      name="school_id"
+                      value={schoolMode === "unlisted" ? OTHER_SCHOOL_VALUE : selectedSchoolId || ""}
+                      onChange={(event) => {
+                        if (event.target.value === OTHER_SCHOOL_VALUE) {
+                          setSchoolMode("unlisted");
+                          form.setValue("school_id", OTHER_SCHOOL_VALUE);
+                        } else {
+                          setSchoolMode("listed");
+                          form.setValue("school_id", event.target.value);
+                          form.setValue("pending_school_name", "");
+                        }
+                      }}
                       disabled={schoolMode === "unlisted"}
                       className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none disabled:text-slate-400"
                     >
                       <option value="">Select school</option>
+                      <option value={OTHER_SCHOOL_VALUE}>Other school</option>
                       {schools.map((school) => (
                         <option key={school.id} value={school.id}>
                           {[school.name, school.city].filter(Boolean).join(", ")}
@@ -155,7 +174,7 @@ export default function SignupPage() {
                   onClick={() => {
                     const next = schoolMode === "listed" ? "unlisted" : "listed";
                     setSchoolMode(next);
-                    form.setValue("school_id", "");
+                    form.setValue("school_id", next === "unlisted" ? OTHER_SCHOOL_VALUE : "");
                     form.setValue("pending_school_name", "");
                   }}
                   className="text-left text-sm font-black text-blue-600 transition hover:text-blue-700"

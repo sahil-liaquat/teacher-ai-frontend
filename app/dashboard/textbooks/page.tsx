@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
-import { PageHeader } from "@/components/page-header";
+import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -166,21 +166,10 @@ export default function TeacherTextbooksPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <PageHeader
-        title="Textbook Library"
-        description="Browse boards first, then classes, then textbooks. This keeps the library fast and focused."
-        size="hero"
-        illustration={
-          <>
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white/95 to-transparent" />
-            <img
-              src="/assets/illustrations/textbook-library-header.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute right-6 top-1/2 w-[270px] -translate-y-1/2 select-none object-contain drop-shadow-[0_14px_14px_rgba(37,99,235,0.14)] xl:right-8 xl:w-[330px]"
-            />
-          </>
-        }
+      <DashboardBannerHeader
+        titleTop="Textbook"
+        titleHighlight="Library"
+        imageSrc="/assets/illustrations/textbook-library-header.png"
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
