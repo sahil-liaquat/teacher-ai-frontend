@@ -26,6 +26,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MASTER = resolve(root, "public/assets/teachpad-icon.png");
 const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
+const ROUNDED_CORNER_RATIO = 0.18;
 
 if (!existsSync(MASTER)) {
   console.error(
@@ -68,13 +69,20 @@ const buildTransparentMaster = async () => {
 // The master with its outer background knocked out — source for every icon below.
 const SOURCE = await buildTransparentMaster();
 
+const roundedMask = (size) => Buffer.from(
+  `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <rect width="${size}" height="${size}" rx="${Math.round(size * ROUNDED_CORNER_RATIO)}" ry="${Math.round(size * ROUNDED_CORNER_RATIO)}" fill="white"/>
+  </svg>`
+);
+
 // Square PNG buffer at `size`. `fit: contain` defends against a slightly
 // non-square master; `flatten` paints transparency onto white for the platforms
 // that DON'T support it (iOS apple-icon → black otherwise; Android maskable
 // needs a full-bleed background under the OS mask).
-const square = (size, { flatten = false } = {}) => {
+const square = (size, { flatten = false, rounded = true } = {}) => {
   let pipe = sharp(SOURCE).resize(size, size, { fit: "contain", background: TRANSPARENT });
   if (flatten) pipe = pipe.flatten({ background: WHITE });
+  if (rounded) pipe = pipe.composite([{ input: roundedMask(size), blend: "dest-in" }]);
   // ensureAlpha() → 4-channel RGBA PNG. Next's metadata image/.ico processor
   // rejects non-RGBA PNGs ("The PNG is not in RGBA format!").
   return pipe.ensureAlpha().png({ force: true }).toBuffer();
@@ -118,8 +126,8 @@ console.log(`\n  Generating icons from ${MASTER}\n`);
 await write("app/icon.png", await square(512));
 await write("public/icons/icon-192.png", await square(192));
 await write("public/icons/icon-512.png", await square(512));
-await write("app/apple-icon.png", await square(180, { flatten: true }));
-await write("public/icons/icon-maskable-512.png", await square(512, { flatten: true }));
+await write("app/apple-icon.png", await square(180, { flatten: true, rounded: false }));
+await write("public/icons/icon-maskable-512.png", await square(512, { flatten: true, rounded: false }));
 
 const ico = await Promise.all([16, 32, 48].map(async (size) => ({ size, buffer: await square(size) })));
 await write("app/favicon.ico", buildIco(ico));
