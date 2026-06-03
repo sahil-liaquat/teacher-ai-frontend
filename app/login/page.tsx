@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, login, requestPasswordReset } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [mode, setMode] = useState<"login" | "forgot">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [resetSentEmail, setResetSentEmail] = useState("");
@@ -41,17 +42,36 @@ export default function LoginPage() {
 
   useEffect(() => {
     let cancelled = false;
-    ensureSession()
-      .then((hasSession) => hasSession ? getCurrentUser({ redirectOnUnauthorized: false }) : null)
-      .then((user) => {
-        if (!user || cancelled) return;
+
+    async function verifyExistingSession() {
+      if (!hasStoredAuthTokens()) {
+        if (!cancelled) setCheckingAuth(false);
+        return;
+      }
+
+      setCheckingAuth(true);
+      try {
+        const hasSession = await ensureSession();
+        if (!hasSession) throw new Error("No active session");
+
+        const user = await getCurrentUser({ redirectOnUnauthorized: false });
+        if (!user.id || !user.email || !user.role) throw new Error("Could not load account");
+        if (cancelled) return;
+
+        queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
         router.replace(user.role === "admin" ? "/admin" : "/dashboard");
-      })
-      .catch(() => undefined);
+      } catch {
+        clearToken();
+        queryClient.clear();
+        if (!cancelled) setCheckingAuth(false);
+      }
+    }
+
+    void verifyExistingSession();
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [queryClient, router]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
@@ -76,6 +96,10 @@ export default function LoginPage() {
     } catch (error) {
       toast({ title: "Could not send reset email", description: error instanceof Error ? error.message : "Try again" });
     }
+  }
+
+  if (checkingAuth) {
+    return <LoginAuthCheckingScreen />;
   }
 
   return (
@@ -219,6 +243,31 @@ export default function LoginPage() {
             </form>
           )}
         </div>
+      </section>
+    </main>
+  );
+}
+
+function hasStoredAuthTokens() {
+  if (typeof window === "undefined") return false;
+  return [
+    "access_token",
+    "refresh_token",
+    "teacher_ai_access_token",
+    "teacher_ai_refresh_token",
+    "teacher_ai_token"
+  ].some((key) => Boolean(window.localStorage.getItem(key)));
+}
+
+function LoginAuthCheckingScreen() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#f6f9ff] px-5 text-[#07111f]">
+      <section className="w-full max-w-[420px] rounded-lg border border-blue-100 bg-white p-8 text-center shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-blue-50 text-blue-600">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+        </div>
+        <h1 className="mt-5 text-2xl font-black tracking-tight text-slate-950">Checking your session</h1>
+        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Verifying your login before opening TeachPad.</p>
       </section>
     </main>
   );
