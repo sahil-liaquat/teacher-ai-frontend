@@ -88,6 +88,29 @@ export default function WorksheetDetailPage() {
     toast({ title: "PDF downloaded", description: "Exported as a proper text PDF." });
   }
 
+  async function share(output = generation?.output_json) {
+    const text = [
+      output?.title,
+      ...(output?.student_worksheet?.sections || []).flatMap((section: any) => [
+        section.section_title,
+        ...(section.questions || []).map((question: any, index: number) => `${index + 1}. ${question.question}`)
+      ])
+    ].filter(Boolean).join("\n");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: output?.title || "Worksheet", text });
+        toast({ title: "Shared" });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast({ title: "Share text copied", description: "Paste it wherever you want to share." });
+      }
+    } catch (error) {
+      if ((error as DOMException)?.name !== "AbortError") {
+        toast({ title: "Share failed", description: "Could not share this worksheet." });
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#dffafa] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
@@ -115,6 +138,7 @@ export default function WorksheetDetailPage() {
         onSave={save}
         onCopy={copy}
         onExport={exportPdf}
+        onShare={share}
         onChange={handleWorksheetChange}
       />
     </div>

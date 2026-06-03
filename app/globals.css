@@ -114,6 +114,24 @@ textarea::placeholder {
   background: #ffffff;
 }
 
+.notes-handwritten {
+  font-family: "Comic Sans MS", "Bradley Hand", "Segoe Print", "Marker Felt", cursive;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+}
+
+.notes-handwritten h3,
+.notes-handwritten p,
+.notes-handwritten li,
+.notes-handwritten span {
+  font-family: inherit;
+}
+
+.notes-handwritten p,
+.notes-handwritten li {
+  line-height: 1.85;
+}
+
 .tat-card {
   border: 1px solid var(--teachpad-cardBorder);
   background: rgba(255, 255, 255, 0.9);

@@ -14,6 +14,7 @@ import {
   FolderOpen,
   Lightbulb,
   MoreVertical,
+  NotebookPen,
   Plus,
   Presentation,
   Settings2,
@@ -38,6 +39,29 @@ const quickAccess = [
   { title: "AI Chat Assistant", desc: "Ask anything and get instant help from AI.", href: "/dashboard/classroom-tools", icon: Bot, tone: "red" },
   { title: "Classroom Tools", desc: "Use tools like notes, worksheets, and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
 ];
+
+const recentTypeClasses: Record<string, { iconBg: string; pill: string }> = {
+  "Lesson Plan": {
+    iconBg: "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]",
+    pill: "bg-[#eff6ff] text-[#1d4ed8]"
+  },
+  Worksheet: {
+    iconBg: "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600",
+    pill: "bg-emerald-50 text-emerald-700"
+  },
+  Presentation: {
+    iconBg: "bg-gradient-to-br from-rose-100 to-pink-50 text-rose-600",
+    pill: "bg-rose-50 text-rose-700"
+  },
+  Notes: {
+    iconBg: "bg-gradient-to-br from-violet-100 to-purple-50 text-violet-600",
+    pill: "bg-violet-50 text-violet-700"
+  },
+  Activity: {
+    iconBg: "bg-gradient-to-br from-amber-100 to-yellow-50 text-amber-600",
+    pill: "bg-amber-50 text-amber-700"
+  }
+};
 
 export default function TeacherDashboard() {
   const token = getToken();
@@ -71,6 +95,26 @@ export default function TeacherDashboard() {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
+  const notesGenerations = useQuery({
+    queryKey: ["notes-generations-summary"],
+    queryFn: () => backendApi.notesGenerations(0, 100),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+  const activityGenerations = useQuery({
+    queryKey: ["activity-generations-summary"],
+    queryFn: () => backendApi.activities(0, 100),
+    enabled: !!token,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
   const currentUser = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: () => getCurrentUser({ redirectOnUnauthorized: false }),
@@ -79,8 +123,8 @@ export default function TeacherDashboard() {
   });
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
-  const statsLoading = lessonSummary.isLoading || worksheets.isLoading || presentations.isLoading;
-  const statsError = lessonSummary.isError && worksheets.isError && presentations.isError;
+  const statsLoading = lessonSummary.isLoading || worksheets.isLoading || presentations.isLoading || notesGenerations.isLoading || activityGenerations.isLoading;
+  const statsError = lessonSummary.isError && worksheets.isError && presentations.isError && notesGenerations.isError && activityGenerations.isError;
   const apiLessonRecent = lessonSummary.data?.recent || [];
   const lessonTotal = lessonSummary.data?.total ?? 0;
   const lessonRecent = apiLessonRecent.length
@@ -121,17 +165,49 @@ export default function TeacherDashboard() {
       created_at: item.created_at || item.updated_at || ""
     };
   });
-  const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent]
+  const notesItems = notesGenerations.data?.items || [];
+  const notesRecent = notesItems.map((item: any) => {
+    const output = item.output_json || {};
+    const metadata = output.metadata || {};
+    return {
+      id: item.id,
+      topic: output.title || metadata.topic || metadata.chapter || "Generated Notes",
+      class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
+      subject: metadata.subject || "Notes",
+      type: "Notes",
+      href: "/dashboard/notes-generator",
+      created_at: item.created_at || item.updated_at || ""
+    };
+  });
+  const activityItems = activityGenerations.data?.items || [];
+  const activityRecent = activityItems.map((item: any) => {
+    const output = item.output_json || {};
+    const metadata = output.metadata || {};
+    return {
+      id: item.id,
+      topic: output.title || metadata.topic || metadata.chapter || "Generated Activity",
+      class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
+      subject: metadata.subject || "Activity",
+      type: "Activity",
+      href: "/dashboard/activity-generator",
+      created_at: item.created_at || item.updated_at || ""
+    };
+  });
+  const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent, ...notesRecent, ...activityRecent]
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   const displayRecent = recent;
   const worksheetTotal = worksheets.data?.total ?? 0;
   const presentationTotal = presentations.data?.total ?? 0;
-  const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal;
+  const notesTotal = notesGenerations.data?.total ?? 0;
+  const activityTotal = activityGenerations.data?.total ?? 0;
+  const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal + notesTotal + activityTotal;
   const lessonMonthlyTotal = lessonSummary.data?.monthly_total ?? 0;
   const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
   const presentationMonthlyTotal = countItemsThisMonth(presentationItems);
-  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal;
-  const allItems = [...apiLessonRecent, ...worksheetItems, ...presentationItems];
+  const notesMonthlyTotal = countItemsThisMonth(notesItems);
+  const activityMonthlyTotal = countItemsThisMonth(activityItems);
+  const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal + notesMonthlyTotal + activityMonthlyTotal;
+  const allItems = [...apiLessonRecent, ...worksheetItems, ...presentationItems, ...notesItems, ...activityItems];
   const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
@@ -266,17 +342,17 @@ export default function TeacherDashboard() {
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                  item.type === "Worksheet"
-                    ? "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600"
-                    : item.type === "Presentation"
-                      ? "bg-gradient-to-br from-rose-100 to-pink-50 text-rose-600"
-                      : "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                  recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
                 )}>
                   {item.type === "Worksheet"
                     ? <FileText className="h-5 w-5" />
                     : item.type === "Presentation"
                       ? <Presentation className="h-5 w-5" />
-                      : <BookOpen className="h-5 w-5" />}
+                      : item.type === "Notes"
+                        ? <NotebookPen className="h-5 w-5" />
+                        : item.type === "Activity"
+                          ? <Sparkles className="h-5 w-5" />
+                          : <BookOpen className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
@@ -284,11 +360,7 @@ export default function TeacherDashboard() {
                 </div>
                 <span className={cn(
                   "rounded-lg px-2.5 py-1 text-xs font-semibold",
-                  item.type === "Worksheet"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : item.type === "Presentation"
-                      ? "bg-rose-50 text-rose-700"
-                      : "bg-[#eff6ff] text-[#1d4ed8]"
+                  recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
                 )}>
                   {item.type}
                 </span>
@@ -316,6 +388,8 @@ export default function TeacherDashboard() {
                     lessonCount={lessonMonthlyTotal}
                     worksheetCount={worksheetMonthlyTotal}
                     presentationCount={presentationMonthlyTotal}
+                    notesCount={notesMonthlyTotal}
+                    activityCount={activityMonthlyTotal}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-extrabold text-slate-900 animate-chart-appear">{monthlyGenerationsTotal}</span>
@@ -336,6 +410,16 @@ export default function TeacherDashboard() {
                     <span className="h-3 w-3 rounded-full bg-rose-500" />
                     <span className="text-sm font-medium text-slate-700">Presentations</span>
                     <span className="text-sm font-bold text-slate-900">{presentationMonthlyTotal}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-violet-500" />
+                    <span className="text-sm font-medium text-slate-700">Notes</span>
+                    <span className="text-sm font-bold text-slate-900">{notesMonthlyTotal}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-amber-500" />
+                    <span className="text-sm font-medium text-slate-700">Activities</span>
+                    <span className="text-sm font-bold text-slate-900">{activityMonthlyTotal}</span>
                   </div>
                 </div>
               </div>
@@ -557,20 +641,27 @@ function CountUpNumber({ value }: { value: number }) {
 function UsageDonut({
   lessonCount,
   worksheetCount,
-  presentationCount
+  presentationCount,
+  notesCount,
+  activityCount
 }: {
   lessonCount: number;
   worksheetCount: number;
   presentationCount: number;
+  notesCount: number;
+  activityCount: number;
 }) {
-  const total = lessonCount + worksheetCount + presentationCount;
-  const radius = 42;
+  const total = lessonCount + worksheetCount + presentationCount + notesCount + activityCount;
+  const radius = 40;
+  const strokeWidth = 14;
   const circumference = 2 * Math.PI * radius;
   const segments = total
     ? [
         { value: lessonCount, color: "#3b82f6" },
         { value: worksheetCount, color: "#0db986" },
-        { value: presentationCount, color: "#f43f5e" }
+        { value: presentationCount, color: "#f43f5e" },
+        { value: notesCount, color: "#8b5cf6" },
+        { value: activityCount, color: "#f59e0b" }
       ]
     : [{ value: 1, color: "#d7dae4" }];
   let offset = 0;
@@ -579,10 +670,14 @@ function UsageDonut({
     <svg className="h-full w-full" viewBox="0 0 108 108" aria-hidden="true">
       <defs>
         <mask id="usage-donut-reveal">
-          <circle cx="54" cy="54" r={radius} fill="none" stroke="white" strokeWidth="12" pathLength="100" className="animate-usage-stroke-reveal" />
+          <circle cx="54" cy="54" r={radius} fill="none" stroke="white" strokeWidth={strokeWidth} pathLength="100" className="animate-usage-stroke-reveal" />
         </mask>
+        <filter id="usage-donut-soft-shadow" x="-18%" y="-12%" width="136%" height="136%">
+          <feDropShadow dx="0" dy="5" stdDeviation="3.5" floodColor="#64748b" floodOpacity="0.18" />
+        </filter>
       </defs>
-      <g className="animate-usage-rotate-once origin-center" mask="url(#usage-donut-reveal)">
+      <circle cx="54" cy="54" r={radius} fill="none" stroke="#eef2f7" strokeWidth={strokeWidth} />
+      <g className="animate-usage-rotate-once origin-center" filter="url(#usage-donut-soft-shadow)" mask="url(#usage-donut-reveal)">
         {segments.map((segment, index) => {
           const length = total ? (segment.value / total) * circumference : circumference;
           const dashOffset = -offset;
@@ -595,16 +690,16 @@ function UsageDonut({
               r={radius}
               fill="none"
               stroke={segment.color}
-              strokeWidth="12"
+              strokeWidth={strokeWidth}
               strokeDasharray={`${length} ${circumference - length}`}
               strokeDashoffset={dashOffset}
-              strokeLinecap="butt"
+              strokeLinecap="round"
               transform="rotate(-90 54 54)"
             />
           );
         })}
       </g>
-      <circle cx="54" cy="54" r="30" fill="white" />
+      <circle cx="54" cy="54" r="28" fill="white" />
     </svg>
   );
 }

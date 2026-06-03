@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
   ArrowRight,
+  ClipboardList,
   Layers3,
   Lightbulb,
-  Trophy
+  NotebookPen,
+  Presentation
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,7 @@ type CompanionResourcesPanelProps = {
   classLabel?: string;
   subject?: string;
   board?: string;
+  chapter?: string;
   lessonPlanId?: string;
   className?: string;
   onCreateWorksheet?: () => void;
@@ -31,7 +34,7 @@ const resources = [
     title: "Worksheet",
     description: "Practice questions from the same topic",
     href: "/dashboard/worksheets/new",
-    image: "/ai-tools/worksheet-generator.png",
+    icon: ClipboardList,
     color: "green"
   },
   {
@@ -39,7 +42,7 @@ const resources = [
     title: "Presentation",
     description: "Turn this lesson into slides",
     href: "/dashboard/presentation-generator",
-    image: "/ai-tools/presentation-generator.png",
+    icon: Presentation,
     color: "red"
   },
   {
@@ -47,7 +50,7 @@ const resources = [
     title: "Notes",
     description: "Concise revision notes for students",
     href: "/dashboard/notes-generator",
-    image: "/ai-tools/lesson-planner.png",
+    icon: NotebookPen,
     color: "pink"
   },
   {
@@ -55,7 +58,7 @@ const resources = [
     title: "Activity",
     description: "Classroom activity based on the lesson",
     href: "/dashboard/activity-generator",
-    icon: Trophy,
+    icon: Activity,
     color: "cyan"
   }
 ] as const;
@@ -65,6 +68,7 @@ export function CompanionResourcesPanel({
   classLabel,
   subject,
   board,
+  chapter,
   lessonPlanId,
   className,
   onCreateWorksheet,
@@ -78,6 +82,7 @@ export function CompanionResourcesPanel({
   const safeClassLabel = toCleanString(classLabel);
   const safeSubject = toCleanString(subject);
   const safeBoard = toCleanString(board);
+  const safeChapter = toCleanString(chapter);
   const safeLessonPlanId = toCleanString(lessonPlanId);
 
   const queryString = useMemo(() => {
@@ -86,9 +91,10 @@ export function CompanionResourcesPanel({
     if (safeClassLabel) params.set("class", safeClassLabel);
     if (safeSubject) params.set("subject", safeSubject);
     if (safeBoard) params.set("board", safeBoard);
+    if (safeChapter) params.set("chapter", safeChapter);
     if (safeLessonPlanId) params.set("lessonPlanId", safeLessonPlanId);
     return params.toString();
-  }, [safeBoard, safeClassLabel, safeLessonPlanId, safeSubject, safeTopic]);
+  }, [safeBoard, safeChapter, safeClassLabel, safeLessonPlanId, safeSubject, safeTopic]);
 
   function openResource(href: string, title: string, handler?: () => void) {
     if (handler) {
@@ -120,7 +126,7 @@ export function CompanionResourcesPanel({
             <div className="min-w-0">
               <h2 className="text-lg font-black leading-6 text-teachpad-ink">Companion Resources</h2>
               <p className="mt-1 text-sm font-medium leading-5 text-teachpad-muted">
-                Use the same topic, class, subject, and textbook context.
+                Use the same board, class, subject, and chapter context.
               </p>
             </div>
           </div>
@@ -129,7 +135,7 @@ export function CompanionResourcesPanel({
         <div className="grid gap-4 p-4">
           <div className="grid gap-3">
             {resources.map((resource) => {
-              const Icon = "icon" in resource ? resource.icon : null;
+              const Icon = resource.icon;
               return (
                 <button
                   key={resource.key}
@@ -142,17 +148,7 @@ export function CompanionResourcesPanel({
                   )}
                 >
                   <span className={cn("grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-[16px] shadow-lg", iconBg(resource.color))}>
-                    {Icon ? (
-                      <Icon className="h-8 w-8 text-white transition duration-300 group-hover:scale-110" />
-                    ) : "image" in resource ? (
-                      <Image
-                        src={resource.image}
-                        alt=""
-                        width={72}
-                        height={72}
-                        className="h-12 w-12 object-contain drop-shadow-[0_8px_12px_rgba(51,72,120,0.16)] transition duration-300 group-hover:scale-110"
-                      />
-                    ) : null}
+                    <Icon className="h-8 w-8 text-white transition duration-300 group-hover:scale-110" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-black text-teachpad-ink">{resource.title}</span>

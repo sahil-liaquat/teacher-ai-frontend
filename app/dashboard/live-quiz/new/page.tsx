@@ -43,7 +43,7 @@ export default function CreateLiveQuizPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto w-full max-w-[1240px]">
       <div className="overflow-hidden rounded-[18px] border border-[#ffe9a8] bg-white shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
         <header className="relative min-h-[180px] overflow-hidden border-b border-[#ffe9a8] bg-gradient-to-br from-[#fff9df] via-white to-[#fff0bf] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[620px]">
@@ -68,7 +68,7 @@ export default function CreateLiveQuizPage() {
 
         <div className="grid gap-4 p-4 sm:p-5">
           <Section icon={BookOpen} title="Quiz Source" subtitle="Choose where the quiz should come from.">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <Field label="Board / Curriculum"><Select defaultValue="CBSE"><option>CBSE</option><option>ICSE</option><option>State Board</option></Select></Field>
               <Field label="Class / Grade"><Select defaultValue="Class 8"><option>Class 8</option><option>Class 7</option><option>Class 9</option></Select></Field>
               <Field label="Subject"><Select defaultValue="Science"><option>Science</option><option>Mathematics</option><option>Social Science</option></Select></Field>
@@ -79,7 +79,7 @@ export default function CreateLiveQuizPage() {
           </Section>
 
           <Section icon={Settings2} title="Quiz Settings" subtitle="Set question format, time, and marks.">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[repeat(4,minmax(0,1fr))]">
               <Field label="Number of Questions"><Select defaultValue="10"><option>5</option><option>10</option><option>15</option><option>20</option></Select></Field>
               <Field label="Difficulty"><Select defaultValue="Medium"><option>Easy</option><option>Medium</option><option>Hard</option></Select></Field>
               <Field label="Time Limit"><Select defaultValue="10 minutes"><option>5 minutes</option><option>10 minutes</option><option>15 minutes</option><option>20 minutes</option></Select></Field>
@@ -139,7 +139,7 @@ function Section({ icon: Icon, title, subtitle, children }: { icon: React.Compon
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="grid gap-2"><span className="text-sm font-black text-teachpad-ink">{label}</span>{children}</label>;
+  return <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch"><span className="text-sm font-black text-teachpad-ink">{label}</span>{children}</label>;
 }
 
 function Toggle({ label, active, locked, onClick }: { label: string; active: boolean; locked?: boolean; onClick: () => void }) {
