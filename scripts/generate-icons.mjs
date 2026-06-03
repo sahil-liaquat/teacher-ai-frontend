@@ -69,6 +69,13 @@ const buildTransparentMaster = async () => {
 // The master with its outer background knocked out — source for every icon below.
 const SOURCE = await buildTransparentMaster();
 
+// Remove transparent padding from the source before resizing so the browser
+// favicon uses as much of the tiny tab icon area as possible.
+const TRIMMED_SOURCE = await sharp(SOURCE)
+  .trim({ background: TRANSPARENT })
+  .png({ force: true })
+  .toBuffer();
+
 const roundedMask = (size) => Buffer.from(
   `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <rect width="${size}" height="${size}" rx="${Math.round(size * ROUNDED_CORNER_RATIO)}" ry="${Math.round(size * ROUNDED_CORNER_RATIO)}" fill="white"/>
@@ -80,7 +87,7 @@ const roundedMask = (size) => Buffer.from(
 // that DON'T support it (iOS apple-icon → black otherwise; Android maskable
 // needs a full-bleed background under the OS mask).
 const square = (size, { flatten = false, rounded = true } = {}) => {
-  let pipe = sharp(SOURCE).resize(size, size, { fit: "contain", background: TRANSPARENT });
+  let pipe = sharp(TRIMMED_SOURCE).resize(size, size, { fit: "contain", background: TRANSPARENT });
   if (flatten) pipe = pipe.flatten({ background: WHITE });
   if (rounded) pipe = pipe.composite([{ input: roundedMask(size), blend: "dest-in" }]);
   // ensureAlpha() → 4-channel RGBA PNG. Next's metadata image/.ico processor
