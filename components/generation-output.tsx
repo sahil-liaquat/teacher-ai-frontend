@@ -205,7 +205,6 @@ function LessonPlanDocumentOutput({
             grade={formatGradeValue(draft.metadata.class)}
             chapter={draft.metadata.chapter}
             source={draft.metadata.book}
-            generatedAt={documentOutput?.generated_at || documentOutput?.created_at || documentOutput?.updated_at}
           />
         </article>
       </div>
@@ -1149,7 +1148,8 @@ export function WorksheetOutput({
   onSave,
   onChange,
   onExport,
-  onCopy
+  onCopy,
+  onShare
 }: {
   output: any;
   tab: string;
@@ -1158,6 +1158,7 @@ export function WorksheetOutput({
   onChange?: (output?: any) => void;
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
+  onShare?: (output?: any) => void;
 }) {
   const [worksheetOutput, setWorksheetOutput] = useState(output);
   const metadata = worksheetOutput?.metadata || {};
@@ -1252,7 +1253,8 @@ export function WorksheetOutput({
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> Copy</Button>
             <Button variant="outline" size="sm" onClick={() => onExport?.(worksheetOutput)}><Download className="h-4 w-4" /> PDF</Button>
-            <Button size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save</Button>
+            <Button variant="outline" size="sm" onClick={() => onShare?.(worksheetOutput)}><Share2 className="h-4 w-4" /> Share</Button>
+            <Button variant="outline" size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save</Button>
           </div>
         </div>
 
@@ -1349,7 +1351,6 @@ export function WorksheetOutput({
             grade={grade}
             chapter={chapter}
             source={metadata.book || worksheetOutput?.textbook_source}
-            generatedAt={worksheetOutput?.generated_at || worksheetOutput?.created_at || worksheetOutput?.updated_at}
           />
         </article>
       ) : tab === "Answer Key" ? (

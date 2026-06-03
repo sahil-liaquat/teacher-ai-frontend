@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, LoaderCircle, Sparkles } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BookOpen, ClipboardList, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { GenerationLoadingScreen } from "@/components/generation-loading-screen"
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveWorksheetGeneration } from "@/lib/worksheet-storage";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
+import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 
 const difficultyPresets = [
   { key: "easy", label: "Easy", values: { easy: 60, medium: 30, hard: 10 } },
@@ -56,8 +57,11 @@ type WorksheetFormDraft = {
 
 export default function NewWorksheetPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { openUpgrade } = useUpgradeModal();
+  const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
+  const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false });
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -210,6 +214,66 @@ export default function NewWorksheetPage() {
   const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
   const canGenerate = Boolean(bookId && chapterNames.length && Number.isFinite(questionCount) && questionCount >= 1 && questionTypes.length);
 
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.board || !boards.length || !companionContext.board) return;
+    const match = findMatchingBoard(boards, companionContext.board);
+    if (!match) return;
+    companionApplied.current.board = true;
+    chooseBoard(match.id);
+  }, [boards, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.class || !classes.length || !companionContext.classLabel) return;
+    const match = findMatchingClass(classes, companionContext.classLabel);
+    if (!match) return;
+    companionApplied.current.class = true;
+    chooseClass(match.id);
+  }, [classes, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.subject || !subjectOptions.length || !companionContext.subject) return;
+    const match = findMatchingSubject(subjectOptions, companionContext.subject);
+    if (!match) return;
+    companionApplied.current.subject = true;
+    chooseSubject(match);
+  }, [companionContext, subjectOptions]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.book || !books.length) return;
+    const candidates = filteredBooksForSubject(books, companionContext.subject || subject);
+    if (!companionContext.chapter && candidates.length === 1) {
+      companionApplied.current.book = true;
+      chooseBook(candidates[0].id);
+      return;
+    }
+    if (!companionContext.chapter || !candidates.length) return;
+    let cancelled = false;
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+      .then((results) => {
+        if (cancelled || companionApplied.current.book) return;
+        const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
+        if (!found) return;
+        const chapter = findMatchingChapter(found.chapters, companionContext.chapter);
+        companionApplied.current.book = true;
+        companionApplied.current.chapter = true;
+        setBookId(found.book.id);
+        setChapters(found.chapters);
+        setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [books, companionContext, subject]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.chapter || !chapters.length || !companionContext.chapter) return;
+    const match = findMatchingChapter(chapters, companionContext.chapter);
+    if (!match) return;
+    companionApplied.current.chapter = true;
+    setChapterNames([match.chapter_title || match.title || companionContext.chapter]);
+  }, [chapters, companionContext]);
+
   function chooseBoard(value: string) {
     setBoardId(value);
     setClasses([]);
@@ -267,8 +331,8 @@ export default function NewWorksheetPage() {
     setQuestionTypes((items) => items.includes(type) ? items.filter((item) => item !== type) : [...items, type]);
   }
 
-  function toggleChapter(name: string) {
-    setChapterNames((items) => items.includes(name) ? items.filter((item) => item !== name) : [...items, name]);
+  function chooseChapter(value: string) {
+    setChapterNames(value ? [value] : []);
   }
 
   function updateQuestionCount(value: string) {
@@ -350,7 +414,7 @@ export default function NewWorksheetPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto w-full max-w-[1240px]">
       <div className="overflow-hidden rounded-[18px] border border-[#d8f1e5] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[178px] border-b border-[#d8f1e5] bg-gradient-to-br from-[#ecfff7] to-[#def8ef] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[620px]">
@@ -380,7 +444,7 @@ export default function NewWorksheetPage() {
 
         <div className="grid gap-4 p-4 sm:p-5">
           <NumericSection number="1" title="Worksheet Setup" subtitle="Select the textbook source and chapters for this worksheet.">
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">
               <FieldBox label="Board / Curriculum" required>
                 <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}>
                   <option value="">Select Board / Curriculum</option>
@@ -424,42 +488,13 @@ export default function NewWorksheetPage() {
                 </Select>
               </FieldBox>
             </div>
-            <div className="mt-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-black text-[#4f4b68]">Chapters / Units <span className="text-red-500">*</span></p>
-                <span className="rounded-full bg-[#ecfff7] px-3 py-1 text-xs font-black text-[#0b7f53]">{chapterNames.length} selected</span>
-              </div>
-              {isLoadingChapters ? (
-                <div className="flex min-h-[64px] items-center justify-between gap-3 rounded-xl border border-[#dffafa] bg-[#f8f6fb] px-4 text-sm font-bold text-[#6d6f78]">
-                  <span>Loading chapters...</span>
-                  <LoaderCircle className="h-5 w-5 animate-spin text-[#159565]" />
-                </div>
-              ) : chaptersError ? (
-                <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{chaptersError}</p>
-              ) : (
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {chapters.map((chapter) => {
-                  const name = chapter.chapter_title || chapter.title || "";
-                  const active = chapterNames.includes(name);
-                  return (
-                    <button
-                      key={chapter.id}
-                      type="button"
-                      disabled={!bookId}
-                      onClick={() => toggleChapter(name)}
-                      aria-pressed={active}
-                      className={`premium-hover-sm flex min-h-[60px] items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-emerald-300 bg-[#ecfff7] text-[#0b7f53] shadow-[0_10px_22px_rgba(22,163,99,0.10)]" : "border-[#dffafa] bg-white text-[#4f4b68] hover:border-emerald-200"}`}
-                    >
-                      <span className={`mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
-                      <span className="min-w-0 text-sm font-black leading-5">
-                        {chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              )}
-              {!bookId ? <p className="mt-3 text-sm font-semibold text-[#6d6f78]">Select a textbook to load chapters.</p> : null}
+            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">
+              <FieldBox label="Chapter / Unit" required error={chaptersError}>
+                <Select value={chapterNames[0] || ""} onChange={(event) => chooseChapter(event.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
+                  <option value="">Select Chapter / Unit</option>
+                  {chapters.map((chapter) => <option key={chapter.id} value={chapter.chapter_title || chapter.title || ""}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{chapter.chapter_title || chapter.title}</option>)}
+                </Select>
+              </FieldBox>
             </div>
           </NumericSection>
 
@@ -556,7 +591,7 @@ function NumericSection({ number, title, subtitle, children }: { number: string;
 
 function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
-    <label className="grid min-w-0 gap-2">
+    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
       <span className="truncate text-sm font-black text-[#4f4b68]">
         {label} {required && <span className="text-red-500">*</span>}
       </span>

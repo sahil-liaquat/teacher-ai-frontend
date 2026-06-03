@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -53,7 +53,7 @@ export function GenerationLoadingScreen({
 
         {state === "error" ? (
           <div className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 px-5 py-10 text-center">
-            <div className="relative h-[200px] w-[280px] sm:h-[240px] sm:w-[340px]">
+            <div className="relative h-[260px] w-[340px] sm:h-[320px] sm:w-[420px]">
               <BookLoadingLoader />
             </div>
             <p className="max-w-[520px] text-base font-semibold leading-7 text-slate-600">
@@ -75,7 +75,7 @@ export function GenerationLoadingScreen({
         ) : (
           <div className="relative mx-auto min-h-[480px] max-w-[800px] px-5 py-8 sm:px-8 sm:py-10">
             <div className="relative flex flex-col items-center justify-center">
-              <div className="relative h-[130px] w-full max-w-[200px] sm:h-[165px] sm:max-w-[250px]">
+              <div className="relative h-[220px] w-full max-w-[340px] sm:h-[280px] sm:max-w-[420px]">
                 <BookLoadingLoader />
               </div>
 
@@ -108,13 +108,39 @@ function AnimatedDotsText({ text }: { text: string }) {
 }
 
 function BookLoadingLoader() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let animation: { destroy: () => void } | null = null;
+    let cancelled = false;
+
+    async function loadAnimation() {
+      const lottie = (await import("lottie-web")).default;
+      if (!containerRef.current || cancelled) return;
+
+      animation = lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: "/assets/illustrations/loading-animation-bored-hand.json"
+      });
+    }
+
+    loadAnimation();
+
+    return () => {
+      cancelled = true;
+      animation?.destroy();
+    };
+  }, []);
+
   return (
     <div className="relative flex h-full w-full items-center justify-center bg-[#ffffff] [color-scheme:light]">
-      <img
-        src="/assets/illustrations/book-loader-transparent.webp"
-        alt=""
+      <div
+        ref={containerRef}
         aria-hidden="true"
-        className="relative h-full w-full select-none object-contain"
+        className="relative h-full w-full select-none"
       />
     </div>
   );

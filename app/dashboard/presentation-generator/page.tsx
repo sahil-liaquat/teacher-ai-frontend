@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Presentation, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { GenerationLoadingScreen } from "@/components/generation-loading-screen"
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { saveLatestPresentationId } from "@/lib/presentation-generator";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
+import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 
 const slideCountOptions = [6, 8, 10, 12] as const;
 const languageOptions = ["English", "Hindi", "Urdu"] as const;
@@ -41,8 +42,11 @@ type PresentationFormDraft = {
 
 export default function PresentationGeneratorPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { openUpgrade } = useUpgradeModal();
+  const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
+  const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -192,7 +196,74 @@ export default function PresentationGeneratorPage() {
   const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
-  const canGenerate = Boolean(boardId && classId && bookId && chapterNames.length && topic.trim().length > 2);
+  const presentationTopic = topic.trim() || chapterNames[0] || companionContext.chapter;
+  const canGenerate = Boolean(boardId && classId && bookId && chapterNames.length && presentationTopic.trim().length > 2);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.topic || !companionContext.topic) return;
+    companionApplied.current.topic = true;
+    setTopic(companionContext.topic);
+  }, [companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.board || !boards.length || !companionContext.board) return;
+    const match = findMatchingBoard(boards, companionContext.board);
+    if (!match) return;
+    companionApplied.current.board = true;
+    chooseBoard(match.id);
+  }, [boards, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.class || !classes.length || !companionContext.classLabel) return;
+    const match = findMatchingClass(classes, companionContext.classLabel);
+    if (!match) return;
+    companionApplied.current.class = true;
+    chooseClass(match.id);
+  }, [classes, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.subject || !subjectOptions.length || !companionContext.subject) return;
+    const match = findMatchingSubject(subjectOptions, companionContext.subject);
+    if (!match) return;
+    companionApplied.current.subject = true;
+    chooseSubject(match);
+  }, [companionContext, subjectOptions]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.book || !books.length) return;
+    const candidates = filteredBooksForSubject(books, companionContext.subject || subject);
+    if (!companionContext.chapter && candidates.length === 1) {
+      companionApplied.current.book = true;
+      chooseBook(candidates[0].id);
+      return;
+    }
+    if (!companionContext.chapter || !candidates.length) return;
+    let cancelled = false;
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+      .then((results) => {
+        if (cancelled || companionApplied.current.book) return;
+        const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
+        if (!found) return;
+        const chapter = findMatchingChapter(found.chapters, companionContext.chapter);
+        companionApplied.current.book = true;
+        companionApplied.current.chapter = true;
+        setBookId(found.book.id);
+        setChapters(found.chapters);
+        setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [books, companionContext, subject]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.chapter || !chapters.length || !companionContext.chapter) return;
+    const match = findMatchingChapter(chapters, companionContext.chapter);
+    if (!match) return;
+    companionApplied.current.chapter = true;
+    setChapterNames([match.chapter_title || match.title || companionContext.chapter]);
+  }, [chapters, companionContext]);
 
   function chooseBoard(value: string) {
     setBoardId(value);
@@ -260,7 +331,7 @@ export default function PresentationGeneratorPage() {
     ];
     try {
       const payload: PresentationGeneratePayload = {
-        topic: topic.trim(),
+        topic: presentationTopic.trim(),
         audience: audienceFromClass(selectedClass.name),
         slide_count: slideCount,
         language,
@@ -320,7 +391,7 @@ export default function PresentationGeneratorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto w-full max-w-[1240px]">
       <div className="overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[178px] border-b border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] via-white to-[#ffe5e9] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[650px]">
@@ -350,7 +421,7 @@ export default function PresentationGeneratorPage() {
 
         <div className="grid gap-4 p-4 sm:p-5">
           <NumericSection number="1" title="Presentation Setup" subtitle="Select the textbook source and chapters for this deck.">
-            <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">
               <FieldBox label="Board / Curriculum" required>
                 <Select value={boardId} onChange={(event) => chooseBoard(event.target.value)} disabled={fetching} isLoading={fetching} loadingLabel="Loading boards...">
                   <option value="">Select Board / Curriculum</option>
@@ -398,7 +469,7 @@ export default function PresentationGeneratorPage() {
           </NumericSection>
 
           <NumericSection number="2" title="Deck Style" subtitle="Keep the deck simple and classroom-ready.">
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">
               <FieldBox label="Language">
                 <Select value={language} onChange={(event) => setLanguage(event.target.value as typeof language)}>
                   {languageOptions.map((item) => <option key={item}>{item}</option>)}
@@ -475,7 +546,7 @@ function NumericSection({ number, title, subtitle, children }: { number: string;
 
 function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
-    <label className="grid min-w-0 gap-2">
+    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
       <span className="truncate text-sm font-black text-[#4f4b68]">
         {label} {required && <span className="text-red-500">*</span>}
       </span>

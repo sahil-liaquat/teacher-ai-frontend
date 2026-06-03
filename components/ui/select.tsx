@@ -122,7 +122,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     }
 
     return (
-      <div className={cn("relative min-w-0 w-full", className)}>
+      <div className={cn("relative block w-full min-w-0 max-w-full self-stretch", className)}>
         <select
           ref={setHiddenRef}
           aria-hidden="true"
@@ -156,7 +156,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             onFocus={syncDisplayFromHiddenSelect}
             onPointerDown={syncDisplayFromHiddenSelect}
             className={cn(
-              "flex h-10 w-full min-w-0 items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-all duration-300 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 data-[disabled]:cursor-not-allowed data-[disabled]:bg-teachpad-tag data-[disabled]:text-[var(--teachpad-placeholderText)] sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
+              "tat-select-trigger flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 data-[disabled]:cursor-not-allowed data-[disabled]:bg-teachpad-tag data-[disabled]:text-[var(--teachpad-placeholderText)] sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
               className
             )}
           >

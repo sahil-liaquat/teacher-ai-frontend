@@ -83,10 +83,11 @@ export default function LessonPlanDetailPage() {
       </div>
       <CompanionResourcesPanel
         className="mt-6 xl:fixed xl:right-[max(1.5rem,calc((100vw-1480px)/2+1.5rem))] xl:top-5 xl:mt-0 xl:w-[360px] 2xl:w-[380px]"
-        topic={output?.metadata?.topic || output?.title || lesson.data?.topic}
+        topic={output?.metadata?.topic || lesson.data?.topic}
         classLabel={output?.metadata?.class || lesson.data?.class_name}
         subject={output?.metadata?.subject || lesson.data?.subject}
         board={output?.metadata?.board}
+        chapter={output?.metadata?.chapter || lesson.data?.chapter_name}
         lessonPlanId={params.id}
       />
     </div>

@@ -320,7 +320,7 @@ export default function NewLessonPlanPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto w-full max-w-[1240px]">
       <div className="overflow-visible rounded-[18px] border border-white/70 bg-white/80 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="relative min-h-[178px] overflow-hidden rounded-t-[18px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[560px]">
@@ -349,7 +349,7 @@ export default function NewLessonPlanPage() {
               action={<SchoolFormatToggle available={Boolean(schoolFormat?.available)} checked={useSchoolFormat} onChange={setUseSchoolFormat} />}
               actionMobilePlacement="below"
             >
-              <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
+              <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
                 <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
                 <FieldBox label="Class / Grade" required error={classesError}><Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes..."><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
                 <FieldBox label="Subject" required error={subjectsError}><Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length || isLoadingSubjects} isLoading={isLoadingSubjects} loadingLabel="Loading subjects..."><option value="">Select Subject</option>{subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FieldBox>
@@ -531,7 +531,7 @@ function SectionTitle({ number, title, subtitle }: { number: string; title: stri
 }
 function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) { 
   return (
-    <label className="grid min-w-0 gap-2">
+    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
       <span className="truncate text-sm font-bold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</span>
       {children}
       {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}

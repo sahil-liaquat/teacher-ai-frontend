@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowLeft, BookOpen, ClipboardCopy, Download, LoaderCircle, NotebookPen, Printer, Sparkles } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, BookOpen, ClipboardCopy, Download, NotebookPen, PenLine, Save, Share2, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,6 +13,8 @@ import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { OutputMetadataFooter } from "@/components/output-metadata-footer";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
+import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
+import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 
 const styleOptions = ["Exam revision", "Classroom blackboard", "Student notebook", "Quick recap"];
 const detailOptions = ["Brief", "Balanced", "Detailed"];
@@ -34,7 +37,10 @@ type NotesFormDraft = {
 };
 
 export default function NotesGeneratorPage() {
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
+  const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -177,6 +183,72 @@ export default function NotesGeneratorPage() {
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
   const canGenerate = Boolean(bookId && chapterNames.length);
 
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.topic || !companionContext.topic) return;
+    companionApplied.current.topic = true;
+    setTopic(companionContext.topic);
+  }, [companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.board || !boards.length || !companionContext.board) return;
+    const match = findMatchingBoard(boards, companionContext.board);
+    if (!match) return;
+    companionApplied.current.board = true;
+    chooseBoard(match.id);
+  }, [boards, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.class || !classes.length || !companionContext.classLabel) return;
+    const match = findMatchingClass(classes, companionContext.classLabel);
+    if (!match) return;
+    companionApplied.current.class = true;
+    chooseClass(match.id);
+  }, [classes, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.subject || !subjectOptions.length || !companionContext.subject) return;
+    const match = findMatchingSubject(subjectOptions, companionContext.subject);
+    if (!match) return;
+    companionApplied.current.subject = true;
+    setSubject(match);
+  }, [companionContext, subjectOptions]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.book || !books.length) return;
+    const candidates = filteredBooksForSubject(books, companionContext.subject || subject);
+    if (!companionContext.chapter && candidates.length === 1) {
+      companionApplied.current.book = true;
+      chooseBook(candidates[0].id);
+      return;
+    }
+    if (!companionContext.chapter || !candidates.length) return;
+    let cancelled = false;
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+      .then((results) => {
+        if (cancelled || companionApplied.current.book) return;
+        const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
+        if (!found) return;
+        const chapter = findMatchingChapter(found.chapters, companionContext.chapter);
+        companionApplied.current.book = true;
+        companionApplied.current.chapter = true;
+        setBookId(found.book.id);
+        setChapters(found.chapters);
+        setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [books, companionContext, subject]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.chapter || !chapters.length || !companionContext.chapter) return;
+    const match = findMatchingChapter(chapters, companionContext.chapter);
+    if (!match) return;
+    companionApplied.current.chapter = true;
+    setChapterNames([match.chapter_title || match.title || companionContext.chapter]);
+  }, [chapters, companionContext]);
+
   function chooseBoard(value: string) {
     setBoardId(value);
     setClasses([]);
@@ -206,8 +278,8 @@ export default function NotesGeneratorPage() {
     setNotes(null);
   }
 
-  function toggleChapter(name: string) {
-    setChapterNames((items) => items.includes(name) ? items.filter((item) => item !== name) : [...items, name]);
+  function chooseChapter(value: string) {
+    setChapterNames(value ? [value] : []);
   }
 
   async function generate() {
@@ -286,6 +358,37 @@ export default function NotesGeneratorPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function downloadNotesPdf() {
+    try {
+      await downloadGeneratedTextPdf({
+        title: notes?.title || "Classroom Notes",
+        subtitle: notes?.metadata?.chapter || "Textbook grounded notes",
+        text: notesText(),
+        filenamePrefix: "classroom-notes"
+      });
+      toast({ title: "PDF downloaded", description: "Your notes were exported as a PDF." });
+    } catch (error) {
+      toast({ title: "PDF export failed", description: error instanceof Error ? error.message : "Could not export notes PDF." });
+    }
+  }
+
+  async function shareNotes() {
+    const text = notesText();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: notes?.title || "Classroom Notes", text });
+        toast({ title: "Shared" });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast({ title: "Share text copied", description: "Paste it wherever you want to share." });
+      }
+    } catch (error) {
+      if ((error as DOMException)?.name !== "AbortError") {
+        toast({ title: "Share failed", description: "Could not share these notes." });
+      }
+    }
+  }
+
   if (generating || generationError) {
     return (
       <GenerationLoadingScreen
@@ -305,14 +408,14 @@ export default function NotesGeneratorPage() {
 
   if (notes) {
     return (
-      <div className="mx-auto max-w-[1180px]">
-        <NotesOutput notes={notes} onCopy={copyNotes} onDownload={downloadNotes} onBack={() => setNotes(null)} />
+      <div className="mx-auto w-full max-w-[1240px]">
+        <NotesOutput notes={notes} onCopy={copyNotes} onPdf={downloadNotesPdf} onShare={shareNotes} onSave={downloadNotes} onBack={() => setNotes(null)} />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto w-full max-w-[1240px]">
       <section className="overflow-hidden rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[166px] border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-5 py-6">
           <div className="relative z-10 max-w-[620px]">
@@ -328,7 +431,7 @@ export default function NotesGeneratorPage() {
 
         <div className="grid gap-4 p-4 sm:p-5">
           <NumericSection number="1" title="Textbook Source" subtitle="Choose the book and chapters for the notes.">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <FieldBox label="Board / Curriculum" required>
                 <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)} disabled={fetching}>
                   <option value="">Select Board / Curriculum</option>
@@ -354,45 +457,18 @@ export default function NotesGeneratorPage() {
                 </Select>
               </FieldBox>
             </div>
-            <div className="mt-4">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-sm font-black text-[#4f4b68]">Chapters <span className="text-red-500">*</span></p>
-                <span className="rounded-full bg-[#fff1f7] px-3 py-1 text-xs font-black text-[#d9467d]">{chapterNames.length} selected</span>
-              </div>
-              {isLoadingChapters ? (
-                <div className="flex min-h-[64px] items-center justify-between rounded-xl border border-[#ffd9e8] bg-[#fff8fb] px-4 text-sm font-bold text-[#6d6f78]">
-                  <span>Loading chapters...</span>
-                  <LoaderCircle className="h-5 w-5 animate-spin text-[#d9467d]" />
-                </div>
-              ) : chaptersError ? (
-                <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{chaptersError}</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {chapters.map((chapter) => {
-                    const name = chapter.chapter_title || chapter.title || "";
-                    const active = chapterNames.includes(name);
-                    return (
-                      <button
-                        key={chapter.id}
-                        type="button"
-                        disabled={!bookId}
-                        onClick={() => toggleChapter(name)}
-                        aria-pressed={active}
-                        className={`flex min-h-[60px] items-start gap-3 rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${active ? "border-pink-300 bg-[#fff1f7] text-[#be185d]" : "border-[#ffd9e8] bg-white text-[#4f4b68] hover:border-pink-200"}`}
-                      >
-                        <span className={`mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black ${active ? "border-pink-500 bg-pink-500 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
-                        <span className="min-w-0 text-sm font-black leading-5">{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {!bookId ? <p className="mt-3 text-sm font-semibold text-[#6d6f78]">Select a textbook to load chapters.</p> : null}
+            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <FieldBox label="Chapter / Unit" required error={chaptersError}>
+                <Select value={chapterNames[0] || ""} onChange={(event) => chooseChapter(event.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
+                  <option value="">Select Chapter / Unit</option>
+                  {chapters.map((chapter) => <option key={chapter.id} value={chapter.chapter_title || chapter.title || ""}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{chapter.chapter_title || chapter.title}</option>)}
+                </Select>
+              </FieldBox>
             </div>
           </NumericSection>
 
           <NumericSection number="2" title="Notes Style" subtitle="Tune the output for how you will use it.">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <FieldBox label="Optional Topic Focus">
                 <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Example: photosynthesis steps" />
               </FieldBox>
@@ -445,8 +521,9 @@ export default function NotesGeneratorPage() {
   );
 }
 
-function NotesOutput({ notes, onCopy, onDownload, onBack }: { notes: any; onCopy: () => void; onDownload: () => void; onBack: () => void }) {
+function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes: any; onCopy: () => void; onPdf: () => void; onShare: () => void; onSave: () => void; onBack: () => void }) {
   const metadata = notes.metadata || {};
+  const [handwritten, setHandwritten] = useState(false);
 
   return (
     <aside className="rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
@@ -462,13 +539,23 @@ function NotesOutput({ notes, onCopy, onDownload, onBack }: { notes: any; onCopy
           <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
           <p className="mt-1 text-sm font-semibold text-[#6d6f78]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={handwritten ? "default" : "outline"}
+            size="sm"
+            onClick={() => setHandwritten((value) => !value)}
+            className={handwritten ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d]" : ""}
+          >
+            <PenLine className="h-4 w-4" /> Handwritten
+          </Button>
           <Button type="button" variant="outline" size="sm" onClick={onCopy}><ClipboardCopy className="h-4 w-4" /> Copy</Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" /> Print</Button>
-          <Button type="button" size="sm" onClick={onDownload} className="bg-gradient-to-r from-[#f45f98] to-[#d9467d]"><Download className="h-4 w-4" /> TXT</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onPdf}><Download className="h-4 w-4" /> PDF</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onShare}><Share2 className="h-4 w-4" /> Share</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onSave}><Save className="h-4 w-4" /> Save</Button>
         </div>
       </div>
-      <div className="p-5">
+      <div className={`p-5 ${handwritten ? "notes-handwritten" : ""}`}>
         <NotesBlock title="Quick Overview" body={notes.quick_overview} />
         <NotesList title="Learning Goals" items={notes.learning_goals} />
         {(notes.sections || []).map((section: any, index: number) => (
@@ -489,7 +576,6 @@ function NotesOutput({ notes, onCopy, onDownload, onBack }: { notes: any; onCopy
           grade={metadata.grade || metadata.class}
           chapter={metadata.chapter || metadata.topic || notes.title}
           source={metadata.book || metadata.textbook || notes.textbook_source}
-          generatedAt={notes.generated_at || notes.created_at || notes.updated_at}
         />
       </div>
     </aside>
@@ -513,7 +599,7 @@ function NumericSection({ number, title, subtitle, children }: { number: string;
 
 function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
   return (
-    <label className="grid min-w-0 gap-2">
+    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
       <span className="truncate text-sm font-black text-[#4f4b68]">{label} {required && <span className="text-red-500">*</span>}</span>
       {children}
       {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}
