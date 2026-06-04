@@ -7,6 +7,30 @@ export const metadata: Metadata = {
   title: "Privacy Policy · TeachPad",
   description:
     "How TeachPad collects, uses, shares, and protects your personal data, and the rights you have under India's Digital Personal Data Protection Act, 2023.",
+  alternates: {
+    canonical: "/privacy"
+  },
+  openGraph: {
+    title: "TeachPad Privacy Policy",
+    description: "Learn how TeachPad collects, uses, shares, and protects personal data for teachers, schools, and account users.",
+    url: "/privacy",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/assets/teachpad-logo.png",
+        width: 1385,
+        height: 279,
+        alt: "TeachPad logo."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TeachPad Privacy Policy",
+    description: "How TeachPad handles personal data, privacy requests, subprocessors, and user rights.",
+    images: ["/assets/teachpad-logo.png"]
+  }
 };
 
 export default function PrivacyPolicyPage() {

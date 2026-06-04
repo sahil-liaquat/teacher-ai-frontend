@@ -20,9 +20,39 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+const siteUrl = "https://teachpad.in";
+const pageUrl = `${siteUrl}/boards-curriculums`;
+const pageTitle = "Boards and Curriculums Supported by TeachPad";
+const pageDescription = "Explore TeachPad supported boards, curriculums, classes, subjects, and textbooks for AI lesson plans, worksheets, presentations, notes, and activities.";
+const previewImage = "/landing/boards-curriculums-hero.png";
+
 export const metadata: Metadata = {
   title: "Boards & Curriculums | TeachPad",
-  description: "Explore the boards and curriculums supported by TeachPad."
+  description: pageDescription,
+  alternates: {
+    canonical: "/boards-curriculums"
+  },
+  openGraph: {
+    title: pageTitle,
+    description: "Explore supported boards, curriculums, classes, subjects, and textbooks for textbook-grounded AI teaching resources.",
+    url: "/boards-curriculums",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/landing/boards-curriculums-hero.png",
+        width: 1500,
+        height: 1030,
+        alt: "TeachPad boards and curriculums support for textbook-grounded teaching resources."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Boards and Curriculums Supported by TeachPad",
+    description: "Find supported boards, curriculums, classes, subjects, and textbooks for AI teaching resources.",
+    images: ["/landing/boards-curriculums-hero.png"]
+  }
 };
 
 const stats = [
@@ -101,9 +131,83 @@ const faqs = [
   }
 ];
 
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "TeachPad",
+    url: siteUrl,
+    logo: `${siteUrl}/assets/teachpad-logo.png`
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "TeachPad",
+    url: siteUrl,
+    description: "TeachPad helps teachers create textbook-grounded classroom resources with AI."
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "TeachPad Curriculum Tools",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: pageUrl,
+    image: `${siteUrl}${previewImage}`,
+    description: pageDescription,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/signup`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "TeachPad Curriculum Support",
+    image: `${siteUrl}${previewImage}`,
+    description: pageDescription,
+    brand: {
+      "@type": "Brand",
+      name: "TeachPad"
+    },
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/pricing`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: siteUrl
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Boards & Curriculums",
+        item: pageUrl
+      }
+    ]
+  }
+];
+
 export default function BoardsCurriculumsPage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_45%,#ffffff_100%)] text-[#07133b]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <MarketingHeader active="boards-curriculums" />
       <div className="mx-auto w-full max-w-[1440px] px-5 py-6 sm:px-10 lg:px-16">
         <HeroSection />
@@ -280,7 +384,7 @@ function BoardMeta({ label, value, Icon }: { label: string; value: string; Icon:
 function GroundingSection() {
   return (
     <section className="mt-6 grid items-center gap-6 rounded-3xl border border-blue-100 bg-[linear-gradient(135deg,#ffffff_0%,#eff7ff_100%)] px-6 py-7 shadow-[0_18px_45px_rgba(15,23,42,0.06)] lg:grid-cols-[220px_1fr_380px]">
-      <Image src="/landing/textbook-grounded-v2.png" alt="" width={300} height={225} className="mx-auto h-32 w-48 object-contain drop-shadow-[0_16px_24px_rgba(37,99,235,0.18)] lg:h-40 lg:w-56" />
+      <Image src="/landing/textbook-grounded-v2.png" alt="Open textbook with curriculum grounding checklist for TeachPad content generation." width={300} height={225} className="mx-auto h-32 w-48 object-contain drop-shadow-[0_16px_24px_rgba(37,99,235,0.18)] lg:h-40 lg:w-56" />
       <div>
         <h2 className="text-2xl font-black text-slate-950">How curriculum grounding works</h2>
         <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
@@ -318,7 +422,7 @@ function CtaBand() {
           </Link>
         </div>
       </div>
-      <Image src="/landing/backpack-globe-v2.png" alt="" width={560} height={280} className="mx-auto h-40 w-full object-contain object-center lg:h-48" />
+      <Image src="/landing/backpack-globe-v2.png" alt="Backpack, globe, books, and stationery representing curriculum-aligned teaching resources." width={560} height={280} className="mx-auto h-40 w-full object-contain object-center lg:h-48" />
     </section>
   );
 }

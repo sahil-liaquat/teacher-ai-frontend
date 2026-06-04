@@ -6,6 +6,30 @@ import { LEGAL, LEGAL_LINKS } from "@/lib/legal";
 export const metadata: Metadata = {
   title: "Contact Us · TeachPad",
   description: "How to reach the TeachPad team for support, billing, and privacy enquiries.",
+  alternates: {
+    canonical: "/contact"
+  },
+  openGraph: {
+    title: "Contact TeachPad",
+    description: "Reach the TeachPad team for product support, billing help, privacy requests, and business enquiries.",
+    url: "/contact",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/assets/teachpad-logo.png",
+        width: 1385,
+        height: 279,
+        alt: "TeachPad logo."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact TeachPad",
+    description: "Get support for TeachPad product, billing, privacy, and business enquiries.",
+    images: ["/assets/teachpad-logo.png"]
+  }
 };
 
 export default function ContactPage() {

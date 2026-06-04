@@ -10,7 +10,8 @@ const tools = [
     title: "Lesson Plan",
     description: "Create structured lesson plans with objectives, outline, assessments, homework, and classroom flow from the chapter you select.",
     image: "/ai-tools/showcase-lesson-plan.png",
-    href: "/dashboard/lesson-plans/new",
+    imageAlt: "TeachPad lesson plan output preview with objectives, classroom flow, and assessment details.",
+    href: "/lesson-plan-generator",
     cta: "Create Lesson Plan",
     Icon: FileText,
     tone: "blue",
@@ -20,7 +21,8 @@ const tools = [
     title: "Worksheet",
     description: "Generate practice sheets that match the grade, topic, difficulty, marks, and question types your class needs.",
     image: "/ai-tools/showcase-worksheet.png",
-    href: "/dashboard/worksheets/new",
+    imageAlt: "TeachPad worksheet output preview with textbook-based practice questions.",
+    href: "/worksheet-generator",
     cta: "Create Worksheet",
     Icon: ClipboardList,
     tone: "green",
@@ -30,7 +32,8 @@ const tools = [
     title: "Presentation",
     description: "Turn textbook concepts into clean classroom slides with visual flow, examples, diagrams, and teachable structure.",
     image: "/ai-tools/showcase-presentation.png",
-    href: "/dashboard/presentation-generator",
+    imageAlt: "TeachPad presentation output preview with classroom slide content.",
+    href: "/presentation-generator",
     cta: "Create Presentation",
     Icon: Presentation,
     tone: "orange",
@@ -40,7 +43,8 @@ const tools = [
     title: "Notes",
     description: "Create concise chapter notes with summaries, definitions, key terms, formulas, and revision-friendly structure.",
     image: "/ai-tools/showcase-notes.png",
-    href: "/dashboard/notes-generator",
+    imageAlt: "TeachPad notes output preview with chapter summaries and key terms.",
+    href: "/notes-generator",
     cta: "Create Notes",
     Icon: NotebookPen,
     tone: "purple",
@@ -50,7 +54,8 @@ const tools = [
     title: "Activity",
     description: "Build classroom activities with materials, steps, timing, grouping ideas, and reflection prompts.",
     image: "/ai-tools/showcase-activity.png",
-    href: "/dashboard/activity-generator",
+    imageAlt: "TeachPad classroom activity output preview with steps, timings, and reflection prompts.",
+    href: "/classroom-activity-generator",
     cta: "Create Activity",
     Icon: Puzzle,
     tone: "orange",
@@ -148,7 +153,7 @@ export function AiToolsShowcase() {
                 <Image
                   key={tool.title}
                   src={tool.image}
-                  alt=""
+                  alt={tool.imageAlt}
                   width={1448}
                   height={1086}
                   priority={index === 0}

@@ -833,6 +833,34 @@ tbody tr:hover {
   animation: sparkle-amber 2s ease-in-out infinite;
 }
 
+.marketing-float {
+  animation: marketing-float 7s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.marketing-float-slow {
+  animation: marketing-float 9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.marketing-pop-hover {
+  transition: transform 360ms ease, filter 360ms ease;
+}
+
+.marketing-pop-hover:hover {
+  transform: translateY(-6px) scale(1.025);
+  filter: saturate(1.04);
+}
+
+@keyframes marketing-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.01);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -857,6 +885,9 @@ tbody tr:hover {
   .animate-sparkle-blue,
   .animate-sparkle-emerald,
   .animate-sparkle-amber,
+  .marketing-float,
+  .marketing-float-slow,
+  .marketing-pop-hover,
   .animate-chart-appear,
   .bar-chart-glow {
     animation: none !important;

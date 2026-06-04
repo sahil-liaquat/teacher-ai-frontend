@@ -7,6 +7,30 @@ export const metadata: Metadata = {
   title: "Terms of Service · TeachPad",
   description:
     "The terms that govern your use of TeachPad — eligibility, subscriptions, acceptable use, intellectual property, and AI-content disclaimers.",
+  alternates: {
+    canonical: "/terms"
+  },
+  openGraph: {
+    title: "TeachPad Terms of Service",
+    description: "Read the terms for using TeachPad, including subscriptions, acceptable use, AI content, intellectual property, and account rules.",
+    url: "/terms",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/assets/teachpad-logo.png",
+        width: 1385,
+        height: 279,
+        alt: "TeachPad logo."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TeachPad Terms of Service",
+    description: "Terms for TeachPad accounts, subscriptions, acceptable use, AI content, and intellectual property.",
+    images: ["/assets/teachpad-logo.png"]
+  }
 };
 
 export default function TermsOfServicePage() {

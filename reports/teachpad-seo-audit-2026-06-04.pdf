@@ -1,0 +1,4075 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 6380
+>>
+stream
+0.200025 w
+0 G
+BT
+/F2 22 Tf
+25.2999999999999972 TL
+0.059 0.09 0.165 rg
+48. 793.8899999999999864 Td
+(TeachPad SEO Audit Report) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 748.8899999999999864 Td
+(Date: 04 June 2026) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 733.8899999999999864 Td
+(Site reviewed: https://teachpad.in codebase running locally at http://localhost:3000) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 718.8899999999999864 Td
+(Scope: Public marketing pages, AI tool landing pages, auth entry pages, metadata, crawlability, indexability,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 703.8899999999999864 Td
+(internal links, structured data, image SEO, and content quality.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 671.8899999999999864 Td
+(Executive Summary) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 638.8899999999999864 Td
+(TeachPad has a strong SEO foundation on the five main AI tool landing pages: lesson plan generator, worksheet) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 623.8899999999999864 Td
+(generator, notes generator, presentation generator, and classroom activity generator. These pages have clear) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 608.8899999999999864 Td
+(search intent, unique title/description metadata, canonical URLs, helpful page copy, JSON-LD, and good image) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 593.8899999999999864 Td
+(alt coverage.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 573.8899999999999864 Td
+(The main SEO risk is not the page content itself. The main risk is technical housekeeping around crawl discovery,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 558.8899999999999864 Td
+(broken internal links, and index control. A local crawl found 36 internal links returning 404 from public pages. The) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 543.8899999999999864 Td
+(frontend also currently has no sitemap or robots route/file, and several pages use generic metadata or have no) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 528.8899999999999864 Td
+(canonical URL. Login, signup, dashboard, and admin surfaces should be explicitly controlled so Google focuses) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 513.8899999999999864 Td
+(on the public acquisition pages.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 493.8899999999999864 Td
+(Overall SEO readiness: B-) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 478.8899999999999864 Td
+(After sitemap/robots, broken links, canonicals, noindex rules, and alt text fixes: A-) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 446.8899999999999864 Td
+(Methodology) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 413.8899999999999864 Td
+(1. Reviewed the Next.js frontend source under /Users/sahilliaquat/Desktop/teachpad/teacher-ai-frontend.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 399.8899999999999864 Td
+(2. Crawled public pages on the local Next.js dev server at http://localhost:3000.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 385.8899999999999864 Td
+(3. Checked page status, title tags, meta descriptions, canonical tags, H1 text, JSON-LD count, image count, and) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 371.8899999999999864 Td
+(missing alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 357.8899999999999864 Td
+(4. Crawled internal links from the public marketing and generator pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 343.8899999999999864 Td
+(5. Compared findings against Google Search Central guidance:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 329.8899999999999864 Td
+(• SEO Starter Guide: https://developers.google.com/search/docs/fundamentals/seo-starter-guide) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 315.8899999999999864 Td
+(• Sitemaps: https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 301.8899999999999864 Td
+(• robots.txt: https://developers.google.com/search/docs/crawling-indexing/robots/intro) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 287.8899999999999864 Td
+(• Title links: https://developers.google.com/search/docs/appearance/title-link) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 273.8899999999999864 Td
+(• Snippets/meta descriptions: https://developers.google.com/search/docs/appearance/snippet) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 259.8899999999999864 Td
+(• Structured data: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 245.8899999999999864 Td
+(• JavaScript SEO: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 231.8899999999999864 Td
+(• Image SEO: https://developers.google.com/search/docs/appearance/google-images) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 200.8899999999999864 Td
+(Priority Findings) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 157.8899999999999864 Td
+(1. Missing Sitemap and robots.txt) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 131.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 116.8899999999999864 Td
+(Current state: No robots.txt, sitemap.xml, app/robots.ts, or app/sitemap.ts was found in the frontend.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 96.8899999999999864 Td
+(Why it matters: Google says a sitemap helps search engines crawl important pages more efficiently, especially) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 81.8899999999999864 Td
+(for newer sites or sites with limited external links. A robots.txt file is useful for crawler traffic management and for) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 66.8899999999999864 Td
+(pointing crawlers to the sitemap.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 1 of 12) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 6215
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 793.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 773.8899999999999864 Td
+(• Add app/sitemap.ts with only indexable public URLs.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 759.8899999999999864 Td
+(• Add app/robots.ts that allows public pages, disallows private app/admin/dashboard areas, and references the) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 745.8899999999999864 Td
+(sitemap.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 731.8899999999999864 Td
+(• Include:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 717.8899999999999864 Td
+(• /) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 703.8899999999999864 Td
+(• /ai-tools) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 689.8899999999999864 Td
+(• /lesson-plan-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 675.8899999999999864 Td
+(• /worksheet-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 661.8899999999999864 Td
+(• /notes-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 647.8899999999999864 Td
+(• /presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 633.8899999999999864 Td
+(• /classroom-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 619.8899999999999864 Td
+(• /boards-curriculums) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 605.8899999999999864 Td
+(• /pricing) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 591.8899999999999864 Td
+(• Legal/contact pages if you want them indexed.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 572.8899999999999864 Td
+(Implementation files:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 552.8899999999999864 Td
+(• /Users/sahilliaquat/Desktop/teachpad/teacher-ai-frontend/app/sitemap.ts) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 538.8899999999999864 Td
+(• /Users/sahilliaquat/Desktop/teachpad/teacher-ai-frontend/app/robots.ts) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 509.8899999999999864 Td
+(2. Broken Public Internal Links) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 483.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 468.8899999999999864 Td
+(Current state: Public page crawl found 52 unique internal links. 16 returned OK and 36 returned 404.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 448.8899999999999864 Td
+(Broken URLs found:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 428.8899999999999864 Td
+(• /activity-ideas-for-teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 414.8899999999999864 Td
+(• /ai-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 400.8899999999999864 Td
+(• /chapter-summary-presentation) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 386.8899999999999864 Td
+(• /classroom-activities-for-teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 372.8899999999999864 Td
+(• /classroom-game-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 358.8899999999999864 Td
+(• /classroom-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 344.8899999999999864 Td
+(• /classroom-presentation-maker) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 330.8899999999999864 Td
+(• /discussion-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 316.8899999999999864 Td
+(• /editable-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 302.8899999999999864 Td
+(• /english-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 288.8899999999999864 Td
+(• /english-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 274.8899999999999864 Td
+(• /exit-ticket-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 260.8899999999999864 Td
+(• /group-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 246.8899999999999864 Td
+(• /hands-on-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 232.8899999999999864 Td
+(• /hindi-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 218.8899999999999864 Td
+(• /hindi-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 204.8899999999999864 Td
+(• /jkbose-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 190.8899999999999864 Td
+(• /lesson-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 176.8899999999999864 Td
+(• /lesson-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 162.8899999999999864 Td
+(• /lesson-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 148.8899999999999864 Td
+(• /maths-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 134.8899999999999864 Td
+(• /maths-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 120.8899999999999864 Td
+(• /mcq-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 106.8899999999999864 Td
+(• /ncert-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 92.8899999999999864 Td
+(• /ppt-generator-for-teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 78.8899999999999864 Td
+(• /presentation-with-speaker-notes) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 64.8899999999999864 Td
+(• /question-paper-generator) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 2 of 12) Tj
+ET
+endstream
+endobj
+7 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 6657
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(• /quiz-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• /revision-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 765.8899999999999864 Td
+(• /role-play-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 751.8899999999999864 Td
+(• /science-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 737.8899999999999864 Td
+(• /science-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 723.8899999999999864 Td
+(• /student-engagement-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 709.8899999999999864 Td
+(• /teaching-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 695.8899999999999864 Td
+(• /think-pair-share-activity) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 681.8899999999999864 Td
+(• /warm-up-activity-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 662.8899999999999864 Td
+(Why it matters: Broken internal links waste crawl budget, create weak user experience, and make the site look) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 647.8899999999999864 Td
+(unfinished to search engines and users. The issue is especially important because these links appear on) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 632.8899999999999864 Td
+(SEO-focused landing pages.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 612.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 592.8899999999999864 Td
+(• If these are just conversion chips, point them to /signup, matching the user-requested behavior already applied to) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 578.8899999999999864 Td
+(lesson, notes, and worksheet resource sections.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 564.8899999999999864 Td
+(• If the business wants to rank for these queries, create real landing pages with unique useful content, not thin) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 550.8899999999999864 Td
+(duplicates.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 536.8899999999999864 Td
+(• Short-term: redirect all nonexistent resource URLs to the closest existing generator page or /signup.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 522.8899999999999864 Td
+(• Long-term: build a controlled resource page cluster with canonical, unique page copy, and clear internal linking.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 493.8899999999999864 Td
+(3. Canonical URL Coverage Is Incomplete) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 467.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 452.8899999999999864 Td
+(Current state:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 432.8899999999999864 Td
+(• Canonicals are present on the five main generator pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 418.8899999999999864 Td
+(• Canonicals are missing on /, /ai-tools, /boards-curriculums, /pricing, /privacy, /terms, /refund, /contact, /login, and) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 404.8899999999999864 Td
+(/signup.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 385.8899999999999864 Td
+(Why it matters: Canonical URLs give search engines a preferred URL when duplicates or near-duplicates exist.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 370.8899999999999864 Td
+(This matters for Next.js deployments where trailing slash, preview, query, or alternate host versions can appear.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 350.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 330.8899999999999864 Td
+(• Add canonical metadata to all public indexable pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 316.8899999999999864 Td
+(• Add noindex metadata to pages that should not rank, such as login, signup, reset-password, auth callback,) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 302.8899999999999864 Td
+(dashboard, and admin routes.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 283.8899999999999864 Td
+(Example:) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.176 0.216 0.282 rg
+62. 263.8899999999999864 Td
+(export const metadata: Metadata = {) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.176 0.216 0.282 rg
+62. 252.8899999999999864 Td
+(  title: "AI Teaching Tools for Indian Teachers | TeachPad",) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.176 0.216 0.282 rg
+62. 241.8899999999999864 Td
+(  description: "...",) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.176 0.216 0.282 rg
+62. 230.8899999999999864 Td
+(  alternates: { canonical: "/" }) Tj
+ET
+BT
+/F1 8.5 Tf
+9.7749999999999986 TL
+0.176 0.216 0.282 rg
+62. 219.8899999999999864 Td
+(};) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 193.8899999999999864 Td
+(4. Auth and App Pages Need Index Control) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 167.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 152.8899999999999864 Td
+(Current state:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 132.8899999999999864 Td
+(• /login returns 200 with title TeachPad, default description, no canonical, and H1 Checking your session.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 118.8899999999999864 Td
+(• /signup returns 200 with title TeachPad, default description, no canonical, and missing image alt text.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 104.8899999999999864 Td
+(• Dashboard/admin routes exist in the app tree and should not appear in search results.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 85.8899999999999864 Td
+(Why it matters: Google notes that robots.txt is not a reliable way to keep web pages out of search results; pages) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 70.8899999999999864 Td
+(that should not be indexed should use noindex or be protected. Login/signup can be indexable if intentionally) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 3 of 12) Tj
+ET
+endstream
+endobj
+9 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 10 0 R
+>>
+endobj
+10 0 obj
+<<
+/Length 5878
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 793.8899999999999864 Td
+(optimized, but dashboard/admin/auth pages should be excluded.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 773.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 753.8899999999999864 Td
+(• Add robots: { index: false, follow: false } to auth, callback, reset password, dashboard, and admin layouts/pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 739.8899999999999864 Td
+(• Decide whether /signup should be indexable. If it is just a conversion destination for resource chips, noindex, follow) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 725.8899999999999864 Td
+(is cleaner.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 711.8899999999999864 Td
+(• If signup should rank, give it its own title and description, for example:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 697.8899999999999864 Td
+(• Title: Create Your TeachPad Account | AI Tools for Teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 683.8899999999999864 Td
+(• Description: Sign up for TeachPad to create textbook-based lesson plans, worksheets, notes, presentations, and) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 669.8899999999999864 Td
+(classroom activities.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 640.8899999999999864 Td
+(5. Missing Alt Text on Several Public Pages) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 614.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 599.8899999999999864 Td
+(Current crawl results:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 579.8899999999999864 Td
+(• /: 14 images, 7 missing alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 565.8899999999999864 Td
+(• /ai-tools: 10 images, 5 missing alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 551.8899999999999864 Td
+(• /boards-curriculums: 7 images, 2 missing alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 537.8899999999999864 Td
+(• /signup: 3 images, 2 missing alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 523.8899999999999864 Td
+(• Generator pages: 0 missing alt attributes.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 504.8899999999999864 Td
+(Why it matters: Google image SEO guidance recommends using standard image elements and meaningful alt) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 489.8899999999999864 Td
+(text so crawlers can understand images. Alt text also improves accessibility.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 469.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 449.8899999999999864 Td
+(• Add descriptive alt text for meaningful screenshots/illustrations.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 435.8899999999999864 Td
+(• Use empty alt text only for purely decorative images.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 421.8899999999999864 Td
+(• Prioritize home and AI tools pages because they are top-level acquisition pages.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 392.8899999999999864 Td
+(6. Generic Home Metadata) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 366.8899999999999864 Td
+(Severity: High) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 351.8899999999999864 Td
+(Current state:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 331.8899999999999864 Td
+(• Home title: TeachPad) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 317.8899999999999864 Td
+(• Description: Textbook-grounded lesson plans and worksheets for teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 303.8899999999999864 Td
+(• H1 crawl text: Teach from your textbook.Let AI do the preparation.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 284.8899999999999864 Td
+(Why it matters: Google title guidance emphasizes concise, descriptive, distinct titles. The current home title is too) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 269.8899999999999864 Td
+(generic for a search result and undersells the product category.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 249.8899999999999864 Td
+(Recommended fix:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 229.8899999999999864 Td
+(• Use a search-intent title:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 215.8899999999999864 Td
+(• TeachPad | AI Teaching Tools for Lesson Plans, Worksheets & Notes) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 201.8899999999999864 Td
+(• Use a richer description:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 187.8899999999999864 Td
+(• TeachPad helps teachers turn textbook chapters into lesson plans, worksheets, notes, presentations, quizzes, and) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 173.8899999999999864 Td
+(classroom activities in seconds.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 159.8899999999999864 Td
+(• Fix H1 spacing so crawlers and screen readers read it naturally:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 145.8899999999999864 Td
+(• Teach from your textbook. Let AI do the preparation.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 114.8899999999999864 Td
+(Page-by-Page SEO Review) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 4 of 12) Tj
+ET
+endstream
+endobj
+11 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 12 0 R
+>>
+endobj
+12 0 obj
+<<
+/Length 5255
+>>
+stream
+0.200025 w
+0 G
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 783.8899999999999864 Td
+(Home Page: /) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 757.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 737.8899999999999864 Td
+(• Clear product positioning.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 723.8899999999999864 Td
+(• Strong internal linking to main tool pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 709.8899999999999864 Td
+(• Good visual storytelling.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 690.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 670.8899999999999864 Td
+(• Title is too generic.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 656.8899999999999864 Td
+(• No canonical URL.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 642.8899999999999864 Td
+(• No JSON-LD.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 628.8899999999999864 Td
+(• 7 images missing alt text.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 614.8899999999999864 Td
+(• H1 text lacks spacing between sentence fragments.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 595.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 575.8899999999999864 Td
+(• Add canonical /.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 561.8899999999999864 Td
+(• Add Organization and WebSite JSON-LD.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 547.8899999999999864 Td
+(• Improve title and description.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 533.8899999999999864 Td
+(• Add missing alt text.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 519.8899999999999864 Td
+(• Add one short section for supported use cases: lesson plans, worksheets, notes, presentations, activities, and) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 505.8899999999999864 Td
+(quizzes.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 476.8899999999999864 Td
+(AI Tools Page: /ai-tools) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 450.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 430.8899999999999864 Td
+(• Clear hub page for product categories.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 416.8899999999999864 Td
+(• Good internal links to main tool pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 402.8899999999999864 Td
+(• Page intent is commercially useful.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 383.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 363.8899999999999864 Td
+(• No canonical URL.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 349.8899999999999864 Td
+(• No JSON-LD.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 335.8899999999999864 Td
+(• 5 missing image alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 321.8899999999999864 Td
+(• H1 crawl text lacks spacing: One textbook.Every teaching resource.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 302.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 282.8899999999999864 Td
+(• Add canonical /ai-tools.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 268.8899999999999864 Td
+(• Add ItemList JSON-LD for the tool list.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 254.8899999999999864 Td
+(• Improve alt text on tool preview images.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 240.8899999999999864 Td
+(• Fix H1 spacing.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 211.8899999999999864 Td
+(Lesson Plan Generator: /lesson-plan-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 185.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 165.8899999999999864 Td
+(• Strong title and meta description.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 151.8899999999999864 Td
+(• Canonical present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 137.8899999999999864 Td
+(• JSON-LD present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 123.8899999999999864 Td
+(• Clear sections for format, example output, steps, FAQs, and related resources.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 109.8899999999999864 Td
+(• No missing image alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 95.8899999999999864 Td
+(• PDF sample download supports user trust.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 76.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 5 of 12) Tj
+ET
+endstream
+endobj
+13 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 14 0 R
+>>
+endobj
+14 0 obj
+<<
+/Length 5719
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(• Meta description is close to snippet truncation length.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• Resource sections were recently redirected to signup, which is acceptable for conversion, but less ideal if the SEO) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 765.8899999999999864 Td
+(plan is to rank for every listed resource keyword.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 746.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 726.8899999999999864 Td
+(• Keep as primary landing page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 712.8899999999999864 Td
+(• Add BreadcrumbList structured data if not already included.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 698.8899999999999864 Td
+(• Monitor Search Console queries for "lesson plan format", "lesson plan pdf", and "lesson plan generator for) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 684.8899999999999864 Td
+(teachers".) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 655.8899999999999864 Td
+(Worksheet Generator: /worksheet-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 629.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 609.8899999999999864 Td
+(• Clear target keyword and intent.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 595.8899999999999864 Td
+(• Canonical present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 581.8899999999999864 Td
+(• JSON-LD present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 567.8899999999999864 Td
+(• Strong output preview image.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 553.8899999999999864 Td
+(• Resource links now redirect to signup.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 539.8899999999999864 Td
+(• No missing image alt attributes.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 520.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 500.8899999999999864 Td
+(• Resource links to signup are good for immediate conversion but do not capture long-tail SEO unless dedicated) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 486.8899999999999864 Td
+(pages are built.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 467.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 447.8899999999999864 Td
+(• Consider building unique pages for high-value variants later: printable worksheet generator, worksheet with) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 433.8899999999999864 Td
+(answers, NCERT worksheet generator, JKBOSE worksheet generator.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 419.8899999999999864 Td
+(• Add breadcrumb structured data.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 390.8899999999999864 Td
+(Notes Generator: /notes-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 364.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 344.8899999999999864 Td
+(• Strong page content and metadata.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 330.8899999999999864 Td
+(• Canonical present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 316.8899999999999864 Td
+(• JSON-LD present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 302.8899999999999864 Td
+(• Resource links redirect to signup.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 288.8899999999999864 Td
+(• No missing image alt attributes.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 269.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 249.8899999999999864 Td
+(• Similar keyword chips could become a thin-content risk if converted into many pages without unique content.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 230.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 210.8899999999999864 Td
+(• Keep the current page as the canonical hub for all notes generator queries.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 196.8899999999999864 Td
+(• Build separate pages only where there is enough distinct user intent.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 167.8899999999999864 Td
+(Presentation Generator: /presentation-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 141.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 121.8899999999999864 Td
+(• Strong title and description.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 107.8899999999999864 Td
+(• Canonical present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 93.8899999999999864 Td
+(• JSON-LD present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 79.8899999999999864 Td
+(• Good visual sections and examples.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 65.8899999999999864 Td
+(• No missing image alt attributes.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 6 of 12) Tj
+ET
+endstream
+endobj
+15 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 16 0 R
+>>
+endobj
+16 0 obj
+<<
+/Length 5661
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 793.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 773.8899999999999864 Td
+(• Internal crawl found many 404s related to presentation resource links, such as /ai-ppt-generator,) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 759.8899999999999864 Td
+(/lesson-ppt-generator, /science-presentation-generator, and similar.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 740.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 720.8899999999999864 Td
+(• Immediately update these resource links to /signup or working pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 706.8899999999999864 Td
+(• If SEO expansion is desired, create a smaller number of high-quality pages first:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 692.8899999999999864 Td
+(• /ai-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 678.8899999999999864 Td
+(• /ppt-generator-for-teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 664.8899999999999864 Td
+(• /science-presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 650.8899999999999864 Td
+(• /presentation-with-speaker-notes) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 621.8899999999999864 Td
+(Classroom Activity Generator: /classroom-activity-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 595.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 575.8899999999999864 Td
+(• Clear page intent.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 561.8899999999999864 Td
+(• Canonical present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 547.8899999999999864 Td
+(• JSON-LD present.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 533.8899999999999864 Td
+(• Strong activity example image.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 519.8899999999999864 Td
+(• No missing image alt attributes.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 500.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 480.8899999999999864 Td
+(• Crawl found many 404s related to activity resource links, such as /warm-up-activity-generator,) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 466.8899999999999864 Td
+(/group-activity-generator, /exit-ticket-generator, and similar.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 447.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 427.8899999999999864 Td
+(• Update all activity resource links to /signup for now.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 413.8899999999999864 Td
+(• Later create a curated cluster only for highest-value activity terms.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 384.8899999999999864 Td
+(Boards & Curriculums: /boards-curriculums) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 358.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 338.8899999999999864 Td
+(• Important credibility page for Indian curriculum coverage.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 324.8899999999999864 Td
+(• Good target area for NCERT, JKBOSE, CBSE, and school curriculum terms.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 305.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 285.8899999999999864 Td
+(• No canonical URL.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 271.8899999999999864 Td
+(• 2 missing image alt attributes.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 257.8899999999999864 Td
+(• H1 crawl text appears as Boards &amp;Curriculums, with no readable space.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 243.8899999999999864 Td
+(• Metadata is short and generic.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 224.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 204.8899999999999864 Td
+(• Add canonical /boards-curriculums.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 190.8899999999999864 Td
+(• Improve title:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 176.8899999999999864 Td
+(• Supported Boards & Curriculums | NCERT, CBSE, JKBOSE | TeachPad) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 162.8899999999999864 Td
+(• Improve description:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 148.8899999999999864 Td
+(• TeachPad supports textbook-grounded teaching resources for NCERT, CBSE, JKBOSE, and custom school) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 134.8899999999999864 Td
+(curriculums.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 120.8899999999999864 Td
+(• Add content sections for each supported board.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 91.8899999999999864 Td
+(Pricing: /pricing) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 65.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 7 of 12) Tj
+ET
+endstream
+endobj
+17 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 18 0 R
+>>
+endobj
+18 0 obj
+<<
+/Length 5071
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(• Simple, readable pricing page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• Title and description are acceptable.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 760.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 740.8899999999999864 Td
+(• No canonical URL.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 726.8899999999999864 Td
+(• No structured data.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 712.8899999999999864 Td
+(• Description is short and could be stronger.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 693.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 673.8899999999999864 Td
+(• Add canonical /pricing.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 659.8899999999999864 Td
+(• Add Product or Offer structured data only if pricing details are stable and accurate.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 645.8899999999999864 Td
+(• Add FAQ content for common buying objections: free plan, school plan, billing, cancellation, usage limits.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 616.8899999999999864 Td
+(Legal and Contact Pages) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 590.8899999999999864 Td
+(Pages reviewed:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 570.8899999999999864 Td
+(• /privacy) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 556.8899999999999864 Td
+(• /terms) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 542.8899999999999864 Td
+(• /refund) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 528.8899999999999864 Td
+(• /contact) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 509.8899999999999864 Td
+(Strengths:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 489.8899999999999864 Td
+(• Each page has specific metadata.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 475.8899999999999864 Td
+(• No missing alt issues.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 456.8899999999999864 Td
+(Issues:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 436.8899999999999864 Td
+(• No canonical URLs.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 422.8899999999999864 Td
+(• No structured data.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 403.8899999999999864 Td
+(Recommended improvements:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 383.8899999999999864 Td
+(• Add canonical URLs.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 369.8899999999999864 Td
+(• Add Organization/ContactPoint structured data on /contact.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 355.8899999999999864 Td
+(• Legal pages may remain indexable, but they do not need heavy SEO work.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 324.8899999999999864 Td
+(Technical SEO) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 281.8899999999999864 Td
+(Rendering) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 255.8899999999999864 Td
+(The site is built in Next.js and the public pages return rendered HTML successfully in the local crawl. This is) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 240.8899999999999864 Td
+(good. Google can process JavaScript, but Google Search Central explains that JavaScript pages go through) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 225.8899999999999864 Td
+(crawling, rendering, and indexing phases. Server-rendered public content reduces dependency on delayed) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 210.8899999999999864 Td
+(rendering.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 190.8899999999999864 Td
+(Recommendation:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 170.8899999999999864 Td
+(• Keep primary SEO text in server-rendered page content.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 156.8899999999999864 Td
+(• Avoid hiding important copy behind client-only interactions.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 127.8899999999999864 Td
+(Internal Linking) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 101.8899999999999864 Td
+(Current internal linking is strong in concept but risky in execution. The resource link sections are good SEO) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 86.8899999999999864 Td
+(architecture if the URLs exist. Right now, many do not.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 66.8899999999999864 Td
+(Recommendation:) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 8 of 12) Tj
+ET
+endstream
+endobj
+19 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 20 0 R
+>>
+endobj
+20 0 obj
+<<
+/Length 5937
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(• Treat each resource chip as either:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• A conversion CTA to /signup, or) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 765.8899999999999864 Td
+(• A real landing page with unique content.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 751.8899999999999864 Td
+(• Do not leave SEO keyword chips pointing to 404s.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 722.8899999999999864 Td
+(Canonicals) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 696.8899999999999864 Td
+(Generator pages use canonical metadata well. This pattern should be copied to other public pages.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 676.8899999999999864 Td
+(Recommended canonical map:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 656.8899999999999864 Td
+(• / -> https://teachpad.in/) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 642.8899999999999864 Td
+(• /ai-tools -> https://teachpad.in/ai-tools) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 628.8899999999999864 Td
+(• /lesson-plan-generator -> https://teachpad.in/lesson-plan-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 614.8899999999999864 Td
+(• /worksheet-generator -> https://teachpad.in/worksheet-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 600.8899999999999864 Td
+(• /notes-generator -> https://teachpad.in/notes-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 586.8899999999999864 Td
+(• /presentation-generator -> https://teachpad.in/presentation-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 572.8899999999999864 Td
+(• /classroom-activity-generator -> https://teachpad.in/classroom-activity-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 558.8899999999999864 Td
+(• /boards-curriculums -> https://teachpad.in/boards-curriculums) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 544.8899999999999864 Td
+(• /pricing -> https://teachpad.in/pricing) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 530.8899999999999864 Td
+(• Legal/contact pages as exact self-canonicals.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 501.8899999999999864 Td
+(Structured Data) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 475.8899999999999864 Td
+(Current state:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 455.8899999999999864 Td
+(• Main generator pages include JSON-LD.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 441.8899999999999864 Td
+(• Home, AI tools, pricing, board/curriculum, and legal/contact pages do not.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 422.8899999999999864 Td
+(Recommended structured data:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 402.8899999999999864 Td
+(• Sitewide/home:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 388.8899999999999864 Td
+(• Organization) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 374.8899999999999864 Td
+(• WebSite) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 360.8899999999999864 Td
+(• AI Tools:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 346.8899999999999864 Td
+(• ItemList of available tools) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 332.8899999999999864 Td
+(• Generator pages:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 318.8899999999999864 Td
+(• SoftwareApplication or WebApplication where appropriate) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 304.8899999999999864 Td
+(• FAQPage only when FAQs are visible on the page) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 290.8899999999999864 Td
+(• BreadcrumbList) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 276.8899999999999864 Td
+(• Contact:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 262.8899999999999864 Td
+(• Organization with ContactPoint) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 243.8899999999999864 Td
+(Important caution:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 223.8899999999999864 Td
+(• Structured data must match visible content. Do not add FAQ structured data for questions that are not visible on the) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 209.8899999999999864 Td
+(page.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 180.8899999999999864 Td
+(Image SEO) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 154.8899999999999864 Td
+(The recent generator page images are visually strong and alt-complete. The remaining issue is on home, AI) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 139.8899999999999864 Td
+(tools, boards/curriculums, and signup.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 119.8899999999999864 Td
+(Recommendations:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 99.8899999999999864 Td
+(• Add meaningful alt text to all non-decorative screenshots.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 85.8899999999999864 Td
+(• Use priority on above-the-fold hero images that are likely LCP candidates.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 71.8899999999999864 Td
+(• Keep screenshots as actual <img>/Next <Image> elements. Google image guidance states that standard HTML) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 9 of 12) Tj
+ET
+endstream
+endobj
+21 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 22 0 R
+>>
+endobj
+22 0 obj
+<<
+/Length 5485
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(image elements help crawlers discover images.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• Consider image sitemap entries if image traffic matters.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 750.8899999999999864 Td
+(Performance and Core Web Vitals) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 724.8899999999999864 Td
+(This audit did not run Lighthouse or production Web Vitals, but the codebase uses large visual assets heavily.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 709.8899999999999864 Td
+(Above-the-fold hero images may affect LCP.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 689.8899999999999864 Td
+(Recommendations:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 669.8899999999999864 Td
+(• Run Lighthouse on production build for:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 655.8899999999999864 Td
+(• /) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 641.8899999999999864 Td
+(• /ai-tools) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 627.8899999999999864 Td
+(• each generator page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 613.8899999999999864 Td
+(• Add priority to one primary above-fold image per page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 599.8899999999999864 Td
+(• Ensure image dimensions are explicit to avoid layout shifts.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 585.8899999999999864 Td
+(• Compress large PNG screenshots where transparency is not required.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 571.8899999999999864 Td
+(• Prefer WebP/AVIF variants for large screenshots if visual quality remains acceptable.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 540.8899999999999864 Td
+(Content and Keyword Strategy) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 497.8899999999999864 Td
+(Strong Existing Keyword Targets) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 471.8899999999999864 Td
+(The site already has strong pages for:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 451.8899999999999864 Td
+(• AI lesson plan generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 437.8899999999999864 Td
+(• AI worksheet generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 423.8899999999999864 Td
+(• AI notes generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 409.8899999999999864 Td
+(• AI presentation generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 395.8899999999999864 Td
+(• Classroom activity generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 381.8899999999999864 Td
+(• Lesson plan format) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 367.8899999999999864 Td
+(• Lesson plan PDF) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 353.8899999999999864 Td
+(• Worksheet with answers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 339.8899999999999864 Td
+(• Revision notes generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 325.8899999999999864 Td
+(• Presentation generator for teachers) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 296.8899999999999864 Td
+(Recommended SEO Cluster Strategy) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 270.8899999999999864 Td
+(Do not create dozens of thin keyword pages at once. Build pages only where the query intent is distinct.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 250.8899999999999864 Td
+(Best first expansion pages:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 230.8899999999999864 Td
+(1. /ai-ppt-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 216.8899999999999864 Td
+(2. /ppt-generator-for-teachers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 202.8899999999999864 Td
+(3. /question-paper-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 188.8899999999999864 Td
+(4. /mcq-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 174.8899999999999864 Td
+(5. /lesson-plan-format) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 160.8899999999999864 Td
+(6. /lesson-plan-pdf) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 146.8899999999999864 Td
+(7. /worksheet-with-answers) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 132.8899999999999864 Td
+(8. /revision-notes-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 118.8899999999999864 Td
+(9. /ncert-lesson-plan-generator) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 104.8899999999999864 Td
+(10. /jkbose-lesson-plan-generator) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 85.8899999999999864 Td
+(Each page should have:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 65.8899999999999864 Td
+(• Unique title and description.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 10 of 12) Tj
+ET
+endstream
+endobj
+23 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 24 0 R
+>>
+endobj
+24 0 obj
+<<
+/Length 5530
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 793.8899999999999864 Td
+(• One clear H1.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 779.8899999999999864 Td
+(• Specific examples.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 765.8899999999999864 Td
+(• Visible FAQs.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 751.8899999999999864 Td
+(• Internal links to the parent generator page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 737.8899999999999864 Td
+(• Canonical self-reference.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 723.8899999999999864 Td
+(• Conversion CTA to signup.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 694.8899999999999864 Td
+(Duplicate Content Risk) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 668.8899999999999864 Td
+(The long resource lists are useful for navigation, but if every chip becomes a page with the same layout and only) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 653.8899999999999864 Td
+(the keyword changed, Google may treat them as low-value near-duplicates.) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 633.8899999999999864 Td
+(Recommendation:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 613.8899999999999864 Td
+(• Use one strong hub page for each tool.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 599.8899999999999864 Td
+(• Create only high-demand child pages with truly different content.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 585.8899999999999864 Td
+(• Merge low-demand keywords into FAQ sections instead of separate pages.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 554.8899999999999864 Td
+(Recommended 30/60/90 Day Plan) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 511.8899999999999864 Td
+(First 30 Days: Technical Cleanup) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 485.8899999999999864 Td
+(1. Add app/sitemap.ts.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 471.8899999999999864 Td
+(2. Add app/robots.ts.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 457.8899999999999864 Td
+(3. Fix all 36 broken internal links.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 443.8899999999999864 Td
+(4. Add canonicals to public pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 429.8899999999999864 Td
+(5. Add noindex to auth, dashboard, admin, callback, reset-password, and private app pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 415.8899999999999864 Td
+(6. Fix missing alt text on home, AI tools, boards/curriculums, and signup.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 401.8899999999999864 Td
+(7. Improve home title, description, and H1 spacing.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 387.8899999999999864 Td
+(8. Submit sitemap in Google Search Console.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 358.8899999999999864 Td
+(Days 31-60: Structured Data and Performance) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 332.8899999999999864 Td
+(1. Add Organization and WebSite JSON-LD on home.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 318.8899999999999864 Td
+(2. Add ItemList JSON-LD on /ai-tools.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 304.8899999999999864 Td
+(3. Add BreadcrumbList JSON-LD to generator pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 290.8899999999999864 Td
+(4. Run Lighthouse on production pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 276.8899999999999864 Td
+(5. Optimize large hero images and screenshots.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 262.8899999999999864 Td
+(6. Add priority to main above-fold images.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 248.8899999999999864 Td
+(7. Review Search Console indexing report for excluded or duplicate URLs.) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 219.8899999999999864 Td
+(Days 61-90: Content Expansion) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 193.8899999999999864 Td
+(1. Create 5-10 high-intent child landing pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 179.8899999999999864 Td
+(2. Build real example resources for each page.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 165.8899999999999864 Td
+(3. Add comparison or guide content for teachers.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 151.8899999999999864 Td
+(4. Add internal links from home and AI tools to the strongest commercial pages.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 137.8899999999999864 Td
+(5. Track rankings and impressions in Search Console.) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 123.8899999999999864 Td
+(6. Prune or merge pages that do not gain impressions.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 92.8899999999999864 Td
+(Implementation Checklist) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 11 of 12) Tj
+ET
+endstream
+endobj
+25 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 26 0 R
+>>
+endobj
+26 0 obj
+<<
+/Length 7899
+>>
+stream
+0.200025 w
+0 G
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 793.8899999999999864 Td
+(High priority:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 773.8899999999999864 Td
+(%¡   C r e a t e   / a p p / s i t e m a p . t s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 759.8899999999999864 Td
+(%¡   C r e a t e   / a p p / r o b o t s . t s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 745.8899999999999864 Td
+(%¡   F i x   p r e s e n t a t i o n   a n d   c l a s s r o o m   a c t i v i t y   r e s o u r c e   4 0 4   l i n k s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 731.8899999999999864 Td
+(%¡   A d d   c a n o n i c a l   m e t a d a t a   t o   / ,   / a i - t o o l s ,   / b o a r d s - c u r r i c u l u m s ,   / p r i c i n g ,   l e g a l ,   a n d   c o n t a c t   p a g e s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 717.8899999999999864 Td
+(%¡   A d d   n o i n d e x   m e t a d a t a   t o   l o g i n ,   s i g n u p   i f   d e s i r e d ,   r e s e t   p a s s w o r d ,   a u t h   c a l l b a c k ,   d a s h b o a r d ,   a n d   a d m i n .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 703.8899999999999864 Td
+(%¡   A d d   m i s s i n g   i m a g e   a l t   t e x t .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 689.8899999999999864 Td
+(%¡   I m p r o v e   h o m e   m e t a d a t a .) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 670.8899999999999864 Td
+(Medium priority:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 650.8899999999999864 Td
+(%¡   A d d   O r g a n i z a t i o n   a n d   W e b S i t e   J S O N - L D .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 636.8899999999999864 Td
+(%¡   A d d   I t e m L i s t   J S O N - L D   t o   A I   t o o l s   p a g e .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 622.8899999999999864 Td
+(%¡   A d d   B r e a d c r u m b L i s t   J S O N - L D   t o   t o o l   p a g e s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 608.8899999999999864 Td
+(%¡   F i x   H 1   s p a c i n g   o n   h o m e ,   A I   t o o l s ,   a n d   b o a r d s / c u r r i c u l u m s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 594.8899999999999864 Td
+(%¡   R u n   L i g h t h o u s e   a n d   o p t i m i z e   L C P   i m a g e s .) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 575.8899999999999864 Td
+(Lower priority:) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 555.8899999999999864 Td
+(%¡   A d d   C o n t a c t P o i n t   s t r u c t u r e d   d a t a .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 541.8899999999999864 Td
+(%¡   C r e a t e   s e l e c t i v e   l o n g - t a i l   l a n d i n g   p a g e s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 527.8899999999999864 Td
+(%¡   A d d   i m a g e   s i t e m a p   e n t r i e s   i f   i m a g e   s e a r c h   m a t t e r s .) Tj
+ET
+BT
+/F1 9.5 Tf
+10.9249999999999989 TL
+0.125 0.133 0.157 rg
+58. 513.8899999999999864 Td
+(%¡   D e c i d e   w h e t h e r   s a m p l e   P D F s   s h o u l d   b e   i n d e x e d .) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 482.8899999999999864 Td
+(Crawl Appendix) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 439.8899999999999864 Td
+(Public Page Metadata Snapshot) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 407.8899999999999864 Td
+(| URL | Status | Title | Canonical | H1 | JSON-LD | Images | Missing Alt |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 387.8899999999999864 Td
+(| `/` | 200 | `TeachPad` | Missing | `Teach from your textbook.Let AI do the preparation.` | 0 | 14 | 7 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 377.8899999999999864 Td
+(| `/ai-tools` | 200 | `AI Tools \\| TeachPad` | Missing | `One textbook.Every teaching resource.` | 0 | 10 | 5 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 367.8899999999999864 Td
+(| `/lesson-plan-generator` | 200 | `AI Lesson Plan Generator for Teachers \\| TeachPad` | Present | Good | Present | 8 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 357.8899999999999864 Td
+(| `/worksheet-generator` | 200 | `AI Worksheet Generator for Teachers \\| TeachPad` | Present | Good | Present | 7 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 347.8899999999999864 Td
+(| `/notes-generator` | 200 | `AI Notes Generator for Teachers \\| TeachPad` | Present | Good | Present | 7 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 337.8899999999999864 Td
+(| `/presentation-generator` | 200 | `AI Presentation Generator for Teachers \\| TeachPad` | Present | Good | Present | 6 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 327.8899999999999864 Td
+(| `/classroom-activity-generator` | 200 | `AI Classroom Activity Generator for Teachers \\| TeachPad` | Present | Good | Present | 7 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 317.8899999999999864 Td
+(| `/boards-curriculums` | 200 | `Boards & Curriculums \\| TeachPad` | Missing | `Boards &amp;Curriculums` | 0 | 7 | 2 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 307.8899999999999864 Td
+(| `/pricing` | 200 | `Pricing \\| TeachPad` | Missing | Good | 0 | 4 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 297.8899999999999864 Td
+(| `/privacy` | 200 | `Privacy Policy · TeachPad` | Missing | Good | 0 | 2 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 287.8899999999999864 Td
+(| `/terms` | 200 | `Terms of Service · TeachPad` | Missing | Good | 0 | 2 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 277.8899999999999864 Td
+(| `/refund` | 200 | `Refund & Cancellation Policy · TeachPad` | Missing | Good | 0 | 2 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 267.8899999999999864 Td
+(| `/contact` | 200 | `Contact Us · TeachPad` | Missing | Good | 0 | 2 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 257.8899999999999864 Td
+(| `/login` | 200 | `TeachPad` | Missing | `Checking your session` | 0 | 0 | 0 |) Tj
+ET
+BT
+/F1 7.5 Tf
+8.625 TL
+0.125 0.133 0.157 rg
+48. 247.8899999999999864 Td
+(| `/signup` | 200 | `TeachPad` | Missing | `Create account` | 0 | 3 | 2 |) Tj
+ET
+BT
+/F2 12.5 Tf
+14.3749999999999982 TL
+0.118 0.161 0.231 rg
+48. 216.8899999999999864 Td
+(Broken Link Summary) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 190.8899999999999864 Td
+(36 public internal links returned 404 during crawl. The majority are resource keyword links from presentation and) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 175.8899999999999864 Td
+(classroom activity sections. These should either redirect to /signup or become real landing pages.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.059 0.09 0.165 rg
+48. 143.8899999999999864 Td
+(Final Recommendation) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 110.8899999999999864 Td
+(TeachPad should prioritize technical SEO cleanup before expanding content. The current generator landing) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 95.8899999999999864 Td
+(pages are good enough to build on, but the site is losing quality signals through missing discovery files,) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 80.8899999999999864 Td
+(incomplete canonical/noindex strategy, and many broken keyword links. Fixing those issues will make the existing) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.125 0.133 0.157 rg
+48. 65.8899999999999864 Td
+(content easier to crawl, easier to understand, and cleaner to convert from search traffic.) Tj
+ET
+BT
+/F1 8 Tf
+9.1999999999999993 TL
+0.392 0.455 0.545 rg
+48. 24. Td
+(TeachPad SEO Audit • 04 June 2026 • Page 12 of 12) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R ]
+/Count 12
+>>
+endobj
+27 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+28 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+29 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+30 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+31 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+32 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+33 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+34 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+35 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+36 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+37 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+38 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+39 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+40 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 27 0 R
+/F2 28 0 R
+/F3 29 0 R
+/F4 30 0 R
+/F5 31 0 R
+/F6 32 0 R
+/F7 33 0 R
+/F8 34 0 R
+/F9 35 0 R
+/F10 36 0 R
+/F11 37 0 R
+/F12 38 0 R
+/F13 39 0 R
+/F14 40 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+41 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20260604045950+05'30')
+>>
+endobj
+42 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 43
+0000000000 65535 f 
+0000073996 00000 n 
+0000075893 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000006584 00000 n 
+0000006721 00000 n 
+0000012988 00000 n 
+0000013125 00000 n 
+0000019834 00000 n 
+0000019972 00000 n 
+0000025903 00000 n 
+0000026042 00000 n 
+0000031350 00000 n 
+0000031489 00000 n 
+0000037261 00000 n 
+0000037400 00000 n 
+0000043114 00000 n 
+0000043253 00000 n 
+0000048377 00000 n 
+0000048516 00000 n 
+0000054506 00000 n 
+0000054645 00000 n 
+0000060183 00000 n 
+0000060322 00000 n 
+0000065905 00000 n 
+0000066044 00000 n 
+0000074128 00000 n 
+0000074254 00000 n 
+0000074385 00000 n 
+0000074519 00000 n 
+0000074657 00000 n 
+0000074781 00000 n 
+0000074910 00000 n 
+0000075042 00000 n 
+0000075178 00000 n 
+0000075306 00000 n 
+0000075433 00000 n 
+0000075562 00000 n 
+0000075695 00000 n 
+0000075797 00000 n 
+0000076146 00000 n 
+0000076232 00000 n 
+trailer
+<<
+/Size 43
+/Root 42 0 R
+/Info 41 0 R
+/ID [ <148E5BE6D1C8BE4C9D10E7690270BD0D> <148E5BE6D1C8BE4C9D10E7690270BD0D> ]
+>>
+startxref
+76336
+%%EOF

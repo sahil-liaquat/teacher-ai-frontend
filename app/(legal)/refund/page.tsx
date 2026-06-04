@@ -7,6 +7,30 @@ export const metadata: Metadata = {
   title: "Refund & Cancellation Policy · TeachPad",
   description:
     "How TeachPad subscriptions renew, how to cancel, free-trial terms, and our no-refund policy.",
+  alternates: {
+    canonical: "/refund"
+  },
+  openGraph: {
+    title: "TeachPad Refund and Cancellation Policy",
+    description: "Understand TeachPad subscription renewals, cancellation steps, free-trial terms, failed payments, and refund policy.",
+    url: "/refund",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/assets/teachpad-logo.png",
+        width: 1385,
+        height: 279,
+        alt: "TeachPad logo."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TeachPad Refund and Cancellation Policy",
+    description: "TeachPad subscription renewal, cancellation, free-trial, failed payment, and refund policy details.",
+    images: ["/assets/teachpad-logo.png"]
+  }
 };
 
 export default function RefundPolicyPage() {

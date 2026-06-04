@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { LucideIcon } from "lucide-react";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
@@ -17,29 +18,113 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/"
+  }
+};
+
+const siteUrl = "https://teachpad.in";
+const siteTitle = "TeachPad | AI Lesson Plans & Worksheets for Teachers";
+const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, quizzes, and classroom activities in seconds with TeachPad AI.";
+const previewImage = "/landing/teachpad-main-hero-centered.png";
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "TeachPad",
+    url: siteUrl,
+    logo: `${siteUrl}/assets/teachpad-logo.png`,
+    sameAs: [siteUrl]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "TeachPad",
+    url: siteUrl,
+    description: siteDescription,
+    publisher: {
+      "@type": "Organization",
+      name: "TeachPad"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "TeachPad",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: siteUrl,
+    image: `${siteUrl}${previewImage}`,
+    description: siteDescription,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/signup`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "TeachPad",
+    image: `${siteUrl}${previewImage}`,
+    description: siteDescription,
+    brand: {
+      "@type": "Brand",
+      name: "TeachPad"
+    },
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/pricing`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: siteUrl
+      }
+    ]
+  }
+];
+
 const tools = [
   {
     title: "Lesson Planner",
     description: "Create structured lesson plans from your selected textbook chapter, including objectives, activities, assessment, homework, and teacher notes.",
     image: "/landing/lesson-planner-3d-v2.png",
+    imageAlt: "3D lesson planner card showing textbook-based lesson planning.",
     accent: "blue"
   },
   {
     title: "Worksheet Generator",
     description: "Generate chapter-based worksheets with questions that match the topic, class level, and textbook content.",
     image: "/landing/worksheet-3d-v2.png",
+    imageAlt: "3D worksheet card showing practice questions generated from a textbook chapter.",
     accent: "green"
   },
   {
     title: "Presentation Generator",
     description: "Turn textbook concepts into clean classroom presentations that help students understand the lesson visually.",
     image: "/landing/presentation-3d-v2.png",
+    imageAlt: "3D presentation card showing classroom slides created from textbook content.",
     accent: "purple"
   },
   {
     title: "Live Quiz Generator",
     description: "Create quick quizzes from the chapter to check understanding during class or after teaching.",
     image: "/landing/live-quiz-3d-v2.png",
+    imageAlt: "3D live quiz card showing interactive classroom quiz results.",
     accent: "orange"
   }
 ];
@@ -56,18 +141,21 @@ const steps = [
     title: "Select your textbook",
     description: "Choose the board, class, subject, book, and chapter you want to teach.",
     image: "/assets/illustrations/textbook-library-header.png",
+    imageAlt: "Teacher selecting a textbook chapter from a digital library.",
     Icon: BookOpen
   },
   {
     title: "Choose what you want to create",
     description: "Pick a lesson plan, worksheet, presentation, notes, classroom activity, or quiz.",
     image: "/ai-tools/tool-icons.png",
+    imageAlt: "TeachPad tool icons for lesson plans, worksheets, presentations, notes, activities, and quizzes.",
     Icon: WandSparkles
   },
   {
     title: "Review, edit, and use",
     description: "TeachPad generates from the chapter, then you can customize, save, download, or use it directly in class.",
     image: "/landing/beautiful-content-lesson-plan.png",
+    imageAlt: "Editable lesson plan output generated from textbook content.",
     Icon: GraduationCap
   }
 ];
@@ -88,6 +176,10 @@ const schoolBenefits = [
 export default function HomePage() {
   return (
     <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-white text-[#07111f]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <MarketingHeader active="home" />
       <HeroSection />
       <ToolsSection />
@@ -105,7 +197,7 @@ export default function HomePage() {
 function HeroSection() {
   return (
     <section className="relative bg-[radial-gradient(circle_at_16%_10%,#eef6ff_0,transparent_30%),radial-gradient(circle_at_90%_12%,#f5fbff_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-10 pt-9 text-center sm:px-6 md:pb-16 lg:px-8 lg:pb-20 lg:pt-14">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-4 pt-9 text-center sm:px-6 md:pb-8 lg:px-8 lg:pb-10 lg:pt-14">
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-center">
           <h1 className="max-w-full text-[38px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[42px] sm:text-6xl lg:text-[72px]">
             Teach from your <span className="text-blue-600">textbook.</span>
@@ -130,7 +222,7 @@ function HeroSection() {
           </div>
         </div>
 
-        <div className="relative z-0 mx-auto mt-8 w-full max-w-7xl sm:mt-10 lg:mt-8">
+        <div className="relative z-0 mx-auto -mt-1 w-full max-w-7xl sm:-mt-2 lg:-mt-4">
           <Image
             src="/landing/teachpad-main-hero-centered.png"
             alt="TeachPad dashboard showing textbook-based lesson planning, worksheet generation, notes, presentations, and classroom activities."
@@ -163,7 +255,7 @@ function ToolsSection() {
             className="group min-w-0 text-center transition duration-300 hover:-translate-y-2"
           >
             <div className="grid h-[180px] place-items-center overflow-visible sm:h-[230px]">
-              <Image src={tool.image} alt="" width={380} height={380} className="h-44 w-44 object-contain drop-shadow-[0_22px_38px_rgba(47,79,129,0.12)] transition duration-300 group-hover:scale-105 sm:h-60 sm:w-60" />
+              <Image src={tool.image} alt={tool.imageAlt} width={380} height={380} className="marketing-pop-hover h-44 w-44 object-contain drop-shadow-[0_22px_38px_rgba(47,79,129,0.12)] sm:h-60 sm:w-60" />
             </div>
             <h3 className="mt-4 text-xl font-black text-slate-950 sm:mt-5">{tool.title}</h3>
             <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">{tool.description}</p>
@@ -209,7 +301,7 @@ function TextbookSection() {
             alt="Open textbook with textbook analysis checklist"
             width={1500}
             height={1030}
-            className="h-auto w-full drop-shadow-[0_26px_44px_rgba(47,79,129,0.12)]"
+            className="marketing-float-slow h-auto w-full drop-shadow-[0_26px_44px_rgba(47,79,129,0.12)]"
           />
         </div>
       </div>
@@ -234,7 +326,7 @@ function HowItWorksSection() {
             <article key={step.title} className="group text-center transition duration-300 hover:-translate-y-2">
               <div className="relative grid min-h-[230px] place-items-center sm:min-h-[280px] lg:min-h-[320px]">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-600 text-sm font-black text-white">{index + 1}</span>
-                <Image src={step.image} alt="" width={360} height={360} className="h-48 w-48 object-contain drop-shadow-[0_24px_42px_rgba(47,79,129,0.14)] transition duration-300 group-hover:scale-105 sm:h-64 sm:w-64 lg:h-72 lg:w-72" />
+                <Image src={step.image} alt={step.imageAlt} width={360} height={360} className="marketing-pop-hover h-48 w-48 object-contain drop-shadow-[0_24px_42px_rgba(47,79,129,0.14)] sm:h-64 sm:w-64 lg:h-72 lg:w-72" />
               </div>
               <div className="mt-5 flex items-center justify-center gap-2 text-blue-600">
                 <step.Icon className="h-5 w-5" />
@@ -259,7 +351,7 @@ function BeautifulContentSection() {
             alt="Lesson plan editor interface mockup"
             width={1448}
             height={1086}
-            className="h-auto w-full translate-y-5 drop-shadow-[0_24px_42px_rgba(47,79,129,0.12)]"
+            className="marketing-float-slow h-auto w-full translate-y-5 drop-shadow-[0_24px_42px_rgba(47,79,129,0.12)]"
           />
         </div>
 
@@ -294,7 +386,7 @@ function ForSchoolsSection() {
     <section id="for-schools" className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
       <div className="grid items-center gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8 lg:grid-cols-[1fr_0.85fr_0.75fr] lg:px-10">
         <div className="-mx-5 -mb-5 sm:-mx-8 lg:-ml-10 lg:-mr-4">
-          <Image src="/landing/school-3d-v2.png" alt="3D school building illustration" width={1600} height={900} className="h-auto w-full drop-shadow-[0_22px_40px_rgba(47,79,129,0.12)]" />
+          <Image src="/landing/school-3d-v2.png" alt="3D school building illustration" width={1600} height={900} className="marketing-float-slow h-auto w-full drop-shadow-[0_22px_40px_rgba(47,79,129,0.12)]" />
         </div>
 
         <div id="pricing">
@@ -382,7 +474,7 @@ function FinalCtaSection() {
           alt="Backpack, globe, books, and stationery illustration"
           width={1600}
           height={900}
-          className="mx-auto h-auto w-full max-w-xl"
+          className="marketing-float-slow mx-auto h-auto w-full max-w-xl"
         />
       </div>
     </section>

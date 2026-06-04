@@ -1,22 +1,75 @@
 "use client";
 
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ClipboardList, FileText, NotebookPen, Presentation, Puzzle, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-const navItems = [
-  { label: "AI Tools", href: "/ai-tools", key: "ai-tools" },
-  { label: "Boards & Curriculums", href: "/boards-curriculums", key: "boards-curriculums" }
+const aiToolPages = [
+  {
+    label: "Lesson Plan Generator",
+    description: "Plan objectives, flow, homework, and assessment.",
+    href: "/lesson-plan-generator",
+    Icon: FileText,
+    tone: "blue"
+  },
+  {
+    label: "Worksheet Generator",
+    description: "Create practice sheets and answer keys.",
+    href: "/worksheet-generator",
+    Icon: ClipboardList,
+    tone: "emerald"
+  },
+  {
+    label: "Presentation Generator",
+    description: "Build classroom PPTs and speaker notes.",
+    href: "/presentation-generator",
+    Icon: Presentation,
+    tone: "orange"
+  },
+  {
+    label: "Notes Generator",
+    description: "Make summaries, definitions, and key points.",
+    href: "/notes-generator",
+    Icon: NotebookPen,
+    tone: "violet"
+  },
+  {
+    label: "Classroom Activity Generator",
+    description: "Generate warm-ups, group tasks, and exit tickets.",
+    href: "/classroom-activity-generator",
+    Icon: Puzzle,
+    tone: "amber"
+  }
 ];
+
+const navItems = [
+  { label: "Home", href: "/", key: "home" },
+  { label: "AI Tools", href: "/ai-tools", key: "ai-tools", children: aiToolPages },
+  { label: "Boards & Curriculums", href: "/boards-curriculums", key: "boards-curriculums" },
+  { label: "Pricing", href: "/pricing", key: "pricing" }
+];
+
+const toolToneClasses = {
+  blue: "bg-blue-50 text-blue-600 group-hover/item:bg-blue-600 group-hover/item:text-white",
+  emerald: "bg-emerald-50 text-emerald-600 group-hover/item:bg-emerald-600 group-hover/item:text-white",
+  orange: "bg-orange-50 text-orange-600 group-hover/item:bg-orange-500 group-hover/item:text-white",
+  violet: "bg-violet-50 text-violet-600 group-hover/item:bg-violet-600 group-hover/item:text-white",
+  amber: "bg-amber-50 text-amber-600 group-hover/item:bg-amber-500 group-hover/item:text-white"
+} as const;
 
 export function MarketingHeader({ active }: { active?: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const activeKey =
     active ||
-    navItems.find((item) => pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`)))?.key;
+    navItems.find(
+      (item) =>
+        pathname === item.href ||
+        (item.href !== "/" && pathname.startsWith(`${item.href}/`)) ||
+        item.children?.some((child) => pathname === child.href || pathname.startsWith(`${child.href}/`))
+    )?.key;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/86 backdrop-blur-xl">
@@ -28,6 +81,61 @@ export function MarketingHeader({ active }: { active?: string }) {
         <nav aria-label="Main navigation" className="hidden items-center justify-center gap-7 lg:flex">
           {navItems.map((item) => {
             const isActive = activeKey === item.key;
+
+            if (item.children) {
+              return (
+                <div key={item.key} className="group relative">
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative inline-flex items-center gap-1.5 py-2 text-sm font-bold transition hover:text-blue-600 ${
+                      isActive ? "text-blue-600" : "text-slate-800"
+                    }`}
+                  >
+                    {item.label}
+                    <ChevronDown className="h-3.5 w-3.5 transition group-hover:rotate-180" />
+                  </Link>
+                  <div className="pointer-events-none absolute left-1/2 top-full z-50 w-[390px] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
+                      <Link
+                        href="/ai-tools"
+                        className="flex items-center justify-between bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_100%)] px-4 py-4 text-sm font-black text-slate-950 transition hover:text-blue-600"
+                      >
+                        <span>
+                          <span className="block">View All AI Tools</span>
+                          <span className="mt-1 block text-xs font-semibold text-slate-500">One textbook. Every teaching resource.</span>
+                        </span>
+                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white">
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </Link>
+                      <div className="grid gap-1 p-2">
+                      {item.children.map((child) => {
+                        const Icon = child.Icon;
+                        const tone = toolToneClasses[child.tone as keyof typeof toolToneClasses];
+                        return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className="group/item grid grid-cols-[44px_1fr_auto] items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
+                        >
+                          <span className={`grid h-11 w-11 place-items-center rounded-xl transition ${tone}`}>
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-black text-slate-900 transition group-hover/item:text-blue-600">{child.label}</span>
+                            <span className="mt-0.5 block text-xs font-semibold leading-5 text-slate-500">{child.description}</span>
+                          </span>
+                          <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover/item:translate-x-0.5 group-hover/item:text-blue-600" />
+                        </Link>
+                        );
+                      })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <Link
@@ -78,17 +186,36 @@ export function MarketingHeader({ active }: { active?: string }) {
               const isActive = activeKey === item.key;
 
               return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  onClick={() => setMenuOpen(false)}
-                  className={`rounded-lg px-3 py-3 text-sm font-bold transition ${
-                    isActive ? "bg-blue-50 text-blue-600" : "text-slate-800 hover:bg-slate-50 hover:text-blue-600"
-                  }`}
-                >
-                  {item.label}
-                </Link>
+                <div key={item.key}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold transition ${
+                      isActive ? "bg-blue-50 text-blue-600" : "text-slate-800 hover:bg-slate-50 hover:text-blue-600"
+                    }`}
+                  >
+                    {item.label}
+                    {item.children ? <ChevronDown className="h-4 w-4" /> : null}
+                  </Link>
+                  {item.children ? (
+                    <div className="mt-1 grid gap-1 pl-3">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setMenuOpen(false)}
+                          className="grid grid-cols-[34px_1fr] items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+                        >
+                          <span className={`grid h-8 w-8 place-items-center rounded-lg ${toolToneClasses[child.tone as keyof typeof toolToneClasses]}`}>
+                            <child.Icon className="h-4 w-4" />
+                          </span>
+                          <span>{child.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>

@@ -6,14 +6,118 @@ import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 import { AiToolsShowcase } from "./showcase";
 
+const siteUrl = "https://teachpad.in";
+const pageUrl = `${siteUrl}/ai-tools`;
+const pageTitle = "TeachPad AI Tools for Teachers";
+const pageDescription = "Explore TeachPad AI tools for teachers to create textbook-based lesson plans, worksheets, presentations, notes, quizzes, and classroom activities in minutes.";
+const previewImage = "/ai-tools/ai-tools-hero.png";
+
 export const metadata: Metadata = {
   title: "AI Tools | TeachPad",
-  description: "Turn textbook chapters into lesson plans, worksheets, presentations, notes, activities, and quizzes."
+  description: pageDescription,
+  alternates: {
+    canonical: "/ai-tools"
+  },
+  openGraph: {
+    title: pageTitle,
+    description: "Create textbook-based lesson plans, worksheets, presentations, notes, quizzes, and classroom activities with TeachPad AI tools.",
+    url: "/ai-tools",
+    siteName: "TeachPad",
+    images: [
+      {
+        url: "/ai-tools/ai-tools-hero.png",
+        width: 1448,
+        height: 1086,
+        alt: "TeachPad AI tools for creating teaching resources from textbook chapters."
+      }
+    ],
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TeachPad AI Tools for Teachers",
+    description: "Create lesson plans, worksheets, presentations, notes, quizzes, and activities from textbook chapters.",
+    images: ["/ai-tools/ai-tools-hero.png"]
+  }
 };
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "TeachPad",
+    url: siteUrl,
+    logo: `${siteUrl}/assets/teachpad-logo.png`
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "TeachPad",
+    url: siteUrl,
+    description: "TeachPad helps teachers create textbook-grounded classroom resources with AI."
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "TeachPad AI Tools",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    url: pageUrl,
+    image: `${siteUrl}${previewImage}`,
+    description: pageDescription,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/signup`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "TeachPad AI Tools",
+    image: `${siteUrl}${previewImage}`,
+    description: pageDescription,
+    brand: {
+      "@type": "Brand",
+      name: "TeachPad"
+    },
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/pricing`
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: siteUrl
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "AI Tools",
+        item: pageUrl
+      }
+    ]
+  }
+];
 
 export default function AiToolsPage() {
   return (
     <main className="min-h-screen w-full max-w-full bg-white text-[#07111f]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <MarketingHeader active="ai-tools" />
       <HeroSection />
       <AiToolsShowcase />
@@ -64,10 +168,10 @@ function HeroSection() {
 
         <div className="relative mx-auto w-full max-w-[820px] lg:-mr-12 lg:max-w-none">
           <Image
-            src="/landing/teachpad-main-hero-centered.png"
+            src="/ai-tools/ai-tools-hero.png"
             alt="TeachPad turns one textbook chapter into AI-generated teaching resources."
-            width={1672}
-            height={941}
+            width={1448}
+            height={1086}
             priority
             className="h-auto w-full drop-shadow-[0_34px_54px_rgba(47,79,129,0.18)]"
           />
@@ -116,7 +220,7 @@ function TextbookAlignedSection() {
             alt="Open textbook with classroom learning materials."
             width={1672}
             height={941}
-            className="h-auto w-full drop-shadow-[0_24px_42px_rgba(47,79,129,0.12)]"
+            className="marketing-float-slow h-auto w-full drop-shadow-[0_24px_42px_rgba(47,79,129,0.12)]"
           />
         </div>
       </div>
@@ -128,17 +232,7 @@ function FinalCtaSection() {
   return (
     <section className="overflow-hidden bg-white">
       <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-16">
-        <div className="order-2 lg:order-1">
-          <Image
-            src="/landing/output-quality-presentation.png"
-            alt="TeachPad presentation resource mockup."
-            width={1448}
-            height={1086}
-            className="mx-auto h-auto w-full max-w-2xl"
-          />
-        </div>
-
-        <div className="order-1 text-center lg:order-2 lg:text-left">
+        <div className="text-center lg:text-left">
           <h2 className="mx-auto max-w-2xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl lg:mx-0">
             Start with your textbook. Create everything you need to teach.
           </h2>
@@ -158,6 +252,16 @@ function FinalCtaSection() {
             </Link>
           </div>
           <p className="mt-4 text-sm font-semibold text-slate-500">No credit card required</p>
+        </div>
+
+        <div>
+          <Image
+            src="/landing/backpack-globe-v2.png"
+            alt="Backpack, globe, books, and stationery illustration"
+            width={1600}
+            height={900}
+            className="marketing-float-slow mx-auto h-auto w-full max-w-xl"
+          />
         </div>
       </div>
     </section>
