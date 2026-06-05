@@ -85,12 +85,13 @@ const tools: Array<{
   {
     title: "Live Quiz Generator",
     description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
-    href: "#",
+    href: "/dashboard/live-quiz/new",
     icon: RadioTower,
-    badge: "Coming soon",
-    status: "soon",
+    badge: "Ready",
+    status: "ready",
     panel: "from-[#fffaf0] to-white",
-    tone: "yellow"
+    tone: "yellow",
+    buttonLabel: "Create Quiz"
   },
   {
     title: "Rubric Assistant",
@@ -130,8 +131,9 @@ export default function ClassroomToolsPage() {
           const card = (
             <div
               className={cn(
-                "group flex h-full min-h-[260px] flex-col rounded-[24px] border border-teachpad-cardBorder bg-gradient-to-br p-5 shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_var(--teachpad-shadowToolCard)]",
+                "clickable-card group flex h-full min-h-[260px] flex-col rounded-[24px] border border-teachpad-cardBorder bg-gradient-to-br p-5 shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_var(--teachpad-shadowToolCard)]",
                 tool.panel,
+                cardHoverStyles[tool.tone],
                 !available && "opacity-86"
               )}
             >
@@ -187,3 +189,13 @@ function IconBubble({
     </span>
   );
 }
+
+const cardHoverStyles = {
+  blue: "[--clickable-card-hover-bg:linear-gradient(135deg,#d8ecff_0%,#ffffff_74%)]",
+  green: "[--clickable-card-hover-bg:linear-gradient(135deg,#d3fbe8_0%,#ffffff_74%)]",
+  yellow: "[--clickable-card-hover-bg:linear-gradient(135deg,#ffe9a8_0%,#ffffff_74%)]",
+  pink: "[--clickable-card-hover-bg:linear-gradient(135deg,#ffd9e8_0%,#ffffff_74%)]",
+  red: "[--clickable-card-hover-bg:linear-gradient(135deg,#ffd6dc_0%,#ffffff_74%)]",
+  aqua: "[--clickable-card-hover-bg:linear-gradient(135deg,#cff7fb_0%,#ffffff_74%)]",
+  lavender: "[--clickable-card-hover-bg:linear-gradient(135deg,#e5d8ff_0%,#ffffff_74%)]"
+};

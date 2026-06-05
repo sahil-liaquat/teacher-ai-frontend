@@ -338,7 +338,7 @@ export default function TeacherDashboard() {
               <Link
                 key={`${item.type}-${item.id || item.topic}-${index}`}
                 href={item.href}
-                className="premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 hover:bg-slate-50"
+                className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe]"
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
@@ -464,7 +464,7 @@ export default function TeacherDashboard() {
                 <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI for accurate, board-aligned content.</p>
               </div>
             </div>
-            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-[#dbeafe] bg-gradient-to-r from-[#eff6ff] to-[#f0f9ff] p-3">
+            <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-[#dbeafe] bg-gradient-to-r from-[#eff6ff] to-[#e0f2fe] p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#dbeafe]">
                 <Clock3 className="h-5 w-5 text-[#2563eb]" />
               </div>
@@ -491,7 +491,7 @@ export default function TeacherDashboard() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="premium-hover flex min-h-[82px] items-center gap-3 rounded-xl border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                className="clickable-card premium-hover flex min-h-[82px] items-center gap-3 rounded-xl border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md [--clickable-card-hover-bg:linear-gradient(135deg,#dffafa_0%,#ffffff_74%)]"
               >
                 <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
                   <Icon className="h-5 w-5" />
@@ -722,13 +722,18 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
   };
 
   return (
-    <div className={cn(
+    <Link href={href} className={cn(
+      "clickable-card group block",
       "relative overflow-hidden min-w-0 w-full",
       "rounded-[20px]",
       "border border-white/60",
       "p-4 sm:p-5",
       "min-h-[190px] sm:min-h-[210px]",
       "shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
+      "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_var(--teachpad-shadowToolCard)]",
+      isGreen
+        ? "[--clickable-card-hover-bg:linear-gradient(135deg,#bbf7d0_0%,#ffffff_74%)]"
+        : "[--clickable-card-hover-bg:linear-gradient(135deg,#bfdbfe_0%,#ffffff_74%)]",
       gradients.card
     )}>
       <div className={cn("absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl", gradients.glow)} />
@@ -751,8 +756,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
           <p className="mt-1.5 text-sm font-medium text-slate-600 leading-5 line-clamp-2">{desc}</p>
         </div>
 
-        <Link
-          href={href}
+        <span
           className={cn(
             "premium-hover-sm mt-4 inline-flex",
             "h-10",
@@ -768,7 +772,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
         >
           <Plus className="h-4 w-4" />
           {button}
-        </Link>
+        </span>
       </div>
 
       {illustrationSrc ? (
@@ -809,7 +813,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
           </div>
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 

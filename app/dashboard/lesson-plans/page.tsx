@@ -18,7 +18,7 @@ export default function LessonPlansListPage() {
       {plans.error ? <Card><CardContent className="p-6 text-red-700">{plans.error instanceof Error ? plans.error.message : "Could not load lesson plans"}</CardContent></Card> : null}
       <div className="grid gap-4">
         {plans.data?.items?.length ? plans.data.items.map((plan, index) => (
-          <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" style={{ animationDelay: `${index * 60}ms` }}>
+          <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="clickable-card premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
             <div className="grid gap-4 xl:grid-cols-[auto_1fr_auto] xl:items-center">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#eee7ff] text-primary"><BookOpen className="h-6 w-6" /></div>
               <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-950">{plan.topic}</h3><Badge>Lesson Plan</Badge><Badge className="bg-[#eef8f1] text-[#166534]">{plan.subject}</Badge></div><p className="mt-1 text-sm leading-6 text-slate-600">{[plan.class_name, plan.chapter_name, `${plan.duration_minutes} min`].filter(Boolean).join(" • ")}</p></div>

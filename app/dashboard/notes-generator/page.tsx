@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
@@ -456,7 +457,11 @@ export default function NotesGeneratorPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#be185d] transition hover:text-[#d9467d]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
       <section className="overflow-hidden rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[166px] overflow-hidden border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-5 py-6">
           <div className="relative z-10 max-w-[620px] lg:max-w-[58%]">

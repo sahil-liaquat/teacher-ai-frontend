@@ -144,12 +144,13 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
 
-      <main className="min-h-screen pt-16 lg:pt-0">
+      <main className="min-h-screen pb-20 pt-16 lg:pb-0 lg:pt-0">
         <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
           {!admin && <TrialStatusPill />}
           {children}
         </div>
       </main>
+      {!admin && <MobileBottomNav nav={teacherNav} activePath={pathname} />}
     </div>
   );
 }
@@ -178,14 +179,14 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href="#"
+                <button
+                  type="button"
                   onClick={logout}
                   aria-label="Logout"
                   className="group flex h-10 w-10 items-center justify-center rounded-xl text-teachpad-muted transition-all duration-300 hover:scale-105 hover:bg-teachpad-red hover:text-[#eb3b5a]"
                 >
                   <LogOut className="h-5 w-5" />
-                </a>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="right">Logout</TooltipContent>
             </Tooltip>
@@ -338,6 +339,17 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function isActive(href: string, pathname: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
-  if (href === "/dashboard/classroom-tools") return pathname.includes("/classroom-tools") || pathname.includes("/lesson-plans/new") || pathname.includes("/worksheets/new");
+  if (href === "/dashboard/classroom-tools") {
+    return [
+      "/dashboard/classroom-tools",
+      "/dashboard/lesson-plans/new",
+      "/dashboard/lesson-plans/generating",
+      "/dashboard/worksheets/new",
+      "/dashboard/presentation-generator",
+      "/dashboard/notes-generator",
+      "/dashboard/activity-generator",
+      "/dashboard/live-quiz"
+    ].some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

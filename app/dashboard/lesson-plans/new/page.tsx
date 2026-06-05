@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Boxes, Brain, ChevronDown, ClipboardCheck, FileText, GraduationCap, Lightbulb, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Boxes, Brain, ChevronDown, ClipboardCheck, FileText, GraduationCap, Lightbulb, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -299,7 +300,8 @@ export default function NewLessonPlanPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <BackToToolsLink tone="text-blue-700 hover:text-blue-800" />
       <div className="overflow-visible rounded-[18px] border border-white/70 bg-white/80 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="relative min-h-[178px] overflow-hidden rounded-t-[18px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[560px]">
@@ -397,6 +399,15 @@ export default function NewLessonPlanPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BackToToolsLink({ tone }: { tone: string }) {
+  return (
+    <Link href="/dashboard/classroom-tools" className={`inline-flex items-center gap-1.5 text-sm font-black transition ${tone}`}>
+      <ArrowLeft className="h-4 w-4" />
+      Back to tools
+    </Link>
   );
 }
 

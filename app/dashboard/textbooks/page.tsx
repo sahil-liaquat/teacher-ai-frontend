@@ -277,9 +277,9 @@ function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) 
     <button
       type="button"
       onClick={onSelect}
-      className="group overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white text-left shadow-[0_18px_45px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)]"
+      className="clickable-card group overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white text-left shadow-[0_18px_45px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
     >
-      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5">
+      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5 transition-colors duration-200 group-hover:from-[#dbeafe] group-hover:via-white group-hover:to-[#ffd9e8]">
         <div className="flex min-w-0 items-start gap-3">
           <PastelIconTile name="layers" className="h-14 w-14 rounded-[20px]" />
           <div className="min-w-0">
@@ -305,7 +305,7 @@ function ClassCard({ cls, onSelect }: { cls: ClassItem; onSelect: () => void }) 
     <button
       type="button"
       onClick={onSelect}
-      className="group rounded-[22px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-[#f8ffff] p-4 text-left shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)]"
+      className="clickable-card group rounded-[22px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-[#f8ffff] p-4 text-left shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#ccfbf1_0%,#ffffff_74%)]"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">

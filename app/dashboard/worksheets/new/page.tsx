@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, ClipboardList, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, ClipboardList, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -414,7 +415,11 @@ export default function NewWorksheetPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#159565] transition hover:text-[#0f7a52]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
       <div className="overflow-hidden rounded-[18px] border border-[#d8f1e5] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[178px] border-b border-[#d8f1e5] bg-gradient-to-br from-[#ecfff7] to-[#def8ef] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[620px]">

@@ -406,7 +406,7 @@ function ClassSection({
               <button
                 key={subject}
                 onClick={() => onViewResources(subject)}
-                className="premium-hover group rounded-[20px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-teachpad-panel p-4 text-left shadow-[0_12px_26px_var(--teachpad-shadowToolCard)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lg"
+                className="clickable-card premium-hover group rounded-[20px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-teachpad-panel p-4 text-left shadow-[0_12px_26px_var(--teachpad-shadowToolCard)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg [--clickable-card-hover-bg:linear-gradient(135deg,#cff7fb_0%,#ffffff_74%)]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-1 gap-3">

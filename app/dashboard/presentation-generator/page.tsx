@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, Presentation, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Presentation, Sparkles } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -391,7 +392,11 @@ export default function PresentationGeneratorPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#eb3b5a] transition hover:text-[#be123c]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
       <div className="overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative min-h-[178px] border-b border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] via-white to-[#ffe5e9] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[650px]">

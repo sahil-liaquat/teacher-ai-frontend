@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Plus, Save, Send, Shuffle, X } from "lucide-react";
+import { ArrowLeft, Plus, Save, Send, Shuffle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +46,11 @@ export default function QuizPreviewPage() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1120px] gap-4 pb-24">
+    <div className="mx-auto grid max-w-[1120px] gap-4 pb-40 lg:pb-24">
+      <Link href="/dashboard/live-quiz/new" className="inline-flex w-fit items-center gap-1.5 text-sm font-black text-[#e57820] transition hover:text-[#be5f11]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to quiz setup
+      </Link>
       <header className="rounded-[18px] border border-[#ffe1d2] bg-gradient-to-br from-[#fffaf0] via-white to-[#ffe1d2] p-5 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
         <h1 className="text-[28px] font-black text-teachpad-ink sm:text-[34px]">Review Quiz</h1>
         <p className="mt-2 text-sm font-semibold text-teachpad-muted">Edit questions before publishing the live quiz.</p>
@@ -82,9 +86,9 @@ export default function QuizPreviewPage() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-teachpad-cardBorder bg-white/94 px-4 py-3 shadow-[0_-12px_34px_rgba(30,80,90,0.10)] backdrop-blur lg:left-24">
+      <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-teachpad-cardBorder bg-white/94 px-4 py-3 shadow-[0_-12px_34px_rgba(30,80,90,0.10)] backdrop-blur lg:bottom-0 lg:left-24">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/dashboard/live-quiz/new"><Button type="button" variant="outline">Back</Button></Link>
+          <Link href="/dashboard/live-quiz/new"><Button type="button" variant="outline"><ArrowLeft className="h-4 w-4" /> Back to Setup</Button></Link>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => toast({ title: "Draft saved", description: "Your quiz draft is saved locally for now." })}>
               <Save className="h-4 w-4" /> Save as Draft

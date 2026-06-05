@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
@@ -468,7 +469,11 @@ export default function ActivityGeneratorPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#16a9b6] transition hover:text-[#0f7f88]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
       <section className="overflow-hidden rounded-[18px] border border-[#c9f7fb] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         <div className="relative overflow-hidden border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white px-5 py-6">
           <div className="relative z-10 max-w-[640px] lg:max-w-[58%]">

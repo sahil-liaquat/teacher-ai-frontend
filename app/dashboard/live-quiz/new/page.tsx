@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, RadioTower, Settings2, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, RadioTower, Settings2, Sparkles, Users } from "lucide-react";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,12 +39,20 @@ export default function CreateLiveQuizPage() {
       <GenerationLoadingScreen
         type="live-quiz"
         status="Creating your live quiz from the selected textbook"
+        onBack={() => {
+          setLoading(false);
+          router.push("/dashboard/classroom-tools");
+        }}
       />
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px]">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#b97800] transition hover:text-[#8a5c00]">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
       <div className="overflow-hidden rounded-[18px] border border-[#ffe9a8] bg-white shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
         <header className="relative min-h-[180px] overflow-hidden border-b border-[#ffe9a8] bg-gradient-to-br from-[#fff9df] via-white to-[#fff0bf] px-5 py-6 sm:px-6">
           <div className="relative z-10 max-w-[620px]">
