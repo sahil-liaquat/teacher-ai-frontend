@@ -369,7 +369,7 @@ function ClassSection({
     .sort((a, b) => b - a)[0];
 
   return (
-    <div className="premium-hover rounded-[24px] border border-teachpad-cardBorder bg-white/84 p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_var(--teachpad-shadowToolCard)]">
+    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white/84 p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)] backdrop-blur-sm">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <PastelIconTile name="graduationCap" className="h-14 w-14" />
@@ -583,7 +583,7 @@ function ResourceCard({
 
   return (
     <div
-      className="premium-hover reveal-card overflow-hidden rounded-[20px] border border-teachpad-cardBorder bg-white/84 shadow-[0_12px_30px_var(--teachpad-shadowCard)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_var(--teachpad-shadowToolCard)]"
+      className="reveal-card overflow-hidden rounded-[20px] border border-teachpad-cardBorder bg-white/84 shadow-[0_12px_30px_var(--teachpad-shadowCard)] backdrop-blur-sm"
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <div className="p-4">

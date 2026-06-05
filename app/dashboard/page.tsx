@@ -326,7 +326,7 @@ export default function TeacherDashboard() {
       </section>
 
       <section className="mx-auto grid w-full max-w-[1240px] items-stretch gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+        <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
             <Link href="/dashboard/resources" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
@@ -374,7 +374,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <div className="flex h-full min-w-0 flex-col rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+        <div className="flex h-full min-w-0 flex-col rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">Your Progress This Month</h2>
           </div>
@@ -434,7 +434,7 @@ export default function TeacherDashboard() {
                   return (
                     <div key={bar.label} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
                       <div
-                        className="w-full max-w-[40px] rounded-t-lg transition-all duration-300 hover:-translate-y-1 animate-chart-appear"
+                        className="w-full max-w-[40px] rounded-t-lg animate-chart-appear"
                         style={{
                           height: `${pct}%`,
                           background: isLast
@@ -477,10 +477,10 @@ export default function TeacherDashboard() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+      <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Quick Access</h2>
-          <button className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+          <button className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm">
             Customize <Settings2 className="h-4 w-4" />
           </button>
         </div>
@@ -555,15 +555,13 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone }: { label
 
   return (
     <div className={cn(
-      "premium-hover relative overflow-hidden min-w-0 w-full",
+      "relative overflow-hidden min-w-0 w-full",
       "rounded-[18px]",
       "border border-white/70",
       "p-4 sm:p-5",
       "min-h-[116px] sm:min-h-[126px]",
       "flex items-center gap-3 sm:gap-4",
       "shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
-      "transition-all duration-300 ease-out",
-      "hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]",
       g.card
     )}>
       <div className={cn("absolute -left-8 -top-8 h-24 w-24 rounded-full blur-2xl", g.glow)} />
@@ -725,14 +723,12 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
 
   return (
     <div className={cn(
-      "premium-hover relative overflow-hidden min-w-0 w-full",
+      "relative overflow-hidden min-w-0 w-full",
       "rounded-[20px]",
       "border border-white/60",
       "p-4 sm:p-5",
       "min-h-[190px] sm:min-h-[210px]",
       "shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
-      "transition-all duration-300 ease-out",
-      "hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.10)]",
       gradients.card
     )}>
       <div className={cn("absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl", gradients.glow)} />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Clock3, Gift, Sparkles } from "lucide-react";
+import { ArrowRight, Clock3, Sparkles } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { useBilling } from "@/lib/use-billing";
@@ -39,6 +39,8 @@ export function TrialStatusPill() {
   const days = days_left ?? 0;
   const hasUpgraded = Boolean(paid_starts_at);
 
+  if (gift.granted) return null;
+
   let tone: Tone = "info";
   let Icon: ComponentType<{ className?: string }> = Sparkles;
   let label = "";
@@ -53,11 +55,6 @@ export function TrialStatusPill() {
     } else {
       label = `Free trial · ${plural(days, "day")} left`;
     }
-  } else if (gift.granted && is_pro) {
-    Icon = Gift;
-    tone = days_left != null && days_left <= 3 ? "warn" : "info";
-    label = `Launch gift · ${plural(days, "day")} of Pro left`;
-    cta = "Go Pro";
   } else if (!is_pro) {
     Icon = Clock3;
     tone = "danger";

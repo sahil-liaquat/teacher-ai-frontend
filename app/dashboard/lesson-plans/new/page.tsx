@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Boxes, Brain, ChevronDown, ClipboardCheck, FileText, GraduationCap, Lightbulb, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload, type SchoolFormatAvailability } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -82,8 +82,6 @@ export default function NewLessonPlanPage() {
   const [booksError, setBooksError] = useState("");
   const [chaptersError, setChaptersError] = useState("");
   const [draftReady, setDraftReady] = useState(false);
-  const [schoolFormat, setSchoolFormat] = useState<SchoolFormatAvailability | null>(null);
-  const [useSchoolFormat, setUseSchoolFormat] = useState(false);
 
   useEffect(() => {
     const draft = readToolDraft<LessonPlanFormDraft>(LESSON_PLAN_DRAFT_KEY);
@@ -126,22 +124,6 @@ export default function NewLessonPlanPage() {
     setFetching(true);
     backendApi.boards(0, 100).then((res) => setBoards(res.items.filter((b) => b.is_active !== false))).catch((err) => toast({ title: "Could not load boards", description: err.message })).finally(() => setFetching(false));
   }, [toast]);
-
-  useEffect(() => {
-    let cancelled = false;
-    backendApi.mySchoolFormat("lesson_plan")
-      .then((res) => {
-        if (cancelled) return;
-        setSchoolFormat(res);
-        setUseSchoolFormat(false);
-      })
-      .catch(() => {
-        if (!cancelled) setSchoolFormat({ available: false, template_available: false, message: "School format not available yet." });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!boardId) {
@@ -226,8 +208,7 @@ export default function NewLessonPlanPage() {
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
   const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
-  const usingSchoolFormat = Boolean(schoolFormat?.available && useSchoolFormat);
-  const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && (usingSchoolFormat || selected.length));
+  const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && selected.length);
 
   function chooseBoard(value: string) {
     setBoardId(value);
@@ -287,12 +268,10 @@ export default function NewLessonPlanPage() {
   }
 
   function toggleComponent(title: string) {
-    if (usingSchoolFormat) return;
     setSelected((items) => items.includes(title) ? items.filter((item) => item !== title) : [...items, title]);
   }
 
   function suggestObjectives() {
-    if (usingSchoolFormat) return;
     const chapter = chapterName || "the selected chapter";
     setLearningObjective(`Students will explain ${topic || chapter} using textbook evidence, identify key concepts, and apply them through a short classroom activity.`);
     toast({ title: "Objectives added", description: "You can edit them before generating." });
@@ -312,8 +291,8 @@ export default function NewLessonPlanPage() {
       learning_objectives_hint: learningObjective.trim() || undefined,
       language,
       teaching_style: teachingStyle,
-      use_school_format: usingSchoolFormat,
-      format_type: usingSchoolFormat ? "school_format" : "teachpad_standard"
+      use_school_format: false,
+      format_type: "teachpad_standard"
     };
     savePendingLessonPlan(payload);
     router.push("/dashboard/lesson-plans/generating");
@@ -346,7 +325,6 @@ export default function NewLessonPlanPage() {
               number="1"
               title="Plan Details"
               subtitle="Provide basic information about your lesson."
-              action={<SchoolFormatToggle available={Boolean(schoolFormat?.available)} checked={useSchoolFormat} onChange={setUseSchoolFormat} />}
               actionMobilePlacement="below"
             >
               <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
@@ -369,10 +347,9 @@ export default function NewLessonPlanPage() {
               expandable
               open={openSections.objectives}
               onToggle={() => setOpenSections((sections) => ({ ...sections, objectives: !sections.objectives }))}
-              disabled={usingSchoolFormat}
-              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} disabled={usingSchoolFormat} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
+              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
             >
-              <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} disabled={usingSchoolFormat} />
+              <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} />
               <div className="mt-2 flex justify-end text-xs text-slate-500">{learningObjective.length}/300</div>
             </NumericSection>
 
@@ -383,7 +360,6 @@ export default function NewLessonPlanPage() {
               expandable
               open={openSections.customize}
               onToggle={() => setOpenSections((sections) => ({ ...sections, customize: !sections.customize }))}
-              disabled={usingSchoolFormat}
             >
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {lessonComponents.map((component) => {
@@ -395,7 +371,6 @@ export default function NewLessonPlanPage() {
                       type="button"
                       onClick={() => toggleComponent(component.title)}
                       aria-pressed={active}
-                      disabled={usingSchoolFormat}
                       className={`group rounded-xl border bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_12px_28px_rgba(37,99,235,0.12)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60 ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_10px_22px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
                     >
                       <div className="mb-3 flex items-start justify-between gap-3">
@@ -491,30 +466,6 @@ function NumericSection({
         </div>
       </div>
     </div>
-  );
-}
-
-function SchoolFormatToggle({ available, checked, onChange }: { available: boolean; checked: boolean; onChange: (checked: boolean) => void }) {
-  const enabled = available && checked;
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={enabled}
-      disabled={!available}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "inline-flex h-9 items-center gap-2 rounded-full border px-2.5 text-xs font-black transition",
-        available ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" : "border-slate-200 bg-slate-50 text-slate-400",
-        !available ? "cursor-not-allowed opacity-70" : ""
-      )}
-      title={available ? "Use school format" : "School format not available"}
-    >
-      <span>Use school format</span>
-      <span className={cn("relative h-5 w-9 rounded-full transition", enabled ? "bg-blue-600" : "bg-slate-300")}>
-        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition", enabled ? "left-4" : "left-0.5")} />
-      </span>
-    </button>
   );
 }
 

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, School, Sparkles, UserRound } from "lucide-react";
-import { backendApi, signup, type PublicSchool } from "@/lib/api";
+import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, Sparkles, UserRound } from "lucide-react";
+import { signup } from "@/lib/api";
 import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
@@ -18,42 +18,21 @@ const schema = z.object({
   email: z.string().email("Enter a valid email address."),
   phone: phoneSchema,
   password: z.string().min(8, "Password must be at least 8 characters."),
-  school_id: z.string().optional(),
-  pending_school_name: z.string().optional(),
   promo_code: z.string().optional()
 });
-
-const OTHER_SCHOOL_VALUE = "__other_school__";
 
 export default function SignupPage() {
   const { toast } = useToast();
   const [confirmation, setConfirmation] = useState<{ email: string; message: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [schools, setSchools] = useState<PublicSchool[]>([]);
-  const [schoolMode, setSchoolMode] = useState<"listed" | "unlisted">("listed");
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", phone: "", password: "", school_id: "", pending_school_name: "", promo_code: "" }
+    defaultValues: { name: "", email: "", phone: "", password: "", promo_code: "" }
   });
-  const selectedSchoolId = form.watch("school_id");
-
-  useEffect(() => {
-    // Public endpoint (no auth) returns active schools only, so no client-side
-    // status filter is needed and a 401 can never bounce the visitor to /login.
-    backendApi.publicSchools("", 0, 100)
-      .then((res) => setSchools(res.items))
-      .catch(() => setSchools([]));
-  }, []);
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    if (schoolMode === "unlisted" && !values.pending_school_name?.trim()) {
-      toast({ title: "Enter school name", description: "Please enter your school name or choose a listed school." });
-      return;
-    }
     try {
       const created = await signup(values.name, values.email, values.password, values.phone, {
-        school_id: schoolMode === "listed" && values.school_id !== OTHER_SCHOOL_VALUE ? values.school_id || undefined : undefined,
-        pending_school_name: schoolMode === "unlisted" ? values.pending_school_name?.trim() || undefined : undefined,
         promo_code: values.promo_code?.trim() || undefined
       });
       const baseMessage = created.email_confirmed
@@ -61,8 +40,7 @@ export default function SignupPage() {
         : created.message || "Check your email to confirm your account before logging in.";
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
-      form.reset({ name: "", email: "", phone: "", password: "", school_id: "", pending_school_name: "", promo_code: "" });
-      setSchoolMode("listed");
+      form.reset({ name: "", email: "", phone: "", password: "", promo_code: "" });
       toast({ title: "Account created", description: message });
     } catch (error) {
       toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
@@ -120,7 +98,7 @@ export default function SignupPage() {
                   label="Mobile number"
                   icon={<Phone className="h-5 w-5" />}
                   error={form.formState.errors.phone?.message}
-                  inputProps={{ ...form.register("phone"), type: "tel", inputMode: "numeric", placeholder: "9876543210" }}
+                  inputProps={{ ...form.register("phone"), type: "tel", inputMode: "numeric", placeholder: "Your number" }}
                 />
                 <AuthInput
                   label="Password"
@@ -138,62 +116,11 @@ export default function SignupPage() {
                     </button>
                   }
                 />
-                <label className="grid gap-2">
-                  <span className="text-sm font-black text-slate-900">Which school do you teach at?</span>
-                  <span className="flex min-h-[50px] items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70">
-                    <School className="h-5 w-5 shrink-0" />
-                    <select
-                      name="school_id"
-                      value={schoolMode === "unlisted" ? OTHER_SCHOOL_VALUE : selectedSchoolId || ""}
-                      onChange={(event) => {
-                        if (event.target.value === OTHER_SCHOOL_VALUE) {
-                          setSchoolMode("unlisted");
-                          form.setValue("school_id", OTHER_SCHOOL_VALUE);
-                        } else {
-                          setSchoolMode("listed");
-                          form.setValue("school_id", event.target.value);
-                          form.setValue("pending_school_name", "");
-                        }
-                      }}
-                      disabled={schoolMode === "unlisted"}
-                      className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none disabled:text-slate-400"
-                    >
-                      <option value="">Select school</option>
-                      <option value={OTHER_SCHOOL_VALUE}>Other school</option>
-                      {schools.map((school) => (
-                        <option key={school.id} value={school.id}>
-                          {[school.name, school.city].filter(Boolean).join(", ")}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                  <span className="text-xs font-semibold text-slate-500">TeachPad can use your school format when available.</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = schoolMode === "listed" ? "unlisted" : "listed";
-                    setSchoolMode(next);
-                    form.setValue("school_id", next === "unlisted" ? OTHER_SCHOOL_VALUE : "");
-                    form.setValue("pending_school_name", "");
-                  }}
-                  className="text-left text-sm font-black text-blue-600 transition hover:text-blue-700"
-                >
-                  {schoolMode === "listed" ? "My school is not listed" : "Choose from listed schools"}
-                </button>
-                {schoolMode === "unlisted" ? (
-                  <AuthInput
-                    label="Enter school name"
-                    icon={<School className="h-5 w-5" />}
-                    error={form.formState.errors.pending_school_name?.message}
-                    inputProps={{ ...form.register("pending_school_name"), placeholder: "Your school" }}
-                  />
-                ) : selectedSchoolId ? null : null}
                 <AuthInput
                   label="Coupon code (optional)"
                   icon={<Sparkles className="h-5 w-5" />}
                   error={form.formState.errors.promo_code?.message}
-                  inputProps={{ ...form.register("promo_code"), placeholder: "e.g. DIWALI" }}
+                  inputProps={{ ...form.register("promo_code"), placeholder: "Enter Coupon" }}
                 />
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}

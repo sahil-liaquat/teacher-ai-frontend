@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Crown, Gift, Zap } from "lucide-react";
+import { ArrowRight, Crown, Zap } from "lucide-react";
 import { useBilling } from "@/lib/use-billing";
 import { Button } from "@/components/ui/button";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
@@ -23,8 +23,10 @@ export function PlanBanner() {
 
   const { is_pro, status, days_left, access_until, monthly_used, monthly_quota, gift, paid_starts_at } = data;
 
+  if (gift.granted) return null;
+
   // ── Pro / Gift / Trial ─────────────────────────────────────────────────────
-  if (is_pro || gift.granted) {
+  if (is_pro) {
     const accessLabel = access_until
       ? new Intl.DateTimeFormat(undefined, {
           day: "numeric",
@@ -33,7 +35,6 @@ export function PlanBanner() {
         }).format(new Date(access_until))
       : null;
 
-    const isGift = gift.granted;
     const hasUpgraded = Boolean(paid_starts_at);
     // "trialing" is the backend SubscriptionStatus value for a trial period.
     // Once the user has upgraded (paid plan scheduled) we drop the trial wording
@@ -44,9 +45,7 @@ export function PlanBanner() {
       <div
         className={cn(
           "mb-3 flex items-center justify-between gap-3 rounded-[18px] border px-4 py-2.5",
-          isGift
-            ? "border-purple-100 bg-gradient-to-r from-purple-50 to-white"
-            : isTrial
+          isTrial
               ? "border-amber-100 bg-gradient-to-r from-amber-50 to-white"
               : "border-blue-100 bg-gradient-to-r from-[#eff6ff] to-white"
         )}
@@ -55,16 +54,12 @@ export function PlanBanner() {
           <span
             className={cn(
               "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
-              isGift
-                ? "bg-purple-100 text-purple-600"
-                : isTrial
+              isTrial
                   ? "bg-amber-100 text-amber-600"
                   : "bg-[#dbeafe] text-teachpad-blue"
             )}
           >
-            {isGift ? (
-              <Gift className="h-4 w-4" />
-            ) : isTrial ? (
+            {isTrial ? (
               <Zap className="h-4 w-4" />
             ) : (
               <Crown className="h-4 w-4" />
@@ -74,16 +69,12 @@ export function PlanBanner() {
             <p
               className={cn(
                 "text-sm font-extrabold",
-                isGift
-                  ? "text-purple-800"
-                  : isTrial
+                isTrial
                     ? "text-amber-800"
                     : "text-[#1e40af]"
               )}
             >
-              {isGift
-                ? "Gift Pro active"
-                : isTrial
+              {isTrial
                   ? days_left !== null
                     ? `Trial: ${days_left} day${days_left === 1 ? "" : "s"} left`
                     : "Trial active"
@@ -96,9 +87,7 @@ export function PlanBanner() {
               <p
                 className={cn(
                   "text-xs font-semibold",
-                  isGift
-                    ? "text-purple-500"
-                    : isTrial
+                  isTrial
                       ? "text-amber-600"
                       : "text-teachpad-muted"
                 )}
@@ -113,9 +102,7 @@ export function PlanBanner() {
           href="/dashboard/billing"
           className={cn(
             "flex shrink-0 items-center gap-1 text-xs font-bold transition-colors",
-            isGift
-              ? "text-purple-500 hover:text-purple-700"
-              : isTrial
+            isTrial
                 ? "text-amber-600 hover:text-amber-800"
                 : "text-teachpad-blue hover:text-blue-700"
           )}
