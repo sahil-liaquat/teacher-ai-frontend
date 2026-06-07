@@ -156,15 +156,17 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             onFocus={syncDisplayFromHiddenSelect}
             onPointerDown={syncDisplayFromHiddenSelect}
             className={cn(
-              "tat-select-trigger flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 data-[disabled]:cursor-not-allowed data-[disabled]:bg-teachpad-tag data-[disabled]:text-[var(--teachpad-placeholderText)] sm:text-sm [&>span:first-child]:min-w-0 [&>span:first-child]:flex-1 [&>span:first-child]:overflow-hidden",
+              "tat-select-trigger flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 data-[disabled]:cursor-not-allowed data-[disabled]:bg-teachpad-tag data-[disabled]:text-[var(--teachpad-placeholderText)] sm:text-sm",
               className
             )}
           >
-            <SelectPrimitive.Value>
-              <span className={isLoading ? "block min-w-0 max-w-full truncate text-teachpad-muted" : selectedOption ? "block min-w-0 max-w-full truncate text-teachpad-ink" : "block min-w-0 max-w-full truncate text-teachpad-muted"}>
-                {isLoading ? loadingLabel : selectedOption?.label || "Select an option"}
-              </span>
-            </SelectPrimitive.Value>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <SelectPrimitive.Value>
+                <span className={isLoading ? "block truncate text-teachpad-muted" : selectedOption ? "block truncate text-teachpad-ink" : "block truncate text-teachpad-muted"}>
+                  {isLoading ? loadingLabel : selectedOption?.label || "Select an option"}
+                </span>
+              </SelectPrimitive.Value>
+            </div>
             {isLoading ? (
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-teachpad-blue" />
             ) : (

@@ -4,28 +4,27 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, Boxes, Brain, ChevronDown, ClipboardCheck, FileText, GraduationCap, Lightbulb, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Boxes, Brain, Check, ChevronDown, ClipboardCheck, Clock, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Rocket, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
 import { cn } from "@/lib/utils";
 
 const lessonComponents = [
-  { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, tone: "orange" },
-  { title: "Direct Instruction", body: "Detailed explanation from selected chapter", icon: BookOpen, tone: "blue" },
-  { title: "Classroom Activity", body: "Hands-on or group activity", icon: Users, tone: "green" },
-  { title: "Class Discussion", body: "Discussion to encourage thinking", icon: MessageCircle, tone: "blue" },
-  { title: "Assessment", body: "Questions to check understanding", icon: ClipboardCheck, tone: "orange" },
-  { title: "Materials Needed", body: "Resources required for class", icon: Boxes, tone: "blue" },
-  { title: "Differentiation", body: "Support for diverse learners", icon: Brain, tone: "blue" },
-  { title: "Teacher Notes", body: "Extra guidance for teacher", icon: FileText, tone: "orange" },
-  { title: "Homework", body: "Practice after class", icon: GraduationCap, tone: "blue" },
-  { title: "Extension Activity", body: "Extra activity for advanced learners", icon: Rocket, tone: "blue" }
+  { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, color: "amber" },
+  { title: "Direct Instruction", body: "Detailed explanation from selected chapter", icon: BookOpen, color: "blue" },
+  { title: "Classroom Activity", body: "Hands-on or group activity", icon: Users, color: "green" },
+  { title: "Class Discussion", body: "Discussion to encourage thinking", icon: MessageCircle, color: "purple" },
+  { title: "Assessment", body: "Questions to check understanding", icon: ClipboardCheck, color: "rose" },
+  { title: "Materials Needed", body: "Resources required for class", icon: Boxes, color: "teal" },
+  { title: "Differentiation", body: "Support for diverse learners", icon: Brain, color: "indigo" },
+  { title: "Teacher Notes", body: "Extra guidance for teacher", icon: FileText, color: "pink" },
+  { title: "Homework", body: "Practice after class", icon: GraduationCap, color: "sky" },
+  { title: "Extension Activity", body: "Extra activity for advanced learners", icon: Rocket, color: "rose" }
 ];
 const defaultLessonComponents = [
   "Warm-up / Introduction",
@@ -49,6 +48,8 @@ type LessonPlanFormDraft = {
   learningObjective: string;
   selected: string[];
   openSections: Record<string, boolean>;
+  bloomsLevel?: string;
+  includeRealLifeExamples?: boolean;
 };
 
 export default function NewLessonPlanPage() {
@@ -69,10 +70,10 @@ export default function NewLessonPlanPage() {
   const [teachingStyle, setTeachingStyle] = useState("Interactive");
   const [learningObjective, setLearningObjective] = useState("");
   const [selected, setSelected] = useState(defaultLessonComponents);
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    objectives: false,
-    customize: false
-  });
+  const [step, setStep] = useState(1);
+  const [bloomsLevel, setBloomsLevel] = useState("Remember");
+  const [includeRealLifeExamples, setIncludeRealLifeExamples] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
@@ -98,7 +99,8 @@ export default function NewLessonPlanPage() {
       setTeachingStyle(draft.teachingStyle || "Interactive");
       setLearningObjective(draft.learningObjective || "");
       setSelected(draft.selected?.length ? draft.selected : defaultLessonComponents);
-      setOpenSections(draft.openSections || { objectives: false, customize: false });
+      if (draft.bloomsLevel) setBloomsLevel(draft.bloomsLevel);
+      if (draft.includeRealLifeExamples !== undefined) setIncludeRealLifeExamples(draft.includeRealLifeExamples);
     }
     setDraftReady(true);
   }, []);
@@ -117,9 +119,11 @@ export default function NewLessonPlanPage() {
       teachingStyle,
       learningObjective,
       selected,
-      openSections
+      openSections: {},
+      bloomsLevel,
+      includeRealLifeExamples
     });
-  }, [draftReady, boardId, chapterName, classId, bookId, duration, language, learningObjective, openSections, selected, subject, teachingStyle, topic]);
+  }, [draftReady, boardId, chapterName, classId, bookId, duration, language, learningObjective, selected, subject, teachingStyle, topic, bloomsLevel, includeRealLifeExamples]);
 
   useEffect(() => {
     setFetching(true);
@@ -205,10 +209,8 @@ export default function NewLessonPlanPage() {
     };
   }, [bookId, toast]);
 
-  const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
-  const isLoadingOptions = fetching || isLoadingClasses || isLoadingSubjects || isLoadingBooks || isLoadingChapters;
   const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && selected.length);
 
   function chooseBoard(value: string) {
@@ -299,17 +301,38 @@ export default function NewLessonPlanPage() {
     router.push("/dashboard/lesson-plans/generating");
   }
 
+  const bloomsOptions = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+
+  const canGoNext = Boolean(boardId && classId && subject && bookId && chapterName && topic.trim());
+
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-3">
-      <BackToToolsLink tone="text-blue-700 hover:text-blue-800" />
-      <div className="overflow-visible rounded-[18px] border border-white/70 bg-white/80 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
-        <div className="relative min-h-[178px] overflow-hidden rounded-t-[18px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-5 py-6 sm:px-6">
-          <div className="relative z-10 max-w-[560px]">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/70 border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm backdrop-blur-sm"><Sparkles className="h-4 w-4" /> AI-Powered</div>
-            <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold tracking-tight text-slate-900 sm:text-[34px]">Create Lesson Plan</h1>
-            <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-slate-600">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
-            <Button type="button" variant="outline" className="mt-4 border-blue-200 bg-white/90 px-4 text-blue-700 hover:bg-blue-50"><BookOpen className="h-4 w-4" /> Textbook grounded</Button>
-          </div>
+    <div className="mx-auto w-full max-w-[1240px] space-y-4">
+      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-teachpad-blue transition hover:text-teachpad-hoverBlue">
+        <ArrowLeft className="h-4 w-4" />
+        Back to tools
+      </Link>
+
+      <div className="overflow-visible rounded-[18px] border border-teachpad-cardBorder bg-white/86 shadow-[0_14px_34px_var(--teachpad-shadowCard)] backdrop-blur-sm">
+        {/* Header */}
+        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-white/50 bg-gradient-to-br from-blue-50 via-blue-50 to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
+          {step === 1 ? (
+            <div className="relative z-10 max-w-[560px]">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 border border-teachpad-cardBorder px-3 py-1.5 text-xs font-bold text-teachpad-blue shadow-sm backdrop-blur-sm">
+                <Sparkles className="h-4 w-4" /> AI-Powered
+              </div>
+              <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">Create Lesson Plan</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
+            </div>
+          ) : (
+            <div className="relative z-10 max-w-[560px]">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teachpad-cardBorder bg-white px-3 py-1.5 text-xs font-semibold text-teachpad-muted shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600 text-[10px] font-bold text-white">2</span>
+                Step 2 of 2
+              </div>
+              <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">Customize Your Lesson</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Fine-tune your lesson plan by defining learning outcomes, selecting instructional components, and choosing additional preferences.</p>
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
             <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-blue-50 to-transparent" />
             <img
@@ -321,188 +344,393 @@ export default function NewLessonPlanPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 p-4 sm:p-5">
-          <div className="grid gap-4">
-            <NumericSection
-              number="1"
-              title="Plan Details"
-              subtitle="Provide basic information about your lesson."
-              actionMobilePlacement="below"
-            >
-              <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,0.9fr)]">
-                <FieldBox label="Board / Curriculum" required><Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}><option value="">Select Board / Curriculum</option>{boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select></FieldBox>
-                <FieldBox label="Class / Grade" required error={classesError}><Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes..."><option value="">Select Class / Grade</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></FieldBox>
-                <FieldBox label="Subject" required error={subjectsError}><Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || !books.length || isLoadingSubjects} isLoading={isLoadingSubjects} loadingLabel="Loading subjects..."><option value="">Select Subject</option>{subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FieldBox>
-                <FieldBox label="Book / Textbook" required error={booksError}><Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject || isLoadingBooks} isLoading={isLoadingBooks} loadingLabel="Loading books..."><option value="">Select Book / Textbook</option>{filteredBooks.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}</Select></FieldBox>
-                <FieldBox label="Chapter / Unit" required error={chaptersError}><Select value={chapterName} onChange={(e) => setChapterName(e.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters..."><option value="">Select Chapter / Unit</option>{chapters.map((ch) => <option key={ch.id} value={ch.chapter_title || ch.title || ""}>{ch.chapter_number ? `${ch.chapter_number}. ` : ""}{ch.chapter_title || ch.title}</option>)}</Select></FieldBox>
-                <FieldBox label="Topic / Lesson Title" required><Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Type Any Topic" maxLength={150} /></FieldBox>
-                <FieldBox label="Duration" required><Select value={String(duration)} onChange={(e) => setDuration(Number(e.target.value))}><option value="30">30 min</option><option value="40">40 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="90">90 min</option></Select></FieldBox>
-                <FieldBox label="Language" required><Select value={language} onChange={(e) => setLanguage(e.target.value)}><option>English</option><option>Hindi</option><option>Urdu</option></Select></FieldBox>
-                <FieldBox label="Teaching Style"><Select value={teachingStyle} onChange={(e) => setTeachingStyle(e.target.value)}><option>Interactive</option><option>Activity Based</option><option>Lecture + Discussion</option><option>Inquiry Based</option></Select></FieldBox>
-              </div>
-            </NumericSection>
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 px-5 pt-5 sm:px-6">
+          <div className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+            step === 1 ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_10px_rgba(22,119,255,0.3)]" : "bg-emerald-100 text-emerald-700"
+          )}>
+            {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
+          </div>
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-emerald-300" : "bg-[#eceef3]")} />
+          <div className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+            step === 2 ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_10px_rgba(22,119,255,0.3)]" : "bg-teachpad-tag text-[#9CA0AA]"
+          )}>
+            2
+          </div>
+        </div>
 
-            <NumericSection
-              number="2"
-              title="Learning Objectives"
-              subtitle="Define what students will learn from this lesson."
-              expandable
-              open={openSections.objectives}
-              onToggle={() => setOpenSections((sections) => ({ ...sections, objectives: !sections.objectives }))}
-              action={<Button type="button" variant="outline" size="sm" onClick={suggestObjectives} className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 sm:w-auto"><Sparkles className="h-4 w-4" />AI Suggest Objectives</Button>}
-            >
-              <Textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will understand the uses of coal and petroleum in daily life." rows={4} />
-              <div className="mt-2 flex justify-end text-xs text-slate-500">{learningObjective.length}/300</div>
-            </NumericSection>
-
-            <NumericSection
-              number="3"
-              title="Customize Your Lesson Plan"
-              subtitle="Choose the components you want to include or emphasize."
-              expandable
-              open={openSections.customize}
-              onToggle={() => setOpenSections((sections) => ({ ...sections, customize: !sections.customize }))}
-            >
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                {lessonComponents.map((component) => {
-                  const Icon = component.icon;
-                  const active = selected.includes(component.title);
-                  return (
-                    <button
-                      key={component.title}
-                      type="button"
-                      onClick={() => toggleComponent(component.title)}
-                      aria-pressed={active}
-                      className={`group rounded-xl border bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:shadow-[0_12px_28px_rgba(37,99,235,0.12)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60 ${active ? "border-blue-300 bg-blue-50/70 shadow-[0_10px_22px_rgba(37,99,235,0.10)]" : "border-slate-200"}`}
-                    >
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <div className={`grid h-10 w-10 place-items-center rounded-lg ${toneClass(component.tone)}`}><Icon className="h-5 w-5" /></div>
-                        <span className={`grid h-6 w-6 place-items-center rounded-full border-2 text-xs font-black transition-all duration-300 ${active ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300 bg-transparent text-transparent group-hover:border-blue-300"}`}>✓</span>
-                      </div>
-                      <p className="font-black text-slate-900">{component.title}</p>
-                      <p className="mt-1 text-sm leading-5 text-slate-600">{component.body}</p>
-                    </button>
-                  );
-                })}
-              </div>
-              {!selected.length ? <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one lesson component to generate.</p> : null}
-            </NumericSection>
-
-            <div className="flex flex-col gap-3 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="p-4 sm:p-5">
+          {step === 1 && (
+            <div key="step-1" className="animate-slide-in-left space-y-5">
+              {/* Section 1: What are you teaching? */}
               <div>
-                <p className="text-base font-bold text-slate-900">Generate classroom-ready output</p>
-                <p className="mt-1 text-sm font-medium text-slate-600">{isLoadingOptions ? "Loading options..." : selectedBook ? `Using ${selectedBook.title}` : "Select a subject, textbook, chapter, and topic."}</p>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">1</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">What are you teaching?</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={GraduationCap} label="Board / Curriculum" required color="blue">
+                    <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)}>
+                      <option value="">Select Board / Curriculum</option>
+                      {boards.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
+                    </Select>
+                  </FieldCard>
+                  <FieldCard icon={Users} label="Class / Grade" required color="purple">
+                    {!boardId ? (
+                      <Placeholder>Select a board first</Placeholder>
+                    ) : isLoadingClasses ? (
+                      <Placeholder>Loading classes...</Placeholder>
+                    ) : classes.filter(c => c.grade_number != null).length > 0 ? (
+                      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2">
+                        {classes
+                          .filter(c => c.grade_number != null)
+                          .sort((a, b) => (a.grade_number || 0) - (b.grade_number || 0))
+                          .map((c) => (
+                            <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
+                              className={cn(
+                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                classId === c.id
+                                  ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_12px_rgba(22,119,255,0.25)]"
+                                  : "border border-teachpad-cardBorder bg-white text-teachpad-ink hover:border-blue-200 hover:bg-blue-50/50"
+                              )}
+                            >{c.grade_number}</button>
+                          ))}
+                      </div>
+                    ) : (
+                      <Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes...">
+                        <option value="">Select Class / Grade</option>
+                        {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </Select>
+                    )}
+                    {classesError && <span className="mt-1 text-xs font-semibold text-red-500">{classesError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={FlaskConical} label="Subject" required color="orange">
+                    {!classId ? (
+                      <Placeholder>Select a class first</Placeholder>
+                    ) : isLoadingSubjects ? (
+                      <Placeholder>Loading subjects...</Placeholder>
+                    ) : (
+                      <Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || (!books.length && !isLoadingSubjects)} isLoading={isLoadingSubjects} loadingLabel="Loading subjects...">
+                        <option value="">Select Subject</option>
+                        {subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                      </Select>
+                    )}
+                    {subjectsError && <span className="mt-1 text-xs font-semibold text-red-500">{subjectsError}</span>}
+                  </FieldCard>
+                </div>
               </div>
-              <Button type="button" disabled={!canGenerate} onClick={generate} className="sm:min-w-[220px]"><Sparkles className="h-5 w-5" />Generate Lesson Plan</Button>
+
+              {/* Section 2: What are we learning? */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">2</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">What are we learning?</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={BookOpen} label="Book / Textbook" required color="green">
+                    {!classId || !subject ? (
+                      <Placeholder>{!classId ? "Select a class first" : "Select a subject first"}</Placeholder>
+                    ) : isLoadingBooks ? (
+                      <Placeholder>Loading books...</Placeholder>
+                    ) : (
+                      <Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!filteredBooks.length} isLoading={isLoadingBooks} loadingLabel="Loading books...">
+                        <option value="">Select Book / Textbook</option>
+                        {filteredBooks.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+                      </Select>
+                    )}
+                    {booksError && <span className="mt-1 text-xs font-semibold text-red-500">{booksError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={FileText} label="Chapter / Unit" required color="teal">
+                    {!bookId ? (
+                      <Placeholder>Select a book first</Placeholder>
+                    ) : isLoadingChapters ? (
+                      <Placeholder>Loading chapters...</Placeholder>
+                    ) : (
+                      <Select value={chapterName} onChange={(e) => setChapterName(e.target.value)} disabled={!chapters.length} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
+                        <option value="">Select Chapter / Unit</option>
+                        {chapters.map((ch) => <option key={ch.id} value={ch.chapter_title || ch.title || ""}>{ch.chapter_number ? `${ch.chapter_number}. ` : ""}{ch.chapter_title || ch.title}</option>)}
+                      </Select>
+                    )}
+                    {chaptersError && <span className="mt-1 text-xs font-semibold text-red-500">{chaptersError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={Sparkles} label="Topic / Lesson Title" required color="amber">
+                    <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Type Any Topic" maxLength={150} />
+                    {chapterName && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {chapterName.split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
+                          <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
+                            className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-teachpad-blue transition-colors hover:bg-blue-100"
+                          >
+                            <Sparkles className="h-3 w-3 text-blue-400" />{suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </FieldCard>
+                </div>
+              </div>
+
+              {/* Section 3: How long and how do you want to teach? */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">How long and how do you want to teach?</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={Clock} label="Duration" required color="blue">
+                    <div className="flex flex-wrap gap-2">
+                      {[30, 45, 60, 90].map((d) => (
+                        <button key={d} type="button" onClick={() => setDuration(d)}
+                          className={cn(
+                            "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-all duration-200",
+                            duration === d
+                              ? "border-blue-300 bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-sm"
+                              : "border-teachpad-cardBorder bg-white text-teachpad-muted hover:border-blue-200 hover:bg-blue-50/50"
+                          )}
+                        >{d} min</button>
+                      ))}
+                    </div>
+                  </FieldCard>
+                  <FieldCard icon={Globe} label="Language" required color="pink">
+                    <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                      <option>English</option><option>Hindi</option><option>Urdu</option>
+                    </Select>
+                  </FieldCard>
+                  <FieldCard icon={Monitor} label="Teaching Style" color="sky">
+                    <div className="flex flex-wrap gap-2">
+                      {["Interactive", "Activity Based", "Lecture + Discussion", "Inquiry Based"].map((style) => (
+                        <button key={style} type="button" onClick={() => setTeachingStyle(style)}
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            teachingStyle === style
+                              ? "border-blue-300 bg-teachpad-blue text-white shadow-sm"
+                              : "border-teachpad-cardBorder bg-white text-teachpad-muted hover:border-blue-200 hover:bg-blue-50/50"
+                          )}
+                        >{style}</button>
+                      ))}
+                    </div>
+                  </FieldCard>
+                </div>
+              </div>
+
+              {/* Step 1 Navigation */}
+              <div className="flex items-center justify-between border-t border-teachpad-cardBorder pt-6">
+                <Link href="/dashboard/classroom-tools" className="text-sm font-semibold text-teachpad-muted transition-colors hover:text-red-500">
+                  Cancel
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                </div>
+                <button
+                  type="button"
+                  disabled={!canGoNext}
+                  onClick={() => setStep(2)}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                >
+                  Next
+                  <ArrowLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+          )}
 
-function BackToToolsLink({ tone }: { tone: string }) {
-  return (
-    <Link href="/dashboard/classroom-tools" className={`inline-flex items-center gap-1.5 text-sm font-black transition ${tone}`}>
-      <ArrowLeft className="h-4 w-4" />
-      Back to tools
-    </Link>
-  );
-}
-
-function NumericSection({
-  number,
-  title,
-  subtitle,
-  action,
-  actionMobilePlacement = "header",
-  disabled = false,
-  children,
-  expandable = false,
-  open = true,
-  onToggle
-}: {
-  number: string;
-  title: string;
-  subtitle: string;
-  action?: ReactNode;
-  actionMobilePlacement?: "header" | "below";
-  disabled?: boolean;
-  children: ReactNode;
-  expandable?: boolean;
-  open?: boolean;
-  onToggle?: () => void;
-}) {
-  return (
-    <div className={cn(
-      "overflow-hidden rounded-[16px] border border-white/70 bg-white/80 shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-sm transition",
-      disabled && "border-slate-200 bg-slate-50/70 opacity-60 grayscale-[0.15]"
-    )}>
-      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-        {expandable ? (
-          <button type="button" onClick={onToggle} disabled={disabled} className="flex min-w-0 flex-1 items-start gap-4 text-left" aria-expanded={open} aria-disabled={disabled}>
-            <SectionTitle number={number} title={title} subtitle={subtitle} />
-          </button>
-        ) : (
-          <div className="flex min-w-0 flex-1 items-start gap-4">
-            <SectionTitle number={number} title={title} subtitle={subtitle} />
-          </div>
-        )}
-        <div className={cn("w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end", actionMobilePlacement === "below" ? "hidden sm:flex" : "flex")}>
-          {action ? <div className="min-w-0 flex-1 sm:flex-none">{action}</div> : <span />}
-          {expandable ? (
-            <button
-              type="button"
-              onClick={onToggle}
-              disabled={disabled}
-              aria-label={`${open ? "Collapse" : "Expand"} ${title}`}
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
-            >
-              <ChevronDown className={`h-5 w-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
-            </button>
-          ) : null}
-        </div>
-      </div>
-      <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-        <div className="min-h-0 overflow-hidden">
-          <div className="px-4 pb-4">
-            {children}
-            {action && actionMobilePlacement === "below" ? (
-              <div className="mt-4 flex sm:hidden">
-                {action}
+          {step === 2 && (
+            <div key="step-2" className="animate-slide-in-right space-y-6">
+              {/* Learning Objectives */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">2</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Learning Objectives</h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Define what students will learn from this lesson.</p>
+                <div className="rounded-2xl border border-teachpad-cardBorder bg-white p-5 shadow-[0_8px_22px_rgba(30,50,80,0.04)]">
+                  <div className="mb-4 flex flex-wrap items-center gap-2 sm:justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Brain className="h-4 w-4 text-teachpad-blue shrink-0" />
+                      <span className="text-sm font-medium text-teachpad-muted">Learning Objectives</span>
+                    </div>
+                    <button type="button" onClick={suggestObjectives}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-teachpad-cardBorder bg-white px-3.5 py-2 text-xs font-semibold text-teachpad-blue shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 max-sm:px-2.5 max-sm:py-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 shrink-0" /> AI Suggest Objectives
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)}
+                      className="min-h-[120px] w-full rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 py-2.5 text-base font-medium text-teachpad-ink outline-none transition-colors duration-200 placeholder:text-[#9CA0AA] focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 sm:text-sm"
+                      placeholder="Type your learning objectives here. Press Enter for multiple objectives."
+                    />
+                  </div>
+                </div>
               </div>
-            ) : null}
-          </div>
+
+              {/* Customize Your Lesson Plan */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Customize Your Lesson Plan</h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Choose the components you want to include or emphasize.</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {lessonComponents.map((comp) => {
+                    const CompIcon = comp.icon;
+                    const active = selected.includes(comp.title);
+                    const toneMap: Record<string, { bg: string; text: string; border: string }> = {
+                      amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]", border: "border-[#fcd34d]" },
+                      blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]", border: "border-[#93c5fd]" },
+                      green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]", border: "border-[#6ee7b7]" },
+                      sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
+                      orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]", border: "border-[#fcd34d]" },
+                      pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]", border: "border-[#f9a8d4]" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
+                      teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]", border: "border-[#5eead4]" },
+                      indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]", border: "border-[#a5b4fc]" },
+                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
+                    };
+                    const ct = toneMap[comp.color] || toneMap.blue;
+                    return (
+                      <div key={comp.title}
+                        onClick={() => toggleComponent(comp.title)}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
+                          active
+                            ? `${ct.border} ${ct.bg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                          <CompIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-teachpad-ink"}`}>
+                              {comp.title}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{comp.body}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Additional Preferences */}
+              <div>
+                <button type="button" onClick={() => setPrefsOpen(!prefsOpen)}
+                  className="flex w-full items-center justify-between rounded-xl border border-teachpad-cardBorder bg-white p-4 shadow-sm transition-all hover:border-blue-200"
+                >
+                  <span className="text-base font-semibold text-teachpad-ink">Additional Preferences</span>
+                  <ChevronDown className={cn("h-5 w-5 text-teachpad-muted transition-transform duration-200", prefsOpen && "rotate-180")} />
+                </button>
+                <div className={cn("grid transition-all duration-300 ease-out", prefsOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="mt-3 space-y-4 rounded-xl border border-teachpad-cardBorder bg-teachpad-input p-5">
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-teachpad-ink">Bloom&apos;s Taxonomy Level</label>
+                          <Select value={bloomsLevel} onChange={(e) => setBloomsLevel(e.target.value)}>
+                            {bloomsOptions.map((level) => <option key={level} value={level}>{level}</option>)}
+                          </Select>
+                        </div>
+                        <div className="flex items-end">
+                          <label className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-teachpad-cardBorder bg-white px-4 py-3 transition-all hover:border-blue-200">
+                            <span className="text-sm font-semibold text-teachpad-ink">Include Real-life Examples</span>
+                            <button type="button" role="switch" aria-checked={includeRealLifeExamples}
+                              onClick={() => setIncludeRealLifeExamples(!includeRealLifeExamples)}
+                              className={cn(
+                                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
+                                includeRealLifeExamples ? "bg-gradient-to-r from-teachpad-blue to-blue-600" : "bg-[#eceef3]"
+                              )}
+                            >
+                              <span className={cn("inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out", includeRealLifeExamples ? "translate-x-5" : "translate-x-0")} />
+                            </button>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Success Card */}
+              <div className="rounded-2xl border border-teachpad-cardBorder bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                    <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-bold text-emerald-800">Great! You&apos;re all set.</h4>
+                    <p className="mt-1 text-sm text-emerald-600">Click Generate Lesson Plan and let AI do the magic!</p>
+                  </div>
+                  <div className="hidden flex-shrink-0 lg:block">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                      <Sparkles className="h-6 w-6 text-emerald-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 Navigation */}
+              <div className="flex items-center justify-between border-t border-teachpad-cardBorder pt-6">
+                <button type="button" onClick={() => setStep(1)}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-white px-5 text-sm font-semibold text-teachpad-muted shadow-sm transition-all duration-200 hover:border-teachpad-blue hover:text-teachpad-blue max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" /> Back
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
+                </div>
+                <button type="button" disabled={!canGenerate} onClick={generate}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                >
+                  <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Lesson Plan
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ number, title, subtitle }: { number: string; title: string; subtitle: string }) {
+function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
+  const toneMap: Record<string, { bg: string; text: string }> = {
+    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
+    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
+    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
+    pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
+    aqua: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
+    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
+    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
+    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
+    rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]" },
+  };
+  const tone = toneMap[color] || toneMap.blue;
   return (
-    <>
-      <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-base font-extrabold text-white shadow-md">{number}</div>
-      <div>
-        <h2 className="text-base font-bold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-600">{subtitle}</p>
+    <div className="min-w-0 rounded-2xl border border-teachpad-cardBorder bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+        </div>
+        <span className="text-xs font-medium text-teachpad-muted sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
       </div>
-    </>
-  );
-}
-function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) { 
-  return (
-    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
-      <span className="truncate text-sm font-bold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</span>
       {children}
-      {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}
-    </label>
+    </div>
   );
 }
-function toneClass(tone: string) { 
-  return tone === "blue" ? "bg-gradient-to-br from-sky-100 to-blue-100 text-blue-700" : 
-         tone === "green" ? "bg-gradient-to-br from-emerald-100 to-green-100 text-emerald-700" : 
-         tone === "orange" ? "bg-gradient-to-br from-amber-100 to-orange-100 text-orange-700" : 
-         "bg-gradient-to-br from-blue-100 to-blue-100 text-blue-700"; 
+
+function Placeholder({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex h-10 items-center rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-sm text-[#9CA0AA]">
+      {children}
+    </div>
+  );
 }
