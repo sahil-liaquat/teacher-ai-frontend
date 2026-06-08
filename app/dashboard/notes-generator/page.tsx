@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, BookOpen, ClipboardCopy, Download, NotebookPen, PenLine, Save, Share2, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, PenLine, Save, Share2, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
@@ -16,6 +15,7 @@ import { OutputMetadataFooter } from "@/components/output-metadata-footer";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
+import { cn } from "@/lib/utils";
 
 const styleOptions = ["Exam revision", "Classroom blackboard", "Student notebook", "Quick recap"];
 const detailOptions = ["Brief", "Balanced", "Detailed"];
@@ -60,11 +60,14 @@ export default function NotesGeneratorPage() {
   const [includeExamples, setIncludeExamples] = useState(true);
   const [includeSummary, setIncludeSummary] = useState(true);
   const [includeQuestions, setIncludeQuestions] = useState(true);
+  const [step, setStep] = useState(1);
   const [fetching, setFetching] = useState(false);
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
   const [isLoadingBooks, setIsLoadingBooks] = useState(false);
   const [isLoadingChapters, setIsLoadingChapters] = useState(false);
   const [classesError, setClassesError] = useState("");
+  const [subjectsError, setSubjectsError] = useState("");
   const [booksError, setBooksError] = useState("");
   const [chaptersError, setChaptersError] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -151,7 +154,10 @@ export default function NotesGeneratorPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!boardId) return setIsLoadingClasses(false);
+    if (!boardId) {
+      setIsLoadingClasses(false);
+      return;
+    }
     let cancelled = false;
     setClassesError("");
     setIsLoadingClasses(true);
@@ -171,19 +177,32 @@ export default function NotesGeneratorPage() {
   }, [boardId]);
 
   useEffect(() => {
-    if (!classId) return setIsLoadingBooks(false);
+    if (!classId) {
+      setIsLoadingSubjects(false);
+      setIsLoadingBooks(false);
+      return;
+    }
     let cancelled = false;
+    setSubjectsError("");
     setBooksError("");
+    setIsLoadingSubjects(true);
     setIsLoadingBooks(true);
     backendApi.booksByClass(classId, 0, 100)
       .then((res) => {
         if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false));
       })
       .catch((err) => {
-        if (!cancelled) setBooksError(err instanceof Error ? err.message : "Could not load books.");
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "Could not load books.";
+          setSubjectsError(message);
+          setBooksError(message);
+        }
       })
       .finally(() => {
-        if (!cancelled) setIsLoadingBooks(false);
+        if (!cancelled) {
+          setIsLoadingSubjects(false);
+          setIsLoadingBooks(false);
+        }
       });
     return () => {
       cancelled = true;
@@ -191,7 +210,10 @@ export default function NotesGeneratorPage() {
   }, [classId]);
 
   useEffect(() => {
-    if (!bookId) return setIsLoadingChapters(false);
+    if (!bookId) {
+      setIsLoadingChapters(false);
+      return;
+    }
     let cancelled = false;
     setChaptersError("");
     setIsLoadingChapters(true);
@@ -214,6 +236,7 @@ export default function NotesGeneratorPage() {
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
   const canGenerate = Boolean(bookId && chapterNames.length);
+  const canGoNext = Boolean(boardId && classId && subject && bookId && chapterNames.length > 0);
 
   useEffect(() => {
     if (!hasCompanionPrefill(companionContext) || companionApplied.current.topic || !companionContext.topic) return;
@@ -291,6 +314,14 @@ export default function NotesGeneratorPage() {
     setBookId("");
     setChapterNames([]);
     setNotes(null);
+    setClassesError("");
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingClasses(Boolean(value));
+    setIsLoadingSubjects(false);
+    setIsLoadingBooks(false);
+    setIsLoadingChapters(false);
   }
 
   function chooseClass(value: string) {
@@ -301,6 +332,24 @@ export default function NotesGeneratorPage() {
     setBookId("");
     setChapterNames([]);
     setNotes(null);
+    setSubjectsError("");
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingSubjects(Boolean(value));
+    setIsLoadingBooks(Boolean(value));
+    setIsLoadingChapters(false);
+  }
+
+  function chooseSubject(value: string) {
+    setSubject(value);
+    setBookId("");
+    setChapters([]);
+    setChapterNames([]);
+    setNotes(null);
+    setBooksError("");
+    setChaptersError("");
+    setIsLoadingBooks(Boolean(value));
+    window.requestAnimationFrame(() => setIsLoadingBooks(false));
   }
 
   function chooseBook(value: string) {
@@ -308,6 +357,8 @@ export default function NotesGeneratorPage() {
     setChapters([]);
     setChapterNames([]);
     setNotes(null);
+    setChaptersError("");
+    setIsLoadingChapters(Boolean(value));
   }
 
   function chooseChapter(value: string) {
@@ -457,22 +508,33 @@ export default function NotesGeneratorPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-3">
+    <div className="mx-auto w-full max-w-[1240px] space-y-4">
       <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#be185d] transition hover:text-[#d9467d]">
         <ArrowLeft className="h-4 w-4" />
         Back to tools
       </Link>
-      <section className="overflow-hidden rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
-        <div className="relative min-h-[166px] overflow-hidden border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-5 py-6">
-          <div className="relative z-10 max-w-[620px] lg:max-w-[58%]">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#d9467d] shadow-sm">
-              <NotebookPen className="h-4 w-4" /> Textbook notes
+
+      <div className="overflow-visible rounded-[18px] border border-[#ffd9e8] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
+        {/* Header */}
+        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
+          {step === 1 ? (
+            <div className="relative z-10 max-w-[560px]">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#d9467d] shadow-sm">
+                <NotebookPen className="h-4 w-4" /> Textbook notes
+              </div>
+              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Notes Generator</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.</p>
             </div>
-            <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Notes Generator</h1>
-            <p className="mt-2.5 max-w-[560px] text-sm font-medium leading-6 text-[#55516e]">
-              Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.
-            </p>
-          </div>
+          ) : (
+            <div className="relative z-10 max-w-[560px]">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9e8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-[10px] font-bold text-white">2</span>
+                Step 2 of 2
+              </div>
+              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Notes</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your notes by choosing the style, detail level, and sections to include.</p>
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
             <img
               src="/assets/illustrations/create-notes-header.png"
@@ -483,94 +545,302 @@ export default function NotesGeneratorPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 p-4 sm:p-5">
-          <NumericSection number="1" title="Textbook Source" subtitle="Choose the book and chapters for the notes.">
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <FieldBox label="Board / Curriculum" required>
-                <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)} disabled={fetching}>
-                  <option value="">Select Board / Curriculum</option>
-                  {boards.map((board) => <option key={board.id} value={board.id}>{board.name} ({board.code})</option>)}
-                </Select>
-              </FieldBox>
-              <FieldBox label="Class / Grade" required error={classesError}>
-                <Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes...">
-                  <option value="">Select Class / Grade</option>
-                  {classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                </Select>
-              </FieldBox>
-              <FieldBox label="Subject" required>
-                <Select value={subject} onChange={(e) => { setSubject(e.target.value); setBookId(""); setChapters([]); setChapterNames([]); }} disabled={!classId || !books.length || isLoadingBooks}>
-                  <option value="">Select Subject</option>
-                  {subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}
-                </Select>
-              </FieldBox>
-              <FieldBox label="Book / Textbook" required error={booksError}>
-                <Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!classId || !subject || isLoadingBooks} isLoading={isLoadingBooks} loadingLabel="Loading books...">
-                  <option value="">Select Book / Textbook</option>
-                  {filteredBooks.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
-                </Select>
-              </FieldBox>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <FieldBox label="Chapter / Unit" required error={chaptersError}>
-                <Select value={chapterNames[0] || ""} onChange={(event) => chooseChapter(event.target.value)} disabled={!bookId || isLoadingChapters} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
-                  <option value="">Select Chapter / Unit</option>
-                  {chapters.map((chapter) => <option key={chapter.id} value={chapter.chapter_title || chapter.title || ""}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{chapter.chapter_title || chapter.title}</option>)}
-                </Select>
-              </FieldBox>
-            </div>
-          </NumericSection>
-
-          <NumericSection number="2" title="Notes Style" subtitle="Tune the output for how you will use it.">
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <FieldBox label="Optional Topic Focus">
-                <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Example: photosynthesis steps" />
-              </FieldBox>
-              <FieldBox label="Language">
-                <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                  <option>English</option>
-                  <option>Hindi</option>
-                  <option>Urdu</option>
-                </Select>
-              </FieldBox>
-              <FieldBox label="Style">
-                <Select value={noteStyle} onChange={(e) => setNoteStyle(e.target.value)}>
-                  {styleOptions.map((item) => <option key={item}>{item}</option>)}
-                </Select>
-              </FieldBox>
-              <FieldBox label="Detail Level">
-                <Select value={detailLevel} onChange={(e) => setDetailLevel(e.target.value)}>
-                  {detailOptions.map((item) => <option key={item}>{item}</option>)}
-                </Select>
-              </FieldBox>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Option label="Key terms" checked={includeKeyTerms} onCheckedChange={setIncludeKeyTerms} />
-              <Option label="Examples" checked={includeExamples} onCheckedChange={setIncludeExamples} />
-              <Option label="Student summary" checked={includeSummary} onCheckedChange={setIncludeSummary} />
-              <Option label="Revision questions" checked={includeQuestions} onCheckedChange={setIncludeQuestions} />
-            </div>
-          </NumericSection>
-
-          <div className="flex flex-col gap-3 rounded-xl border border-[#ffd9e8] bg-[#fff8fb] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-              <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-[14px] bg-[#fff1f7] text-[#d9467d]">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-base font-black text-[#25262b]">Generate classroom notes</p>
-                <p className="mt-1 text-sm font-medium text-[#6d6f78]">
-                  {selectedBook ? `Using ${selectedBook.title} - ${chapterNames.length || 0} chapter${chapterNames.length === 1 ? "" : "s"}` : "Select a subject, textbook, and chapters."}
-                </p>
-              </div>
-            </div>
-            <Button type="button" disabled={!canGenerate || generating} onClick={generate} className="bg-gradient-to-r from-[#f45f98] to-[#d9467d] shadow-[0_14px_28px_rgba(244,95,152,0.24)] sm:min-w-[220px]">
-              <Sparkles className="h-5 w-5" />
-              Generate Notes
-            </Button>
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 px-5 pt-5 sm:px-6">
+          <div className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+            step === 1 ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_10px_rgba(244,95,152,0.3)]" : "bg-[#fff1f7] text-[#d9467d]"
+          )}>
+            {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
+          </div>
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#f9a8d4]" : "bg-[#eceef3]")} />
+          <div className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+            step === 2 ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_10px_rgba(244,95,152,0.3)]" : "bg-[#fff1f7] text-[#9CA0AA]"
+          )}>
+            2
           </div>
         </div>
-      </section>
+
+        <div className="p-4 sm:p-5">
+          {step === 1 && (
+            <div key="step-1" className="animate-slide-in-left space-y-5">
+              {/* Section 1: What are you teaching? */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">1</span>
+                  <h3 className="text-base font-bold text-[#25262b]">What are you teaching?</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={GraduationCap} label="Board / Curriculum" required color="blue">
+                    <Select value={boardId} onChange={(e) => chooseBoard(e.target.value)} disabled={fetching}>
+                      <option value="">Select Board / Curriculum</option>
+                      {boards.map((board) => <option key={board.id} value={board.id}>{board.name} ({board.code})</option>)}
+                    </Select>
+                  </FieldCard>
+                  <FieldCard icon={Users} label="Class / Grade" required color="purple">
+                    {!boardId ? (
+                      <Placeholder>Select a board first</Placeholder>
+                    ) : isLoadingClasses ? (
+                      <Placeholder>Loading classes...</Placeholder>
+                    ) : classes.filter(c => c.grade_number != null).length > 0 ? (
+                      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2">
+                        {classes
+                          .filter(c => c.grade_number != null)
+                          .sort((a, b) => (a.grade_number || 0) - (b.grade_number || 0))
+                          .map((c) => (
+                            <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
+                              className={cn(
+                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                classId === c.id
+                                  ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_12px_rgba(244,95,152,0.25)]"
+                                  : "border border-[#ffd9e8] bg-white text-[#25262b] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                              )}
+                            >{c.grade_number}</button>
+                          ))}
+                      </div>
+                    ) : (
+                      <Select value={classId} onChange={(e) => chooseClass(e.target.value)} disabled={!boardId || isLoadingClasses} isLoading={isLoadingClasses} loadingLabel="Loading classes...">
+                        <option value="">Select Class / Grade</option>
+                        {classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                      </Select>
+                    )}
+                    {classesError && <span className="mt-1 text-xs font-semibold text-red-500">{classesError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={FlaskConical} label="Subject" required color="orange">
+                    {!classId ? (
+                      <Placeholder>Select a class first</Placeholder>
+                    ) : isLoadingSubjects ? (
+                      <Placeholder>Loading subjects...</Placeholder>
+                    ) : (
+                      <Select value={subject} onChange={(e) => chooseSubject(e.target.value)} disabled={!classId || (!books.length && !isLoadingSubjects)} isLoading={isLoadingSubjects} loadingLabel="Loading subjects...">
+                        <option value="">Select Subject</option>
+                        {subjectOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                      </Select>
+                    )}
+                    {subjectsError && <span className="mt-1 text-xs font-semibold text-red-500">{subjectsError}</span>}
+                  </FieldCard>
+                </div>
+              </div>
+
+              {/* Section 2: What are we learning? */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
+                  <h3 className="text-base font-bold text-[#25262b]">What are we learning?</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={BookOpen} label="Book / Textbook" required color="green">
+                    {!classId || !subject ? (
+                      <Placeholder>{!classId ? "Select a class first" : "Select a subject first"}</Placeholder>
+                    ) : isLoadingBooks ? (
+                      <Placeholder>Loading books...</Placeholder>
+                    ) : (
+                      <Select value={bookId} onChange={(e) => chooseBook(e.target.value)} disabled={!filteredBooks.length} isLoading={isLoadingBooks} loadingLabel="Loading books...">
+                        <option value="">Select Book / Textbook</option>
+                        {filteredBooks.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
+                      </Select>
+                    )}
+                    {booksError && <span className="mt-1 text-xs font-semibold text-red-500">{booksError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={FileText} label="Chapter / Unit" required color="teal">
+                    {!bookId ? (
+                      <Placeholder>Select a book first</Placeholder>
+                    ) : isLoadingChapters ? (
+                      <Placeholder>Loading chapters...</Placeholder>
+                    ) : (
+                      <Select value={chapterNames[0] || ""} onChange={(e) => chooseChapter(e.target.value)} disabled={!chapters.length} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
+                        <option value="">Select Chapter / Unit</option>
+                        {chapters.map((chapter) => <option key={chapter.id} value={chapter.chapter_title || chapter.title || ""}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{chapter.chapter_title || chapter.title}</option>)}
+                      </Select>
+                    )}
+                    {chaptersError && <span className="mt-1 text-xs font-semibold text-red-500">{chaptersError}</span>}
+                  </FieldCard>
+                  <FieldCard icon={Sparkles} label="Topic / Focus" color="amber">
+                    <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Optional: Type a specific topic" maxLength={150} />
+                    {chapterNames[0] && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {chapterNames[0].split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
+                          <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
+                            className="inline-flex items-center gap-1 rounded-full border border-[#ffd9e8] bg-[#fff1f7] px-2.5 py-1 text-xs font-medium text-[#be185d] transition-colors hover:bg-[#ffe4f0]"
+                          >
+                            <Sparkles className="h-3 w-3 text-[#d9467d]" />{suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </FieldCard>
+                </div>
+              </div>
+
+              {/* Step 1 Navigation */}
+              <div className="flex items-center justify-between border-t border-[#ffd9e8] pt-6">
+                <Link href="/dashboard/classroom-tools" className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#d9467d]">
+                  Cancel
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                </div>
+                <button
+                  type="button"
+                  disabled={!canGoNext}
+                  onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                >
+                  Next
+                  <ArrowLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div key="step-2" className="animate-slide-in-right space-y-6">
+              {/* Notes Style */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
+                  <h3 className="text-base font-bold text-[#25262b]">Notes Style</h3>
+                </div>
+                <p className="mb-4 text-sm text-[#55516e]">Choose the style, language, and level of detail for your notes.</p>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FieldCard icon={Globe} label="Language" color="pink">
+                    <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                      <option>English</option>
+                      <option>Hindi</option>
+                      <option>Urdu</option>
+                    </Select>
+                  </FieldCard>
+                  <FieldCard icon={NotebookPen} label="Notes Style" color="sky">
+                    <div className="flex flex-wrap gap-2">
+                      {styleOptions.map((style) => (
+                        <button key={style} type="button" onClick={() => setNoteStyle(style)}
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            noteStyle === style
+                              ? "border-[#f9a8d4] bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
+                              : "border-[#ffd9e8] bg-white text-[#55516e] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                          )}
+                        >{style}</button>
+                      ))}
+                    </div>
+                  </FieldCard>
+                  <FieldCard icon={ClipboardCheck} label="Detail Level" color="indigo">
+                    <div className="flex flex-wrap gap-2">
+                      {detailOptions.map((level) => (
+                        <button key={level} type="button" onClick={() => setDetailLevel(level)}
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            detailLevel === level
+                              ? "border-[#f9a8d4] bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
+                              : "border-[#ffd9e8] bg-white text-[#55516e] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                          )}
+                        >{level}</button>
+                      ))}
+                    </div>
+                  </FieldCard>
+                </div>
+              </div>
+
+              {/* What to Include */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">3</span>
+                  <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
+                </div>
+                <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your notes.</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    { key: "includeKeyTerms" as const, label: "Key Terms", desc: "Important vocabulary with definitions", icon: BookOpen, color: "rose" },
+                    { key: "includeExamples" as const, label: "Examples", desc: "Real-world examples for each concept", icon: Lightbulb, color: "amber" },
+                    { key: "includeSummary" as const, label: "Student Summary", desc: "Easy-to-understand summary for students", icon: NotebookPen, color: "teal" },
+                    { key: "includeQuestions" as const, label: "Revision Questions", desc: "Practice questions to test understanding", icon: ClipboardCheck, color: "violet" },
+                  ].map((item) => {
+                    const CompIcon = item.icon;
+                    const active = item.key === "includeKeyTerms" ? includeKeyTerms
+                      : item.key === "includeExamples" ? includeExamples
+                      : item.key === "includeSummary" ? includeSummary
+                      : includeQuestions;
+                    const toneMap: Record<string, { bg: string; text: string; border: string }> = {
+                      rose: { bg: "bg-[#fff1f7]", text: "text-[#d9467d]", border: "border-[#f9a8d4]" },
+                      amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
+                      teal: { bg: "bg-[#ecfdf5]", text: "text-[#059669]", border: "border-[#6ee7b7]" },
+                      violet: { bg: "bg-[#f5f3ff]", text: "text-[#7c3aed]", border: "border-[#c4b5fd]" },
+                    };
+                    const ct = toneMap[item.color] || toneMap.blue;
+                    return (
+                      <div key={item.key}
+                        onClick={() => {
+                          const setter = item.key === "includeKeyTerms" ? setIncludeKeyTerms
+                            : item.key === "includeExamples" ? setIncludeExamples
+                            : item.key === "includeSummary" ? setIncludeSummary
+                            : setIncludeQuestions;
+                          setter(!active);
+                        }}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
+                          active
+                            ? `${ct.border} ${ct.bg}`
+                            : "border-[#ffd9e8] bg-white hover:border-[#ffd9e8] hover:bg-[#fff8fb]"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                          <CompIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-[#25262b]"}`}>
+                              {item.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Success Card */}
+              <div className="rounded-2xl border border-[#ffd9e8] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                    <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-bold text-emerald-800">Great! You&apos;re all set.</h4>
+                    <p className="mt-1 text-sm text-emerald-600">Click Generate Notes and let AI do the magic!</p>
+                  </div>
+                  <div className="hidden flex-shrink-0 lg:block">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                      <Sparkles className="h-6 w-6 text-emerald-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 Navigation */}
+              <div className="flex items-center justify-between border-t border-[#ffd9e8] pt-6">
+                <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9e8] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#d9467d] hover:text-[#d9467d] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" /> Back
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d]" />
+                </div>
+                <button type="button" disabled={!canGenerate || generating} onClick={generate}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                >
+                  <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Notes
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -591,7 +861,7 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes:
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
           </button>
           <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
-          <p className="mt-1 text-sm font-semibold text-[#6d6f78]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
+          <p className="mt-1 text-sm font-semibold text-[#55516e]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -615,7 +885,7 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes:
         {(notes.sections || []).map((section: any, index: number) => (
           <section key={`${section.heading}-${index}`} className="mt-5 rounded-[14px] border border-[#ffd9e8] bg-[#fff8fb] p-4">
             <h3 className="text-base font-black text-[#25262b]">{section.heading}</h3>
-            <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#4f4b68]">{section.explanation}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#55516e]">{section.explanation}</p>
             <NotesList title="Key Points" items={section.key_points} compact />
             <NotesList title="Examples" items={section.examples} compact />
           </section>
@@ -636,37 +906,37 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes:
   );
 }
 
-function NumericSection({ number, title, subtitle, children }: { number: string; title: string; subtitle: string; children: ReactNode }) {
+function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
+  const toneMap: Record<string, { bg: string; text: string }> = {
+    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
+    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
+    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
+    pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
+    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
+    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
+    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
+  };
+  const tone = toneMap[color] || toneMap.blue;
   return (
-    <section className="overflow-hidden rounded-[16px] border border-[#ffd9e8] bg-white shadow-[0_10px_24px_rgba(39,30,91,0.04)]">
-      <div className="flex items-start gap-3 p-4">
-        <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#f45f98] to-[#d9467d] text-base font-black text-white">{number}</div>
-        <div>
-          <h2 className="text-base font-black text-[#25262b]">{title}</h2>
-          <p className="text-sm text-[#6d6f78]">{subtitle}</p>
+    <div className="min-w-0 rounded-2xl border border-[#ffd9e8] bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
+        <span className="text-xs font-medium text-[#55516e] sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
       </div>
-      <div className="px-4 pb-4">{children}</div>
-    </section>
-  );
-}
-
-function FieldBox({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: ReactNode }) {
-  return (
-    <label className="grid w-full min-w-0 max-w-full gap-2 self-stretch">
-      <span className="truncate text-sm font-black text-[#4f4b68]">{label} {required && <span className="text-red-500">*</span>}</span>
       {children}
-      {error ? <span className="text-xs font-semibold text-red-600">{error}</span> : null}
-    </label>
+    </div>
   );
 }
 
-function Option({ label, checked, onCheckedChange }: { label: string; checked: boolean; onCheckedChange: (checked: boolean) => void }) {
+function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <label className="flex items-center gap-3 rounded-xl border border-[#ffd9e8] bg-[#fff8fb] p-3 text-sm font-black text-[#4f4b68]">
-      <Checkbox checked={checked} onChange={(event) => onCheckedChange(event.target.checked)} />
-      {label}
-    </label>
+    <div className="flex h-10 items-center rounded-xl border border-[#ffd9e8] bg-[#fff8fb] px-3.5 text-sm text-[#9CA0AA]">
+      {children}
+    </div>
   );
 }
 
@@ -675,7 +945,7 @@ function NotesBlock({ title, body }: { title: string; body?: string }) {
   return (
     <section className="mt-5">
       <h3 className="text-base font-black text-[#25262b]">{title}</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#4f4b68]">{body}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#55516e]">{body}</p>
     </section>
   );
 }
@@ -685,7 +955,7 @@ function NotesList({ title, items, compact = false }: { title: string; items?: s
   return (
     <section className={compact ? "mt-3" : "mt-5"}>
       <h3 className="text-sm font-black text-[#25262b]">{title}</h3>
-      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-[#4f4b68]">
+      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-[#55516e]">
         {items.map((item, index) => <li key={`${item}-${index}`} className="rounded-lg bg-white px-3 py-2 shadow-sm">{item}</li>)}
       </ul>
     </section>
@@ -701,7 +971,7 @@ function Terms({ terms }: { terms?: Array<{ term?: string; meaning?: string }> }
         {terms.map((term, index) => (
           <div key={`${term.term}-${index}`} className="rounded-xl border border-[#ffd9e8] bg-white p-3">
             <p className="text-sm font-black text-[#be185d]">{term.term}</p>
-            <p className="mt-1 text-sm font-medium leading-6 text-[#4f4b68]">{term.meaning}</p>
+            <p className="mt-1 text-sm font-medium leading-6 text-[#55516e]">{term.meaning}</p>
           </div>
         ))}
       </div>

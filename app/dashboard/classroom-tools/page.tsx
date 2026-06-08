@@ -85,13 +85,12 @@ const tools: Array<{
   {
     title: "Live Quiz Generator",
     description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
-    href: "/dashboard/live-quiz/new",
+    href: "#",
     icon: RadioTower,
-    badge: "Ready",
-    status: "ready",
+    badge: "Coming soon",
+    status: "soon",
     panel: "from-[#fffaf0] to-white",
-    tone: "yellow",
-    buttonLabel: "Create Quiz"
+    tone: "yellow"
   },
   {
     title: "Rubric Assistant",
