@@ -17,45 +17,52 @@ import { Button } from "@/components/ui/button";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { cn } from "@/lib/utils";
 
-const cardStyles: Record<string, { card: string; iconBox: string; iconShadow: string; glow: string }> = {
+const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: string; iconShadow: string; glow: string }> = {
   blue: {
     card: "bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white",
+    hoverCard: "hover:from-[#dbeafe] hover:via-[#eff6ff] hover:to-white",
     iconBox: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
     iconShadow: "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-[#bfdbfe]/30"
   },
   green: {
     card: "bg-gradient-to-br from-white via-emerald-50/70 to-white",
+    hoverCard: "hover:from-emerald-100 hover:via-emerald-50/80 hover:to-white",
     iconBox: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100",
     iconShadow: "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-emerald-200/30"
   },
   yellow: {
     card: "bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white",
+    hoverCard: "hover:from-[#fef3c7] hover:via-amber-50/90 hover:to-white",
     iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
     iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-amber-200/30"
   },
   pink: {
     card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
+    hoverCard: "hover:from-pink-100 hover:via-pink-50/80 hover:to-white",
     iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
     iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-pink-200/30"
   },
   red: {
     card: "bg-gradient-to-br from-white via-rose-50/80 to-white",
+    hoverCard: "hover:from-rose-100 hover:via-rose-50/90 hover:to-white",
     iconBox: "bg-[#fff7f8] text-[#eb3b5a] ring-[#ffd9de]",
     iconShadow: "shadow-[0_14px_30px_rgba(235,59,90,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-rose-200/30"
   },
   aqua: {
     card: "bg-gradient-to-br from-[#f0fdff] via-cyan-50/70 to-white",
+    hoverCard: "hover:from-[#cff7fb] hover:via-cyan-50/80 hover:to-white",
     iconBox: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb]",
     iconShadow: "shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-cyan-200/30"
   },
   lavender: {
     card: "bg-gradient-to-br from-[#f6f1ff] via-violet-50/70 to-white",
+    hoverCard: "hover:from-[#e9e1ff] hover:via-violet-50/80 hover:to-white",
     iconBox: "bg-[#f6f1ff] text-[#8b5cf6] ring-[#e9e1ff]",
     iconShadow: "shadow-[0_14px_30px_rgba(139,92,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-violet-200/30"
@@ -165,8 +172,8 @@ export default function ClassroomToolsPage() {
           const card = (
             <div
               className={cn(
-                "clickable-card group relative flex h-full min-h-[240px] flex-col overflow-hidden rounded-[20px] border border-white/60 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_var(--teachpad-shadowToolCard)]",
-                s.card,
+                "group relative flex h-full min-h-[240px] flex-col overflow-hidden rounded-[20px] border border-white/60 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_var(--teachpad-shadowToolCard)]",
+                s.card, s.hoverCard,
                 !available && "opacity-86"
               )}
             >
