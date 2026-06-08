@@ -144,7 +144,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
 
-      <main className="min-h-screen pb-20 pt-16 lg:pb-0 lg:pt-0">
+      <main className="min-h-screen pb-24 pt-16 lg:pb-0 lg:pt-0">
         <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
           {!admin && <TrialStatusPill />}
           {children}
@@ -260,51 +260,82 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
 }
 
 function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: string }) {
-  const visibleNav = nav.slice(0, 5);
+  const items = nav.slice(0, 5);
+  const leftItems = [items[0], items[2]];   // Home, Saved
+  const centerItem = items[1];               // AI Tools
+  const rightItems = [items[3], items[4]];   // Books, Billing
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 w-full max-w-full border-t border-teachpad-cardBorder bg-white/90 px-3 shadow-[0_-10px_40px_var(--teachpad-shadowCard)] backdrop-blur-xl lg:hidden" style={{ boxSizing: "border-box" }}>
-      <div className="flex h-16 items-center" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
-        {visibleNav.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href, activePath);
-
-          return (
-            <Link
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden">
+      <div className="relative mx-4 mb-4 w-full max-w-md">
+        {/* Floating bar */}
+        <div className="flex h-[72px] items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+          {leftItems.map((item) => (
+            <TabBarItem
               key={item.href}
-              href={item.href}
-              title={item.label}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition-all duration-200 min-w-0",
-                active ? "scale-110" : ""
-              )}
-            >
-              <span
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
-                  active
-                    ? "bg-gradient-to-br from-teachpad-blue to-blue-600 shadow-lg"
-                    : "bg-teachpad-tag"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-5 w-5",
-                    active ? "text-white" : "text-teachpad-muted"
-                  )}
-                />
-              </span>
-              <span className={cn(
-                "text-[10px] font-semibold transition-colors truncate max-w-full",
-                active ? "text-teachpad-blue" : "text-teachpad-muted"
-              )}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+              item={item}
+              active={isActive(item.href, activePath)}
+            />
+          ))}
+          <div className="w-[60px]" /> {/* spacer for center button */}
+          {rightItems.map((item) => (
+            <TabBarItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href, activePath)}
+            />
+          ))}
+        </div>
+        {/* Center AI Tools button */}
+        <Link
+          href={centerItem.href}
+          className="absolute left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-0.5" style={{ top: '-14px' }}
+        >
+          <div className={cn(
+            "flex h-[58px] w-[58px] items-center justify-center rounded-full transition-all duration-200 hover:scale-105",
+            "bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/30",
+            isActive(centerItem.href, activePath) && "scale-105 shadow-xl shadow-blue-500/40"
+          )}>
+            <Sparkles className="h-6 w-6 text-white" />
+          </div>
+          <span className={cn(
+            "text-[10px] font-semibold transition-colors duration-200",
+            isActive(centerItem.href, activePath) ? "text-gray-900" : "text-gray-500"
+          )}>
+            AI Tools
+          </span>
+        </Link>
       </div>
     </nav>
+  );
+}
+
+function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex flex-col items-center justify-center gap-0.5 transition-all duration-200 hover:scale-105 min-w-0",
+        active && "scale-105"
+      )}
+    >
+      <span className={cn(
+        "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200",
+        active ? "bg-blue-100" : "bg-transparent"
+      )}>
+        <Icon className={cn(
+          "h-5 w-5 transition-colors duration-200",
+          active ? "text-blue-600" : "text-gray-400"
+        )} />
+      </span>
+      <span className={cn(
+        "text-[10px] font-semibold transition-colors duration-200 truncate max-w-full",
+        active ? "text-gray-900" : "text-gray-500"
+      )}>
+        {item.label}
+      </span>
+    </Link>
   );
 }
 
