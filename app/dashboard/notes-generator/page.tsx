@@ -700,7 +700,7 @@ export default function NotesGeneratorPage() {
               {/* Notes Style */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">1</span>
                   <h3 className="text-base font-bold text-[#25262b]">Notes Style</h3>
                 </div>
                 <p className="mb-4 text-sm text-[#55516e]">Choose the style, language, and level of detail for your notes.</p>
@@ -746,7 +746,7 @@ export default function NotesGeneratorPage() {
               {/* What to Include */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">3</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
                   <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
                 </div>
                 <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your notes.</p>

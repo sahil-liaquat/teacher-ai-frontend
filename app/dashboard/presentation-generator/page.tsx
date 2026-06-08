@@ -606,7 +606,7 @@ export default function PresentationGeneratorPage() {
               {/* Presentation Setup */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f2] text-xs font-bold text-[#eb3b5a]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f2] text-xs font-bold text-[#eb3b5a]">1</span>
                   <h3 className="text-base font-bold text-[#25262b]">Presentation Setup</h3>
                 </div>
                 <p className="mb-4 text-sm text-[#55516e]">Choose the slide count, language, style, tone, and level of detail for your deck.</p>
@@ -706,7 +706,7 @@ export default function PresentationGeneratorPage() {
               {/* What to Include */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f2] text-xs font-bold text-[#eb3b5a]">3</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f2] text-xs font-bold text-[#eb3b5a]">2</span>
                   <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
                 </div>
                 <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your presentation.</p>

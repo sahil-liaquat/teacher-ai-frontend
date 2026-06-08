@@ -542,7 +542,7 @@ export default function NewLessonPlanPage() {
               {/* Learning Objectives */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">1</span>
                   <h3 className="text-base font-bold text-teachpad-ink">Learning Objectives</h3>
                 </div>
                 <p className="mb-4 text-sm text-teachpad-muted">Define what students will learn from this lesson.</p>
@@ -570,7 +570,7 @@ export default function NewLessonPlanPage() {
               {/* Customize Your Lesson Plan */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">2</span>
                   <h3 className="text-base font-bold text-teachpad-ink">Customize Your Lesson Plan</h3>
                 </div>
                 <p className="mb-4 text-sm text-teachpad-muted">Choose the components you want to include or emphasize.</p>
