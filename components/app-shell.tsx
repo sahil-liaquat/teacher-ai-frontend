@@ -155,6 +155,21 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
   );
 }
 
+const navIconColors: Record<string, string> = {
+  Home: "text-blue-500",
+  "AI Tools": "text-blue-500",
+  Saved: "text-orange-500",
+  Books: "text-green-600",
+  Billing: "text-purple-500",
+  Settings: "text-gray-500",
+  Overview: "text-blue-500",
+  Users: "text-sky-500",
+  Curriculum: "text-emerald-500",
+  Generations: "text-indigo-500",
+  Textbooks: "text-green-600",
+  System: "text-gray-500",
+};
+
 function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
   const logout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -199,6 +214,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
 
 function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
+  const colorClass = navIconColors[item.label] || "text-teachpad-muted";
 
   return (
     <Tooltip>
@@ -223,7 +239,7 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
             <Icon
               className={cn(
                 "h-5 w-5 transition-colors duration-300",
-                active ? "text-teachpad-blue" : "text-teachpad-muted group-hover:text-teachpad-blue"
+                active ? "text-teachpad-blue" : colorClass
               )}
             />
           </span>
