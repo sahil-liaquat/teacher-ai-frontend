@@ -129,8 +129,10 @@ export type WorksheetGeneratePayload = {
   chapter_name?: string;
   chapter_names?: string[];
   topic?: string;
-  question_count: number;
-  question_types: string[];
+  question_count?: number;
+  question_types?: string[];
+  question_type_counts?: Record<string, number>;
+  question_type_marks?: Record<string, number>;
   language?: string;
   difficulty_distribution?: { easy: number; medium: number; hard: number };
   include_answer_key?: boolean;

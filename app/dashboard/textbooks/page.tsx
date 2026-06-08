@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
@@ -15,8 +16,7 @@ import { cn } from "@/lib/utils";
 const statTiles = [
   { label: "Boards", key: "boards", icon: "layers", tone: "bg-[#e9e1ff]" },
   { label: "Classes", key: "classes", icon: "graduationCap", tone: "bg-[#dffafa]" },
-  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-[#fff0bf]" },
-  { label: "Ready", key: "ready", icon: "checkCircle", tone: "bg-[#e5ffc6]" }
+  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-[#fff0bf]" }
 ] as const;
 
 export default function TeacherTextbooksPage() {
@@ -24,7 +24,7 @@ export default function TeacherTextbooksPage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [summary, setSummary] = useState({ classes: 0, books: 0, ready: 0, loading: false });
+  const [summary, setSummary] = useState({ classes: 0, books: 0, loading: false });
   const [loadingBoards, setLoadingBoards] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingBooks, setLoadingBooks] = useState(false);
@@ -52,7 +52,7 @@ export default function TeacherTextbooksPage() {
   useEffect(() => {
     if (loadingBoards) return;
     if (!boards.length) {
-      setSummary({ classes: 0, books: 0, ready: 0, loading: false });
+      setSummary({ classes: 0, books: 0, loading: false });
       return;
     }
     let cancelled = false;
@@ -68,13 +68,12 @@ export default function TeacherTextbooksPage() {
           setSummary({
             classes: allClasses.length,
             books: allBooks.length,
-            ready: allBooks.filter((book) => book.is_ingested).length,
             loading: false
           });
         }
       } catch (err) {
         if (!cancelled) {
-          setSummary({ classes: 0, books: 0, ready: 0, loading: false });
+          setSummary({ classes: 0, books: 0, loading: false });
           toast({ title: "Could not load textbook summary", description: err instanceof Error ? err.message : "Try again" });
         }
       }
@@ -172,7 +171,7 @@ export default function TeacherTextbooksPage() {
         imageSrc="/assets/illustrations/textbook-library-header.png"
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {statTiles.map((stat) => {
           const value = stat.key === "boards" ? boards.length : summary[stat.key];
           return (
@@ -273,6 +272,12 @@ export default function TeacherTextbooksPage() {
 }
 
 function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) {
+  const boardLogo = board.code?.toLowerCase().includes("jkbose")
+    ? "/landing/board-logos/jkbose-logo.png"
+    : board.code?.toLowerCase().includes("cbse")
+    ? "/landing/board-logos/cbse-logo.png"
+    : null;
+
   return (
     <button
       type="button"
@@ -281,11 +286,16 @@ function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) 
     >
       <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5 transition-colors duration-200 group-hover:from-[#dbeafe] group-hover:via-white group-hover:to-[#ffd9e8]">
         <div className="flex min-w-0 items-start gap-3">
-          <PastelIconTile name="layers" className="h-14 w-14 rounded-[20px]" />
+          {boardLogo ? (
+            <span className="grid h-20 w-20 shrink-0 place-items-center rounded-[20px] bg-white p-2 shadow-sm">
+              <Image src={boardLogo} alt={board.name} width={80} height={80} className="h-full w-full object-contain" />
+            </span>
+          ) : (
+            <PastelIconTile name="layers" className="h-14 w-14 rounded-[20px]" />
+          )}
           <div className="min-w-0">
             <div className="flex flex-wrap items-start gap-2">
               <h2 className="min-w-0 text-xl font-black leading-6 tracking-tight text-teachpad-ink">{board.name}</h2>
-              <Badge className="shrink-0 border-[#e5ffc6] bg-[#e5ffc6] text-[#3d7b0f]">Active</Badge>
             </div>
             <p className="mt-1 text-sm font-semibold text-teachpad-muted">{board.code || "Curriculum board"}</p>
           </div>

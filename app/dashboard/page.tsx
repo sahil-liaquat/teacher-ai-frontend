@@ -306,7 +306,7 @@ export default function TeacherDashboard() {
 
       <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 gap-4 xl:grid-cols-2">
         <ActionPanel
-          title="Create Lesson Plan"
+          title="Lesson Plan Generator"
           desc="Generate curriculum-aligned lesson plans in seconds."
           href="/dashboard/lesson-plans/new"
           button="Create Lesson Plan"
@@ -315,7 +315,7 @@ export default function TeacherDashboard() {
           illustrationSrc="/assets/illustrations/lesson-plan-card.png"
         />
         <ActionPanel
-          title="Create Worksheet"
+          title="Worksheet Generator"
           desc="Generate printable worksheets with answers and marking schemes."
           href="/dashboard/worksheets/new"
           button="Create Worksheet"
@@ -329,7 +329,7 @@ export default function TeacherDashboard() {
         <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
-            <Link href="/dashboard/resources" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+            <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
               View All
             </Link>
           </div>

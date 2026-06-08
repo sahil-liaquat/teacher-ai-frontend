@@ -11,7 +11,7 @@ export default function NotFound() {
     <ErrorPageShell
       eyebrow="Page not found"
       statusCode="404"
-      title="This page is not in the lesson plan."
+      title="This page is not in the TeachPad."
       description="The link may be old, moved, or typed incorrectly. Head back to TeachPad or explore the AI tools teachers use most."
       primaryHref="/"
       primaryLabel="Back to Home"

@@ -44,6 +44,28 @@ const defaultQuestionTypes = [
   "Short Answer"
 ];
 
+const defaultMarks: Record<string, number> = {
+  "MCQ": 1,
+  "True/False": 1,
+  "Fill in the Blanks": 1,
+  "One Word Answer": 1,
+  "Short Answer": 3,
+  "Long Answer": 5,
+  "Match the Following": 1,
+  "Application Based Questions": 4
+};
+
+const questionTypeIdMap: Record<string, string> = {
+  "MCQ": "mcq",
+  "True/False": "true_false",
+  "Fill in the Blanks": "fill_in_the_blanks",
+  "One Word Answer": "one_word",
+  "Short Answer": "short_answer",
+  "Long Answer": "long_answer",
+  "Match the Following": "match_following",
+  "Application Based Questions": "application_based"
+};
+
 const WORKSHEET_DRAFT_KEY = "worksheet";
 
 type WorksheetFormDraft = {
@@ -53,10 +75,11 @@ type WorksheetFormDraft = {
   bookId: string;
   chapterNames: string[];
   topic: string;
-  questionCountInput: string;
   language: string;
   difficulty: DifficultyDistribution;
   questionTypes: string[];
+  questionTypeCounts?: Record<string, number>;
+  questionTypeMarks?: Record<string, number>;
   includeAnswerKey: boolean;
   includeMarkingScheme: boolean;
   includeHints: boolean;
@@ -80,10 +103,17 @@ export default function NewWorksheetPage() {
   const [bookId, setBookId] = useState("");
   const [chapterNames, setChapterNames] = useState<string[]>([]);
   const [topic, setTopic] = useState("");
-  const [questionCountInput, setQuestionCountInput] = useState("16");
   const [language, setLanguage] = useState("English");
   const [difficulty, setDifficulty] = useState<DifficultyDistribution>(difficultyPresets[1].values);
   const [questionTypes, setQuestionTypes] = useState<string[]>(defaultQuestionTypes);
+  const [questionTypeCounts, setQuestionTypeCounts] = useState<Record<string, number>>(
+    Object.fromEntries(questionTypeOptions.map(t => [t, 5]))
+  );
+  const [questionTypeMarks, setQuestionTypeMarks] = useState<Record<string, number>>(
+    Object.fromEntries(questionTypeOptions.map(t => [t, defaultMarks[t]]))
+  );
+  const [countDrafts, setCountDrafts] = useState<Record<string, string>>({});
+  const [marksDrafts, setMarksDrafts] = useState<Record<string, string>>({});
   const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
   const [includeMarkingScheme, setIncludeMarkingScheme] = useState(true);
   const [includeHints, setIncludeHints] = useState(false);
@@ -112,10 +142,11 @@ export default function NewWorksheetPage() {
       setBookId(draft.bookId || "");
       setChapterNames(draft.chapterNames || []);
       setTopic(draft.topic || "");
-      setQuestionCountInput(draft.questionCountInput || "16");
       setLanguage(draft.language || "English");
       setDifficulty(draft.difficulty || difficultyPresets[1].values);
       setQuestionTypes(draft.questionTypes?.length ? draft.questionTypes : defaultQuestionTypes);
+      if (draft.questionTypeCounts) setQuestionTypeCounts(draft.questionTypeCounts);
+      if (draft.questionTypeMarks) setQuestionTypeMarks(draft.questionTypeMarks);
       setIncludeAnswerKey(draft.includeAnswerKey ?? true);
       setIncludeMarkingScheme(draft.includeMarkingScheme ?? true);
       setIncludeHints(draft.includeHints ?? false);
@@ -133,16 +164,17 @@ export default function NewWorksheetPage() {
       bookId,
       chapterNames,
       topic,
-      questionCountInput,
       language,
       difficulty,
       questionTypes,
+      questionTypeCounts,
+      questionTypeMarks,
       includeAnswerKey,
       includeMarkingScheme,
       includeHints,
       includeDiagramsImages
     });
-  }, [draftReady, boardId, chapterNames, classId, bookId, difficulty, language, questionCountInput, questionTypes, subject, topic, includeAnswerKey, includeMarkingScheme, includeHints, includeDiagramsImages]);
+  }, [draftReady, boardId, classId, subject, bookId, chapterNames, topic, language, difficulty, questionTypes, questionTypeCounts, questionTypeMarks, includeAnswerKey, includeMarkingScheme, includeHints, includeDiagramsImages]);
 
   useEffect(() => {
     setFetching(true);
@@ -234,8 +266,8 @@ export default function NewWorksheetPage() {
   const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
-  const questionCount = Number(questionCountInput);
-  const canGenerate = Boolean(bookId && chapterNames.length && Number.isFinite(questionCount) && questionCount >= 1 && questionTypes.length);
+  const totalQuestions = questionTypes.reduce((sum, t) => sum + (questionTypeCounts[t] || 0), 0);
+  const canGenerate = Boolean(bookId && chapterNames.length && questionTypes.length && totalQuestions >= 1 && totalQuestions <= 60);
   const canGoNext = Boolean(boardId && classId && subject && bookId && chapterNames.length > 0);
 
   useEffect(() => {
@@ -365,15 +397,6 @@ export default function NewWorksheetPage() {
     setQuestionTypes((items) => items.includes(type) ? items.filter((item) => item !== type) : [...items, type]);
   }
 
-  function updateQuestionCount(value: string) {
-    if (/^\d{0,2}$/.test(value)) setQuestionCountInput(value);
-  }
-
-  function normalizeQuestionCount() {
-    const next = Math.min(60, Math.max(1, Number(questionCountInput || 1)));
-    setQuestionCountInput(String(next));
-  }
-
   async function generate() {
     if (!canGenerate) {
       toast({ title: "Complete required details", description: "Select textbook, at least one chapter, and at least one question type." });
@@ -392,8 +415,12 @@ export default function NewWorksheetPage() {
         book_id: bookId,
         chapter_names: chapterNames,
         topic: topic.trim() || undefined,
-        question_count: questionCount,
-        question_types: questionTypes,
+        question_type_counts: Object.fromEntries(
+          questionTypes.map(t => [questionTypeIdMap[t], questionTypeCounts[t] || 5])
+        ),
+        question_type_marks: Object.fromEntries(
+          questionTypes.map(t => [questionTypeIdMap[t], questionTypeMarks[t] || defaultMarks[t]])
+        ),
         language,
         difficulty_distribution: difficulty,
         include_answer_key: includeAnswerKey,
@@ -593,17 +620,6 @@ export default function NewWorksheetPage() {
                     )}
                     {chaptersError && <span className="mt-1 text-xs font-semibold text-red-500">{chaptersError}</span>}
                   </FieldCard>
-                  <FieldCard icon={Hash} label="Number of Questions" required color="indigo">
-                    <Input
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      min={1}
-                      max={60}
-                      value={questionCountInput}
-                      onChange={(e) => updateQuestionCount(e.target.value)}
-                      onBlur={normalizeQuestionCount}
-                    />
-                  </FieldCard>
                 </div>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <FieldCard icon={Globe} label="Language" color="sky">
@@ -665,30 +681,98 @@ export default function NewWorksheetPage() {
                   {questionTypeOptions.map((type) => {
                     const active = questionTypes.includes(type);
                     return (
-                      <button
+                      <div
                         key={type}
-                        type="button"
-                        onClick={() => toggleQuestionType(type)}
-                        aria-pressed={active}
                         className={cn(
-                          "premium-hover-sm flex min-h-[60px] items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200",
+                          "rounded-xl border p-3 transition-all duration-200",
                           active
-                            ? "border-[#bdebd7] bg-[#ecfff7] text-[#0b7f53] shadow-[0_10px_22px_rgba(22,163,99,0.10)]"
-                            : "border-[#dffafa] bg-white text-[#4f4b68] hover:border-[#bdebd7]"
+                            ? "border-[#bdebd7] bg-[#ecfff7] shadow-[0_10px_22px_rgba(22,163,99,0.10)]"
+                            : "border-[#dffafa] bg-white hover:border-[#bdebd7]"
                         )}
                       >
-                        <span className={cn(
-                          "grid h-8 w-8 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black",
-                          active ? "border-[#159565] bg-[#159565] text-white" : "border-slate-300 text-transparent"
-                        )}>✓</span>
-                        <span className="text-sm font-black">{type}</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleQuestionType(type)}
+                          aria-pressed={active}
+                          className="flex w-full items-center gap-3 text-left"
+                        >
+                          <span className={cn(
+                            "grid h-8 w-8 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black",
+                            active ? "border-[#159565] bg-[#159565] text-white" : "border-slate-300 text-transparent"
+                          )}>✓</span>
+                          <span className="text-sm font-black">{type}</span>
+                        </button>
+                        {active && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-[#55516e]">Count</label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={countDrafts[type] ?? questionTypeCounts[type] ?? 5}
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+                                  if (raw === "" || /^\d{1,2}$/.test(raw)) {
+                                    setCountDrafts((prev) => ({ ...prev, [type]: raw }));
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const val = Math.max(1, Math.min(60, Number(e.target.value) || 1));
+                                  setQuestionTypeCounts((prev) => ({ ...prev, [type]: val }));
+                                  setCountDrafts((prev) => {
+                                    const next = { ...prev };
+                                    delete next[type];
+                                    return next;
+                                  });
+                                }}
+                                className="mt-0.5 block w-full rounded-lg border border-[#d8f1e5] bg-white px-2 py-1 text-sm text-[#25262b] outline-none focus:border-[#159565] focus:ring-1 focus:ring-[#159565]"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-[#55516e]">Marks</label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={marksDrafts[type] ?? questionTypeMarks[type] ?? defaultMarks[type]}
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+                                  if (raw === "" || /^\d{1,2}$/.test(raw)) {
+                                    setMarksDrafts((prev) => ({ ...prev, [type]: raw }));
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const val = Math.max(1, Number(e.target.value) || 1);
+                                  setQuestionTypeMarks((prev) => ({ ...prev, [type]: val }));
+                                  setMarksDrafts((prev) => {
+                                    const next = { ...prev };
+                                    delete next[type];
+                                    return next;
+                                  });
+                                }}
+                                className="mt-0.5 block w-full rounded-lg border border-[#d8f1e5] bg-white px-2 py-1 text-sm text-[#25262b] outline-none focus:border-[#159565] focus:ring-1 focus:ring-[#159565]"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
                 {!questionTypes.length ? (
                   <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one question type.</p>
                 ) : null}
+                {questionTypes.length > 0 && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="text-sm font-semibold text-[#55516e]">
+                      Total questions: <span className="text-[#25262b]">{totalQuestions}</span>
+                    </span>
+                    {totalQuestions > 60 && (
+                      <span className="text-xs font-semibold text-red-500">
+                        Maximum 60 questions allowed. Please reduce some counts.
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Difficulty Distribution */}

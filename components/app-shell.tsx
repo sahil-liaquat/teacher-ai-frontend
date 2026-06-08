@@ -10,6 +10,7 @@ import {
   BookmarkCheck,
   BookMarked,
   BookOpen,
+  Clock,
   CreditCard,
   GraduationCap,
   Home,
@@ -36,6 +37,7 @@ type NavItem = {
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
+  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
   { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
@@ -158,6 +160,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 const navIconColors: Record<string, string> = {
   Home: "text-blue-500",
   "AI Tools": "text-blue-500",
+  Recent: "text-teal-500",
   Saved: "text-orange-500",
   Books: "text-green-600",
   Billing: "text-purple-500",
