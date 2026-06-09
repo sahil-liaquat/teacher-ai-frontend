@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PauseCircle, PlayCircle, Search, ShieldCheck, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { PauseCircle, PlayCircle, Search, ShieldCheck, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { backendApi, type ApiUser } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDate } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
 const USERS_PAGE_SIZE = 25;
 
@@ -34,6 +35,11 @@ export default function AdminUsersPage() {
       setGrant(null);
     },
     onError: (e) => toast({ title: "Grant failed", description: e instanceof Error ? e.message : "Try again." })
+  });
+  const resendMutation = useMutation({
+    mutationFn: (user: ApiUser) => backendApi.adminResendConfirmation(user.id!),
+    onSuccess: (res) => toast({ title: "Confirmation re-sent", description: res.message }),
+    onError: (e) => toast({ title: "Resend failed", description: e instanceof Error ? e.message : "Try again." })
   });
   const totalPages = users.data?.pages || 1;
   const totalUsers = users.data?.total || 0;
@@ -105,18 +111,18 @@ export default function AdminUsersPage() {
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                   <tr>
-                    {["User", "Role", "Joined", "Updated", "Status", "Actions"].map((heading) => (
+                    {["User", "Role", "Joined", "Funnel", "Status", "Actions"].map((heading) => (
                       <th key={heading} className="px-6 py-4 font-semibold">{heading}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} />)}
+                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} />)}
                 </tbody>
               </table>
             </div>
             <div className="grid gap-3 p-4 lg:hidden">
-              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} />)}
+              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} />)}
             </div>
           </>
         ) : null}
@@ -187,9 +193,9 @@ export default function AdminUsersPage() {
   );
 }
 
-function UserTableRow({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
+function UserTableRow({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
+    <tr className={cn("hover:bg-gray-50 transition-colors", !user.confirmed ? "bg-amber-50/40" : undefined)}>
       <td className="px-6 py-4">
         <div className="min-w-0">
           <p className="font-semibold text-gray-900">{displayName(user)}</p>
@@ -198,18 +204,18 @@ function UserTableRow({ user, onStatusChange, onGrant }: { user: ApiUser; onStat
       </td>
       <td className="px-6 py-4"><StatusPill status={user.role === "admin" ? "info" : "neutral"}>{user.role || "teacher"}</StatusPill></td>
       <td className="px-6 py-4 text-gray-600">{formatDate(user.created_at)}</td>
-      <td className="px-6 py-4 text-gray-600">{formatDate(user.updated_at)}</td>
+      <td className="px-6 py-4"><FunnelCell user={user} /></td>
       <td className="px-6 py-4"><StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill></td>
       <td className="px-6 py-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} />
       </td>
     </tr>
   );
 }
 
-function UserCard({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
+function UserCard({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className={cn("rounded-xl border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-semibold text-gray-900">{displayName(user)}</p>
@@ -217,18 +223,19 @@ function UserCard({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusCh
         </div>
         <StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill>
       </div>
+      <div className="mt-3"><FunnelCell user={user} /></div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <Info label="Role" value={user.role || "teacher"} />
         <Info label="Joined" value={formatDate(user.created_at)} />
       </div>
       <div className="mt-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} />
       </div>
     </div>
   );
 }
 
-function StatusButtons({ user, onStatusChange, onGrant }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void }) {
+function StatusButtons({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" disabled={!user.is_active} onClick={() => onStatusChange({ user, isActive: false })}>
@@ -241,6 +248,12 @@ function StatusButtons({ user, onStatusChange, onGrant }: { user: ApiUser; onSta
       </Button>
       <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "extend" })}>Extend</Button>
       <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "comp" })}>Comp</Button>
+      {!user.confirmed ? (
+        <Button size="sm" variant="outline" onClick={() => onResend(user)}>
+          <Send className="h-4 w-4" />
+          Resend
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -256,4 +269,20 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function displayName(user: ApiUser) {
   return user.full_name || user.name || user.email || "Unnamed user";
+}
+
+function FunnelCell({ user }: { user: ApiUser }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      <StatusPill status={user.confirmed ? "success" : "danger"}>
+        {user.confirmed ? "confirmed" : "unconfirmed"}
+      </StatusPill>
+      <StatusPill status={user.logged_in ? "success" : "neutral"}>
+        {user.logged_in ? "logged in" : "never logged in"}
+      </StatusPill>
+      <StatusPill status={user.has_subscription ? "info" : "danger"}>
+        {user.has_subscription ? "has sub" : "no sub"}
+      </StatusPill>
+    </div>
+  );
 }
