@@ -258,6 +258,70 @@ export type AdminSummary = {
   top_users: Array<{ id: string; name: string; created_at?: string }>;
 };
 
+export type AdminUsageParams = {
+  start?: string; // inclusive ISO date "YYYY-MM-DD"
+  end?: string;   // exclusive upper bound ISO date "YYYY-MM-DD" (send selected-end + 1 day to include it)
+  sort?: "cost_inr" | "generations" | "total_tokens" | "last_generation";
+  limit?: number;
+};
+
+export type AdminUsageTotals = {
+  generations: number;
+  failures: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  cost_inr: number;
+  active_users: number;
+};
+
+export type AdminUsageByUser = {
+  user_id: string;
+  email: string | null;
+  name: string | null;
+  tier: string; // trial | comp | paid | past_due | free | none
+  sub_status: string | null;
+  generations: number;
+  total_tokens: number;
+  cost_inr: number;
+  last_generation: string | null;
+  confirmed: boolean;
+  logged_in: boolean;
+  has_subscription: boolean;
+};
+
+export type AdminUsageByKind = {
+  kind: string;
+  generations: number;
+  total_tokens: number;
+  cost_inr: number;
+};
+
+export type AdminUsageByTier = {
+  tier: string;
+  users: number;
+  generations: number;
+  total_tokens: number;
+  cost_inr: number;
+};
+
+export type AdminUsageDaily = {
+  day: string; // ISO date "YYYY-MM-DD"
+  generations: number;
+  total_tokens: number;
+  cost_inr: number;
+};
+
+export type AdminUsageResponse = {
+  start: string; // echoed back by the backend
+  end: string;
+  totals: AdminUsageTotals;
+  by_user: AdminUsageByUser[];
+  by_kind: AdminUsageByKind[];
+  by_tier: AdminUsageByTier[];
+  daily: AdminUsageDaily[];
+};
+
 type TokenResponse = {
   access_token: string;
   refresh_token: string;
@@ -775,6 +839,15 @@ export async function resetPassword(accessToken: string, password: string) {
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
+  adminUsage: (params: AdminUsageParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.start) qs.set("start", params.start);
+    if (params.end) qs.set("end", params.end);
+    if (params.sort) qs.set("sort", params.sort);
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminUsageResponse>(`/admin/usage${suffix}`);
+  },
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
   createBoard: (payload: Pick<Board, "code" | "name"> & { description?: string }) =>
     apiFetch<Board>("/boards", { method: "POST", body: JSON.stringify(payload) }),
