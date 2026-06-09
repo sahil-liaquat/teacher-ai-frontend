@@ -28,6 +28,9 @@ export type ApiUser = {
   phone?: string | null;
   phone_prompt_state?: "required" | "hidden";
   needs_school?: boolean;
+  confirmed?: boolean;
+  logged_in?: boolean;
+  has_subscription?: boolean;
 };
 
 export type PaginatedResponse<T> = {
@@ -828,6 +831,13 @@ export async function requestPasswordReset(email: string) {
   });
 }
 
+export async function resendConfirmation(email: string) {
+  return apiFetch<{ message: string }>("/auth/resend-confirmation", {
+    method: "POST",
+    body: JSON.stringify({ email })
+  });
+}
+
 export async function resetPassword(accessToken: string, password: string) {
   return apiFetch<{ message: string }>("/auth/reset-password", {
     method: "POST",
@@ -952,6 +962,8 @@ export const backendApi = {
     apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/extend`, { method: "POST", body: JSON.stringify({ days }) }),
   adminCompUser: (userId: string, days: number) =>
     apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/comp`, { method: "POST", body: JSON.stringify({ days }) }),
+  adminResendConfirmation: (userId: string) =>
+    apiFetch<{ message: string }>(`/admin/users/${userId}/resend-confirmation`, { method: "POST" }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
