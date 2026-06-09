@@ -8,6 +8,7 @@ import type { ComponentType, ReactNode } from "react";
 import {
   BookOpen,
   BarChart3,
+  Coins,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -32,6 +33,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/billing", label: "Billing", icon: Ticket },
+  { href: "/admin/usage", label: "Usage", icon: Coins },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/generations", label: "Generations", icon: BarChart3 },
