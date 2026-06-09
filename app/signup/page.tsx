@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, Sparkles, UserRound } from "lucide-react";
-import { signup } from "@/lib/api";
+import { resendConfirmation, signup } from "@/lib/api";
+import { suggestEmailCorrection } from "@/lib/email-typo";
 import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
@@ -29,6 +30,10 @@ export default function SignupPage() {
     resolver: zodResolver(schema),
     defaultValues: { name: "", email: "", phone: "", password: "", promo_code: "" }
   });
+
+  const emailValue = form.watch("email");
+  const emailSuggestion = useMemo(() => suggestEmailCorrection(emailValue || ""), [emailValue]);
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
@@ -73,7 +78,25 @@ export default function SignupPage() {
               <p className="mt-3 break-words rounded-lg bg-white px-4 py-3 text-base font-black text-slate-950 shadow-sm">
                 {confirmation.email}
               </p>
-              <Link href="/login" className="mt-5 block">
+              <button
+                type="button"
+                disabled={resending}
+                onClick={async () => {
+                  setResending(true);
+                  try {
+                    const res = await resendConfirmation(confirmation.email);
+                    toast({ title: "Confirmation re-sent", description: res.message });
+                  } catch (error) {
+                    toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+                  } finally {
+                    setResending(false);
+                  }
+                }}
+                className="mt-5 text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:opacity-60"
+              >
+                {resending ? "Resending…" : "Didn't get the email? Resend"}
+              </button>
+              <Link href="/login" className="mt-3 block">
                 <AuthButton type="button">
                   Go to login
                 </AuthButton>
@@ -88,12 +111,23 @@ export default function SignupPage() {
                   error={form.formState.errors.name?.message}
                   inputProps={{ ...form.register("name"), placeholder: "Your Name" }}
                 />
-                <AuthInput
-                  label="Email address"
-                  icon={<Mail className="h-5 w-5" />}
-                  error={form.formState.errors.email?.message}
-                  inputProps={{ ...form.register("email"), placeholder: "you@school.edu", type: "email" }}
-                />
+                <div>
+                  <AuthInput
+                    label="Email address"
+                    icon={<Mail className="h-5 w-5" />}
+                    error={form.formState.errors.email?.message}
+                    inputProps={{ ...form.register("email"), placeholder: "you@school.edu", type: "email" }}
+                  />
+                  {emailSuggestion ? (
+                    <button
+                      type="button"
+                      onClick={() => form.setValue("email", emailSuggestion, { shouldValidate: true })}
+                      className="mt-1.5 text-left text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+                    >
+                      Did you mean <span className="font-black underline">{emailSuggestion}</span>?
+                    </button>
+                  ) : null}
+                </div>
                 <AuthInput
                   label="Mobile number"
                   icon={<Phone className="h-5 w-5" />}
