@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation } from "@/lib/api";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,25 @@ export default function LoginPage() {
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" }
   });
+
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+
+  async function handleResendConfirmation() {
+    const email = form.getValues("email").trim();
+    if (!email) {
+      toast({ title: "Enter your email", description: "Type your email above, then resend the confirmation link." });
+      return;
+    }
+    setResendingConfirmation(true);
+    try {
+      const res = await resendConfirmation(email);
+      toast({ title: "Confirmation re-sent", description: res.message });
+    } catch (error) {
+      toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+    } finally {
+      setResendingConfirmation(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -189,6 +208,14 @@ export default function LoginPage() {
                   className="text-sm font-black text-blue-600 transition hover:text-blue-700"
                 >
                   Forgot password?
+                </button>
+                <button
+                  type="button"
+                  disabled={resendingConfirmation}
+                  onClick={handleResendConfirmation}
+                  className="block text-sm font-semibold text-slate-500 transition hover:text-blue-600 disabled:opacity-60"
+                >
+                  {resendingConfirmation ? "Resending…" : "Didn't get the confirmation email? Resend"}
                 </button>
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
