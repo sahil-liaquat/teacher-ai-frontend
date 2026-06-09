@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PauseCircle, PlayCircle, Search, ShieldCheck, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight, Send } from "lucide-react";
+import { PauseCircle, PlayCircle, Search, ShieldCheck, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight, Send, Trash2 } from "lucide-react";
 import { backendApi, type ApiUser } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDate } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,18 @@ export default function AdminUsersPage() {
     mutationFn: (user: ApiUser) => backendApi.adminResendConfirmation(user.id!),
     onSuccess: (res) => toast({ title: "Confirmation re-sent", description: res.message }),
     onError: (e) => toast({ title: "Resend failed", description: e instanceof Error ? e.message : "Try again." })
+  });
+  const [deleteTarget, setDeleteTarget] = useState<ApiUser | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const deleteMutation = useMutation({
+    mutationFn: (user: ApiUser) => backendApi.adminDeleteUser(user.id!),
+    onSuccess: () => {
+      toast({ title: "User deleted", description: `${deleteTarget?.email ?? "User"} was permanently removed.` });
+      setDeleteTarget(null);
+      setDeleteConfirmText("");
+      client.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e) => toast({ title: "Delete failed", description: e instanceof Error ? e.message : "Try again." })
   });
   const totalPages = users.data?.pages || 1;
   const totalUsers = users.data?.total || 0;
@@ -117,12 +129,12 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} />)}
+                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} />)}
                 </tbody>
               </table>
             </div>
             <div className="grid gap-3 p-4 lg:hidden">
-              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} />)}
+              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} />)}
             </div>
           </>
         ) : null}
@@ -189,11 +201,50 @@ export default function AdminUsersPage() {
           </div>
         </div>
       ) : null}
+
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-user-title" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <UserRoundX className="h-6 w-6" />
+              </span>
+              <div>
+                <h2 id="delete-user-title" className="text-lg font-bold text-gray-900">Delete user permanently?</h2>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  This permanently removes <span className="font-semibold">{displayName(deleteTarget)}</span> and all of their data from TeachPad and Supabase Auth. This cannot be undone.
+                </p>
+              </div>
+            </div>
+            <label className="mt-4 grid gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Type <span className="font-mono normal-case text-gray-700">{deleteTarget.email}</span> to confirm
+              </span>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={deleteTarget.email ?? ""}
+                autoFocus
+              />
+            </label>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }} disabled={deleteMutation.isPending}>Cancel</Button>
+              <Button
+                variant="danger"
+                onClick={() => deleteMutation.mutate(deleteTarget)}
+                disabled={deleteMutation.isPending || deleteConfirmText.trim().toLowerCase() !== (deleteTarget.email ?? "").trim().toLowerCase()}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete User"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
 
-function UserTableRow({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
+function UserTableRow({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
   return (
     <tr className={cn("hover:bg-gray-50 transition-colors", !user.confirmed ? "bg-amber-50/40" : undefined)}>
       <td className="px-6 py-4">
@@ -207,13 +258,13 @@ function UserTableRow({ user, onStatusChange, onGrant, onResend }: { user: ApiUs
       <td className="px-6 py-4"><FunnelCell user={user} /></td>
       <td className="px-6 py-4"><StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill></td>
       <td className="px-6 py-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} />
       </td>
     </tr>
   );
 }
 
-function UserCard({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
+function UserCard({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
   return (
     <div className={cn("rounded-xl border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
       <div className="flex items-start justify-between gap-3">
@@ -229,13 +280,13 @@ function UserCard({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; 
         <Info label="Joined" value={formatDate(user.created_at)} />
       </div>
       <div className="mt-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} />
       </div>
     </div>
   );
 }
 
-function StatusButtons({ user, onStatusChange, onGrant, onResend }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void }) {
+function StatusButtons({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" disabled={!user.is_active} onClick={() => onStatusChange({ user, isActive: false })}>
@@ -252,6 +303,12 @@ function StatusButtons({ user, onStatusChange, onGrant, onResend }: { user: ApiU
         <Button size="sm" variant="outline" onClick={() => onResend(user)}>
           <Send className="h-4 w-4" />
           Resend
+        </Button>
+      ) : null}
+      {user.role !== "admin" ? (
+        <Button size="sm" variant="danger" onClick={() => onDelete(user)}>
+          <Trash2 className="h-4 w-4" />
+          Delete
         </Button>
       ) : null}
     </div>

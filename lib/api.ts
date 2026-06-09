@@ -964,6 +964,8 @@ export const backendApi = {
     apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/comp`, { method: "POST", body: JSON.stringify({ days }) }),
   adminResendConfirmation: (userId: string) =>
     apiFetch<{ message: string }>(`/admin/users/${userId}/resend-confirmation`, { method: "POST" }),
+  adminDeleteUser: (userId: string) =>
+    apiFetch<void>(`/admin/users/${userId}`, { method: "DELETE" }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
