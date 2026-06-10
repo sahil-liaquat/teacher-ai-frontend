@@ -10,6 +10,7 @@ import {
   updateProfile,
   type ApiUser
 } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { normalizeIndianMobile } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,19 +56,21 @@ export function ProfileCompletionModal() {
       if (code) {
         try {
           await backendApi.billingRedeem(code);
-          toast({ title: "Coupon applied", description: "Your access has been updated." });
+          toast({ title: "Coupon applied", description: "Your access has been updated.", variant: "success" });
         } catch (err) {
           toast({
             title: "Coupon not applied",
-            description: err instanceof Error ? err.message : "That code could not be redeemed."
+            description: getErrorMessage(err, "That code could not be redeemed."),
+            variant: "error"
           });
         }
       }
-      toast({ title: "Profile saved", description: "Thanks — you're all set." });
+      toast({ title: "Profile saved", description: "Thanks — you're all set.", variant: "success" });
     } catch (err) {
       toast({
         title: "Could not save",
-        description: err instanceof Error ? err.message : "Please try again."
+        description: getErrorMessage(err, "Please try again."),
+        variant: "error"
       });
     } finally {
       setSubmitting(false);

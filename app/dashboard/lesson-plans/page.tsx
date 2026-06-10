@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, Eye, Sparkles } from "lucide-react";
 import { backendApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ export default function LessonPlansListPage() {
     <div className="space-y-6">
       <PageHeader title="Lesson Plans" description="AI-generated lesson plans saved from your existing FastAPI backend." actions={<Link href="/dashboard/lesson-plans/new"><Button><Sparkles className="h-4 w-4" /> New Lesson Plan</Button></Link>} />
       {plans.isLoading ? <Card><CardContent className="p-6 text-sm font-semibold text-[#6d6f78]">Loading saved lesson plans...</CardContent></Card> : null}
-      {plans.error ? <Card><CardContent className="p-6 text-red-700">{plans.error instanceof Error ? plans.error.message : "Could not load lesson plans"}</CardContent></Card> : null}
+      {plans.error ? <Card><CardContent className="p-6 text-red-700">{getErrorMessage(plans.error, "Could not load lesson plans")}</CardContent></Card> : null}
       <div className="grid gap-4">
         {plans.data?.items?.length ? plans.data.items.map((plan, index) => (
           <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="clickable-card premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>

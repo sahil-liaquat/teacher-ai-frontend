@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Download, FileText, ImageIcon, Maximize2, X } fr
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { backendApi, isPaymentRequiredError } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import {
   loadLatestPresentationId,
@@ -58,7 +59,7 @@ export default function PresentationOutputPage() {
       })
       .catch((error) => {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Could not load presentation.";
+          const message = getErrorMessage(error, "Could not load presentation.");
           setErrorMessage(message);
           toast({ title: "Could not load presentation", description: message });
         }
@@ -144,7 +145,7 @@ export default function PresentationOutputPage() {
         openUpgrade("PDF export requires a Pro plan.");
         return;
       }
-      const message = error instanceof Error ? error.message : "Could not export PDF.";
+      const message = getErrorMessage(error, "Could not export PDF.");
       toast({ title: "PDF export failed", description: message });
     }
   }
@@ -164,7 +165,7 @@ export default function PresentationOutputPage() {
         openUpgrade("PPTX export requires a Pro plan.");
         return;
       }
-      const message = error instanceof Error ? error.message : "Could not export PPT.";
+      const message = getErrorMessage(error, "Could not export PPT.");
       toast({ title: "PPT export failed", description: message });
     }
   }

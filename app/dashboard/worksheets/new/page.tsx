@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Check, ClipboardCheck, ClipboardList, FileText, FlaskConical, Globe, GraduationCap, Hash, Image, Lightbulb, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -197,7 +198,7 @@ export default function NewWorksheetPage() {
         if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) setClassesError(err instanceof Error ? err.message : "Could not load classes.");
+        if (!cancelled) setClassesError(getErrorMessage(err, "Could not load classes."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingClasses(false);
@@ -224,7 +225,7 @@ export default function NewWorksheetPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Could not load books.";
+          const message = getErrorMessage(err, "Could not load books.");
           setSubjectsError(message);
           setBooksError(message);
         }
@@ -253,7 +254,7 @@ export default function NewWorksheetPage() {
         if (!cancelled) setChapters(items);
       })
       .catch((err) => {
-        if (!cancelled) setChaptersError(err instanceof Error ? err.message : "Could not load chapters.");
+        if (!cancelled) setChaptersError(getErrorMessage(err, "Could not load chapters."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingChapters(false);
@@ -440,7 +441,7 @@ export default function NewWorksheetPage() {
         return;
       }
       const rateLimit = getRateLimitNotice(error);
-      const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate worksheet.");
+      const message = rateLimit ? rateLimit.description : getErrorMessage(error, "Could not generate worksheet.");
       setGenerationError(message);
       toast(rateLimit ?? { title: "Generation failed", description: message });
       setGenerating(false);
