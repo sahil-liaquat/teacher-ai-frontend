@@ -150,7 +150,7 @@ export default function NotesGeneratorPage() {
     setFetching(true);
     backendApi.boards(0, 100)
       .then((res) => setBoards(res.items.filter((board) => board.is_active !== false)))
-      .catch((err) => toast({ title: "Could not load boards", description: err.message }))
+      .catch((err) => toast({ title: "Could not load boards", description: getErrorMessage(err, "Could not load boards. Try again."), variant: "error" }))
       .finally(() => setFetching(false));
   }, [toast]);
 
