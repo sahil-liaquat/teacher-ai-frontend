@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/toast";
 import { backendApi } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getWorksheetGeneration, saveWorksheetGeneration } from "@/lib/worksheet-storage";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function WorksheetDetailPage() {
   const params = useParams<{ id: string }>();
@@ -62,16 +63,21 @@ export default function WorksheetDetailPage() {
       setGeneration(saved);
       saveWorksheetGeneration(saved);
       setHasUnsavedWorksheetChanges(false);
-    } catch {
+      if (!options.silent) {
+        toast({ title: "Saved", description: "Worksheet saved.", variant: "success" });
+      }
+    } catch (err) {
       setGeneration(nextGeneration);
-    }
-    if (!options.silent) {
-      toast({ title: "Saved", description: "Worksheet saved." });
+      throw err;
     }
   }
 
   async function save(output = generation?.output_json) {
-    await saveEditedWorksheet(output);
+    try {
+      await saveEditedWorksheet(output);
+    } catch (err) {
+      toast({ title: "Save failed", description: getErrorMessage(err, "Try again"), variant: "error" });
+    }
   }
 
   async function copy(output = generation?.output_json) {

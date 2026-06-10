@@ -392,7 +392,7 @@ export default function PresentationGeneratorPage() {
       const rateLimit = getRateLimitNotice(error);
       const message = rateLimit ? rateLimit.description : getErrorMessage(error, "Could not generate presentation.");
       setGenerationError(message);
-      toast(rateLimit ?? { title: "Generation failed", description: message });
+      toast(rateLimit ?? { title: "Generation failed", description: message, variant: "error" });
       setGenerating(false);
       setGenerationStatus("");
     } finally {
