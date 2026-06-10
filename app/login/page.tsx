@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation } from "@/lib/api";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "forgot">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [resetSentEmail, setResetSentEmail] = useState("");
+  const [resendingReset, setResendingReset] = useState(false);
+  const resendCooldown = useResendCooldown();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" }
@@ -48,10 +51,12 @@ export default function LoginPage() {
       toast({ title: "Enter your email", description: "Type your email above, then resend the confirmation link." });
       return;
     }
+    if (resendingConfirmation || resendCooldown.secondsLeft("confirmation") > 0) return;
     setResendingConfirmation(true);
     try {
       const res = await resendConfirmation(email);
       toast({ title: "Confirmation re-sent", description: res.message });
+      resendCooldown.start("confirmation");
     } catch (error) {
       toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
     } finally {
@@ -111,9 +116,24 @@ export default function LoginPage() {
     try {
       const response = await requestPasswordReset(values.email);
       setResetSentEmail(values.email);
+      resendCooldown.start("reset");
       toast({ title: "Reset email sent", description: response.message || "Check your inbox for the reset link." });
     } catch (error) {
       toast({ title: "Could not send reset email", description: error instanceof Error ? error.message : "Try again" });
+    }
+  }
+
+  async function handleResendReset() {
+    if (!resetSentEmail || resendingReset || resendCooldown.secondsLeft("reset") > 0) return;
+    setResendingReset(true);
+    try {
+      const response = await requestPasswordReset(resetSentEmail);
+      toast({ title: "Reset email re-sent", description: response.message || "Check your inbox for the reset link." });
+      resendCooldown.start("reset");
+    } catch (error) {
+      toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+    } finally {
+      setResendingReset(false);
     }
   }
 
@@ -211,11 +231,15 @@ export default function LoginPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={resendingConfirmation}
+                  disabled={resendingConfirmation || resendCooldown.secondsLeft("confirmation") > 0}
                   onClick={handleResendConfirmation}
                   className="block text-sm font-semibold text-slate-500 transition hover:text-blue-600 disabled:opacity-60"
                 >
-                  {resendingConfirmation ? "Resending…" : "Didn't get the confirmation email? Resend"}
+                  {resendingConfirmation
+                    ? "Resending…"
+                    : resendCooldown.secondsLeft("confirmation") > 0
+                      ? `Resend in ${resendCooldown.secondsLeft("confirmation")}s`
+                      : "Didn't get the confirmation email? Resend"}
                 </button>
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
@@ -237,6 +261,18 @@ export default function LoginPage() {
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-center">
               <p className="break-words text-base font-black text-slate-950">{resetSentEmail}</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Open the link from your inbox to create a new password.</p>
+              <button
+                type="button"
+                disabled={resendingReset || resendCooldown.secondsLeft("reset") > 0}
+                onClick={handleResendReset}
+                className="mt-4 block w-full text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:pointer-events-none disabled:opacity-60"
+              >
+                {resendingReset
+                  ? "Resending…"
+                  : resendCooldown.secondsLeft("reset") > 0
+                    ? `Resend in ${resendCooldown.secondsLeft("reset")}s`
+                    : "Didn't get the email? Resend"}
+              </button>
               <button
                 type="button"
                 onClick={() => {

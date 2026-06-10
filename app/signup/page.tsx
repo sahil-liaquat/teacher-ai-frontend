@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, Sparkles, UserRound } from "lucide-react";
 import { resendConfirmation, signup } from "@/lib/api";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
 import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -34,6 +35,7 @@ export default function SignupPage() {
   const emailValue = form.watch("email");
   const emailSuggestion = useMemo(() => suggestEmailCorrection(emailValue || ""), [emailValue]);
   const [resending, setResending] = useState(false);
+  const resendCooldown = useResendCooldown();
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
@@ -45,6 +47,7 @@ export default function SignupPage() {
         : created.message || "Check your email to confirm your account before logging in.";
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
+      if (!created.email_confirmed) resendCooldown.start();
       form.reset({ name: "", email: "", phone: "", password: "", promo_code: "" });
       toast({ title: "Account created", description: message });
     } catch (error) {
@@ -80,12 +83,14 @@ export default function SignupPage() {
               </p>
               <button
                 type="button"
-                disabled={resending}
+                disabled={resending || resendCooldown.secondsLeft() > 0}
                 onClick={async () => {
+                  if (resending || resendCooldown.secondsLeft() > 0) return;
                   setResending(true);
                   try {
                     const res = await resendConfirmation(confirmation.email);
                     toast({ title: "Confirmation re-sent", description: res.message });
+                    resendCooldown.start();
                   } catch (error) {
                     toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
                   } finally {
@@ -94,7 +99,7 @@ export default function SignupPage() {
                 }}
                 className="mt-5 text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:opacity-60"
               >
-                {resending ? "Resending…" : "Didn't get the email? Resend"}
+                {resending ? "Resending…" : resendCooldown.secondsLeft() > 0 ? `Resend in ${resendCooldown.secondsLeft()}s` : "Didn't get the email? Resend"}
               </button>
               <Link href="/login" className="mt-3 block">
                 <AuthButton type="button">
