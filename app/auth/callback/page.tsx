@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type State =
@@ -64,6 +65,7 @@ export default function GoogleCallbackPage() {
           refresh_token: session.refresh_token,
         });
 
+        // Intentionally silent: local sign-out is best-effort cleanup before redirect.
         // Drop the transient Supabase session (fire-and-forget — the local storage
         // cleanup is unconditional; no need to wait on the server round-trip).
         void supabase.auth.signOut({ scope: "local" }).catch(() => {});
@@ -78,7 +80,7 @@ export default function GoogleCallbackPage() {
       } catch (err) {
         setState({
           status: "error",
-          message: err instanceof Error ? err.message : "We could not complete Google sign-in. Please try again.",
+          message: getErrorMessage(err, "We could not complete Google sign-in. Please try again."),
         });
       }
     }

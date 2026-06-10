@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/errors";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,8 @@ export function GoogleButton({
     } catch (err) {
       toast({
         title: "Google sign-in failed",
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err, "Please try again."),
+        variant: "error",
       });
       setLoading(false);
     }

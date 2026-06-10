@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Loader2, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 
 type ConfirmationState =
   | { status: "checking"; message: string }
@@ -107,7 +108,7 @@ export default function ConfirmEmailPage() {
         if (!cancelled) {
           setState({
             status: "error",
-            message: error instanceof Error ? error.message : "The link was verified, but we could not continue. Please try again."
+            message: getErrorMessage(error, "The link was verified, but we could not continue. Please try again.")
           });
         }
       }
