@@ -10,6 +10,7 @@ export function QuizShareCard() {
   const { toast } = useToast();
 
   async function copyQuizLink() {
+    // Intentionally silent: clipboard write is best-effort in the quiz mock.
     await navigator.clipboard?.writeText(quizSummary.link).catch(() => undefined);
     toast({ title: "Quiz link copied", description: "Share it with your students." });
   }

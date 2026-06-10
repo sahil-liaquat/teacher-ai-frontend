@@ -13,6 +13,7 @@ export default function WorksheetDetailPage() {
   const [tab, setTab] = useState("Worksheet");
   const [generation, setGeneration] = useState<any>(null);
   const [hasUnsavedWorksheetChanges, setHasUnsavedWorksheetChanges] = useState(false);
+  const [autoSaveFailed, setAutoSaveFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -40,7 +41,9 @@ export default function WorksheetDetailPage() {
   useEffect(() => {
     if (!generation?.output_json || !hasUnsavedWorksheetChanges) return;
     const timeout = window.setTimeout(() => {
-      saveEditedWorksheet(generation.output_json, { silent: true }).catch(() => undefined);
+      saveEditedWorksheet(generation.output_json, { silent: true })
+        .then(() => setAutoSaveFailed(false))
+        .catch(() => setAutoSaveFailed(true));
     }, 1200);
     return () => window.clearTimeout(timeout);
   }, [generation?.output_json, hasUnsavedWorksheetChanges]);
@@ -131,6 +134,22 @@ export default function WorksheetDetailPage() {
 
   return (
     <div className="print-shell">
+      {autoSaveFailed ? (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+          <span>Changes not saved — we'll keep retrying as you edit.</span>
+          <button
+            type="button"
+            className="font-black underline"
+            onClick={() =>
+              void saveEditedWorksheet()
+                .then(() => setAutoSaveFailed(false))
+                .catch(() => setAutoSaveFailed(true))
+            }
+          >
+            Retry now
+          </button>
+        </div>
+      ) : null}
       <WorksheetOutput
         output={generation.output_json}
         tab={tab}

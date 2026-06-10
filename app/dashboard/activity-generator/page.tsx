@@ -295,6 +295,7 @@ export default function ActivityGeneratorPage() {
         setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
+      // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
       .catch(() => undefined);
     return () => {
       cancelled = true;
