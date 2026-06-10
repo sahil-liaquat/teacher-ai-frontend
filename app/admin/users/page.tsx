@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 const USERS_PAGE_SIZE = 25;
 
@@ -36,9 +37,13 @@ export default function AdminUsersPage() {
     },
     onError: (e) => toast({ title: "Grant failed", description: e instanceof Error ? e.message : "Try again." })
   });
+  const resendCooldown = useResendCooldown();
   const resendMutation = useMutation({
     mutationFn: (user: ApiUser) => backendApi.adminResendConfirmation(user.id!),
-    onSuccess: (res) => toast({ title: "Confirmation re-sent", description: res.message }),
+    onSuccess: (res, target) => {
+      toast({ title: "Confirmation re-sent", description: res.message });
+      if (target.id) resendCooldown.start(target.id);
+    },
     onError: (e) => toast({ title: "Resend failed", description: e instanceof Error ? e.message : "Try again." })
   });
   const [deleteTarget, setDeleteTarget] = useState<ApiUser | null>(null);
@@ -129,12 +134,12 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} />)}
+                  {filteredUsers.map((user) => <UserTableRow key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} resendSeconds={resendCooldown.secondsLeft(user.id || "")} resendPending={resendMutation.isPending && resendMutation.variables?.id === user.id} />)}
                 </tbody>
               </table>
             </div>
             <div className="grid gap-3 p-4 lg:hidden">
-              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} />)}
+              {filteredUsers.map((user) => <UserCard key={user.id} user={user} onStatusChange={setStatusChange} onGrant={setGrant} onResend={(u) => resendMutation.mutate(u)} onDelete={setDeleteTarget} resendSeconds={resendCooldown.secondsLeft(user.id || "")} resendPending={resendMutation.isPending && resendMutation.variables?.id === user.id} />)}
             </div>
           </>
         ) : null}
@@ -244,7 +249,17 @@ export default function AdminUsersPage() {
   );
 }
 
-function UserTableRow({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
+type UserActionProps = {
+  user: ApiUser;
+  onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void;
+  onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void;
+  onResend: (user: ApiUser) => void;
+  onDelete: (user: ApiUser) => void;
+  resendSeconds: number;
+  resendPending: boolean;
+};
+
+function UserTableRow({ user, onStatusChange, onGrant, onResend, onDelete, resendSeconds, resendPending }: UserActionProps) {
   return (
     <tr className={cn("hover:bg-gray-50 transition-colors", !user.confirmed ? "bg-amber-50/40" : undefined)}>
       <td className="px-6 py-4">
@@ -258,13 +273,13 @@ function UserTableRow({ user, onStatusChange, onGrant, onResend, onDelete }: { u
       <td className="px-6 py-4"><FunnelCell user={user} /></td>
       <td className="px-6 py-4"><StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill></td>
       <td className="px-6 py-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} resendSeconds={resendSeconds} resendPending={resendPending} />
       </td>
     </tr>
   );
 }
 
-function UserCard({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
+function UserCard({ user, onStatusChange, onGrant, onResend, onDelete, resendSeconds, resendPending }: UserActionProps) {
   return (
     <div className={cn("rounded-xl border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
       <div className="flex items-start justify-between gap-3">
@@ -280,13 +295,13 @@ function UserCard({ user, onStatusChange, onGrant, onResend, onDelete }: { user:
         <Info label="Joined" value={formatDate(user.created_at)} />
       </div>
       <div className="mt-4">
-        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} />
+        <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onResend={onResend} onDelete={onDelete} resendSeconds={resendSeconds} resendPending={resendPending} />
       </div>
     </div>
   );
 }
 
-function StatusButtons({ user, onStatusChange, onGrant, onResend, onDelete }: { user: ApiUser; onStatusChange: (value: { user: ApiUser; isActive: boolean }) => void; onGrant: (value: { user: ApiUser; mode: "extend" | "comp" }) => void; onResend: (user: ApiUser) => void; onDelete: (user: ApiUser) => void }) {
+function StatusButtons({ user, onStatusChange, onGrant, onResend, onDelete, resendSeconds, resendPending }: UserActionProps) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button size="sm" variant="outline" disabled={!user.is_active} onClick={() => onStatusChange({ user, isActive: false })}>
@@ -300,9 +315,9 @@ function StatusButtons({ user, onStatusChange, onGrant, onResend, onDelete }: { 
       <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "extend" })}>Extend</Button>
       <Button size="sm" variant="outline" onClick={() => onGrant({ user, mode: "comp" })}>Comp</Button>
       {!user.confirmed ? (
-        <Button size="sm" variant="outline" onClick={() => onResend(user)}>
+        <Button size="sm" variant="outline" disabled={resendPending || resendSeconds > 0} onClick={() => onResend(user)}>
           <Send className="h-4 w-4" />
-          Resend
+          {resendPending ? "Sending…" : resendSeconds > 0 ? `Resend (${resendSeconds}s)` : "Resend"}
         </Button>
       ) : null}
       {user.role !== "admin" ? (
