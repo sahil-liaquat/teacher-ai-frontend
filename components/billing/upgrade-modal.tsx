@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import type { ReactNode } from "react";
 import { Check, ShieldCheck, Sparkles, X, Zap } from "lucide-react";
 import { backendApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useBilling } from "@/lib/use-billing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -251,7 +252,8 @@ function UpgradeModalUI({
     } catch (err) {
       toast({
         title: "Could not start checkout",
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err, "Please try again."),
+        variant: "error",
       });
     } finally {
       // Only reset loading when we did NOT hand off to Razorpay. If we did,

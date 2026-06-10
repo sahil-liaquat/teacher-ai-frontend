@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Boxes, Check, ClipboardCheck, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Presentation, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -138,7 +139,7 @@ export default function PresentationGeneratorPage() {
     setFetching(true);
     backendApi.boards(0, 100)
       .then((res) => setBoards(res.items.filter((board) => board.is_active !== false)))
-      .catch((error) => toast({ title: "Could not load boards", description: error instanceof Error ? error.message : "Please try again." }))
+      .catch((error) => toast({ title: "Could not load boards", description: getErrorMessage(error, "Please try again."), variant: "error" }))
       .finally(() => setFetching(false));
   }, [toast]);
 
@@ -155,7 +156,7 @@ export default function PresentationGeneratorPage() {
         if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
       })
       .catch((error) => {
-        if (!cancelled) setClassesError(error instanceof Error ? error.message : "Could not load classes.");
+        if (!cancelled) setClassesError(getErrorMessage(error, "Could not load classes."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingClasses(false);
@@ -178,7 +179,7 @@ export default function PresentationGeneratorPage() {
         if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false));
       })
       .catch((error) => {
-        if (!cancelled) setBooksError(error instanceof Error ? error.message : "Could not load books.");
+        if (!cancelled) setBooksError(getErrorMessage(error, "Could not load books."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingBooks(false);
@@ -201,7 +202,7 @@ export default function PresentationGeneratorPage() {
         if (!cancelled) setChapters(items);
       })
       .catch((error) => {
-        if (!cancelled) setChaptersError(error instanceof Error ? error.message : "Could not load chapters.");
+        if (!cancelled) setChaptersError(getErrorMessage(error, "Could not load chapters."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingChapters(false);
@@ -271,6 +272,7 @@ export default function PresentationGeneratorPage() {
         setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
+      // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
       .catch(() => undefined);
     return () => {
       cancelled = true;
@@ -388,9 +390,9 @@ export default function PresentationGeneratorPage() {
         return;
       }
       const rateLimit = getRateLimitNotice(error);
-      const message = rateLimit ? rateLimit.description : (error instanceof Error ? error.message : "Could not generate presentation.");
+      const message = rateLimit ? rateLimit.description : getErrorMessage(error, "Could not generate presentation.");
       setGenerationError(message);
-      toast(rateLimit ?? { title: "Generation failed", description: message });
+      toast(rateLimit ?? { title: "Generation failed", description: message, variant: "error" });
       setGenerating(false);
       setGenerationStatus("");
     } finally {

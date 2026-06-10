@@ -445,7 +445,8 @@ function normalizeError(error: any) {
 
 async function parseError(res: Response) {
   const error = await res.json().catch(() => ({ detail: res.statusText }));
-  return Object.assign(new Error(normalizeError(error)), { status: res.status });
+  const code = typeof (error as { code?: unknown })?.code === "string" ? (error as { code: string }).code : undefined;
+  return Object.assign(new Error(normalizeError(error)), { status: res.status, code });
 }
 
 // ─── Billing types ────────────────────────────────────────────────────────────

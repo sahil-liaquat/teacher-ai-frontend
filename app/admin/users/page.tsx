@@ -8,6 +8,7 @@ import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, Stat
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
@@ -32,31 +33,31 @@ export default function AdminUsersPage() {
       ? backendApi.adminCompUser(grant!.user.id!, grantDays)
       : backendApi.adminExtendUser(grant!.user.id!, grantDays),
     onSuccess: () => {
-      toast({ title: grant!.mode === "comp" ? "Comp granted" : "Access extended", description: `${grantDays} days for ${grant!.user.email}` });
+      toast({ title: grant!.mode === "comp" ? "Comp granted" : "Access extended", description: `${grantDays} days for ${grant!.user.email}`, variant: "success" });
       setGrant(null);
     },
-    onError: (e) => toast({ title: "Grant failed", description: e instanceof Error ? e.message : "Try again." })
+    onError: (e) => toast({ title: "Grant failed", description: getErrorMessage(e, "Try again."), variant: "error" })
   });
   const resendCooldown = useResendCooldown();
   const resendMutation = useMutation({
     mutationFn: (user: ApiUser) => backendApi.adminResendConfirmation(user.id!),
     onSuccess: (res, target) => {
-      toast({ title: "Confirmation re-sent", description: res.message });
+      toast({ title: "Confirmation re-sent", description: res.message, variant: "success" });
       if (target.id) resendCooldown.start(target.id);
     },
-    onError: (e) => toast({ title: "Resend failed", description: e instanceof Error ? e.message : "Try again." })
+    onError: (e) => toast({ title: "Resend failed", description: getErrorMessage(e, "Try again."), variant: "error" })
   });
   const [deleteTarget, setDeleteTarget] = useState<ApiUser | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const deleteMutation = useMutation({
     mutationFn: (user: ApiUser) => backendApi.adminDeleteUser(user.id!),
     onSuccess: () => {
-      toast({ title: "User deleted", description: `${deleteTarget?.email ?? "User"} was permanently removed.` });
+      toast({ title: "User deleted", description: `${deleteTarget?.email ?? "User"} was permanently removed.`, variant: "success" });
       setDeleteTarget(null);
       setDeleteConfirmText("");
       client.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (e) => toast({ title: "Delete failed", description: e instanceof Error ? e.message : "Try again." })
+    onError: (e) => toast({ title: "Delete failed", description: getErrorMessage(e, "Try again."), variant: "error" })
   });
   const totalPages = users.data?.pages || 1;
   const totalUsers = users.data?.total || 0;

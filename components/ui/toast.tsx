@@ -3,8 +3,10 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type Toast = { id: string; title: string; description?: string };
+type ToastVariant = "error" | "success";
+type Toast = { id: string; title: string; description?: string; variant?: ToastVariant };
 type ToastContext = { toast: (toast: Omit<Toast, "id">) => void };
 
 const Context = createContext<ToastContext | null>(null);
@@ -32,10 +34,22 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex w-80 flex-col gap-2">
         {toasts.map((toast) => (
-          <div key={toast.id} className="rounded-lg border border-border bg-white p-4 shadow-soft">
+          <div
+            key={toast.id}
+            className={cn(
+              "rounded-lg border bg-white p-4 shadow-soft",
+              toast.variant === "error" && "border-red-200 bg-red-50/60",
+              toast.variant === "success" && "border-emerald-200",
+              !toast.variant && "border-border"
+            )}
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold">{toast.title}</p>
+                <p className={cn(
+                  "text-sm font-semibold",
+                  toast.variant === "error" && "text-red-700",
+                  toast.variant === "success" && "text-emerald-700"
+                )}>{toast.title}</p>
                 {toast.description ? <p className="mt-1 text-xs text-muted-foreground">{toast.description}</p> : null}
               </div>
               <Button

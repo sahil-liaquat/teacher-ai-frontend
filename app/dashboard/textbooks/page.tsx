@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,7 @@ export default function TeacherTextbooksPage() {
         if (!cancelled) setBoards(res.items.filter((board) => board.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) toast({ title: "Could not load boards", description: err instanceof Error ? err.message : "Try again" });
+        if (!cancelled) toast({ title: "Could not load boards", description: getErrorMessage(err, "Try again"), variant: "error" });
       })
       .finally(() => {
         if (!cancelled) setLoadingBoards(false);
@@ -74,7 +75,7 @@ export default function TeacherTextbooksPage() {
       } catch (err) {
         if (!cancelled) {
           setSummary({ classes: 0, books: 0, loading: false });
-          toast({ title: "Could not load textbook summary", description: err instanceof Error ? err.message : "Try again" });
+          toast({ title: "Could not load textbook summary", description: getErrorMessage(err, "Try again"), variant: "error" });
         }
       }
     }
@@ -102,7 +103,7 @@ export default function TeacherTextbooksPage() {
         if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) toast({ title: "Could not load classes", description: err instanceof Error ? err.message : "Try again" });
+        if (!cancelled) toast({ title: "Could not load classes", description: getErrorMessage(err, "Try again"), variant: "error" });
       })
       .finally(() => {
         if (!cancelled) setLoadingClasses(false);
@@ -126,7 +127,7 @@ export default function TeacherTextbooksPage() {
         if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) toast({ title: "Could not load textbooks", description: err instanceof Error ? err.message : "Try again" });
+        if (!cancelled) toast({ title: "Could not load textbooks", description: getErrorMessage(err, "Try again"), variant: "error" });
       })
       .finally(() => {
         if (!cancelled) setLoadingBooks(false);

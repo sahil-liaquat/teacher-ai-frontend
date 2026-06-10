@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
 import { clearToken, getToken, resetPassword } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/components/ui/toast";
 
 const schema = z.object({
@@ -27,24 +28,10 @@ function getRecoveryToken() {
   return hashParams.get("access_token") || searchParams.get("access_token") || getToken() || "";
 }
 
-function getResetPasswordErrorMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : "Please request a new reset link.";
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes("expired") || normalized.includes("session_not_found") || normalized.includes("session_expired") || normalized.includes("invalid jwt")) {
-    return "This reset link has expired or is no longer valid. Please request a fresh reset link.";
-  }
-
-  if (normalized.includes("same_password")) {
-    return "Please choose a new password that is different from your current password.";
-  }
-
-  if (normalized.includes("weak") || normalized.includes("password")) {
-    return message;
-  }
-
-  return message;
-}
+const RESET_ERROR_OVERRIDES: Record<string, string> = {
+  SESSION_EXPIRED: "This reset link has expired or is no longer valid. Please request a fresh reset link.",
+  VALIDATION: "Please choose a new password that is different from your current password."
+};
 
 export default function ResetPasswordPage() {
   const { toast } = useToast();
@@ -76,9 +63,9 @@ export default function ResetPasswordPage() {
       setIsComplete(true);
       clearToken();
       form.reset();
-      toast({ title: "Password updated", description: response.message || "You can now log in." });
+      toast({ title: "Password updated", description: response.message || "You can now log in.", variant: "success" });
     } catch (error) {
-      toast({ title: "Password reset failed", description: getResetPasswordErrorMessage(error) });
+      toast({ title: "Password reset failed", description: getErrorMessage(error, "Please request a new reset link.", RESET_ERROR_OVERRIDES), variant: "error" });
     }
   }
 

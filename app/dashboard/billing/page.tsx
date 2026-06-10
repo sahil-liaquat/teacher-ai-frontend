@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { backendApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useBilling } from "@/lib/use-billing";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { cn } from "@/lib/utils";
@@ -70,14 +71,13 @@ export default function BillingPage() {
       toast({
         title: "Code redeemed!",
         description: "Your plan has been updated successfully.",
+        variant: "success",
       });
     } catch (err) {
       toast({
         title: "Could not redeem code",
-        description:
-          err instanceof Error
-            ? err.message
-            : "Please check the code and try again.",
+        description: getErrorMessage(err, "Please check the code and try again."),
+        variant: "error",
       });
     } finally {
       setRedeemLoading(false);
@@ -101,12 +101,13 @@ export default function BillingPage() {
         title: "Subscription cancelled",
         description:
           "Your Pro access will remain active until the current period ends.",
+        variant: "success",
       });
     } catch (err) {
       toast({
         title: "Could not cancel subscription",
-        description:
-          err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err, "Please try again."),
+        variant: "error",
       });
     } finally {
       setCancelLoading(false);

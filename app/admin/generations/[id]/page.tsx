@@ -6,6 +6,7 @@ import { FileText } from "lucide-react";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { LessonPlanOutput } from "@/components/generation-output";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminGenerationDetailPage() {
   const params = useParams<{ id: string }>();
@@ -21,7 +22,7 @@ export default function AdminGenerationDetailPage() {
       <AdminPanel>
         <EmptyState
           title="Could not load generation"
-          description={generation.error instanceof Error ? generation.error.message : "This backend exposes lesson-plan detail records only."}
+          description={getErrorMessage(generation.error, "This backend exposes lesson-plan detail records only.")}
         />
       </AdminPanel>
     );

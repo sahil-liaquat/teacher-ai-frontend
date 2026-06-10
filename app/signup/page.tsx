@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, LockKeyhole, Mail, Phone, Quote, Sparkles, UserRound } from "lucide-react";
 import { resendConfirmation, signup } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
 import { phoneSchema } from "@/lib/phone";
@@ -49,9 +50,9 @@ export default function SignupPage() {
       setConfirmation({ email: created.email, message });
       if (!created.email_confirmed) resendCooldown.start();
       form.reset({ name: "", email: "", phone: "", password: "", promo_code: "" });
-      toast({ title: "Account created", description: message });
+      toast({ title: "Account created", description: message, variant: "success" });
     } catch (error) {
-      toast({ title: "Signup failed", description: error instanceof Error ? error.message : "Please try again." });
+      toast({ title: "Signup failed", description: getErrorMessage(error, "Please try again."), variant: "error" });
     }
   }
 
@@ -89,10 +90,10 @@ export default function SignupPage() {
                   setResending(true);
                   try {
                     const res = await resendConfirmation(confirmation.email);
-                    toast({ title: "Confirmation re-sent", description: res.message });
+                    toast({ title: "Confirmation re-sent", description: res.message, variant: "success" });
                     resendCooldown.start();
                   } catch (error) {
-                    toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+                    toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
                   } finally {
                     setResending(false);
                   }

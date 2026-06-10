@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/profile";
 import { useToast } from "@/components/ui/toast";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, requestPasswordReset, type ApiUser } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
 import { normalizeIndianMobile } from "@/lib/phone";
@@ -171,9 +172,9 @@ export default function SettingsPage() {
         queryClient.setQueryData(BILLING_QUERY_KEY, updatedBilling);
       }
 
-      toast({ title: "Profile saved", description: "Your profile details are up to date." });
+      toast({ title: "Profile saved", description: "Your profile details are up to date.", variant: "success" });
     } catch (error) {
-      toast({ title: "Could not save profile", description: error instanceof Error ? error.message : "Please try again." });
+      toast({ title: "Could not save profile", description: getErrorMessage(error, "Please try again."), variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -190,9 +191,9 @@ export default function SettingsPage() {
     try {
       const response = await requestPasswordReset(accountEmail);
       setResetSent(true);
-      toast({ title: "Reset link sent", description: response.message || `Check ${accountEmail} for the reset link.` });
+      toast({ title: "Reset link sent", description: response.message || `Check ${accountEmail} for the reset link.`, variant: "success" });
     } catch (error) {
-      toast({ title: "Could not send reset link", description: error instanceof Error ? error.message : "Please try again." });
+      toast({ title: "Could not send reset link", description: getErrorMessage(error, "Please try again."), variant: "error" });
     } finally {
       setSendingReset(false);
     }

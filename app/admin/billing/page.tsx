@@ -8,6 +8,7 @@ import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, StatusPill, form
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/errors";
 
 const KINDS: PromoKind[] = ["trial", "comp", "discount"];
 
@@ -21,17 +22,17 @@ export default function AdminBillingPage() {
   const create = useMutation({
     mutationFn: () => backendApi.adminCreatePromoCode(form),
     onSuccess: (created) => {
-      toast({ title: "Code created", description: created.code });
+      toast({ title: "Code created", description: created.code, variant: "success" });
       setForm({ kind: "comp", duration_days: 30 });
       client.invalidateQueries({ queryKey: ["admin-promo-codes"] });
     },
-    onError: (e) => toast({ title: "Could not create code", description: e instanceof Error ? e.message : "Try again." })
+    onError: (e) => toast({ title: "Could not create code", description: getErrorMessage(e, "Try again."), variant: "error" })
   });
 
   const toggle = useMutation({
     mutationFn: (c: PromoCodeOut) => backendApi.adminSetPromoActive(c.id, !c.is_active),
     onSuccess: () => client.invalidateQueries({ queryKey: ["admin-promo-codes"] }),
-    onError: (e) => toast({ title: "Could not update code", description: e instanceof Error ? e.message : "Try again." })
+    onError: (e) => toast({ title: "Could not update code", description: getErrorMessage(e, "Try again."), variant: "error" })
   });
 
   const isDiscount = form.kind === "discount";

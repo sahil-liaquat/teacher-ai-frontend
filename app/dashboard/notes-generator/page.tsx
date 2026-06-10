@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, PenLine, Save, Share2, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -93,7 +94,7 @@ export default function NotesGeneratorPage() {
       })
       .catch((error) => {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Could not load saved notes.";
+          const message = getErrorMessage(error, "Could not load saved notes.");
           setSavedGenerationError(message);
           toast({ title: "Could not load notes", description: message });
         }
@@ -149,7 +150,7 @@ export default function NotesGeneratorPage() {
     setFetching(true);
     backendApi.boards(0, 100)
       .then((res) => setBoards(res.items.filter((board) => board.is_active !== false)))
-      .catch((err) => toast({ title: "Could not load boards", description: err.message }))
+      .catch((err) => toast({ title: "Could not load boards", description: getErrorMessage(err, "Could not load boards. Try again."), variant: "error" }))
       .finally(() => setFetching(false));
   }, [toast]);
 
@@ -166,7 +167,7 @@ export default function NotesGeneratorPage() {
         if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) setClassesError(err instanceof Error ? err.message : "Could not load classes.");
+        if (!cancelled) setClassesError(getErrorMessage(err, "Could not load classes."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingClasses(false);
@@ -193,7 +194,7 @@ export default function NotesGeneratorPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Could not load books.";
+          const message = getErrorMessage(err, "Could not load books.");
           setSubjectsError(message);
           setBooksError(message);
         }
@@ -222,7 +223,7 @@ export default function NotesGeneratorPage() {
         if (!cancelled) setChapters(items);
       })
       .catch((err) => {
-        if (!cancelled) setChaptersError(err instanceof Error ? err.message : "Could not load chapters.");
+        if (!cancelled) setChaptersError(getErrorMessage(err, "Could not load chapters."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingChapters(false);
@@ -290,6 +291,7 @@ export default function NotesGeneratorPage() {
         setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
+      // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
       .catch(() => undefined);
     return () => {
       cancelled = true;
@@ -392,7 +394,7 @@ export default function NotesGeneratorPage() {
       setNotes(generation.output_json);
       toast({ title: "Notes generated", description: "Your classroom notes are ready below." });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not generate notes.";
+      const message = getErrorMessage(error, "Could not generate notes.");
       setGenerationError(message);
       toast({ title: "Generation failed", description: message });
     } finally {
@@ -452,7 +454,7 @@ export default function NotesGeneratorPage() {
       });
       toast({ title: "PDF downloaded", description: "Your notes were exported as a PDF." });
     } catch (error) {
-      toast({ title: "PDF export failed", description: error instanceof Error ? error.message : "Could not export notes PDF." });
+      toast({ title: "PDF export failed", description: getErrorMessage(error, "Could not export notes PDF."), variant: "error" });
     }
   }
 
@@ -486,7 +488,7 @@ export default function NotesGeneratorPage() {
           setSavedGenerationLoading(true);
           backendApi.notesGeneration(generationId)
             .then((generation) => setNotes(generation.output_json))
-            .catch((error) => setSavedGenerationError(error instanceof Error ? error.message : "Could not load saved notes."))
+            .catch((error) => setSavedGenerationError(getErrorMessage(error, "Could not load saved notes.")))
             .finally(() => setSavedGenerationLoading(false));
         }}
         onBack={() => {

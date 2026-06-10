@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { Activity, ArrowLeft, BookOpen, Boxes, Brain, Check, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, Save, Share2, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
@@ -95,7 +96,7 @@ export default function ActivityGeneratorPage() {
       })
       .catch((error) => {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Could not load saved activity.";
+          const message = getErrorMessage(error, "Could not load saved activity.");
           setSavedGenerationError(message);
           toast({ title: "Could not load activity", description: message });
         }
@@ -153,7 +154,7 @@ export default function ActivityGeneratorPage() {
     setFetching(true);
     backendApi.boards(0, 100)
       .then((res) => setBoards(res.items.filter((board) => board.is_active !== false)))
-      .catch((err) => toast({ title: "Could not load boards", description: err.message }))
+      .catch((err) => toast({ title: "Could not load boards", description: getErrorMessage(err, "Could not load boards. Try again."), variant: "error" }))
       .finally(() => setFetching(false));
   }, [toast]);
 
@@ -170,7 +171,7 @@ export default function ActivityGeneratorPage() {
         if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
       })
       .catch((err) => {
-        if (!cancelled) setClassesError(err instanceof Error ? err.message : "Could not load classes.");
+        if (!cancelled) setClassesError(getErrorMessage(err, "Could not load classes."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingClasses(false);
@@ -197,7 +198,7 @@ export default function ActivityGeneratorPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "Could not load books.";
+          const message = getErrorMessage(err, "Could not load books.");
           setSubjectsError(message);
           setBooksError(message);
         }
@@ -226,7 +227,7 @@ export default function ActivityGeneratorPage() {
         if (!cancelled) setChapters(items);
       })
       .catch((err) => {
-        if (!cancelled) setChaptersError(err instanceof Error ? err.message : "Could not load chapters.");
+        if (!cancelled) setChaptersError(getErrorMessage(err, "Could not load chapters."));
       })
       .finally(() => {
         if (!cancelled) setIsLoadingChapters(false);
@@ -294,6 +295,7 @@ export default function ActivityGeneratorPage() {
         setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
+      // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
       .catch(() => undefined);
     return () => {
       cancelled = true;
@@ -397,7 +399,7 @@ export default function ActivityGeneratorPage() {
       setActivity(generation.output_json);
       toast({ title: "Activity generated", description: "Your classroom activity is ready." });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not generate activity.";
+      const message = getErrorMessage(error, "Could not generate activity.");
       setGenerationError(message);
       toast({ title: "Generation failed", description: message });
     } finally {
@@ -454,7 +456,7 @@ export default function ActivityGeneratorPage() {
       });
       toast({ title: "PDF downloaded", description: "Your activity was exported as a PDF." });
     } catch (error) {
-      toast({ title: "PDF export failed", description: error instanceof Error ? error.message : "Could not export activity PDF." });
+      toast({ title: "PDF export failed", description: getErrorMessage(error, "Could not export activity PDF."), variant: "error" });
     }
   }
 
@@ -488,7 +490,7 @@ export default function ActivityGeneratorPage() {
           setSavedGenerationLoading(true);
           backendApi.activity(generationId)
             .then((generation) => setActivity(generation.output_json))
-            .catch((error) => setSavedGenerationError(error instanceof Error ? error.message : "Could not load saved activity."))
+            .catch((error) => setSavedGenerationError(getErrorMessage(error, "Could not load saved activity.")))
             .finally(() => setSavedGenerationLoading(false));
         }}
         onBack={() => {

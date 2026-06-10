@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
@@ -55,10 +56,10 @@ export default function LoginPage() {
     setResendingConfirmation(true);
     try {
       const res = await resendConfirmation(email);
-      toast({ title: "Confirmation re-sent", description: res.message });
+      toast({ title: "Confirmation re-sent", description: res.message, variant: "success" });
       resendCooldown.start("confirmation");
     } catch (error) {
-      toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+      toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {
       setResendingConfirmation(false);
     }
@@ -85,6 +86,7 @@ export default function LoginPage() {
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
         router.replace(user.role === "admin" ? "/admin" : "/dashboard");
       } catch {
+        // Intentionally silent: a stale/invalid stored session should land on the login form, not an error.
         clearToken();
         queryClient.clear();
         if (!cancelled) setCheckingAuth(false);
@@ -108,7 +110,7 @@ export default function LoginPage() {
       router.replace(destination);
       router.refresh();
     } catch (error) {
-      toast({ title: "Login failed", description: error instanceof Error ? error.message : "Try again" });
+      toast({ title: "Login failed", description: getErrorMessage(error, "Try again"), variant: "error" });
     }
   }
 
@@ -117,9 +119,9 @@ export default function LoginPage() {
       const response = await requestPasswordReset(values.email);
       setResetSentEmail(values.email);
       resendCooldown.start("reset");
-      toast({ title: "Reset email sent", description: response.message || "Check your inbox for the reset link." });
+      toast({ title: "Reset email sent", description: response.message || "Check your inbox for the reset link.", variant: "success" });
     } catch (error) {
-      toast({ title: "Could not send reset email", description: error instanceof Error ? error.message : "Try again" });
+      toast({ title: "Could not send reset email", description: getErrorMessage(error, "Try again"), variant: "error" });
     }
   }
 
@@ -128,10 +130,10 @@ export default function LoginPage() {
     setResendingReset(true);
     try {
       const response = await requestPasswordReset(resetSentEmail);
-      toast({ title: "Reset email re-sent", description: response.message || "Check your inbox for the reset link." });
+      toast({ title: "Reset email re-sent", description: response.message || "Check your inbox for the reset link.", variant: "success" });
       resendCooldown.start("reset");
     } catch (error) {
-      toast({ title: "Could not resend", description: error instanceof Error ? error.message : "Try again." });
+      toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {
       setResendingReset(false);
     }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { backendApi, getRateLimitNotice, isPaymentRequiredError, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
@@ -81,7 +82,7 @@ export default function GeneratingLessonPlanPage() {
         setError(rateLimit.description);
         toast(rateLimit);
       } else {
-        setError(err instanceof Error ? err.message : "Could not generate the lesson plan.");
+        setError(getErrorMessage(err, "Could not generate the lesson plan."));
       }
     } finally {
       window.clearTimeout(t1);
