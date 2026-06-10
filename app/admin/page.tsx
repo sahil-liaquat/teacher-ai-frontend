@@ -75,6 +75,12 @@ export default function AdminDashboard() {
         }
       />
 
+      {data?.degraded ? (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          Some admin data couldn't be loaded — the numbers below may be incomplete. Refresh to retry.
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         {kpis.map(({ key, label, detail, icon: Icon, tone }) => (
           <MetricCard
@@ -197,7 +203,12 @@ function Empty({ label }: { label: string }) {
 }
 
 async function loadAdminSummary() {
-  return backendApi.adminSummary().catch(loadAdminSummaryFromExistingApis);
+  return backendApi
+    .adminSummary()
+    .then((summary: any) => ({ ...summary, degraded: false }))
+    .catch(() =>
+      loadAdminSummaryFromExistingApis().then((summary) => ({ ...summary, degraded: true }))
+    );
 }
 
 async function loadAdminSummaryFromExistingApis() {

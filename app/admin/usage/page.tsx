@@ -22,6 +22,7 @@ import {
 import { UsageDailyChart } from "@/components/admin/usage-daily-chart";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 const USER_LIMIT = 200;
 
@@ -105,7 +106,7 @@ export default function AdminUsagePage() {
       {usage.isError && !data ? (
         <EmptyState
           title="Could not load usage"
-          description={usage.error instanceof Error ? usage.error.message : "Try again in a moment."}
+          description={getErrorMessage(usage.error, "Try again in a moment.")}
         />
       ) : data ? (
         <UsageContent data={data} sort={sort} onSort={setSort} fetching={usage.isFetching} />

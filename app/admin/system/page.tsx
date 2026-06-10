@@ -5,6 +5,7 @@ import { Activity, CheckCircle2, Clock3, Cpu, Database, RefreshCw, Server, Shiel
 import { backendApi } from "@/lib/api";
 import { AdminPageHeader, HealthIndicator, MetricCard, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminSystemPage() {
   const status = useQuery({ queryKey: ["system-status"], queryFn: () => backendApi.health() });
@@ -90,7 +91,7 @@ export default function AdminSystemPage() {
             <Detail label="Status" value={status.data?.status || "-"} />
             <Detail label="Version" value={status.data?.version || "-"} />
             <Detail label="Request State" value={status.isFetching ? "fetching" : "idle"} />
-            <Detail label="Error" value={status.error instanceof Error ? status.error.message : "-"} danger={Boolean(status.error)} />
+            <Detail label="Error" value={status.error ? getErrorMessage(status.error, "Unavailable") : "-"} danger={Boolean(status.error)} />
           </dl>
         </div>
       </div>

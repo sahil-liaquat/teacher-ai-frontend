@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Hash, LibraryBig } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill } from "@/components/admin/admin-ui";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminBookDetailPage() {
   const params = useParams<{ id: string }>();
@@ -17,7 +18,7 @@ export default function AdminBookDetailPage() {
   if (detail.error || !data) {
     return (
       <AdminPanel>
-        <EmptyState title="Could not load book" description={detail.error instanceof Error ? detail.error.message : "The backend did not return this textbook."} />
+        <EmptyState title="Could not load book" description={getErrorMessage(detail.error, "The backend did not return this textbook.")} />
       </AdminPanel>
     );
   }

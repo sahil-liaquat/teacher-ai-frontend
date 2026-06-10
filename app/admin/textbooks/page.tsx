@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminTextbooksPage() {
   const books = useQuery({ queryKey: ["admin-books"], queryFn: loadBookLibrary });
@@ -68,7 +69,7 @@ export default function AdminTextbooksPage() {
       toast({ title: "Book uploaded", description: "The textbook was parsed and queued for indexing." });
       client.invalidateQueries({ queryKey: ["admin-books"] });
     } catch (error) {
-      toast({ title: "Upload failed", description: error instanceof Error ? error.message : "Try again" });
+      toast({ title: "Upload failed", description: getErrorMessage(error, "Try again"), variant: "error" });
     } finally {
       setBusy(false);
     }
