@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { backendApi, type ActivityKind } from "@/lib/api";
@@ -23,11 +24,17 @@ export function ActivityDetailDrawer({
     enabled: open,
   });
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   if (!open) return null;
   const d = detail.data;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-teachpad-ink/30 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex justify-end bg-teachpad-ink/30 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="relative flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-gray-200 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
           <div>

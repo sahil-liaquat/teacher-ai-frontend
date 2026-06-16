@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, ScrollText } from "lucide-react";
+import { Eye } from "lucide-react";
 import {
   backendApi,
   type ActivityKind,
@@ -111,7 +111,11 @@ export default function AdminActivityPage() {
           }
         >
           {items.length === 0 ? (
-            <EmptyState title="No activity" description="No generations match the current filters." />
+            search ? (
+              <EmptyState title="No matches on this page" description="Search only filters the loaded page. Clear the search to page through all results." />
+            ) : (
+              <EmptyState title="No activity" description="No generations match the current filters." />
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
