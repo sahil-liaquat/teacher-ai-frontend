@@ -325,6 +325,56 @@ export type AdminUsageResponse = {
   daily: AdminUsageDaily[];
 };
 
+export type ActivityKind = "lesson_plan" | "worksheet" | "notes" | "activity" | "presentation";
+
+export type AdminActivityParams = {
+  user_id?: string;
+  kind?: ActivityKind;
+  book_id?: string;
+  start?: string; // inclusive ISO date "YYYY-MM-DD"
+  end?: string;   // exclusive upper bound ISO date "YYYY-MM-DD"
+  skip?: number;
+  limit?: number;
+};
+
+export type ActivityRow = {
+  generation_id: string;
+  user_id: string;
+  kind: ActivityKind;
+  created_at: string;
+  book_id: string | null;
+  topic: string | null;
+  has_input: boolean;
+  user_email: string | null;
+  user_name: string | null;
+  book_title: string | null;
+  cost_inr: number | null;
+  total_tokens: number | null;
+};
+
+export type AdminActivityResponse = {
+  total: number;
+  skip: number;
+  limit: number;
+  items: ActivityRow[];
+};
+
+export type ActivityDetail = {
+  generation_id: string;
+  kind: ActivityKind;
+  user_id: string;
+  created_at: string;
+  book_id: string | null;
+  topic: string | null;
+  user_email: string | null;
+  user_name: string | null;
+  book_title: string | null;
+  input_json: Record<string, unknown> | null;
+  output_json: Record<string, unknown> | null;
+  cost_inr: number | null;
+  total_tokens: number | null;
+};
+
 type TokenResponse = {
   access_token: string;
   refresh_token: string;
@@ -859,6 +909,20 @@ export const backendApi = {
     const suffix = qs.toString() ? `?${qs.toString()}` : "";
     return apiFetch<AdminUsageResponse>(`/admin/usage${suffix}`);
   },
+  adminActivity: (params: AdminActivityParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.user_id) qs.set("user_id", params.user_id);
+    if (params.kind) qs.set("kind", params.kind);
+    if (params.book_id) qs.set("book_id", params.book_id);
+    if (params.start) qs.set("start", params.start);
+    if (params.end) qs.set("end", params.end);
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminActivityResponse>(`/admin/activity${suffix}`);
+  },
+  adminActivityDetail: (generationId: string, kind: ActivityKind) =>
+    apiFetch<ActivityDetail>(`/admin/activity/${generationId}?kind=${kind}`),
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
   createBoard: (payload: Pick<Board, "code" | "name"> & { description?: string }) =>
     apiFetch<Board>("/boards", { method: "POST", body: JSON.stringify(payload) }),
