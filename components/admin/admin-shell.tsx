@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  ScrollText,
   Shield,
   Ticket,
   Users,
@@ -37,6 +38,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/generations", label: "Generations", icon: BarChart3 },
+  { href: "/admin/activity", label: "Activity", icon: ScrollText },
   { href: "/admin/system", label: "System", icon: Activity }
 ];
 
