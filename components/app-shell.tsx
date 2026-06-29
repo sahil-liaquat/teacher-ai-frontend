@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
-  BarChart3,
   BookmarkCheck,
   BookMarked,
   BookOpen,
@@ -48,7 +47,6 @@ const adminNav: NavItem[] = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
-  { href: "/admin/generations", label: "Generations", icon: BarChart3 },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/system", label: "System", icon: Shield }
 ];
@@ -168,7 +166,6 @@ const navIconColors: Record<string, string> = {
   Overview: "text-blue-500",
   Users: "text-sky-500",
   Curriculum: "text-emerald-500",
-  Generations: "text-indigo-500",
   Textbooks: "text-green-600",
   System: "text-gray-500",
 };

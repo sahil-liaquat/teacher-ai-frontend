@@ -98,7 +98,7 @@ export default function AdminDashboard() {
         <AdminPanel
           title="Recent Generations"
           description="Latest lesson plan activity"
-          actions={<Link href="/admin/generations" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
+          actions={<Link href="/admin/activity" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700">View all <ArrowRight className="h-4 w-4" /></Link>}
         >
           {filteredGenerations.length === 0 ? (
             <Empty label="No recent generations" />
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
               {filteredGenerations.map((item: any, index) => (
                 <Link 
                   key={item.id || index} 
-                  href={item.id ? `/admin/generations/${item.id}` : "/admin/generations"} 
+                  href="/admin/activity"
                   className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
