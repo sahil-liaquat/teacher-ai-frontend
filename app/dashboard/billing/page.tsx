@@ -173,8 +173,9 @@ export default function BillingPage() {
             {/* Account / usage details */}
             <UsageCard data={data} />
 
-            {/* Cancel subscription — paying subscribers only (never during a trial) */}
-            {data.is_pro && data.status !== "trialing" && (
+            {/* Cancel subscription — only when there's a live paid subscription
+                left to cancel (never for comp/gift/trial grants). */}
+            {data.can_cancel && (
               <CancelCard
                 confirm={cancelConfirm}
                 loading={cancelLoading}
