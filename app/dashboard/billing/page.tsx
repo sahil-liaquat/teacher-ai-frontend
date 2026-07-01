@@ -156,6 +156,18 @@ export default function BillingPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           {/* ── Left column ─────────────────────────────────────────────────── */}
           <div className="space-y-4">
+            {/* Influencer-comp auto-convert nudge — add a card now, charged at comp-end */}
+            {data.can_setup_mandate && (
+              <MandateNudge
+                until={data.access_until}
+                onSetup={() =>
+                  openUpgrade(
+                    "Add a payment method so your Pro access continues after your free period.",
+                  )
+                }
+              />
+            )}
+
             {/* Current plan card */}
             <PlanCard data={data} onUpgrade={() => openUpgrade()} />
 
@@ -186,6 +198,33 @@ export default function BillingPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Mandate nudge (influencer comp → add a card to auto-convert) ─────────────
+
+function MandateNudge({
+  until,
+  onSetup,
+}: {
+  until: string | null;
+  onSetup: () => void;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-[24px] border border-blue-100 bg-blue-50 px-5 py-4 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+      <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-teachpad-blue" />
+      <div className="min-w-0 flex-1">
+        <p className="font-extrabold text-teachpad-ink">Keep your access uninterrupted</p>
+        <p className="mt-1 text-sm font-medium text-teachpad-muted">
+          Your free access ends {formatDate(until)}. Add a payment method now and you
+          won&apos;t be charged until then — your Pro plan simply continues.
+        </p>
+        <Button size="sm" className="mt-3" onClick={onSetup}>
+          <CreditCard className="h-4 w-4" />
+          Add payment method
+        </Button>
+      </div>
     </div>
   );
 }

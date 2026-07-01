@@ -169,15 +169,17 @@ function UpgradeModalUI({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The small Razorpay mandate-auth token only appears for trial users (the
-  // checkout uses a future-dated start), so show the explanation only then —
-  // never to expired-trial / immediate-charge users.
-  const showTrialNote = billing?.status === "trialing" && (billing?.days_left ?? 0) > 0;
+  // The small Razorpay mandate-auth token appears whenever checkout uses a
+  // future-dated start: trial users, and influencer-comped users setting up a
+  // mandate to auto-convert at comp-end. Never for expired / immediate-charge users.
+  const showTrialNote =
+    (billing?.status === "trialing" && (billing?.days_left ?? 0) > 0) ||
+    !!billing?.can_setup_mandate;
   const priceLabel = selected === "pro_annual" ? "₹1,699/year" : "₹199/month";
   const trialEnds = (() => {
-    if (!billing?.access_until) return "when your trial ends";
+    if (!billing?.access_until) return "when your free access ends";
     const d = new Date(billing.access_until);
-    if (Number.isNaN(d.getTime())) return "when your trial ends";
+    if (Number.isNaN(d.getTime())) return "when your free access ends";
     return `on ${d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`;
   })();
 

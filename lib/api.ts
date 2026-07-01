@@ -508,6 +508,9 @@ export type BillingMe = {
   // True only when there's a live paid subscription left to cancel. Comp/gift/
   // trial grants are false — don't show "Cancel subscription" for them.
   can_cancel: boolean;
+  // True when an influencer-comped user can add a card now to auto-convert to
+  // paid at comp-end (drives the billing-page nudge). False once a mandate is set.
+  can_setup_mandate: boolean;
   access_until: string | null;
   paid_starts_at: string | null;
   days_left: number | null;
