@@ -16,6 +16,7 @@ export default function AdminBillingPage() {
   const client = useQueryClient();
   const { toast } = useToast();
   const codes = useQuery({ queryKey: ["admin-promo-codes"], queryFn: () => backendApi.adminPromoCodes() });
+  const influencers = useQuery({ queryKey: ["admin-influencers"], queryFn: () => backendApi.adminInfluencers() });
 
   const [form, setForm] = useState<PromoCodeCreatePayload>({ kind: "comp", duration_days: 30 });
 
@@ -80,6 +81,18 @@ export default function AdminBillingPage() {
             <Input value={form.code ?? ""} placeholder="auto-generated"
               onChange={(e) => setForm((f) => ({ ...f, code: e.target.value || null }))} />
           </Field>
+          <Field label="Link to influencer (optional)">
+            <select
+              className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              value={form.influencer_id ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, influencer_id: e.target.value || null }))}
+            >
+              <option value="">No influencer</option>
+              {(influencers.data || []).map((influencer) => (
+                <option key={influencer.id} value={influencer.id}>{influencer.name}</option>
+              ))}
+            </select>
+          </Field>
           <Field label="Max redemptions (optional)">
             <Input type="number" min={1} value={form.max_redemptions ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, max_redemptions: e.target.value ? Number(e.target.value) : null }))} />
@@ -109,7 +122,7 @@ export default function AdminBillingPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                <tr>{["Code", "Kind", "Value", "Used", "Expires", "Status", ""].map((h) => (
+                <tr>{["Code", "Kind", "Value", "Influencer", "Used", "Expires", "Status", ""].map((h) => (
                   <th key={h} className="px-6 py-4 font-semibold">{h}</th>))}</tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -118,6 +131,7 @@ export default function AdminBillingPage() {
                     <td className="px-6 py-4 font-mono font-semibold text-gray-900">{c.code}</td>
                     <td className="px-6 py-4">{c.kind}</td>
                     <td className="px-6 py-4 text-gray-600">{c.kind === "discount" ? (c.target_plan_code ?? "-") : `${c.duration_days ?? 0} days`}</td>
+                    <td className="px-6 py-4 text-gray-600">{influencers.data?.find((item) => item.id === c.influencer_id)?.name ?? (c.influencer_id ? "Linked" : "-")}</td>
                     <td className="px-6 py-4 text-gray-600">{c.times_redeemed}{c.max_redemptions ? ` / ${c.max_redemptions}` : ""}</td>
                     <td className="px-6 py-4 text-gray-600">{formatDate(c.expires_at ?? undefined)}</td>
                     <td className="px-6 py-4"><StatusPill status={c.is_active ? "success" : "neutral"}>{c.is_active ? "active" : "off"}</StatusPill></td>

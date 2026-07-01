@@ -34,11 +34,13 @@ export default function SettingsPage() {
     retry: false,
     staleTime: Infinity
   });
+  const isInfluencer = currentUser.data?.role === "influencer";
+  const shouldLoadTeacherUsage = Boolean(token && currentUser.data && !isInfluencer);
 
   const plans = useQuery({
     queryKey: ["settings-lesson-plans-summary"],
     queryFn: () => backendApi.lessonPlans(0, 100),
-    enabled: !!token,
+    enabled: shouldLoadTeacherUsage,
     retry: false,
     staleTime: 0
   });
@@ -46,28 +48,28 @@ export default function SettingsPage() {
   const worksheets = useQuery({
     queryKey: ["settings-worksheets-summary"],
     queryFn: () => backendApi.worksheets(0, 100),
-    enabled: !!token,
+    enabled: shouldLoadTeacherUsage,
     retry: false,
     staleTime: 0
   });
   const presentations = useQuery({
     queryKey: ["settings-presentations-summary"],
     queryFn: () => backendApi.presentations(0, 100),
-    enabled: !!token,
+    enabled: shouldLoadTeacherUsage,
     retry: false,
     staleTime: 0
   });
   const notesGenerations = useQuery({
     queryKey: ["settings-notes-summary"],
     queryFn: () => backendApi.notesGenerations(0, 100),
-    enabled: !!token,
+    enabled: shouldLoadTeacherUsage,
     retry: false,
     staleTime: 0
   });
   const activities = useQuery({
     queryKey: ["settings-activities-summary"],
     queryFn: () => backendApi.activities(0, 100),
-    enabled: !!token,
+    enabled: shouldLoadTeacherUsage,
     retry: false,
     staleTime: 0
   });
@@ -122,6 +124,8 @@ export default function SettingsPage() {
 
   const displayName = profile.name || currentUser.data?.full_name || currentUser.data?.name || "Teacher";
   const email = currentUser.data?.email || "No email available";
+  const roleLabel = isInfluencer ? "Influencer" : "Teacher";
+  const workspaceLabel = isInfluencer ? "Influencer portal" : "Teacher workspace";
   const isLoadingUsage = plans.isLoading || worksheets.isLoading || presentations.isLoading || notesGenerations.isLoading || activities.isLoading;
 
   function updateProfile(field: keyof TeacherProfile, value: string) {
@@ -220,7 +224,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="mt-6 grid gap-3">
-            <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value="Teacher" />
+            <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value={roleLabel} />
             <AccountLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} />
             <AccountLine icon={<Phone className="h-4 w-4" />} label="Mobile" value={billing?.billing_phone || "Not added"} />
           </div>
@@ -257,37 +261,47 @@ export default function SettingsPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Monthly usage</h2>
-              <p className="mt-1 text-sm font-semibold text-teachpad-muted">Generation activity for the current month.</p>
+        {!isInfluencer ? (
+          <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Monthly usage</h2>
+                <p className="mt-1 text-sm font-semibold text-teachpad-muted">Generation activity for the current month.</p>
+              </div>
+              <div className="rounded-full bg-[#e5ffc6] px-3 py-1 text-sm font-black text-[#3d7b0f]">
+                {isLoadingUsage ? "Loading" : `${usage.total}/${usageLimit} used`}
+              </div>
             </div>
-            <div className="rounded-full bg-[#e5ffc6] px-3 py-1 text-sm font-black text-[#3d7b0f]">
-              {isLoadingUsage ? "Loading" : `${usage.total}/${usageLimit} used`}
+
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-teachpad-tag">
+              <div className="h-full rounded-full bg-gradient-to-r from-teachpad-blue via-[#16c5d9] to-[#8ec63f]" style={{ width: `${isLoadingUsage ? 0 : usage.percent}%` }} />
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <UsageMetric icon="bookOpen" label="Lesson plans" value={isLoadingUsage ? "..." : usage.monthlyLessons} tone="bg-[#ffdce8]" />
+              <UsageMetric icon="clipboardList" label="Worksheets" value={isLoadingUsage ? "..." : usage.monthlyWorksheets} tone="bg-[#e5ffc6]" />
+              <UsageMetric icon="presentation" label="Presentations" value={isLoadingUsage ? "..." : usage.monthlyPresentations} tone="bg-[#ffe1e8]" />
+              <UsageMetric icon="notebookPen" label="Notes" value={isLoadingUsage ? "..." : usage.monthlyNotes} tone="bg-[#f1e8ff]" />
+              <UsageMetric icon="sparkles" label="Activities" value={isLoadingUsage ? "..." : usage.monthlyActivities} tone="bg-[#dffafa]" />
+              <UsageMetric icon="folderOpen" label="Saved resources" value={isLoadingUsage ? "..." : usage.savedResources} tone="bg-[#fff0bf]" />
             </div>
           </div>
-
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-teachpad-tag">
-            <div className="h-full rounded-full bg-gradient-to-r from-teachpad-blue via-[#16c5d9] to-[#8ec63f]" style={{ width: `${isLoadingUsage ? 0 : usage.percent}%` }} />
+        ) : (
+          <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+            <PastelIconTile name="sparkles" className="h-14 w-14 rounded-[20px]" />
+            <h2 className="mt-4 text-xl font-black tracking-tight text-teachpad-ink">Influencer portal</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">
+              Profile changes here apply to your influencer account. Commission and payout activity stays in the influencer dashboard.
+            </p>
           </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <UsageMetric icon="bookOpen" label="Lesson plans" value={isLoadingUsage ? "..." : usage.monthlyLessons} tone="bg-[#ffdce8]" />
-            <UsageMetric icon="clipboardList" label="Worksheets" value={isLoadingUsage ? "..." : usage.monthlyWorksheets} tone="bg-[#e5ffc6]" />
-            <UsageMetric icon="presentation" label="Presentations" value={isLoadingUsage ? "..." : usage.monthlyPresentations} tone="bg-[#ffe1e8]" />
-            <UsageMetric icon="notebookPen" label="Notes" value={isLoadingUsage ? "..." : usage.monthlyNotes} tone="bg-[#f1e8ff]" />
-            <UsageMetric icon="sparkles" label="Activities" value={isLoadingUsage ? "..." : usage.monthlyActivities} tone="bg-[#dffafa]" />
-            <UsageMetric icon="folderOpen" label="Saved resources" value={isLoadingUsage ? "..." : usage.savedResources} tone="bg-[#fff0bf]" />
-          </div>
-        </div>
+        )}
 
         <div className="rounded-[24px] border border-teachpad-cardBorder bg-gradient-to-br from-[#f8ffff] to-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
           <PastelIconTile name="sparkles" className="h-14 w-14 rounded-[20px]" />
           <h2 className="mt-4 text-xl font-black tracking-tight text-teachpad-ink">Account status</h2>
           <div className="mt-4 grid gap-3">
             <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Session" value={currentUser.isLoading ? "Checking" : "Active"} />
-            <StatusRow icon={<CalendarDays className="h-4 w-4" />} label="Plan" value="Teacher workspace" />
+            <StatusRow icon={<CalendarDays className="h-4 w-4" />} label="Workspace" value={workspaceLabel} />
             <StatusRow icon={<FolderOpen className="h-4 w-4" />} label="Library" value={`${usage.savedResources} saved`} />
           </div>
           <div className="mt-5 rounded-[20px] border border-teachpad-cardBorder bg-white/82 p-3">

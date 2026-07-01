@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
 import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
+import { clearStoredReferralPromoCode, getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -38,10 +39,17 @@ export default function SignupPage() {
   const [resending, setResending] = useState(false);
   const resendCooldown = useResendCooldown();
 
+  useEffect(() => {
+    const storedCode = getStoredReferralPromoCode();
+    if (storedCode) form.setValue("promo_code", storedCode);
+  }, [form]);
+
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
+      const storedCode = getStoredReferralPromoCode();
+      const promoCode = values.promo_code?.trim() || storedCode || undefined;
       const created = await signup(values.name, values.email, values.password, values.phone, {
-        promo_code: values.promo_code?.trim() || undefined
+        promo_code: promoCode
       });
       const baseMessage = created.email_confirmed
         ? "Your account is ready. You can log in now."
@@ -49,6 +57,7 @@ export default function SignupPage() {
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
       if (!created.email_confirmed) resendCooldown.start();
+      clearStoredReferralPromoCode();
       form.reset({ name: "", email: "", phone: "", password: "", promo_code: "" });
       toast({ title: "Account created", description: message, variant: "success" });
     } catch (error) {

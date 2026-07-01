@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { ReferralCapture } from "@/components/referral-capture";
 
 const siteTitle = "TeachPad | AI Lesson Plans & Worksheets for Teachers";
 const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, quizzes, and classroom activities in seconds with TeachPad AI.";
@@ -59,7 +61,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', 'G-ZC7B99HTG0');
           `}
         </Script>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Suspense fallback={null}>
+            <ReferralCapture />
+          </Suspense>
+          {children}
+        </Providers>
       </body>
     </html>
   );

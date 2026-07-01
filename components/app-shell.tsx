@@ -10,6 +10,7 @@ import {
   BookMarked,
   BookOpen,
   Clock,
+  HandCoins,
   CreditCard,
   GraduationCap,
   Home,
@@ -43,6 +44,17 @@ const teacherNav: NavItem[] = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
 ];
 
+const influencerWorkspaceNav: NavItem[] = [
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/influencer", label: "Influencer", icon: HandCoins },
+  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
+  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
+  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
+  { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings }
+];
+
 const adminNav: NavItem[] = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
@@ -53,12 +65,12 @@ const adminNav: NavItem[] = [
 
 const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
 
-export function AppShell({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
+export function AppShell({ children, admin = false, role }: { children: ReactNode; admin?: boolean; role?: "teacher" | "influencer" }) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const nav = admin ? adminNav : teacherNav;
+  const requiredRole = role ?? null;
   const { data: currentUser, isError, isLoading } = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: async () => {
@@ -71,6 +83,10 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
     retry: false,
     staleTime: Infinity
   });
+  const usesInfluencerWorkspace = role === "influencer" || currentUser?.role === "influencer";
+  const nav = admin ? adminNav : usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav;
+  const homeHref = admin ? "/admin" : "/dashboard";
+  const settingsHref = "/dashboard/settings";
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
@@ -94,7 +110,13 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
     if (admin && currentUser && currentUser.role !== "admin") {
       router.replace("/dashboard");
     }
-  }, [admin, currentUser, router]);
+    if (!admin && !requiredRole && currentUser?.role === "admin") {
+      router.replace("/admin");
+    }
+    if (requiredRole && currentUser && currentUser.role !== requiredRole) {
+      router.replace(currentUser.role === "admin" ? "/admin" : "/dashboard");
+    }
+  }, [admin, currentUser?.role, requiredRole, router]);
 
   async function logout() {
     await logoutSession();
@@ -103,7 +125,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
     router.replace("/login");
   }
 
-  if (isLoading || isError || !currentUser || (admin && currentUser.role !== "admin")) {
+  if (isLoading || isError || !currentUser || (admin && currentUser.role !== "admin") || (!admin && !requiredRole && currentUser.role === "admin") || (role && currentUser.role !== role)) {
     return <AuthCheckingScreen />;
   }
 
@@ -113,8 +135,8 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-teachpad-blue">
           <Menu className="h-5 w-5" />
         </button>
-        <Brand compact />
-        <Link href="/dashboard/settings" aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-md backdrop-blur-sm transition-all hover:bg-white">
+        <Brand compact href={homeHref} />
+        <Link href={settingsHref} aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-md backdrop-blur-sm transition-all hover:bg-white">
           <BoyAvatar />
         </Link>
       </header>
@@ -124,7 +146,7 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
           <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-teachpad-ink/20 backdrop-blur-sm lg:hidden" />
           <aside className="fixed inset-y-0 left-0 z-50 w-[280px] rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
             <div className="flex items-center justify-between">
-              <Brand />
+              <Brand href={homeHref} />
               <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
                 <X className="h-4 w-4" />
               </button>
@@ -146,11 +168,11 @@ export function AppShell({ children, admin = false }: { children: ReactNode; adm
 
       <main className="min-h-screen pb-24 pt-16 lg:pb-0 lg:pt-0">
         <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
-          {!admin && <TrialStatusPill />}
+          {!admin && role !== "influencer" && <TrialStatusPill />}
           {children}
         </div>
       </main>
-      {!admin && <MobileBottomNav nav={teacherNav} activePath={pathname} />}
+      {!admin && <MobileBottomNav nav={usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav} activePath={pathname} />}
     </div>
   );
 }
@@ -168,6 +190,10 @@ const navIconColors: Record<string, string> = {
   Curriculum: "text-emerald-500",
   Textbooks: "text-green-600",
   System: "text-gray-500",
+  Dashboard: "text-blue-500",
+  Commissions: "text-emerald-500",
+  Payouts: "text-purple-500",
+  Influencer: "text-red-500",
 };
 
 function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
@@ -277,9 +303,28 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
 
 function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: string }) {
   const items = nav.slice(0, 5);
-  const leftItems = [items[0], items[2]];   // Home, Saved
-  const centerItem = items[1];               // AI Tools
-  const rightItems = [items[3], items[4]];   // Books, Billing
+  const centerIndex = items.findIndex((item) => item.href === "/dashboard/classroom-tools");
+
+  if (centerIndex === -1 || items.length < 5) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden">
+        <div className="mx-4 mb-4 flex h-[72px] w-full max-w-md items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+          {items.map((item) => (
+            <TabBarItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href, activePath)}
+            />
+          ))}
+        </div>
+      </nav>
+    );
+  }
+
+  const centerItem = items[centerIndex];
+  const sideItems = items.filter((_, index) => index !== centerIndex);
+  const leftItems = sideItems.slice(0, 2);
+  const rightItems = sideItems.slice(2, 4);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden">
@@ -366,9 +411,9 @@ function AuthCheckingScreen() {
   );
 }
 
-function Brand({ compact = false }: { compact?: boolean }) {
+function Brand({ compact = false, href = "/dashboard" }: { compact?: boolean; href?: string }) {
   return (
-    <Link href="/dashboard" className={cn("block min-w-0", compact && "w-[154px]")}>
+    <Link href={href} className={cn("block min-w-0", compact && "w-[154px]")}>
       {compact ? (
         <img
           src="/assets/teachpad-logo.png"

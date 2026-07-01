@@ -12,8 +12,13 @@ import { getSupabaseClient } from "@/lib/supabase";
 
 type State =
   | { status: "checking" }
-  | { status: "success"; user: ApiUser & { name: string; role: "admin" | "teacher" } }
+  | { status: "success"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" } }
   | { status: "error"; message: string };
+
+function dashboardForRole(role: ApiUser["role"]) {
+  if (role === "admin") return "/admin";
+  return "/dashboard";
+}
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
@@ -74,7 +79,7 @@ export default function GoogleCallbackPage() {
         setState({ status: "success", user });
 
         window.setTimeout(() => {
-          router.replace(user.role === "admin" ? "/admin" : "/dashboard");
+          router.replace(dashboardForRole(user.role));
           router.refresh();
         }, 800);
       } catch (err) {

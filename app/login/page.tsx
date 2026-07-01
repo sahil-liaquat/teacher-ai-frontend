@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -24,6 +24,11 @@ const schema = z.object({
 const forgotPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address.")
 });
+
+function dashboardForRole(role: ApiUser["role"]) {
+  if (role === "admin") return "/admin";
+  return "/dashboard";
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,7 +89,7 @@ export default function LoginPage() {
         if (cancelled) return;
 
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
-        router.replace(user.role === "admin" ? "/admin" : "/dashboard");
+        router.replace(dashboardForRole(user.role));
       } catch {
         // Intentionally silent: a stale/invalid stored session should land on the login form, not an error.
         clearToken();
@@ -106,7 +111,7 @@ export default function LoginPage() {
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
       toast({ title: "Welcome!", description: user.name });
       const next = new URLSearchParams(window.location.search).get("next");
-      const destination = next?.startsWith("/") ? next : (user.role === "admin" ? "/admin" : "/dashboard");
+      const destination = next?.startsWith("/") ? next : dashboardForRole(user.role);
       router.replace(destination);
       router.refresh();
     } catch (error) {

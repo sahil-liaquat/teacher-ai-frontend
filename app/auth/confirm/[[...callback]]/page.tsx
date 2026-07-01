@@ -11,8 +11,13 @@ import { getErrorMessage } from "@/lib/errors";
 
 type ConfirmationState =
   | { status: "checking"; message: string }
-  | { status: "success"; message: string; purpose: "signup" | "recovery"; user: ApiUser & { name: string; role: "admin" | "teacher" } }
+  | { status: "success"; message: string; purpose: "signup" | "recovery"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" } }
   | { status: "error"; message: string };
+
+function dashboardForRole(role: ApiUser["role"]) {
+  if (role === "admin") return "/admin";
+  return "/dashboard";
+}
 
 function getConfirmationParams() {
   if (typeof window === "undefined") return new URLSearchParams();
@@ -101,7 +106,7 @@ export default function ConfirmEmailPage() {
         });
 
         window.setTimeout(() => {
-          router.replace(purpose === "recovery" ? "/reset-password" : user.role === "admin" ? "/admin" : "/dashboard");
+          router.replace(purpose === "recovery" ? "/reset-password" : dashboardForRole(user.role));
           router.refresh();
         }, 1600);
       } catch (error) {
@@ -159,7 +164,7 @@ export default function ConfirmEmailPage() {
         <p className="mt-3 text-base font-semibold leading-7 text-teachpad-muted">{content.message}</p>
 
         {state.status === "success" ? (
-          <Link href={state.purpose === "recovery" ? "/reset-password" : state.user.role === "admin" ? "/admin" : "/dashboard"} className="mt-7 block">
+          <Link href={state.purpose === "recovery" ? "/reset-password" : dashboardForRole(state.user.role)} className="mt-7 block">
             <Button className="h-14 w-full rounded-[16px] text-base font-black">Continue</Button>
           </Link>
         ) : state.status === "error" ? (

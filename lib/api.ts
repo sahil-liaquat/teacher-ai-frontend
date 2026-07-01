@@ -21,7 +21,7 @@ export type ApiUser = {
   full_name?: string;
   name?: string;
   email?: string;
-  role?: "admin" | "teacher";
+  role?: "admin" | "teacher" | "influencer";
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -534,6 +534,7 @@ export type PromoCodeOut = {
   expires_at: string | null;
   is_active: boolean;
   note: string | null;
+  influencer_id?: string | null;
 };
 
 export type PromoCodeCreatePayload = {
@@ -544,6 +545,44 @@ export type PromoCodeCreatePayload = {
   expires_at?: string | null;
   note?: string | null;
   code?: string | null;
+  influencer_id?: string | null;
+};
+
+export type InfluencerSummary = {
+  id: string;
+  name: string;
+  created_at?: string;
+};
+
+export type InfluencerDashboard = {
+  total_referred_signups: number;
+  total_active_subscribers: number;
+  total_earned_commission_inr: number;
+  pending_payout_amount_inr: number;
+  payouts_received_inr: number;
+};
+
+export type CommissionOut = {
+  id: string;
+  referred_user_name?: string | null;
+  referred_user_email?: string | null;
+  amount_inr: number;
+  payment_status: "pending" | "paid";
+  created_at: string;
+  notes?: string | null;
+};
+
+export type PayoutOut = {
+  id: string;
+  amount_inr: number;
+  payout_reference: string;
+  created_at: string;
+  note?: string | null;
+};
+
+export type PayoutCreateResponse = PayoutOut & {
+  total_amount_cleared?: number;
+  settled_commission_ids?: string[];
 };
 
 export type PromoRedemptionOut = {
@@ -774,7 +813,7 @@ export async function streamApiFetch(
   if (buffer.trim()) onEvent(JSON.parse(buffer) as LessonPlanStreamEvent);
 }
 
-export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
+export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" }> {
   clearToken();
   const tokens = await apiFetch<TokenResponse>("/auth/login", {
     method: "POST",
@@ -799,7 +838,7 @@ export async function login(email: string, password: string): Promise<ApiUser & 
   };
 }
 
-export async function completeTokenLogin(tokens: Pick<TokenResponse, "access_token" | "refresh_token">): Promise<ApiUser & { name: string; role: "admin" | "teacher" }> {
+export async function completeTokenLogin(tokens: Pick<TokenResponse, "access_token" | "refresh_token">): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" }> {
   if (!tokens.access_token || !tokens.refresh_token) {
     throw new Error("Confirmation link is missing the required session tokens.");
   }
@@ -1026,6 +1065,27 @@ export const backendApi = {
     apiFetch<PromoCodeOut>(`/admin/promo-codes/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }),
   adminPromoRedemptions: (id: string) =>
     apiFetch<PromoRedemptionOut[]>(`/admin/promo-codes/${id}/redemptions`),
+  adminInfluencers: () =>
+    apiFetch<InfluencerSummary[]>("/admin/influencers"),
+  adminChangeUserRole: (userId: string, role: "teacher" | "influencer") =>
+    apiFetch<{ message: string }>(`/admin/users/${userId}/change-role`, { method: "POST", body: JSON.stringify({ role }) }),
+  adminCommissions: (params: { influencer_id?: string; payment_status?: "pending" | "paid" } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.influencer_id) qs.set("influencer_id", params.influencer_id);
+    if (params.payment_status) qs.set("payment_status", params.payment_status);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<CommissionOut[]>(`/admin/commissions${suffix}`);
+  },
+  adminPayouts: (influencerId?: string) =>
+    apiFetch<PayoutOut[]>(`/admin/payouts${influencerId ? `?influencer_id=${encodeURIComponent(influencerId)}` : ""}`),
+  adminCreateInfluencerPayout: (influencerId: string, payload: { commission_ids: string[] | null; payout_reference: string; note?: string | null }) =>
+    apiFetch<PayoutCreateResponse>(`/admin/influencers/${influencerId}/payout`, { method: "POST", body: JSON.stringify(payload) }),
+  influencerDashboard: () =>
+    apiFetch<InfluencerDashboard>("/influencer/dashboard"),
+  influencerCommissions: () =>
+    apiFetch<CommissionOut[]>("/influencer/commissions"),
+  influencerPayouts: () =>
+    apiFetch<PayoutOut[]>("/influencer/payouts"),
   adminExtendUser: (userId: string, days: number) =>
     apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/extend`, { method: "POST", body: JSON.stringify({ days }) }),
   adminCompUser: (userId: string, days: number) =>
