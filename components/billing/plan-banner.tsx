@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Crown, Zap } from "lucide-react";
+import { ArrowRight, CreditCard, Crown, Zap } from "lucide-react";
 import { useBilling } from "@/lib/use-billing";
 import { Button } from "@/components/ui/button";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
@@ -21,9 +21,53 @@ export function PlanBanner() {
 
   if (isLoading || isError || !data) return null;
 
-  const { is_pro, status, days_left, access_until, monthly_used, monthly_quota, gift, paid_starts_at } = data;
+  const { is_pro, status, days_left, access_until, monthly_used, monthly_quota, gift, paid_starts_at, can_setup_mandate } = data;
 
   if (gift.granted) return null;
+
+  // ── Influencer comp → nudge to add a card (auto-converts at comp-end) ───────
+  // These users are is_pro (comp active) but have no mandate yet; surface an
+  // "add a card" CTA instead of the plain Pro banner. Hidden once a card is set
+  // (backend flips can_setup_mandate false) — then they fall through to Pro.
+  if (can_setup_mandate) {
+    const untilLabel = access_until
+      ? new Intl.DateTimeFormat(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(new Date(access_until))
+      : null;
+
+    return (
+      <div className="mb-3 flex items-center justify-between gap-3 rounded-[18px] border border-blue-100 bg-gradient-to-r from-[#eff6ff] to-white px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#dbeafe] text-teachpad-blue">
+            <CreditCard className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-extrabold text-[#1e40af]">TeachPad Pro</p>
+            <p className="text-xs font-semibold text-teachpad-muted">
+              {untilLabel
+                ? `Add a card to keep Pro after ${untilLabel}`
+                : "Add a card to keep Pro after your free period"}
+            </p>
+          </div>
+        </div>
+
+        <Button
+          size="sm"
+          onClick={() =>
+            openUpgrade(
+              "Add a payment method so your Pro access continues after your free period.",
+            )
+          }
+          className="h-8 shrink-0 rounded-xl px-3 text-xs"
+        >
+          Add card
+        </Button>
+      </div>
+    );
+  }
 
   // ── Pro / Gift / Trial ─────────────────────────────────────────────────────
   if (is_pro) {
