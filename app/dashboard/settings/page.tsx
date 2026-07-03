@@ -26,7 +26,26 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
+
+  useEffect(() => {
+    const stored = localStorage.getItem("teachpad_sidebar_layout");
+    if (stored === "floating") {
+      setSidebarLayout("floating");
+    }
+  }, []);
+
+  function changeSidebarLayout(layout: "floating" | "expanded") {
+    setSidebarLayout(layout);
+    localStorage.setItem("teachpad_sidebar_layout", layout);
+    window.dispatchEvent(new Event("teachpad_sidebar_layout_changed"));
+    toast({
+      title: "Sidebar layout updated",
+      description: `Sidebar changed to ${layout === "expanded" ? "expanded" : "floating icon"} view.`,
+      variant: "success"
+    });
+  }
 
   const currentUser = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
@@ -327,6 +346,66 @@ export default function SettingsPage() {
               {sendingReset ? "Sending..." : resetSent ? "Send again" : "Reset password"}
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Layout preferences</h2>
+          <p className="mt-1 text-sm font-semibold text-teachpad-muted">Customize your workspace navigation experience.</p>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => changeSidebarLayout("floating")}
+            className={cn(
+              "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+              sidebarLayout === "floating"
+                ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                : "border-teachpad-cardBorder bg-white"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span className={cn(
+                "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                sidebarLayout === "floating" ? "text-teachpad-blue" : "text-teachpad-muted"
+              )}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+                </svg>
+              </span>
+              <span className="font-bold text-teachpad-ink text-sm">Floating Icons (Default)</span>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+              A minimalist sidebar that floats on the left side of the workspace, showing only icons with text tooltips.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => changeSidebarLayout("expanded")}
+            className={cn(
+              "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+              sidebarLayout === "expanded"
+                ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                : "border-teachpad-cardBorder bg-white"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span className={cn(
+                "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                sidebarLayout === "expanded" ? "text-teachpad-blue" : "text-teachpad-muted"
+              )}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a4 4 0 00-4-4H3m18 0h-2a4 4 0 00-4 4v2m0-10V4m0 8h.01M9 20h6" />
+                </svg>
+              </span>
+              <span className="font-bold text-teachpad-ink text-sm">Expanded Sidebar</span>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+              A traditional sidebar docked to the left side of the page, showing full navigation links and brand logo.
+            </p>
+          </button>
         </div>
       </section>
     </div>

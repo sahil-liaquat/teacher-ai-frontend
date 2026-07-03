@@ -87,6 +87,21 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   const nav = admin ? adminNav : usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav;
   const homeHref = admin ? "/admin" : "/dashboard";
   const settingsHref = "/dashboard/settings";
+  const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
+
+  useEffect(() => {
+    const updateLayout = () => {
+      const stored = localStorage.getItem("teachpad_sidebar_layout");
+      setSidebarLayout(stored === "floating" ? "floating" : "expanded");
+    };
+    updateLayout();
+    window.addEventListener("teachpad_sidebar_layout_changed", updateLayout);
+    window.addEventListener("storage", updateLayout);
+    return () => {
+      window.removeEventListener("teachpad_sidebar_layout_changed", updateLayout);
+      window.removeEventListener("storage", updateLayout);
+    };
+  }, []);
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
@@ -164,10 +179,17 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         </>
       )}
 
-      <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
+      {sidebarLayout === "expanded" ? (
+        <ExpandedSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} homeHref={homeHref} />
+      ) : (
+        <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
+      )}
 
       <main className="min-h-screen pb-24 pt-16 lg:pb-0 lg:pt-0">
-        <div className="mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 lg:pl-24 xl:py-5">
+        <div className={cn(
+          "mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 xl:py-5",
+          sidebarLayout === "expanded" ? "lg:pl-[260px]" : "lg:pl-24"
+        )}>
           {!admin && role !== "influencer" && <TrialStatusPill />}
           {children}
         </div>
@@ -405,9 +427,74 @@ function AuthCheckingScreen() {
     <main className="teachpad-page grid min-h-screen place-items-center px-4">
       <div className="rounded-3xl border border-teachpad-cardBorder bg-white/90 px-8 py-6 text-center shadow-[0_18px_50px_var(--teachpad-shadowCard)] backdrop-blur-xl">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-teachpad-blue" />
-        <p className="mt-5 text-sm font-semibold text-teachpad-muted">Checking your session...</p>
+        <p className="mt-5 text-sm font-semibold text-teachpad-muted">Loading your workspace...</p>
       </div>
     </main>
+  );
+}
+
+function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void; homeHref: string }) {
+  const logout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onLogout();
+  };
+
+  return (
+    <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between">
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="mb-6 flex items-center justify-between">
+          <Brand href={homeHref} compact={true} />
+        </div>
+        <nav className="flex-1 space-y-1.5 overflow-y-auto min-h-0 pr-1 select-none">
+          {nav.map((item) => (
+            <ExpandedSidebarNavItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href, activePath)}
+              onClick={onNavigate}
+            />
+          ))}
+        </nav>
+      </div>
+
+      <div className="pt-4 border-t border-teachpad-cardBorder">
+        <button
+          onClick={logout}
+          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-teachpad-muted transition-all duration-300 hover:bg-teachpad-red hover:text-[#eb3b5a]"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-teachpad-tag">
+            <LogOut className="h-5 w-5" />
+          </span>
+          Logout
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  const Icon = item.icon;
+  const colorClass = navIconColors[item.label] || "text-teachpad-muted";
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className={cn(
+        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02]",
+        active
+          ? "bg-gradient-to-r from-blue-50/50 to-white text-teachpad-blue border border-teachpad-cardBorder/30 shadow-sm"
+          : "text-teachpad-muted hover:bg-slate-50 hover:text-teachpad-ink"
+      )}
+    >
+      <span className={cn(
+        "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300",
+        active ? "bg-white text-teachpad-blue shadow-[0_4px_12px_rgba(59,130,246,0.12)]" : colorClass
+      )}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="truncate">{item.label}</span>
+    </Link>
   );
 }
 

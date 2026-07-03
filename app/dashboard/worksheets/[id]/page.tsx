@@ -122,9 +122,11 @@ export default function WorksheetDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#dffafa] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#c9f7fb] border-t-[#6f3ee9]" />
-        <p className="mt-4 text-sm font-bold text-[#6d6f78]">Loading worksheet...</p>
+      <div className="flex min-h-[60vh] w-full items-center justify-center p-4">
+        <div className="w-full max-w-[420px] rounded-3xl border border-[#dffafa] bg-white p-8 text-center shadow-[0_20px_50px_rgba(39,30,91,0.04)]">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-[#6f3ee9]" />
+          <p className="mt-5 text-sm font-bold text-slate-600">Loading worksheet...</p>
+        </div>
       </div>
     );
   }

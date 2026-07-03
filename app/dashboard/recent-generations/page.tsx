@@ -76,6 +76,7 @@ function formatDate(dateStr: string): string {
 
 export default function RecentGenerationsPage() {
   const lessonPlans = useQuery({ queryKey: ["recent-lesson-plans"], queryFn: () => backendApi.lessonPlans(0, 30), staleTime: 0, refetchOnMount: "always" });
+  const worksheets = useQuery({ queryKey: ["recent-worksheets"], queryFn: () => backendApi.worksheets(0, 30), staleTime: 0, refetchOnMount: "always" });
   const notes = useQuery({ queryKey: ["recent-notes"], queryFn: () => backendApi.notesGenerations(0, 30), staleTime: 0, refetchOnMount: "always" });
   const activities = useQuery({ queryKey: ["recent-activities"], queryFn: () => backendApi.activities(0, 30), staleTime: 0, refetchOnMount: "always" });
   const presentations = useQuery({ queryKey: ["recent-presentations"], queryFn: () => backendApi.presentations(0, 30), staleTime: 0, refetchOnMount: "always" });
@@ -109,7 +110,27 @@ export default function RecentGenerationsPage() {
       });
     });
 
+    // Merge backend worksheets with local-only worksheets, deduplicating by id
+    const backendWorksheetItems = worksheets.data?.items || [];
+    const seenWorksheetIds = new Set<string>();
+
+    backendWorksheetItems.forEach((item: any) => {
+      seenWorksheetIds.add(String(item.id));
+      const meta = item.output_json?.metadata || {};
+      items.push({
+        id: `ws-${item.id}`,
+        title: meta.title || item.output_json?.title || meta.topic || "Generated Worksheet",
+        type: "worksheet",
+        createdAt: item.created_at || item.updated_at || "",
+        href: `/dashboard/worksheets/${item.id}`,
+        subject: meta.subject,
+        className: meta.grade ? `Class ${meta.grade}` : undefined,
+        chapterName: meta.chapter,
+      });
+    });
+
     localWorksheets.forEach((item: any) => {
+      if (seenWorksheetIds.has(String(item.id))) return;
       const meta = item.output_json?.metadata || {};
       items.push({
         id: `ws-${item.id}`,
@@ -130,7 +151,7 @@ export default function RecentGenerationsPage() {
         title: meta.title || item.topic || "Generated Notes",
         type: "notes",
         createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/resources`,
+        href: `/dashboard/notes-generator?id=${item.id}`,
         subject: meta.subject || item.subject,
         className: normalizeClassName(meta.class || item.class_name),
         chapterName: meta.chapter || item.chapter_name,
@@ -144,7 +165,7 @@ export default function RecentGenerationsPage() {
         title: meta.title || item.topic || "Generated Activity",
         type: "activity",
         createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/resources`,
+        href: `/dashboard/activity-generator?id=${item.id}`,
         subject: meta.subject || item.subject,
         className: normalizeClassName(meta.class || item.class_name),
         chapterName: meta.chapter || item.chapter_name,
@@ -157,7 +178,7 @@ export default function RecentGenerationsPage() {
         title: item.topic || "Generated Presentation",
         type: "presentation",
         createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/presentation-generator/history`,
+        href: `/dashboard/presentation-generator/output?id=${item.id}`,
         subject: undefined,
         className: item.audience,
         chapterName: undefined,
@@ -165,9 +186,9 @@ export default function RecentGenerationsPage() {
     });
 
     return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [lessonPlans.data, notes.data, activities.data, presentations.data, localWorksheets]);
+  }, [lessonPlans.data, worksheets.data, notes.data, activities.data, presentations.data, localWorksheets]);
 
-  const isLoading = lessonPlans.isLoading || notes.isLoading || activities.isLoading || presentations.isLoading;
+  const isLoading = lessonPlans.isLoading || worksheets.isLoading || notes.isLoading || activities.isLoading || presentations.isLoading;
   const [page, setPage] = useState(0);
   const PER_PAGE = 10;
   const totalPages = Math.max(1, Math.ceil(allGenerations.length / PER_PAGE));

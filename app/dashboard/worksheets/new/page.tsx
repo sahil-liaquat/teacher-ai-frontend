@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, BookOpen, Check, ClipboardCheck, ClipboardList, FileText, FlaskConical, Globe, GraduationCap, Hash, Image, Lightbulb, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardList, FileText, FlaskConical, Globe, GraduationCap, Hash, Image, Lightbulb, LoaderCircle, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,7 @@ export default function NewWorksheetPage() {
   const { openUpgrade } = useUpgradeModal();
   const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
   const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
+  const prevChaptersStr = useRef("");
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -337,6 +338,14 @@ export default function NewWorksheetPage() {
     companionApplied.current.chapter = true;
     setChapterNames([match.chapter_title || match.title || companionContext.chapter]);
   }, [chapters, companionContext]);
+
+  useEffect(() => {
+    const chaptersStr = chapterNames.join(", ");
+    if (!topic || topic === prevChaptersStr.current) {
+      setTopic(chaptersStr);
+    }
+    prevChaptersStr.current = chaptersStr;
+  }, [chapterNames, topic]);
 
   function chooseBoard(value: string) {
     setBoardId(value);
@@ -615,10 +624,18 @@ export default function NewWorksheetPage() {
                     ) : isLoadingChapters ? (
                       <Placeholder>Loading chapters...</Placeholder>
                     ) : (
-                      <Select value={chapterNames[0] || ""} onChange={(e) => chooseChapter(e.target.value)} disabled={!chapters.length} isLoading={isLoadingChapters} loadingLabel="Loading chapters...">
-                        <option value="">Select Chapter / Unit</option>
-                        {chapters.map((chapter) => <option key={chapter.id} value={chapter.chapter_title || chapter.title || ""}>{chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}{chapter.chapter_title || chapter.title}</option>)}
-                      </Select>
+                      <MultiSelect
+                        options={chapters.map((chapter) => ({
+                          value: chapter.chapter_title || chapter.title || "",
+                          label: `${chapter.chapter_number ? `${chapter.chapter_number}. ` : ""}${chapter.chapter_title || chapter.title}`
+                        }))}
+                        selectedValues={chapterNames}
+                        onChange={setChapterNames}
+                        placeholder="Select Chapters"
+                        disabled={!chapters.length}
+                        isLoading={isLoadingChapters}
+                        loadingLabel="Loading chapters..."
+                      />
                     )}
                     {chaptersError && <span className="mt-1 text-xs font-semibold text-red-500">{chaptersError}</span>}
                   </FieldCard>
@@ -633,9 +650,9 @@ export default function NewWorksheetPage() {
                   </FieldCard>
                   <FieldCard icon={Sparkles} label="Topic / Focus" color="amber">
                     <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Optional: Type a specific topic" maxLength={150} />
-                    {chapterNames[0] && (
+                    {chapterNames.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
-                        {chapterNames[0].split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
+                        {chapterNames.slice(0, 6).map((suggestion) => (
                           <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
                             className="inline-flex items-center gap-1 rounded-full border border-[#d8f1e5] bg-[#ecfff7] px-2.5 py-1 text-xs font-medium text-[#159565] transition-colors hover:bg-[#d8f1e5]"
                           >
@@ -949,6 +966,157 @@ function Placeholder({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-10 items-center rounded-xl border border-[#d8f1e5] bg-[#f8fffb] px-3.5 text-sm text-[#9CA0AA]">
       {children}
+    </div>
+  );
+}
+
+interface MultiSelectProps {
+  options: { value: string; label: string }[];
+  selectedValues: string[];
+  onChange: (values: string[]) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  isLoading?: boolean;
+  loadingLabel?: string;
+}
+
+function MultiSelect({
+  options,
+  selectedValues,
+  onChange,
+  placeholder = "Select options",
+  disabled = false,
+  isLoading = false,
+  loadingLabel = "Loading..."
+}: MultiSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = useMemo(() => {
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [options, searchQuery]);
+
+  function handleToggle(value: string) {
+    if (selectedValues.includes(value)) {
+      onChange(selectedValues.filter((v) => v !== value));
+    } else {
+      onChange([...selectedValues, value]);
+    }
+  }
+
+  function handleSelectAll() {
+    const allValues = filteredOptions.map((o) => o.value);
+    const newValues = Array.from(new Set([...selectedValues, ...allValues]));
+    onChange(newValues);
+  }
+
+  function handleClear() {
+    const filteredValues = filteredOptions.map((o) => o.value);
+    onChange(selectedValues.filter((v) => !filteredValues.includes(v)));
+  }
+
+  const triggerLabel = useMemo(() => {
+    if (isLoading) return loadingLabel;
+    if (selectedValues.length === 0) return placeholder;
+    if (selectedValues.length === 1) {
+      const option = options.find((o) => o.value === selectedValues[0]);
+      return option ? option.label : selectedValues[0];
+    }
+    return `${selectedValues.length} chapters selected`;
+  }, [selectedValues, options, isLoading, loadingLabel, placeholder]);
+
+  return (
+    <div ref={containerRef} className="relative block w-full min-w-0 max-w-full self-stretch">
+      <button
+        type="button"
+        disabled={disabled || isLoading}
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-[#f8fffb] px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-[#f3faf7] disabled:text-[#9CA0AA] sm:text-sm",
+          isOpen && "border-teachpad-blue bg-white ring-4 ring-blue-100/60"
+        )}
+      >
+        <span className={cn("block truncate", (isLoading || selectedValues.length === 0) ? "text-[#9CA0AA]" : "text-[#25262b]")}>
+          {triggerLabel}
+        </span>
+        {isLoading ? (
+          <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-[#159565]" />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-[#9CA0AA] transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }} />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-xl border border-[#d8f1e5] bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
+          <div className="flex items-center border-b border-[#d8f1e5] px-2.5 py-1.5">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search chapters..."
+              className="w-full bg-transparent text-sm font-medium text-[#25262b] outline-none placeholder:text-[#9CA0AA]"
+            />
+          </div>
+          <div className="flex items-center justify-between border-b border-[#d8f1e5] px-3 py-1.5 bg-[#f8fffb]">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="text-xs font-bold text-[#159565] hover:underline"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-xs font-bold text-[#9CA0AA] hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-1.5 max-h-[180px]">
+            {filteredOptions.length === 0 ? (
+              <div className="px-2.5 py-4 text-center text-xs font-semibold text-[#9CA0AA]">
+                No chapters found
+              </div>
+            ) : (
+              filteredOptions.map((option) => {
+                const isChecked = selectedValues.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleToggle(option.value)}
+                    className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-semibold text-[#25262b] outline-none hover:bg-[#f8fffb] transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {}}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#d8f1e5] text-[#159565] accent-[#159565]"
+                    />
+                    <span className="block min-w-0 whitespace-normal break-words leading-5">
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
