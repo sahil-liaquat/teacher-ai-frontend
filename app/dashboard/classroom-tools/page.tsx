@@ -193,8 +193,8 @@ export default function ClassroomToolsPage() {
                   ) : null}
                 </div>
                 <div className="mt-5 flex-1">
-                  <h2 className="text-lg font-black tracking-tight text-slate-900">{tool.title}</h2>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{tool.description}</p>
+                  <h2 className="text-lg font-bold tracking-tight text-slate-900">{tool.title}</h2>
+                  <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{tool.description}</p>
                 </div>
                 <Button className="mt-5 w-full" variant={available ? "default" : "outline"} disabled={!available}>
                   {available ? tool.buttonLabel || "Open Tool" : "Coming Soon"}
