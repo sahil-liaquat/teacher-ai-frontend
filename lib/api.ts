@@ -565,6 +565,13 @@ export type InfluencerDashboard = {
   payouts_received_inr: number;
 };
 
+export type InfluencerReferralCode = {
+  code: string;
+  kind: PromoKind;
+  duration_days?: number | null;
+  expires_at?: string | null;
+};
+
 export type CommissionOut = {
   id: string;
   referred_user_name?: string | null;
@@ -1089,6 +1096,8 @@ export const backendApi = {
     apiFetch<CommissionOut[]>("/influencer/commissions"),
   influencerPayouts: () =>
     apiFetch<PayoutOut[]>("/influencer/payouts"),
+  influencerReferralCodes: () =>
+    apiFetch<InfluencerReferralCode[]>("/influencer/codes"),
   adminExtendUser: (userId: string, days: number) =>
     apiFetch<{ ok: boolean }>(`/admin/subscriptions/${userId}/extend`, { method: "POST", body: JSON.stringify({ days }) }),
   adminCompUser: (userId: string, days: number) =>
