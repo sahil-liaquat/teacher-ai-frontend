@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Phone, Save, UserRound } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile, type PastelIconTileName } from "@/components/pastel-icon-tile";
+import { ReferralCodeCard } from "@/components/influencer/referral-code-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/profile";
@@ -312,6 +313,9 @@ export default function SettingsPage() {
             <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">
               Profile changes here apply to your influencer account. Commission and payout activity stays in the influencer dashboard.
             </p>
+            <div className="mt-4">
+              <ReferralCodeCard variant="compact" />
+            </div>
           </div>
         )}
 

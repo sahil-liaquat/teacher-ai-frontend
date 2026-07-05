@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { HandCoins, IndianRupee, ReceiptText, Search, Sparkles, TrendingUp, Users } from "lucide-react";
 import { EmptyState, LoadingState, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
+import { ReferralCodeCard } from "@/components/influencer/referral-code-card";
 import { Input } from "@/components/ui/input";
 import { backendApi, type CommissionOut, type PayoutOut } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,8 @@ export default function InfluencerPortalClient() {
           ) : null}
         </div>
       </div>
+
+      <ReferralCodeCard variant="hero" />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,0.9fr)]">
         <section className="h-full min-w-0 overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
