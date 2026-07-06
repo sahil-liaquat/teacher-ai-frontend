@@ -817,7 +817,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
           placeholder={isListening ? "Listening..." : "Search AI tools (e.g. Lesson Planner, Worksheet Generator...)"}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-14 pl-12 pr-18 sm:pr-24 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
+          className="w-full h-14 pl-12 pr-24 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
         />
         
         <div className="absolute right-5 sm:right-7 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -1314,7 +1314,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
       <div className={cn("absolute -right-4 bottom-4 h-16 w-16 rounded-full blur-2xl", gradients.glow)} />
 
       <div className="relative z-10 flex h-full min-w-0 w-full flex-col justify-between sm:max-w-none">
-        <div>
+        <div className="min-w-0 w-full">
           <div className={cn(
             "inline-flex",
             "h-14 w-14 sm:h-[64px] sm:w-[64px]",

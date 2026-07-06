@@ -21,7 +21,7 @@ export default function LessonPlansListPage() {
         {plans.data?.items?.length ? plans.data.items.map((plan, index) => (
           <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="clickable-card premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
             <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3 min-w-0">
+              <div className="flex items-start gap-3 min-w-0 flex-1">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eee7ff] text-primary sm:h-12 sm:w-12 sm:rounded-2xl">
                   <BookOpen className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
                 </div>
@@ -38,7 +38,7 @@ export default function LessonPlansListPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 shrink-0 self-end sm:self-center justify-end sm:justify-start">
+              <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end sm:justify-start">
                 <Button variant="outline" size="sm" className="h-8 text-xs font-semibold px-3 flex-1 sm:flex-initial justify-center">
                   <Eye className="h-3.5 w-3.5 mr-1" /> Open
                 </Button>
