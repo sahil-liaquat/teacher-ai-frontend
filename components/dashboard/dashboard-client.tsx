@@ -477,7 +477,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
             sidebarLayout === "expanded" ? "text-left lg:text-right lg:ml-auto" : "text-left"
           )}>
             <h1 className={cn(
-              "flex items-center gap-x-2 whitespace-nowrap text-xl font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-2xl md:text-3xl",
+              "flex items-center gap-x-2 whitespace-nowrap text-2xl font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl",
               sidebarLayout === "expanded" && "lg:justify-end"
             )}>
               <span className="truncate">{greeting.text}, {firstName}</span>
@@ -486,10 +486,10 @@ const last7DaysBars = getLast7DaysBars(allItems);
                   src={greeting.icon}
                   alt=""
                   aria-hidden="true"
-                  className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-10 sm:w-10 md:h-12 md:w-12"
+                  className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-12 sm:w-12"
                 />
               ) : (
-                <span className="inline-block text-[1.8rem] leading-none sm:text-[2.2rem] md:text-[2.7rem]">{greeting.emoji}</span>
+                <span className="inline-block text-[2.45rem] leading-none sm:text-[2.7rem]">{greeting.emoji}</span>
               )}
             </h1>
             <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
@@ -808,17 +808,17 @@ const last7DaysBars = getLast7DaysBars(allItems);
 
       {/* Center Stage Greeting */}
       <div className="flex flex-col items-center text-center mt-12 mb-8 px-4">
-        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-xl font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl md:text-4xl">
+        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-3xl font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
           <span className="truncate">{greeting.text}, {firstName}</span>
           {greeting.icon ? (
             <img
               src={greeting.icon}
               alt=""
               aria-hidden="true"
-              className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-12 sm:w-12 md:h-14 md:w-14"
+              className="h-12 w-12 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-14 sm:w-14"
             />
           ) : (
-            <span className="inline-block text-[1.8rem] leading-none sm:text-[2.7rem] md:text-[3.2rem]">{greeting.emoji}</span>
+            <span className="inline-block text-[2.7rem] leading-none sm:text-[3.2rem]">{greeting.emoji}</span>
           )}
         </h1>
         <p className="mt-2 text-sm font-medium text-slate-500">What would you like to create today?</p>
