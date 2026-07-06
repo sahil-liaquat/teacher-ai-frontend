@@ -958,6 +958,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
                 value={formatNumber(numericVal, stat.fallback)}
                 numericValue={numericVal}
                 hoverLift={true}
+                showOnlyLabel={true}
               />
             );
           })
@@ -1080,7 +1081,7 @@ function StatsErrorCard() {
   );
 }
 
-function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean }) {
+function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift, showOnlyLabel }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean; showOnlyLabel?: boolean }) {
   const gradients = {
     pink: {
       card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
@@ -1132,11 +1133,19 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-[15.5px] transition-colors group-hover/card:text-blue-600">{label}</p>
-        <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
-          <CountUpNumber value={numericValue} />
-        </p>
-        <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
+        {showOnlyLabel ? (
+          <p className="text-[17px] font-extrabold leading-snug text-slate-900 sm:text-[20px] transition-colors group-hover/card:text-blue-600">
+            {label}
+          </p>
+        ) : (
+          <>
+            <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-[15.5px] transition-colors group-hover/card:text-blue-600">{label}</p>
+            <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
+              <CountUpNumber value={numericValue} />
+            </p>
+            <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
+          </>
+        )}
       </div>
     </>
   );
