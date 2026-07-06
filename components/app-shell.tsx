@@ -145,7 +145,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-teachpad-ink">
+    <div className="min-h-screen bg-transparent text-teachpad-ink overflow-x-hidden max-w-full">
       <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-teachpad-cardBorder bg-white/80 px-4 shadow-[0_10px_28px_var(--teachpad-shadowCard)] backdrop-blur-xl lg:hidden">
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-teachpad-blue">
           <Menu className="h-5 w-5" />
@@ -329,8 +329,8 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
 
   if (centerIndex === -1 || items.length < 5) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden">
-        <div className="mx-4 mb-4 flex h-[72px] w-full max-w-md items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
+        <div className="flex h-[72px] w-full max-w-md items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
           {items.map((item) => (
             <TabBarItem
               key={item.href}
@@ -349,8 +349,8 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
   const rightItems = sideItems.slice(2, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden">
-      <div className="relative mx-4 mb-4 w-full max-w-md">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
+      <div className="relative w-full max-w-md">
         {/* Floating bar */}
         <div className="flex h-[72px] items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
           {leftItems.map((item) => (

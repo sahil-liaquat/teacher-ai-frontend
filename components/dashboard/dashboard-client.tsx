@@ -213,6 +213,22 @@ export default function DashboardClient() {
   const [dashboardLayout, setDashboardLayout] = useState<"search-first" | "original">("search-first");
   const [searchQuery, setSearchQuery] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [placeholderText, setPlaceholderText] = useState("Search AI tools...");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => {
+      if (window.innerWidth >= 640) {
+        setPlaceholderText("Search AI tools (e.g. Lesson Planner, Worksheet Generator...)");
+      } else {
+        setPlaceholderText("Search AI tools...");
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const startVoiceSearch = () => {
@@ -454,7 +470,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
     ];
 
     return (
-      <div className="mx-auto grid w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
+      <div className="mx-auto flex flex-col w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
         {/* Original Greeting Header */}
         <header className="mx-auto flex w-full max-w-[1240px] flex-col gap-3 sm:flex-row sm:items-start sm:justify-between px-4 mt-6">
           <div className={cn(
@@ -598,7 +614,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
                 <Link
                   key={`${item.type}-${item.id || item.topic}-${index}`}
                   href={item.href}
-                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe]"
+                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
                 >
                   <div className={cn(
                     "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
@@ -779,9 +795,9 @@ const last7DaysBars = getLast7DaysBars(allItems);
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
+    <div className="mx-auto flex flex-col w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
       {sidebarLayout !== "expanded" && (
-        <header className="mx-auto flex w-full max-w-[1240px] items-center justify-end px-4 py-2">
+        <header className="mx-auto hidden lg:flex w-full max-w-[1240px] items-center justify-end px-4 py-2">
           <img
             src="/assets/teachpad-logo.png"
             alt="Teachpad"
@@ -814,7 +830,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
         <input
           ref={searchInputRef}
           type="text"
-          placeholder={isListening ? "Listening..." : "Search AI tools (e.g. Lesson Planner, Worksheet Generator...)"}
+          placeholder={isListening ? "Listening..." : placeholderText}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full h-14 pl-12 pr-24 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
@@ -830,7 +846,6 @@ const last7DaysBars = getLast7DaysBars(allItems);
               <X className="h-5 w-5" />
             </button>
           ) : (
-            <>
               <button
                 type="button"
                 onClick={startVoiceSearch}
@@ -842,10 +857,6 @@ const last7DaysBars = getLast7DaysBars(allItems);
               >
                 <Mic className="h-4.5 w-4.5" />
               </button>
-              <button type="button" className="text-blue-500 hover:text-blue-600 transition-colors p-1" title="AI Assistant">
-                <Sparkles className="h-4.5 w-4.5" />
-              </button>
-            </>
           )}
         </div>
 
@@ -985,7 +996,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
               <Link
                 key={`${item.type}-${item.id || item.topic}-${index}`}
                 href={item.href}
-                className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe]"
+                className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
               >
                 <div className={cn(
                   "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
