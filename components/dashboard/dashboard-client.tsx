@@ -35,10 +35,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const statCards = [
-  { label: "Create Lesson Plans", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
-  { label: "Create Worksheets", fallback: "0", sub: "Total Created", icon: ClipboardCheck, tone: "green", href: "/dashboard/worksheets/new" },
-  { label: "Create Notes", fallback: "0", sub: "Total Created", icon: NotebookPen, tone: "yellow", href: "/dashboard/notes-generator" },
-  { label: "Create Presentations", fallback: "0", sub: "Total Created", icon: Presentation, tone: "pink", href: "/dashboard/presentation-generator" }
+  { label: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
+  { label: "Worksheet Generator", desc: "Generate printable worksheets with answers.", fallback: "0", sub: "Total Created", icon: ClipboardCheck, tone: "green", href: "/dashboard/worksheets/new" },
+  { label: "Notes Generator", desc: "Create comprehensive study notes and summaries.", fallback: "0", sub: "Total Created", icon: NotebookPen, tone: "yellow", href: "/dashboard/notes-generator" },
+  { label: "Presentation Generator", desc: "Generate slide outlines and speaker notes.", fallback: "0", sub: "Total Created", icon: Presentation, tone: "pink", href: "/dashboard/presentation-generator" }
 ];
 
 const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: string; iconShadow: string; glow: string }> = {
@@ -1081,7 +1081,7 @@ function StatsErrorCard() {
   );
 }
 
-function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift, showOnlyLabel }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean; showOnlyLabel?: boolean }) {
+function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift, showOnlyLabel, desc }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean; showOnlyLabel?: boolean; desc?: string }) {
   const gradients = {
     pink: {
       card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
@@ -1134,9 +1134,16 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
 
       <div className="min-w-0 flex-1">
         {showOnlyLabel ? (
-          <p className="text-[17px] font-extrabold leading-snug text-slate-900 sm:text-[20px] transition-colors group-hover/card:text-blue-600">
-            {label}
-          </p>
+          <>
+            <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">
+              {label}
+            </p>
+            {desc && (
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">
+                {desc}
+              </p>
+            )}
+          </>
         ) : (
           <>
             <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-[15.5px] transition-colors group-hover/card:text-blue-600">{label}</p>
