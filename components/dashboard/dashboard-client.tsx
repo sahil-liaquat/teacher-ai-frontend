@@ -35,10 +35,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const statCards = [
-  { label: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
-  { label: "Worksheet Generator", desc: "Generate printable worksheets with answers.", fallback: "0", sub: "Total Created", icon: ClipboardCheck, tone: "green", href: "/dashboard/worksheets/new" },
-  { label: "Notes Generator", desc: "Create comprehensive study notes and summaries.", fallback: "0", sub: "Total Created", icon: NotebookPen, tone: "yellow", href: "/dashboard/notes-generator" },
-  { label: "Presentation Generator", desc: "Generate slide outlines and speaker notes.", fallback: "0", sub: "Total Created", icon: Presentation, tone: "pink", href: "/dashboard/presentation-generator" }
+  { label: "Lesson Planner", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
+  { label: "Worksheet Generator", fallback: "0", sub: "Total Created", icon: ClipboardCheck, tone: "green", href: "/dashboard/worksheets/new" },
+  { label: "Notes Generator", fallback: "0", sub: "Total Created", icon: NotebookPen, tone: "yellow", href: "/dashboard/notes-generator" },
+  { label: "Presentation Generator", fallback: "0", sub: "Total Created", icon: Presentation, tone: "pink", href: "/dashboard/presentation-generator" }
 ];
 
 const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: string; iconShadow: string; glow: string }> = {
@@ -958,7 +958,6 @@ const last7DaysBars = getLast7DaysBars(allItems);
                 value={formatNumber(numericVal, stat.fallback)}
                 numericValue={numericVal}
                 hoverLift={true}
-                showOnlyLabel={true}
               />
             );
           })
