@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle, Search, X } from "lucide-react";
 import { backendApi, Board, Book, ClassItem } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,20 @@ export default function TeacherTextbooksPage() {
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,8 +155,38 @@ export default function TeacherTextbooksPage() {
   const selectedBoard = useMemo(() => boards.find((board) => board.id === selectedBoardId) || null, [boards, selectedBoardId]);
   const selectedClass = useMemo(() => classes.find((classItem) => classItem.id === selectedClassId) || null, [classes, selectedClassId]);
 
+  const filteredBoards = useMemo(() => {
+    return boards.filter((board) => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+      return (
+        board.name.toLowerCase().includes(query) ||
+        (board.code && board.code.toLowerCase().includes(query))
+      );
+    });
+  }, [boards, searchQuery]);
+
+  const filteredClasses = useMemo(() => {
+    return classes.filter((cls) => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+      return cls.name.toLowerCase().includes(query);
+    });
+  }, [classes, searchQuery]);
+
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+      return (
+        book.title.toLowerCase().includes(query) ||
+        (book.subject && book.subject.toLowerCase().includes(query))
+      );
+    });
+  }, [books, searchQuery]);
+
   const subjectGroups = useMemo(() => {
-    const groups = books.reduce<Record<string, Book[]>>((collection, book) => {
+    const groups = filteredBooks.reduce<Record<string, Book[]>>((collection, book) => {
       const subject = book.subject || "General";
       collection[subject] = [...(collection[subject] || []), book];
       return collection;
@@ -150,18 +195,20 @@ export default function TeacherTextbooksPage() {
     return Object.entries(groups)
       .map(([subject, items]) => ({ subject, books: items }))
       .sort((a, b) => a.subject.localeCompare(b.subject));
-  }, [books]);
+  }, [filteredBooks]);
 
   const goToBoards = () => {
     setSelectedBoardId(null);
     setSelectedClassId(null);
     setClasses([]);
     setBooks([]);
+    setSearchQuery("");
   };
 
   const goToClasses = () => {
     setSelectedClassId(null);
     setBooks([]);
+    setSearchQuery("");
   };
 
   return (
@@ -190,24 +237,56 @@ export default function TeacherTextbooksPage() {
       </section>
 
       <section className="rounded-[24px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
-        <div className="flex flex-wrap items-center gap-2 text-base font-bold text-teachpad-muted">
-          <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
-            Boards
-          </button>
-          {selectedBoard ? (
-            <>
-              <ChevronRight className="h-4 w-4" />
-              <button type="button" onClick={goToClasses} className={cn("transition hover:text-teachpad-blue", !selectedClass && "text-teachpad-blue")}>
-                {selectedBoard.name}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-base font-bold text-teachpad-muted">
+            <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
+              Boards
+            </button>
+            {selectedBoard ? (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <button type="button" onClick={goToClasses} className={cn("transition hover:text-teachpad-blue", !selectedClass && "text-teachpad-blue")}>
+                  {selectedBoard.name}
+                </button>
+              </>
+            ) : null}
+            {selectedClass ? (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-teachpad-blue">{selectedClass.name}</span>
+              </>
+            ) : null}
+          </div>
+          <div className="relative group w-full sm:w-[260px] md:w-[320px]">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder={
+                !selectedBoard
+                  ? "Search boards..."
+                  : !selectedClass
+                  ? "Search classes..."
+                  : "Search textbooks..."
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 pl-10 pr-12 rounded-xl border border-slate-200/80 bg-white/60 hover:bg-white/80 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none shadow-[0_8px_20px_rgba(15,23,42,0.03)] focus:shadow-[0_12px_24px_rgba(37,99,235,0.06)] focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 ease-in-out"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hover:scale-110 active:scale-95 transition-all duration-150 focus:outline-none"
+              >
+                <X className="h-4 w-4" />
               </button>
-            </>
-          ) : null}
-          {selectedClass ? (
-            <>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-teachpad-blue">{selectedClass.name}</span>
-            </>
-          ) : null}
+            ) : (
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 shadow-sm opacity-80 transition-opacity duration-200 group-focus-within:opacity-0 sm:inline-block hidden">
+                ⌘K
+              </span>
+            )}
+          </div>
         </div>
       </section>
 
@@ -216,17 +295,26 @@ export default function TeacherTextbooksPage() {
       {!loadingBoards && !boards.length ? <EmptyLibrary /> : null}
 
       {!loadingBoards && boards.length > 0 && !selectedBoard ? (
-        boards.length ? (
+        filteredBoards.length ? (
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {boards.map((board) => (
+            {filteredBoards.map((board) => (
               <BoardCard
                 key={board.id}
                 board={board}
-                onSelect={() => setSelectedBoardId(board.id)}
+                onSelect={() => {
+                  setSelectedBoardId(board.id);
+                  setSearchQuery("");
+                }}
               />
             ))}
           </section>
-        ) : null
+        ) : (
+          <EmptyState
+            title="No boards found"
+            description="Try adjusting your search term to find a board."
+            compact
+          />
+        )
       ) : null}
 
       {selectedBoard && !selectedClass ? (
@@ -234,17 +322,28 @@ export default function TeacherTextbooksPage() {
           <LibrarySkeleton label="Loading classes..." />
         ) : (
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {classes.length ? (
-              classes.map((classItem) => (
+            {filteredClasses.length ? (
+              filteredClasses.map((classItem) => (
                 <ClassCard
                   key={classItem.id}
                   cls={classItem}
-                  onSelect={() => setSelectedClassId(classItem.id)}
+                  onSelect={() => {
+                    setSelectedClassId(classItem.id);
+                    setSearchQuery("");
+                  }}
                 />
               ))
             ) : (
               <div className="md:col-span-2 xl:col-span-3">
-                <EmptyState title="No classes found" description="Try another search term, or go back to choose another board." compact />
+                <EmptyState
+                  title="No classes found"
+                  description={
+                    searchQuery
+                      ? "Try adjusting your search term to find a class."
+                      : "Try another search term, or go back to choose another board."
+                  }
+                  compact
+                />
               </div>
             )}
           </section>
@@ -262,8 +361,12 @@ export default function TeacherTextbooksPage() {
             subjectGroups.map((group) => <SubjectShelf key={group.subject} subject={group.subject} books={group.books} />)
           ) : (
             <EmptyState
-              title="No subjects found"
-              description="Subjects will appear here once textbooks are added for this class."
+              title={searchQuery ? "No textbooks found" : "No subjects found"}
+              description={
+                searchQuery
+                  ? "Try adjusting your search term to find a textbook."
+                  : "Subjects will appear here once textbooks are added for this class."
+              }
             />
           )}
         </section>

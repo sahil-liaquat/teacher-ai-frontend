@@ -28,12 +28,17 @@ export default function SettingsPage() {
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
+  const [dashboardLayout, setDashboardLayout] = useState<"search-first" | "original">("search-first");
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
 
   useEffect(() => {
     const stored = localStorage.getItem("teachpad_sidebar_layout");
     if (stored === "floating") {
       setSidebarLayout("floating");
+    }
+    const storedDash = localStorage.getItem("teachpad_dashboard_layout");
+    if (storedDash === "original") {
+      setDashboardLayout("original");
     }
   }, []);
 
@@ -44,6 +49,17 @@ export default function SettingsPage() {
     toast({
       title: "Sidebar layout updated",
       description: `Sidebar changed to ${layout === "expanded" ? "expanded" : "floating icon"} view.`,
+      variant: "success"
+    });
+  }
+
+  function changeDashboardLayout(layout: "search-first" | "original") {
+    setDashboardLayout(layout);
+    localStorage.setItem("teachpad_dashboard_layout", layout);
+    window.dispatchEvent(new Event("teachpad_dashboard_layout_changed"));
+    toast({
+      title: "Dashboard layout updated",
+      description: `Dashboard changed to ${layout === "search-first" ? "Search-first" : "Original"} layout view.`,
       variant: "success"
     });
   }
@@ -356,60 +372,121 @@ export default function SettingsPage() {
       <section className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
         <div>
           <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Layout preferences</h2>
-          <p className="mt-1 text-sm font-semibold text-teachpad-muted">Customize your workspace navigation experience.</p>
+          <p className="mt-1 text-sm font-semibold text-teachpad-muted">Customize your workspace navigation and dashboard layouts.</p>
         </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => changeSidebarLayout("floating")}
-            className={cn(
-              "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-              sidebarLayout === "floating"
-                ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                : "border-teachpad-cardBorder bg-white"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span className={cn(
-                "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                sidebarLayout === "floating" ? "text-teachpad-blue" : "text-teachpad-muted"
-              )}>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
-                </svg>
-              </span>
-              <span className="font-bold text-teachpad-ink text-sm">Floating Icons (Default)</span>
-            </div>
-            <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-              A minimalist sidebar that floats on the left side of the workspace, showing only icons with text tooltips.
-            </p>
-          </button>
+        
+        <div className="mt-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-teachpad-muted mb-3">Sidebar View</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => changeSidebarLayout("floating")}
+              className={cn(
+                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                sidebarLayout === "floating"
+                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                  : "border-teachpad-cardBorder bg-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                  sidebarLayout === "floating" ? "text-teachpad-blue" : "text-teachpad-muted"
+                )}>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+                  </svg>
+                </span>
+                <span className="font-bold text-teachpad-ink text-sm">Floating Icons (Default)</span>
+              </div>
+              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+                A minimalist sidebar that floats on the left side of the workspace, showing only icons with text tooltips.
+              </p>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => changeSidebarLayout("expanded")}
-            className={cn(
-              "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-              sidebarLayout === "expanded"
-                ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                : "border-teachpad-cardBorder bg-white"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span className={cn(
-                "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                sidebarLayout === "expanded" ? "text-teachpad-blue" : "text-teachpad-muted"
-              )}>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a4 4 0 00-4-4H3m18 0h-2a4 4 0 00-4 4v2m0-10V4m0 8h.01M9 20h6" />
-                </svg>
-              </span>
-              <span className="font-bold text-teachpad-ink text-sm">Expanded Sidebar</span>
-            </div>
-            <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-              A traditional sidebar docked to the left side of the page, showing full navigation links and brand logo.
-            </p>
-          </button>
+            <button
+              type="button"
+              onClick={() => changeSidebarLayout("expanded")}
+              className={cn(
+                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                sidebarLayout === "expanded"
+                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                  : "border-teachpad-cardBorder bg-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                  sidebarLayout === "expanded" ? "text-teachpad-blue" : "text-teachpad-muted"
+                )}>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a4 4 0 00-4-4H3m18 0h-2a4 4 0 00-4 4v2m0-10V4m0 8h.01M9 20h6" />
+                  </svg>
+                </span>
+                <span className="font-bold text-teachpad-ink text-sm">Expanded Sidebar</span>
+              </div>
+              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+                A traditional sidebar docked to the left side of the page, showing full navigation links and brand logo.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-8 border-t border-slate-100 pt-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-teachpad-muted mb-3">Dashboard View</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => changeDashboardLayout("search-first")}
+              className={cn(
+                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                dashboardLayout === "search-first"
+                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                  : "border-teachpad-cardBorder bg-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                  dashboardLayout === "search-first" ? "text-teachpad-blue" : "text-teachpad-muted"
+                )}>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+                <span className="font-bold text-teachpad-ink text-sm">Search-First Dashboard (Default)</span>
+              </div>
+              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+                A modern, centered AI search workspace with primary tool launcher links and recent generations.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => changeDashboardLayout("original")}
+              className={cn(
+                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                dashboardLayout === "original"
+                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
+                  : "border-teachpad-cardBorder bg-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
+                  dashboardLayout === "original" ? "text-teachpad-blue" : "text-teachpad-muted"
+                )}>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h3a1 1 0 011 1v6a1 1 0 01-1 1h-3a1 1 0 01-1-1v-6z" />
+                  </svg>
+                </span>
+                <span className="font-bold text-teachpad-ink text-sm">Original Layout</span>
+              </div>
+              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
+                The original dashboard layout featuring metrics at the top and Textbook Generator action panels.
+              </p>
+            </button>
+          </div>
         </div>
       </section>
     </div>
