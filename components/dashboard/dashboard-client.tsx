@@ -477,7 +477,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
             sidebarLayout === "expanded" ? "text-left lg:text-right lg:ml-auto" : "text-left"
           )}>
             <h1 className={cn(
-              "flex items-center gap-x-2 whitespace-nowrap text-[21px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl",
+              "flex items-center gap-x-2 whitespace-nowrap text-[23px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl",
               sidebarLayout === "expanded" && "lg:justify-end"
             )}>
               <span>{greeting.text}, {firstName}</span>
@@ -808,7 +808,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
 
       {/* Center Stage Greeting */}
       <div className="flex flex-col items-center text-center mt-12 mb-8 px-4">
-        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-[23px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
+        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-[25px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
           <span>{greeting.text}, {firstName}</span>
           {greeting.icon ? (
             <img
