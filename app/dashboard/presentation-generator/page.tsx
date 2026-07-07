@@ -99,6 +99,19 @@ export default function PresentationGeneratorPage() {
   const [generationError, setGenerationError] = useState("");
   const [draftReady, setDraftReady] = useState(false);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+    document.body.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      document.querySelectorAll(".overflow-y-auto, main").forEach((el) => {
+        el.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     const draft = readToolDraft<PresentationFormDraft>(PRESENTATION_DRAFT_KEY);
     if (draft) {
@@ -628,7 +641,7 @@ export default function PresentationGeneratorPage() {
                 <button
                   type="button"
                   disabled={!canGoNext}
-                  onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  onClick={() => { setStep(2); scrollToTop(); }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
@@ -803,7 +816,7 @@ export default function PresentationGeneratorPage() {
 
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
-                <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button type="button" onClick={() => { setStep(1); scrollToTop(); }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
@@ -813,7 +826,7 @@ export default function PresentationGeneratorPage() {
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                 </div>
-                <button type="button" onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button type="button" onClick={() => { setStep(3); scrollToTop(); }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:h-10 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
@@ -854,36 +867,36 @@ export default function PresentationGeneratorPage() {
                           <>
                             <div className="absolute top-[-10%] left-[-10%] w-14 h-14 rounded-full bg-blue-300/25 blur-md" />
                             <div className="absolute bottom-[-10%] right-[-10%] w-14 h-14 rounded-full bg-pink-300/25 blur-md" />
-                            <div className="absolute bottom-1 left-2 text-base text-emerald-600/70">🌿</div>
+                            <div className="absolute bottom-1.5 left-3 text-3xl text-emerald-600/70 select-none">🌿</div>
                           </>
                         )}
                         {item.id === "Plains" && (
                           <>
-                            <div className="absolute bottom-1 left-2 text-xl select-none">🦒</div>
-                            <div className="absolute bottom-1 right-2 text-xl select-none">🦁</div>
-                            <div className="absolute bottom-1 right-8 text-xl select-none">🌳</div>
+                            <div className="absolute bottom-1.5 left-3 text-4xl select-none">🦒</div>
+                            <div className="absolute bottom-1.5 right-3 text-3xl select-none">🦁</div>
+                            <div className="absolute bottom-1.5 right-11 text-3xl select-none">🌳</div>
                           </>
                         )}
                         {item.id === "Science" && (
                           <>
-                            <div className="absolute top-2 left-2 text-sm select-none">🧬</div>
-                            <div className="absolute bottom-2 right-2 text-base select-none">🧪</div>
-                            <div className="absolute bottom-2 right-8 text-sm select-none">🔬</div>
+                            <div className="absolute top-2 left-3 text-xl select-none">🧬</div>
+                            <div className="absolute bottom-2 right-3 text-3xl select-none">🧪</div>
+                            <div className="absolute bottom-2 right-12 text-2xl select-none">🔬</div>
                           </>
                         )}
                         {item.id === "Maths" && (
                           <>
-                            <div className="absolute bottom-2 left-2 text-base select-none">✏️</div>
-                            <div className="absolute bottom-2 right-2 text-lg select-none">🧮</div>
-                            <div className="absolute bottom-2 right-8 text-base select-none">📐</div>
+                            <div className="absolute bottom-2 left-3 text-2xl select-none">✏️</div>
+                            <div className="absolute bottom-2 right-3 text-3xl select-none">🧮</div>
+                            <div className="absolute bottom-2 right-12 text-2xl select-none">📐</div>
                           </>
                         )}
                         {item.id === "Deep" && (
                           <>
                             <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#172554]/50 to-transparent" />
-                            <div className="absolute bottom-1.5 right-2 text-2xl select-none">🐋</div>
-                            <div className="absolute top-2 left-2 text-xs select-none">🐟</div>
-                            <div className="absolute top-3 right-8 text-xs select-none">🐟</div>
+                            <div className="absolute bottom-2 right-3 text-4xl select-none">🐋</div>
+                            <div className="absolute top-3 left-3 text-lg select-none">🐟</div>
+                            <div className="absolute top-4 right-10 text-lg select-none">🐟</div>
                           </>
                         )}
                         {item.id === "Classic" && (
@@ -960,7 +973,7 @@ export default function PresentationGeneratorPage() {
 
               {/* Step 3 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
-                <button type="button" onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button type="button" onClick={() => { setStep(2); scrollToTop(); }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
