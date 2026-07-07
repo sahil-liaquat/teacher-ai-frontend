@@ -130,6 +130,20 @@ export default function PresentationOutputPage() {
     }
   }
 
+  function handleFullscreenClick(event: React.MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest("button") || target.closest("textarea") || target.closest("input")) {
+      return;
+    }
+    const clientX = event.clientX;
+    const halfWidth = window.innerWidth / 2;
+    if (clientX > halfWidth) {
+      setActiveSlide((index) => Math.min((deck?.slides.length || 1) - 1, index + 1));
+    } else {
+      setActiveSlide((index) => Math.max(0, index - 1));
+    }
+  }
+
   async function exportPdf() {
     const currentDeck = deck;
     if (!currentDeck) return;
@@ -223,9 +237,12 @@ export default function PresentationOutputPage() {
       </main>
 
       {presenting ? (
-        <div className="fixed inset-0 z-[100] bg-white">
+        <div 
+          onClick={handleFullscreenClick} 
+          className="fixed inset-0 z-[100] bg-white cursor-pointer"
+        >
           <EditableSlide slide={active} onChange={updateActiveSlide} fullBleed deckInstructions={deck.instructions} deckId={deck.id} slideIndex={activeSlide} />
-          <button type="button" onClick={exitPresentMode} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white/75 text-slate-700 shadow-sm backdrop-blur-sm" aria-label="Back from present view">
+          <button type="button" onClick={exitPresentMode} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white/75 text-slate-700 shadow-sm backdrop-blur-sm cursor-default" aria-label="Back from present view">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -833,11 +850,13 @@ function EditableSlide({
               onChange={(event) => updateTitle(event.target.value)}
               onInput={(event) => autoSize(event.currentTarget)}
               onFocus={handleFocus}
+              readOnly={fullBleed}
               rows={2}
               spellCheck={false}
               placeholder="Slide heading"
               className={cn(
-                "w-full resize-none overflow-hidden rounded-xl border border-transparent bg-transparent p-[0.4cqw] font-extrabold leading-[1.12] outline-none transition placeholder:text-slate-400/60 focus:border-slate-200/80 focus:bg-white/40 break-words break-normal",
+                "w-full resize-none overflow-hidden rounded-xl border border-transparent bg-transparent p-[0.4cqw] font-extrabold leading-[1.12] outline-none transition placeholder:text-slate-400/60 break-words break-normal",
+                !fullBleed && "focus:border-slate-200/80 focus:bg-white/40",
                 themeStyle.textClass,
                 fullBleed ? "text-[3.2cqw]" : "text-[2.2cqw]"
               )}
@@ -846,7 +865,7 @@ function EditableSlide({
             <div className={cn("h-[0.3cqw] w-[8cqw] rounded-full ml-[0.5cqw]", themeStyle.dividerClass)} />
           </div>
 
-          {editingContent ? (
+          {!fullBleed && editingContent ? (
             <textarea
               value={contentDraft}
               onChange={(event) => updateContent(event.target.value)}
@@ -860,11 +879,16 @@ function EditableSlide({
               aria-label="Slide content"
             />
           ) : (
-            <button
-              type="button"
-              onClick={() => setEditingContent(true)}
-              className="mt-[2cqw] flex min-h-0 flex-1 flex-col justify-center rounded-[20px] border border-transparent p-[0.4cqw] text-left outline-none transition hover:bg-black/[0.01]"
-              aria-label="Edit slide content"
+            <div
+              onClick={() => {
+                if (!fullBleed) setEditingContent(true);
+              }}
+              className={cn(
+                "mt-[2cqw] flex min-h-0 flex-1 flex-col justify-center rounded-[20px] p-[0.4cqw] text-left outline-none",
+                !fullBleed && "cursor-pointer border border-transparent transition hover:bg-black/[0.01]"
+              )}
+              role={!fullBleed ? "button" : undefined}
+              aria-label={!fullBleed ? "Edit slide content" : undefined}
             >
               <div className="flex flex-col gap-[1cqw] w-full">
                 {displayBullets.map((point, index) => {
@@ -879,7 +903,10 @@ function EditableSlide({
                   return (
                     <div 
                       key={point} 
-                      className="group/bullet flex items-start gap-[1cqw] rounded-[1.2cqw] border border-white/50 bg-white/40 p-[1cqw] px-[1.2cqw] shadow-[0_4px_12px_rgba(0,0,0,0.01)] backdrop-blur-[6px] transition-all duration-300 hover:translate-x-1 hover:bg-white/60 hover:shadow-[0_8px_20px_rgba(0,0,0,0.02)]"
+                      className={cn(
+                        "group/bullet flex items-start gap-[1cqw] rounded-[1.2cqw] border border-white/50 bg-white/40 p-[1cqw] px-[1.2cqw] shadow-[0_4px_12px_rgba(0,0,0,0.01)] backdrop-blur-[6px] transition-all duration-300",
+                        !fullBleed && "hover:translate-x-1 hover:bg-white/60 hover:shadow-[0_8px_20px_rgba(0,0,0,0.02)]"
+                      )}
                       style={{ 
                         animation: 'slide-appear 500ms cubic-bezier(0.16, 1, 0.3, 1) both', 
                         animationDelay: `${index * 80}ms` 
@@ -891,14 +918,14 @@ function EditableSlide({
                       )}>
                         <span className="h-[0.7cqw] w-[0.7cqw] rounded-full bg-current" />
                       </span>
-                      <span className={cn("font-semibold leading-relaxed text-[1.35cqw] group-hover/bullet:text-[#1a1a1a] transition-colors duration-200", themeStyle.textClass)}>
+                      <span className={cn("font-semibold leading-relaxed text-[1.35cqw] transition-colors duration-200", !fullBleed && "group-hover/bullet:text-[#1a1a1a]", themeStyle.textClass)}>
                         {point}
                       </span>
                     </div>
                   );
                 })}
               </div>
-            </button>
+            </div>
           )}
         </div>
 
