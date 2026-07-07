@@ -41,6 +41,7 @@ export type PresentationDeck = PresentationOptions & {
   pptxFileUrl?: string | null;
   pdfFileUrl?: string | null;
   slides: PresentationSlide[];
+  instructions?: string | null;
 };
 
 const PRESENTATION_LAST_ID_KEY = "teacher_ai_presentation_last_id";
@@ -99,6 +100,7 @@ export function presentationGenerationToDeck(generation: PresentationGeneration)
     teacherNotes: Array.isArray(output.teacher_notes) ? output.teacher_notes : [],
     pptxFileUrl: generation.pptx_file_url,
     pdfFileUrl: generation.pdf_file_url,
+    instructions: generation.instructions,
     slides
   };
 }

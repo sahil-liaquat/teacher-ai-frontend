@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FocusEvent } from "react";
 import { ArrowLeft, ArrowRight, Download, FileText, ImageIcon, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -195,18 +195,18 @@ export default function PresentationOutputPage() {
 
   return (
     <>
-      <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[18px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[24px] sm:p-4", slideTheme.page)}>
-        <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-2 sm:min-h-[calc(100vh-128px)] sm:gap-3">
+      <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[24px] p-3 sm:min-h-[calc(100vh-96px)] sm:rounded-[32px] sm:p-6 bg-slate-50/50 shadow-inner")}>
+        <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-4 sm:min-h-[calc(100vh-128px)] sm:gap-5">
           <Toolbar
             deck={deck}
             onPresent={enterPresentMode}
             onExportPdf={exportPdf}
             onExportPpt={exportPpt}
           />
-          <section className="grid min-h-0 min-w-0 flex-1 gap-2 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-3">
-            <div className="flex min-w-0 flex-col gap-2 rounded-[18px] border border-white/70 bg-white/55 p-2 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:gap-3 sm:rounded-[22px] sm:p-5">
-              <div className="grid min-w-0 flex-1 place-items-center">
-                <EditableSlide slide={active} onChange={updateActiveSlide} />
+          <section className="grid min-h-0 min-w-0 flex-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-5">
+            <div className="flex min-w-0 flex-col gap-4 rounded-[28px] border border-white/80 bg-white/40 p-4 shadow-[0_20px_50px_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-5 sm:rounded-[32px] sm:p-6">
+              <div className="relative flex-1 w-full min-h-0 flex items-center justify-center overflow-hidden">
+                <EditableSlide slide={active} onChange={updateActiveSlide} deckInstructions={deck.instructions} deckId={deck.id} slideIndex={activeSlide} />
               </div>
               <SlideImageSelector
                 slide={active}
@@ -224,7 +224,7 @@ export default function PresentationOutputPage() {
 
       {presenting ? (
         <div className="fixed inset-0 z-[100] bg-white">
-          <EditableSlide slide={active} onChange={updateActiveSlide} fullBleed />
+          <EditableSlide slide={active} onChange={updateActiveSlide} fullBleed deckInstructions={deck.instructions} deckId={deck.id} slideIndex={activeSlide} />
           <button type="button" onClick={exitPresentMode} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white/75 text-slate-700 shadow-sm backdrop-blur-sm" aria-label="Back from present view">
             <X className="h-5 w-5" />
           </button>
@@ -245,28 +245,28 @@ function SlidePreviewStrip({
 }) {
   return (
     <aside
-      className="min-h-0 min-w-0 rounded-[22px] border border-white/80 bg-white/85 p-3 font-sans text-slate-700 antialiased shadow-[0_18px_42px_rgba(59,86,128,0.1)] backdrop-blur-sm"
+      className="min-h-0 min-w-0 rounded-[28px] border border-white/80 bg-white/70 p-4 font-sans text-slate-700 antialiased shadow-[0_16px_40px_rgba(15,23,42,0.04)] backdrop-blur-md"
       style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
     >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[13px] font-semibold leading-none text-slate-700">Slides</p>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-500">{slides.length}</span>
+      <div className="mb-4 flex items-center justify-between gap-3 px-1">
+        <p className="text-[13px] font-bold uppercase tracking-wider text-slate-500">Slides</p>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-500">{slides.length}</span>
       </div>
-      <div className="flex max-h-[140px] gap-2 overflow-x-auto pr-1 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
+      <div className="flex max-h-[140px] gap-3 overflow-x-auto pr-1 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
             type="button"
             onClick={() => onSelect(index)}
             className={cn(
-              "grid w-[200px] shrink-0 grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-[18px] border p-2.5 text-left transition md:w-full",
+              "grid w-[200px] shrink-0 grid-cols-[56px_minmax(0,1fr)] gap-3.5 rounded-[20px] border p-3 text-left transition-all duration-300 md:w-full border-slate-100 bg-white/70 shadow-[0_4px_12px_rgba(0,0,0,0.015)]",
               activeSlide === index
-                ? "border-blue-300 bg-blue-50/90 shadow-[0_14px_28px_rgba(37,99,235,0.14)]"
-                : "border-slate-200/80 bg-white shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_12px_24px_rgba(59,86,128,0.12)]"
+                ? "border-blue-300 bg-blue-50/70 shadow-[0_12px_32px_rgba(37,99,235,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                : "hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_12px_24px_rgba(59,86,128,0.08)]"
             )}
             aria-label={`Open slide ${index + 1}`}
           >
-            <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100">
+            <div className="relative aspect-square overflow-hidden rounded-[14px] bg-slate-100 border border-slate-200/50 shadow-inner">
               {selectedSlideImage(slide) ? (
                 <img src={selectedSlideImage(slide)} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -276,8 +276,8 @@ function SlidePreviewStrip({
               )}
             </div>
             <div className="min-w-0 self-center">
-              <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-800">{slide.title}</p>
-              <p className="mt-1 line-clamp-1 text-[11px] font-medium leading-snug text-slate-500">{slide.points[0] || slide.subtitle || "Presentation slide"}</p>
+              <p className="line-clamp-2 text-[12.5px] font-bold leading-snug text-slate-800">{slide.title}</p>
+              <p className="mt-1 line-clamp-1 text-[10.5px] font-semibold leading-none text-slate-400">{slide.points[0] || slide.subtitle || "Presentation slide"}</p>
             </div>
           </button>
         ))}
@@ -298,24 +298,24 @@ function Toolbar({
   onExportPpt: () => void;
 }) {
   return (
-    <header className="flex flex-col gap-2 rounded-[16px] border border-white/70 bg-white/90 p-2.5 shadow-[0_14px_34px_rgba(39,30,91,0.06)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:rounded-[18px] sm:p-3">
+    <header className="rounded-[24px] border border-white/80 bg-white/70 p-3.5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] backdrop-blur-md flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
       <div className="min-w-0">
-        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#2563eb] transition hover:text-[#1d4ed8]">
+        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-blue-500 hover:text-blue-600 transition-colors duration-200">
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Inputs
         </Link>
-        <h1 className="mt-1 truncate text-base font-black text-[#25262b] sm:text-lg">{deck.topic}</h1>
+        <h1 className="mt-1.5 truncate text-base font-extrabold text-slate-900 sm:text-xl tracking-tight leading-none">{deck.topic}</h1>
       </div>
-      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <Button type="button" onClick={onPresent} className="h-9 bg-[#25262b] px-2 text-xs text-white hover:bg-[#171717] sm:h-10 sm:px-4 sm:text-sm">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+        <Button type="button" onClick={onPresent} className="h-10 bg-slate-900 hover:bg-slate-800 rounded-xl px-4 text-xs font-bold text-white shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-95 transition-all duration-200 flex items-center gap-2">
           <Maximize2 className="h-4 w-4" />
           Present
         </Button>
-        <Button type="button" variant="outline" onClick={onExportPpt} className="h-9 px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+        <Button type="button" variant="outline" onClick={onExportPpt} className="h-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl px-4 text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all duration-200 flex items-center gap-2">
           <Download className="h-4 w-4" />
           PPT
         </Button>
-        <Button type="button" variant="outline" onClick={onExportPdf} className="h-9 px-2 text-xs sm:h-10 sm:px-4 sm:text-sm">
+        <Button type="button" variant="outline" onClick={onExportPdf} className="h-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl px-4 text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all duration-200 flex items-center gap-2">
           <FileText className="h-4 w-4" />
           PDF
         </Button>
@@ -364,35 +364,361 @@ function SlideImageSelector({
   const imageIndex = clampImageIndex(slide.selectedImageIndex, slide.imageUrls.length);
 
   return (
-    <div className="flex min-h-14 items-center justify-center gap-2 rounded-[16px] border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+    <div className="mx-auto mt-2 flex min-h-14 items-center justify-center gap-3 rounded-[20px] border border-white/80 bg-white/50 px-4 py-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur-md">
       {slide.imageUrls.slice(0, 3).map((url, index) => (
         <button
           key={`${url}-${index}`}
           type="button"
           onClick={() => onSelect(index)}
           className={cn(
-            "aspect-video w-24 overflow-hidden rounded-xl bg-white/85 p-0.5 shadow-sm outline-none transition focus:ring-2 focus:ring-[#55516e] sm:w-32",
-            imageIndex === index ? "ring-2 ring-[#25262b]" : "opacity-75 hover:opacity-100"
+            "aspect-video w-20 sm:w-28 overflow-hidden rounded-xl bg-white p-0.5 shadow-sm outline-none transition-all duration-300",
+            imageIndex === index ? "ring-2 ring-slate-800 scale-105" : "opacity-60 hover:opacity-100 hover:scale-[1.02]"
           )}
           aria-label={`Use image ${index + 1}`}
         >
-          <img src={url} alt="" className="h-full w-full rounded-lg object-cover" />
+          <img src={url} alt="" className="h-full w-full rounded-[10px] object-cover" />
         </button>
       ))}
     </div>
   );
 }
 
+const themesMap: Record<string, {
+  bgClass: string;
+  textClass: string;
+  mutedClass: string;
+  dividerClass: string;
+  bulletColor?: string;
+  renderBackground: (slideIndex: number) => React.ReactNode;
+}> = {
+  Light: {
+    bgClass: "bg-[#fcfcfd]/90",
+    textClass: "text-slate-900",
+    mutedClass: "text-slate-600/75",
+    dividerClass: "bg-gradient-to-r from-sky-400 via-pink-300 to-amber-300",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          {/* Layered glowing ambient light blobs */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50cqw] h-[50cqw] rounded-full bg-blue-400/8 blur-[50px] pointer-events-none animate-[float-blob-1_25s_ease-in-out_infinite]" />
+          <div className="absolute bottom-[-10%] right-[30%] w-[45cqw] h-[45cqw] rounded-full bg-pink-400/6 blur-[45px] pointer-events-none animate-[float-blob-2_30s_ease-in-out_infinite]" />
+          <div className="absolute top-[20%] right-[-10%] w-[40cqw] h-[40cqw] rounded-full bg-purple-400/6 blur-[40px] pointer-events-none animate-[float-blob-3_28s_ease-in-out_infinite]" />
+          
+          <div className="absolute top-[4cqw] right-[4cqw] text-[6cqw] select-none opacity-38 animate-[pulse_3s_ease-in-out_infinite]">✨</div>
+          {mode === 0 && (
+            <>
+              <div className="absolute bottom-[4cqw] left-[3cqw] text-[8cqw] select-none opacity-40">🌿</div>
+              <div className="absolute top-[28cqw] left-[35cqw] text-[6.5cqw] select-none opacity-35">🌸</div>
+            </>
+          )}
+          {mode === 1 && (
+            <>
+              <div className="absolute bottom-[4cqw] left-[3cqw] text-[8cqw] select-none opacity-40">🌸</div>
+              <div className="absolute top-[28cqw] left-[35cqw] text-[7.5cqw] select-none opacity-35">🦋</div>
+            </>
+          )}
+          {mode === 2 && (
+            <>
+              <div className="absolute bottom-[4cqw] left-[3cqw] text-[8cqw] select-none opacity-40">🍀</div>
+              <div className="absolute top-[28cqw] left-[35cqw] text-[7cqw] select-none opacity-38">🐝</div>
+            </>
+          )}
+        </>
+      );
+    }
+  },
+  Plains: {
+    bgClass: "bg-[#fdfbf7]/95",
+    textClass: "text-[#2e3c4e]",
+    mutedClass: "text-[#4b5563]/75",
+    dividerClass: "bg-[#8b5a2b]",
+    bulletColor: "bg-[#8b5a2b] text-white",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          <div className="absolute top-[-15cqw] right-[-15cqw] w-[50cqw] h-[50cqw] rounded-full bg-amber-400/12 blur-[60px] pointer-events-none" />
+          <div className="absolute top-[4cqw] right-[4cqw] text-[7cqw] select-none opacity-35">☀️</div>
+          <div className="absolute bottom-0 left-0 right-0 h-[6cqw] bg-[#8b5a2b]/3 opacity-[0.04] rounded-t-[10cqw]" />
+
+          {mode === 0 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] left-[3cqw] text-[9cqw] select-none opacity-42 transition-transform hover:scale-110 duration-300">🦒</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[8.5cqw] select-none opacity-42 transition-transform hover:scale-110 duration-300">🦁</div>
+              <div className="absolute bottom-[2.5cqw] right-[25%] text-[8cqw] select-none opacity-38">🌳</div>
+              <div className="absolute top-[18cqw] left-[2cqw] text-[6cqw] select-none opacity-[0.35]">🦅</div>
+            </>
+          )}
+          {mode === 1 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] left-[3cqw] text-[9cqw] select-none opacity-42">🐘</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[8.5cqw] select-none opacity-42">🦓</div>
+              <div className="absolute bottom-[2.5cqw] right-[25%] text-[8cqw] select-none opacity-38">🐆</div>
+            </>
+          )}
+          {mode === 2 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] left-[3cqw] text-[8.5cqw] select-none opacity-42">🐫</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[8.5cqw] select-none opacity-42">🐒</div>
+              <div className="absolute bottom-[2.5cqw] right-[25%] text-[8cqw] select-none opacity-38">🌳</div>
+            </>
+          )}
+        </>
+      );
+    }
+  },
+  Science: {
+    bgClass: "bg-[#f5faff]/95",
+    textClass: "text-slate-900",
+    mutedClass: "text-[#3b5266]/75",
+    dividerClass: "bg-[#0284c7]",
+    bulletColor: "bg-[#0284c7] text-white",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          <div className="absolute top-[-10%] left-[-10%] w-[45cqw] h-[45cqw] rounded-full bg-sky-400/10 blur-[40px] pointer-events-none" />
+          <div className="absolute inset-0 opacity-[0.025] bg-[linear-gradient(to_right,#0284c7_1px,transparent_1px),linear-gradient(to_bottom,#0284c7_1px,transparent_1px)] bg-[size:3cqw_3cqw] pointer-events-none" />
+          
+          {mode === 0 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[3cqw] text-[8.5cqw] select-none opacity-[0.42] rotate-12 transition-all hover:rotate-45 duration-500">🧬</div>
+              <div className="absolute bottom-[3cqw] right-[3cqw] text-[8.5cqw] select-none opacity-[0.42]">🔬</div>
+              <div className="absolute top-[4cqw] right-[35cqw] text-[6.5cqw] select-none opacity-[0.35]">⚛️</div>
+            </>
+          )}
+          {mode === 1 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[3cqw] text-[8.5cqw] select-none opacity-[0.42] rotate-6">🪐</div>
+              <div className="absolute bottom-[3cqw] right-[3cqw] text-[9cqw] select-none opacity-[0.42]">🚀</div>
+              <div className="absolute top-[4cqw] right-[35cqw] text-[7cqw] select-none opacity-[0.35]">🔭</div>
+            </>
+          )}
+          {mode === 2 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[3cqw] text-[8.5cqw] select-none opacity-[0.42] -rotate-12">🧪</div>
+              <div className="absolute bottom-[3cqw] right-[3cqw] text-[8.5cqw] select-none opacity-[0.42]">💡</div>
+              <div className="absolute top-[4cqw] right-[35cqw] text-[6.8cqw] select-none opacity-[0.35]">🔋</div>
+            </>
+          )}
+        </>
+      );
+    }
+  },
+  Maths: {
+    bgClass: "bg-[#fffdf5]/95",
+    textClass: "text-slate-900",
+    mutedClass: "text-[#5c5440]/75",
+    dividerClass: "bg-[#0284c7]",
+    bulletColor: "bg-[#0284c7] text-white",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          <div className="absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:2cqw_2cqw] pointer-events-none" />
+          
+          {mode === 0 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[35%] text-[6cqw] font-mono select-none opacity-[0.35] font-bold">π</div>
+              <div className="absolute bottom-[2.5cqw] left-[3cqw] text-[8cqw] select-none opacity-42">✏️</div>
+              <div className="absolute bottom-[2.5cqw] right-[20%] text-[8cqw] select-none opacity-42">📐</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[8cqw] select-none opacity-42">🧮</div>
+            </>
+          )}
+          {mode === 1 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[35%] text-[6cqw] font-mono select-none opacity-[0.35] font-bold">∞</div>
+              <div className="absolute bottom-[12cqw] left-[3cqw] text-[6cqw] font-mono select-none opacity-[0.35] font-bold">x² + y² = z²</div>
+              <div className="absolute bottom-[2.5cqw] right-[20%] text-[8cqw] select-none opacity-38">📏</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[6.5cqw] font-mono select-none opacity-[0.35] font-bold">½</div>
+            </>
+          )}
+          {mode === 2 && (
+            <>
+              <div className="absolute top-[3.5cqw] left-[35%] text-[6.5cqw] font-mono select-none opacity-[0.35] font-bold">∑</div>
+              <div className="absolute bottom-[2.5cqw] left-[3cqw] text-[8cqw] select-none opacity-42">🧭</div>
+              <div className="absolute bottom-[2.5cqw] right-[20%] text-[8cqw] select-none opacity-42">📈</div>
+              <div className="absolute bottom-[2.5cqw] right-[3cqw] text-[8cqw] select-none opacity-42">⏰</div>
+            </>
+          )}
+        </>
+      );
+    }
+  },
+  Simple: {
+    bgClass: "bg-[#fafafa]/95",
+    textClass: "text-slate-900",
+    mutedClass: "text-slate-500",
+    dividerClass: "bg-slate-300",
+    bulletColor: "bg-slate-700 text-white",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          {/* Minimal dot matrix pattern */}
+          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:2.5cqw_2.5cqw] pointer-events-none" />
+          
+          {/* Thin elegant architectural border framing the left text side */}
+          <div className="absolute top-[3cqw] bottom-[3cqw] left-[3cqw] w-[35cqw] border border-slate-900/[0.03] rounded-[1.2cqw] pointer-events-none" />
+          
+          {mode === 0 && (
+            <div className="absolute bottom-[3.5cqw] left-[4cqw] text-[8cqw] select-none opacity-[0.35]">📏</div>
+          )}
+          {mode === 1 && (
+            <div className="absolute bottom-[3.5cqw] left-[4cqw] text-[8cqw] select-none opacity-[0.35]">🧭</div>
+          )}
+          {mode === 2 && (
+            <div className="absolute bottom-[3.5cqw] left-[4cqw] text-[8cqw] select-none opacity-[0.35]">📝</div>
+          )}
+        </>
+      );
+    }
+  },
+  Deep: {
+    bgClass: "bg-[#0b1426]/95",
+    textClass: "text-white",
+    mutedClass: "text-blue-200/75",
+    dividerClass: "bg-gradient-to-r from-sky-400 to-teal-400",
+    bulletColor: "bg-sky-400 text-blue-900",
+    renderBackground: (slideIndex) => {
+      const mode = slideIndex % 3;
+      return (
+        <>
+          {/* Deep blue ocean light glows */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50cqw] h-[50cqw] rounded-full bg-blue-500/15 blur-[55px] pointer-events-none animate-[float-blob-1_25s_ease-in-out_infinite]" />
+          <div className="absolute bottom-[-10%] right-[30%] w-[45cqw] h-[45cqw] rounded-full bg-teal-500/10 blur-[50px] pointer-events-none animate-[float-blob-2_30s_ease-in-out_infinite]" />
+          
+          {/* Marine Bubble animations */}
+          <div className="absolute bottom-[5cqw] left-[8cqw] w-[1cqw] h-[1cqw] rounded-full bg-white/20 animate-pulse" />
+          <div className="absolute bottom-[15cqw] left-[9cqw] w-[0.6cqw] h-[0.6cqw] rounded-full bg-white/10 animate-ping" />
+          <div className="absolute bottom-[25cqw] right-[32cqw] w-[0.8cqw] h-[0.8cqw] rounded-full bg-white/20" />
+
+          {mode === 0 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] right-[5cqw] text-[9.5cqw] select-none opacity-[0.42] -scale-x-100 transition-transform duration-[4000ms] hover:translate-x-[-10cqw]">🐋</div>
+              <div className="absolute top-[3.5cqw] left-[4cqw] text-[6.5cqw] select-none opacity-35">🐠</div>
+              <div className="absolute bottom-[10cqw] left-[2cqw] text-[6.8cqw] select-none opacity-35">🪸</div>
+            </>
+          )}
+          {mode === 1 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] right-[5cqw] text-[9cqw] select-none opacity-[0.42]">🐬</div>
+              <div className="absolute top-[3.5cqw] left-[4cqw] text-[6.5cqw] select-none opacity-35">🐢</div>
+              <div className="absolute bottom-[10cqw] left-[2cqw] text-[7cqw] select-none opacity-35">⭐</div>
+            </>
+          )}
+          {mode === 2 && (
+            <>
+              <div className="absolute bottom-[2.5cqw] right-[5cqw] text-[9cqw] select-none opacity-[0.42] -scale-x-100">🦈</div>
+              <div className="absolute top-[3.5cqw] left-[4cqw] text-[6.5cqw] select-none opacity-35">🐙</div>
+              <div className="absolute bottom-[10cqw] left-[2cqw] text-[6.8cqw] select-none opacity-35">🪸</div>
+            </>
+          )}
+        </>
+      );
+    }
+  },
+  Classic: {
+    bgClass: "bg-[#fcfcfd]/90",
+    textClass: "text-slate-900",
+    mutedClass: "text-slate-600/75",
+    dividerClass: "bg-[#eb3b5a]",
+    bulletColor: "bg-[#eb3b5a] text-white",
+    renderBackground: () => (
+      <>
+        <div className="absolute top-[-10%] right-[-10%] w-24 h-24 rounded-full bg-[#fca5a5]/10 blur-md pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-20 h-20 rounded-full bg-[#cbd5e1]/15 blur-md pointer-events-none" />
+      </>
+    )
+  },
+  Mono: {
+    bgClass: "bg-white",
+    textClass: "text-black font-mono",
+    mutedClass: "text-slate-700 font-mono",
+    dividerClass: "bg-black",
+    bulletColor: "bg-black text-white",
+    renderBackground: () => null
+  },
+  Gradient: {
+    bgClass: "bg-gradient-to-br from-orange-100/90 to-rose-100/90",
+    textClass: "text-slate-900",
+    mutedClass: "text-slate-700/75",
+    dividerClass: "bg-[#0d9488]",
+    bulletColor: "bg-[#0d9488] text-white",
+    renderBackground: () => null
+  },
+  "Gradient II": {
+    bgClass: "bg-gradient-to-br from-sky-100/90 to-teal-50/90",
+    textClass: "text-slate-900",
+    mutedClass: "text-slate-700/75",
+    dividerClass: "bg-[#db2777]",
+    bulletColor: "bg-[#db2777] text-white",
+    renderBackground: () => null
+  },
+  Dark: {
+    bgClass: "bg-[#090d16]/95",
+    textClass: "text-white",
+    mutedClass: "text-slate-400",
+    dividerClass: "bg-[#38bdf8]",
+    bulletColor: "bg-[#38bdf8] text-slate-950",
+    renderBackground: () => (
+      <>
+        <div className="absolute top-2 right-4 text-[4cqw] select-none opacity-20">🌙</div>
+        <div className="absolute bottom-2 left-4 text-[3cqw] select-none opacity-20">💫</div>
+      </>
+    )
+  },
+  Bold: {
+    bgClass: "bg-[#d97706]/95",
+    textClass: "text-white",
+    mutedClass: "text-amber-100/80",
+    dividerClass: "bg-white",
+    bulletColor: "bg-white text-amber-900",
+    renderBackground: () => null
+  },
+  Bright: {
+    bgClass: "bg-[#5cbeb3]/95",
+    textClass: "text-slate-950",
+    mutedClass: "text-slate-800/80",
+    dividerClass: "bg-white",
+    bulletColor: "bg-white text-[#48a89d]",
+    renderBackground: () => null
+  },
+  Pink: {
+    bgClass: "bg-[#f472b6]/95",
+    textClass: "text-white",
+    mutedClass: "text-pink-100/80",
+    dividerClass: "bg-white",
+    bulletColor: "bg-white text-pink-700",
+    renderBackground: () => null
+  },
+  Rust: {
+    bgClass: "bg-[#b45309]/95",
+    textClass: "text-white",
+    mutedClass: "text-amber-100/80",
+    dividerClass: "bg-white",
+    bulletColor: "bg-white text-amber-950",
+    renderBackground: () => null
+  }
+};
+
 function EditableSlide({
   slide,
   onChange,
   large = false,
-  fullBleed = false
+  fullBleed = false,
+  deckInstructions = null,
+  deckId = "",
+  slideIndex = 0
 }: {
   slide: PresentationSlide;
   onChange: (patch: Partial<PresentationSlide>) => void;
   large?: boolean;
   fullBleed?: boolean;
+  deckInstructions?: string | null;
+  deckId?: string;
+  slideIndex?: number;
 }) {
   const [titleDraft, setTitleDraft] = useState("");
   const [contentDraft, setContentDraft] = useState("");
@@ -401,11 +727,30 @@ function EditableSlide({
   const currentImage = slide.imageUrls[imageIndex];
   const contentText = useMemo(() => formatBulletText([slide.subtitle || "", ...slide.points].filter(Boolean)), [slide.id, slide.points, slide.subtitle]);
   const displayBullets = useMemo(() => slideBullets(slide), [slide.id, slide.points, slide.subtitle]);
+  
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+
+  const selectedTheme = useMemo(() => {
+    const local = (typeof window !== "undefined" && deckId) ? localStorage.getItem(`presentation_theme_${deckId}`) : null;
+    if (local) return local;
+    if (!deckInstructions) return "Light";
+    const match = deckInstructions.match(/\[Theme:\s*([^\]]+)\]/);
+    return match ? match[1].trim() : "Light";
+  }, [deckId, deckInstructions]);
+
+  const themeStyle = useMemo(() => themesMap[selectedTheme] || themesMap.Light, [selectedTheme]);
 
   useEffect(() => {
     setTitleDraft(slide.title);
     setContentDraft(contentText);
     setEditingContent(false);
+    
+    // Trigger autoSize on title textarea once rendered to avoid vertical clipping on initial load
+    setTimeout(() => {
+      if (titleRef.current) {
+        autoSize(titleRef.current);
+      }
+    }, 50);
   }, [slide.id]);
 
   function autoSize(element: HTMLTextAreaElement) {
@@ -430,39 +775,77 @@ function EditableSlide({
   return (
     <div
       className={cn(
-        "aspect-[16/9] w-full max-w-full overflow-hidden rounded-[12px] border font-sans antialiased shadow-sm sm:rounded-[16px]",
-        slideTheme.slide,
-        slideTheme.border,
-        large ? "sm:max-h-[calc(100vh-150px)]" : "sm:max-h-[calc(100vh-250px)]",
-        fullBleed && "h-screen max-h-none rounded-none border-0 shadow-none sm:max-h-none sm:rounded-none"
+        "relative aspect-[16/9] w-full overflow-hidden rounded-[24px] border border-white/25 shadow-[0_24px_60px_rgba(15,23,42,0.10),inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-[24px] font-sans antialiased @container slide-loading-animate hover:-translate-y-0.5 hover:shadow-[0_32px_72px_rgba(15,23,42,0.14)] transition-all duration-500 ease-out",
+        themeStyle.bgClass,
+        fullBleed && "w-screen h-screen max-h-none max-w-none rounded-none border-0 shadow-none sm:max-h-none sm:rounded-none hover:translate-y-0 hover:shadow-none"
       )}
-      style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
+      style={{ 
+        fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"",
+        containerType: "inline-size"
+      }}
     >
-      <div className="relative grid h-full min-w-0 grid-cols-[minmax(0,40%)_minmax(0,60%)] bg-white">
-        <div className="pointer-events-none absolute left-[5%] top-[12%] h-2 w-2 rounded-full bg-sky-300/70 sm:h-3 sm:w-3" />
-        <div className="pointer-events-none absolute bottom-[14%] left-[32%] h-3 w-3 rounded-full bg-pink-300/60 sm:h-4 sm:w-4" />
-        <div className="pointer-events-none absolute left-[44%] top-0 h-full w-[10%] bg-gradient-to-r from-white/70 to-transparent" />
+      <style>{`
+        @keyframes slide-appear {
+          from {
+            opacity: 0;
+            transform: scale(0.99) translateY(3px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        @keyframes float-blob-1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(2%, 3%) scale(1.03); }
+          66% { transform: translate(-1%, 1%) scale(0.97); }
+        }
+        @keyframes float-blob-2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-3%, -2%) scale(1.05); }
+        }
+        @keyframes float-blob-3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          40% { transform: translate(1%, -3%) scale(0.95); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .slide-loading-animate {
+          animation: slide-appear 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+      `}</style>
+
+      {/* Premium Background Blurs */}
+      {themeStyle.renderBackground(slideIndex)}
+
+      <div className="relative grid h-full min-w-0 grid-cols-[minmax(0,40%)_minmax(0,60%)] bg-transparent">
+        <div className="pointer-events-none absolute left-[38%] top-0 h-full w-[10%] bg-gradient-to-r from-[#fcfcfd]/70 to-transparent" />
+        
         <div className={cn(
-          "relative z-10 flex min-w-0 flex-col bg-[radial-gradient(circle_at_18%_14%,rgba(219,234,254,0.72)_0,transparent_34%),radial-gradient(circle_at_86%_18%,rgba(252,231,243,0.58)_0,transparent_32%),linear-gradient(135deg,#ffffff_0%,#fbfdff_58%,#fff9fb_100%)]",
-          large ? "p-2 pr-1 sm:p-12 sm:pr-6" : "p-2 pr-1 sm:p-8 sm:pr-5"
+          "relative z-10 flex min-w-0 flex-col justify-between p-[3.5cqw] pr-[2cqw]"
         )}>
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-[22%] bg-gradient-to-r from-transparent to-white" />
-          <textarea
-            value={titleDraft}
-            onChange={(event) => updateTitle(event.target.value)}
-            onInput={(event) => autoSize(event.currentTarget)}
-            onFocus={handleFocus}
-            rows={2}
-            spellCheck={false}
-            placeholder="Slide heading"
-            className={cn(
-              "w-full resize-none overflow-hidden rounded-lg border border-transparent bg-transparent p-1.5 font-semibold leading-[1.08] outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:rounded-xl sm:p-3",
-              slideTheme.text,
-              large ? "text-[clamp(0.78rem,4.2vw,4.2rem)] sm:text-[clamp(2rem,3.8vw,4.2rem)]" : "text-[clamp(0.72rem,4vw,3rem)] sm:text-[clamp(1.55rem,2.9vw,3rem)]"
-            )}
-            aria-label="Slide heading"
-          />
-          <div className={cn("ml-1.5 mt-1 h-1 w-14 rounded-full bg-gradient-to-r from-sky-400 via-pink-300 to-amber-300 sm:ml-3", large ? "sm:mt-3 sm:h-2 sm:w-28" : "sm:mt-2 sm:w-24")} />
+          <div className="flex flex-col gap-[1cqw]">
+            <textarea
+              ref={titleRef}
+              value={titleDraft}
+              onChange={(event) => updateTitle(event.target.value)}
+              onInput={(event) => autoSize(event.currentTarget)}
+              onFocus={handleFocus}
+              rows={2}
+              spellCheck={false}
+              placeholder="Slide heading"
+              className={cn(
+                "w-full resize-none overflow-hidden rounded-xl border border-transparent bg-transparent p-[0.4cqw] font-extrabold leading-[1.12] outline-none transition placeholder:text-slate-400/60 focus:border-slate-200/80 focus:bg-white/40 break-words break-normal",
+                themeStyle.textClass,
+                fullBleed ? "text-[3.2cqw]" : "text-[2.2cqw]"
+              )}
+              aria-label="Slide heading"
+            />
+            <div className={cn("h-[0.3cqw] w-[8cqw] rounded-full ml-[0.5cqw]", themeStyle.dividerClass)} />
+          </div>
+
           {editingContent ? (
             <textarea
               value={contentDraft}
@@ -471,13 +854,8 @@ function EditableSlide({
               autoFocus
               placeholder={"Slide content\nAdd one idea per line"}
               className={cn(
-                "mt-1 min-h-0 flex-1 resize-none rounded-lg border border-transparent bg-transparent p-1 font-medium leading-4 outline-none transition placeholder:text-current/25 focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-4 sm:rounded-xl sm:p-3 sm:leading-7",
-                slideTheme.muted,
-                fullBleed
-                  ? "text-[clamp(0.9rem,2.2vw,2.2rem)]"
-                  : large
-                    ? "text-[clamp(0.5rem,2.6vw,1.75rem)] sm:text-[clamp(1.1rem,1.8vw,1.75rem)]"
-                    : "text-[clamp(0.48rem,2.45vw,1.25rem)] sm:text-[clamp(0.95rem,1.25vw,1.25rem)]"
+                "mt-[2cqw] min-h-0 flex-1 resize-none rounded-[1.2cqw] border border-slate-200/80 bg-white/60 p-[1.2cqw] font-medium leading-relaxed outline-none transition placeholder:text-slate-400/60 focus:border-blue-400/50 focus:bg-white/95 text-[1.35cqw] break-words break-normal",
+                themeStyle.textClass
               )}
               aria-label="Slide content"
             />
@@ -485,52 +863,62 @@ function EditableSlide({
             <button
               type="button"
               onClick={() => setEditingContent(true)}
-              className={cn(
-                "mt-1 flex min-h-0 flex-1 flex-col justify-center rounded-lg border border-transparent p-1 text-left outline-none transition hover:bg-black/[0.02] focus:border-[#d9d9de] focus:bg-black/[0.02] sm:mt-5 sm:rounded-xl sm:p-3",
-                slideTheme.muted
-              )}
+              className="mt-[2cqw] flex min-h-0 flex-1 flex-col justify-center rounded-[20px] border border-transparent p-[0.4cqw] text-left outline-none transition hover:bg-black/[0.01]"
               aria-label="Edit slide content"
             >
-              <ul className={cn("grid w-full list-none", large ? "gap-1 sm:gap-4" : "gap-0.5 sm:gap-2.5")}>
-                {displayBullets.map((point, index) => (
-                  <li key={point} className={cn("grid grid-cols-[0.58em_minmax(0,1fr)] items-start sm:grid-cols-[0.72em_minmax(0,1fr)]", large ? "gap-1.5 sm:gap-3" : "gap-1.5 sm:gap-2.5")}>
-                    <span className={cn(
-                      "mt-[0.62em] rounded-full",
-                      index % 3 === 0 ? "bg-sky-400" : index % 3 === 1 ? "bg-pink-300" : "bg-amber-300",
-                      large ? "h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" : "h-1.5 w-1.5 sm:h-2 sm:w-2"
-                    )} />
-                    <span className={cn(
-                      "font-medium leading-snug text-[#5f6368]",
-                      fullBleed
-                        ? "text-[clamp(0.85rem,1.8vw,1.8rem)]"
-                        : large
-                          ? "text-[clamp(0.44rem,2.15vw,1.55rem)] sm:text-[clamp(1.05rem,1.55vw,1.55rem)]"
-                          : "text-[clamp(0.42rem,2.05vw,1.08rem)] sm:text-[clamp(0.9rem,1.08vw,1.08rem)]"
-                    )}>
-                      {point}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex flex-col gap-[1cqw] w-full">
+                {displayBullets.map((point, index) => {
+                  const colors = [
+                    "bg-[#e0f2fe] text-[#0284c7]",
+                    "bg-[#fce7f3] text-[#db2777]",
+                    "bg-[#fef3c7] text-[#d97706]",
+                    "bg-[#ede9fe] text-[#7c3aed]"
+                  ];
+                  const colorClass = colors[index % colors.length];
+                  const bulletColorClass = themeStyle.bulletColor || colorClass;
+                  return (
+                    <div 
+                      key={point} 
+                      className="group/bullet flex items-start gap-[1cqw] rounded-[1.2cqw] border border-white/50 bg-white/40 p-[1cqw] px-[1.2cqw] shadow-[0_4px_12px_rgba(0,0,0,0.01)] backdrop-blur-[6px] transition-all duration-300 hover:translate-x-1 hover:bg-white/60 hover:shadow-[0_8px_20px_rgba(0,0,0,0.02)]"
+                      style={{ 
+                        animation: 'slide-appear 500ms cubic-bezier(0.16, 1, 0.3, 1) both', 
+                        animationDelay: `${index * 80}ms` 
+                      }}
+                    >
+                      <span className={cn(
+                        "rounded-full flex items-center justify-center shrink-0 h-[2.2cqw] w-[2.2cqw]",
+                        bulletColorClass
+                      )}>
+                        <span className="h-[0.7cqw] w-[0.7cqw] rounded-full bg-current" />
+                      </span>
+                      <span className={cn("font-semibold leading-relaxed text-[1.35cqw] group-hover/bullet:text-[#1a1a1a] transition-colors duration-200", themeStyle.textClass)}>
+                        {point}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </button>
           )}
         </div>
-        <div className="relative m-1 ml-0 flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden rounded-[8px] bg-transparent sm:m-4 sm:ml-0 sm:gap-3 sm:rounded-[10px]">
-          <div className="grid min-h-0 flex-1 place-items-center overflow-hidden">
-            {currentImage ? (
-              <img
-                src={currentImage}
-                alt={slide.title}
-                className="h-full w-full object-contain"
-                onError={() => onChange({ selectedImageIndex: Math.min(imageIndex + 1, slide.imageUrls.length - 1) })}
-              />
-            ) : (
-              <div className={cn("grid place-items-center gap-3 text-center", slideTheme.muted)}>
-                <ImageIcon className={large ? "h-10 w-10 sm:h-20 sm:w-20" : "h-8 w-8 sm:h-14 sm:w-14"} />
-                <span className="px-2 text-[8px] font-black uppercase tracking-[0.08em] sm:px-4 sm:text-xs sm:tracking-[0.12em]">{slide.visual || "Visual"}</span>
-              </div>
-            )}
-          </div>
+
+        <div className="relative flex items-center justify-center p-[2.5cqw] min-h-0 min-w-0 bg-gradient-to-r from-transparent via-white/90 to-white w-full h-full z-10">
+          {/* Subtle glow behind image */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-sky-200/5 via-pink-200/5 to-purple-200/5 rounded-[3cqw] blur-[24px] scale-90 pointer-events-none" />
+          
+          {currentImage ? (
+            <img
+              src={currentImage}
+              alt={slide.title}
+              className="max-h-[92%] max-w-[92%] object-contain rounded-[1.8cqw] transition-all duration-500 hover:scale-[1.01]"
+              onError={() => onChange({ selectedImageIndex: Math.min(imageIndex + 1, slide.imageUrls.length - 1) })}
+            />
+          ) : (
+            <div className={cn("grid place-items-center gap-[1.2cqw] text-center bg-white/30 border border-white/40 backdrop-blur-[6px] w-[92%] h-[92%] justify-center rounded-[1.8cqw]", slideTheme.muted)}>
+              <ImageIcon className="h-[4.5cqw] w-[4.5cqw]" />
+              <span className="px-[1.2cqw] text-[1.2cqw] font-bold uppercase tracking-wider">{slide.visual || "Visual"}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

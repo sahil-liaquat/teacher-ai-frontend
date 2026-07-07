@@ -45,7 +45,17 @@ type PresentationFormDraft = {
   includeActivities: boolean;
   includeQuiz: boolean;
   includeImages: boolean;
+  theme?: string;
 };
+
+const themeOptions = [
+  { id: "Light", label: "Light", desc: "A light touch", bg: "bg-white border-[#ffd9de] text-[#25262b]", descColor: "text-[#55516e]/85", titleColor: "text-pink-600 font-black" },
+  { id: "Plains", label: "Plains", desc: "Roarrrr", bg: "bg-[#eef2f7] border-[#d1dbe5] text-slate-800", descColor: "text-slate-500", titleColor: "text-[#2e3c4e] font-black" },
+  { id: "Science", label: "Science", desc: "For curious minds", bg: "bg-[#f0f7ff] border-[#bfdbfe] text-slate-800", descColor: "text-[#3b5266]/85", titleColor: "text-orange-600 font-black" },
+  { id: "Maths", label: "Maths", desc: "Numbers are fun", bg: "bg-[#fffbeb] border-[#fef3c7] text-slate-800", descColor: "text-[#5c5440]/85", titleColor: "text-sky-600 font-black" },
+  { id: "Simple", label: "Simple", desc: "Less is more", bg: "bg-[#fcfcfd] border-[#e4e4e7] text-slate-900", descColor: "text-slate-400", titleColor: "text-amber-800 font-black" },
+  { id: "Deep", label: "Deep", desc: "Into the blue", bg: "bg-[#1e3a8a] border-blue-900 text-white", descColor: "text-blue-200/70", titleColor: "text-white font-black" }
+];
 
 export default function PresentationGeneratorPage() {
   const router = useRouter();
@@ -75,6 +85,7 @@ export default function PresentationGeneratorPage() {
   const [includeActivities, setIncludeActivities] = useState(true);
   const [includeQuiz, setIncludeQuiz] = useState(true);
   const [includeImages, setIncludeImages] = useState(true);
+  const [theme, setTheme] = useState<string>("Light");
   const [step, setStep] = useState(1);
   const [fetching, setFetching] = useState(false);
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
@@ -96,18 +107,19 @@ export default function PresentationGeneratorPage() {
       setSubject(draft.subject || "");
       setBookId(draft.bookId || "");
       setChapterNames(draft.chapterNames || []);
-      setTopic(draft.topic || "");
+      setTopic("");
       setSlideCount((draft.slideCount || 8) as (typeof slideCountOptions)[number]);
       setLanguage((draft.language || "English") as (typeof languageOptions)[number]);
       setStyle((draft.style || "Clean classroom") as (typeof styleOptions)[number]);
       setTone((draft.tone || "Simple") as (typeof toneOptions)[number]);
       setDetailLevel(draft.detailLevel || "Balanced");
       setVisualDensity(draft.visualDensity || "Balanced visuals");
-      setInstructions(draft.instructions || "");
+      setInstructions("");
       setIncludeSpeakerNotes(draft.includeSpeakerNotes ?? true);
       setIncludeActivities(draft.includeActivities ?? true);
       setIncludeQuiz(draft.includeQuiz ?? true);
       setIncludeImages(draft.includeImages ?? true);
+      setTheme(draft.theme || "Light");
     }
     setDraftReady(true);
   }, []);
@@ -120,20 +132,21 @@ export default function PresentationGeneratorPage() {
       subject,
       bookId,
       chapterNames,
-      topic,
+      topic: "",
       slideCount,
       language,
       style,
       tone,
       detailLevel,
       visualDensity,
-      instructions,
+      instructions: "",
       includeSpeakerNotes,
       includeActivities,
       includeQuiz,
-      includeImages
+      includeImages,
+      theme
     });
-  }, [draftReady, boardId, chapterNames, classId, bookId, detailLevel, includeActivities, includeImages, includeQuiz, includeSpeakerNotes, instructions, language, slideCount, style, subject, tone, topic, visualDensity]);
+  }, [draftReady, boardId, chapterNames, classId, bookId, detailLevel, includeActivities, includeImages, includeQuiz, includeSpeakerNotes, language, slideCount, style, subject, tone, visualDensity, theme]);
 
   useEffect(() => {
     setFetching(true);
@@ -366,7 +379,10 @@ export default function PresentationGeneratorPage() {
         tone,
         detail_level: detailLevel as PresentationGeneratePayload["detail_level"],
         visual_density: visualDensity as PresentationGeneratePayload["visual_density"],
-        instructions: instructions.trim() || null,
+        instructions: [
+          instructions.trim(),
+          `[Theme: ${theme}]`
+        ].filter(Boolean).join("\n") || null,
         include_speaker_notes: includeSpeakerNotes,
         include_activities: includeActivities,
         include_quiz: includeQuiz,
@@ -380,6 +396,9 @@ export default function PresentationGeneratorPage() {
       };
       const generation = await backendApi.createPresentation(payload);
       saveLatestPresentationId(generation.id);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`presentation_theme_${generation.id}`, theme);
+      }
       toast({ title: "Presentation generated", description: "Opening the output page." });
       router.push(`/dashboard/presentation-generator/output?id=${generation.id}`);
     } catch (error) {
@@ -435,14 +454,23 @@ export default function PresentationGeneratorPage() {
               <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Presentation Generator</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate textbook-grounded classroom presentations with visuals, speaker notes, and activities.</p>
             </div>
-          ) : (
+          ) : step === 2 ? (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9de] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-[10px] font-bold text-white">2</span>
-                Step 2 of 2
+                Step 2 of 3
               </div>
               <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Presentation</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your presentation by choosing the style, tone, detail level, and sections to include.</p>
+            </div>
+          ) : (
+            <div className="relative z-10 max-w-[560px]">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9de] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-[10px] font-bold text-white">3</span>
+                Step 3 of 3
+              </div>
+              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Choose Visual Theme</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Select a premium theme for your presentation slides. Emojis, background gradients, and elements will adapt dynamically.</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
@@ -466,9 +494,16 @@ export default function PresentationGeneratorPage() {
           <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#fecdd3]" : "bg-[#eceef3]")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-[#fff1f2] text-[#9CA0AA]"
+            step === 2 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-[#fff1f2] text-[#eb3b5a]"
           )}>
-            2
+            {step > 2 ? <Check className="h-3.5 w-3.5" /> : 2}
+          </div>
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 2 ? "bg-[#fecdd3]" : "bg-[#eceef3]")} />
+          <div className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+            step === 3 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-[#fff1f2] text-[#9CA0AA]"
+          )}>
+            3
           </div>
         </div>
 
@@ -764,8 +799,149 @@ export default function PresentationGeneratorPage() {
                 </div>
               </div>
 
+
+
+              {/* Step 2 Navigation */}
+              <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
+                <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" /> Back
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                </div>
+                <button type="button" onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                >
+                  Next
+                  <ArrowLeft className="h-4 w-4 rotate-180" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div key="step-3" className="animate-slide-in-right space-y-6">
+              {/* Choose Theme Grid */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f2] text-xs font-bold text-[#eb3b5a]">1</span>
+                  <h3 className="text-base font-bold text-[#25262b]">Choose Visual Theme</h3>
+                </div>
+                <p className="mb-4 text-sm text-[#55516e]">Select one of our premium presentation visual themes below.</p>
+                
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {themeOptions.map((item) => {
+                    const active = theme === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setTheme(item.id)}
+                        className={cn(
+                          "relative aspect-[16/10] overflow-hidden rounded-[20px] border p-5 text-center flex flex-col justify-center items-center transition-all duration-300",
+                          item.bg,
+                          active
+                            ? "ring-4 ring-[#eb3b5a]/45 border-[#eb3b5a] shadow-[0_12px_28px_rgba(235,59,90,0.12)] scale-[1.02] z-10"
+                            : "border-[#ffd9de]/80 hover:border-[#eb3b5a]/50 hover:shadow-[0_8px_20px_rgba(0,0,0,0.03)]"
+                        )}
+                      >
+                        {/* Custom Theme Preview Ornaments */}
+                        {item.id === "Light" && (
+                          <>
+                            <div className="absolute top-[-10%] left-[-10%] w-14 h-14 rounded-full bg-blue-300/25 blur-md" />
+                            <div className="absolute bottom-[-10%] right-[-10%] w-14 h-14 rounded-full bg-pink-300/25 blur-md" />
+                            <div className="absolute bottom-1 left-2 text-base text-emerald-600/70">🌿</div>
+                          </>
+                        )}
+                        {item.id === "Plains" && (
+                          <>
+                            <div className="absolute bottom-1 left-2 text-xl select-none">🦒</div>
+                            <div className="absolute bottom-1 right-2 text-xl select-none">🦁</div>
+                            <div className="absolute bottom-1 right-8 text-xl select-none">🌳</div>
+                          </>
+                        )}
+                        {item.id === "Science" && (
+                          <>
+                            <div className="absolute top-2 left-2 text-sm select-none">🧬</div>
+                            <div className="absolute bottom-2 right-2 text-base select-none">🧪</div>
+                            <div className="absolute bottom-2 right-8 text-sm select-none">🔬</div>
+                          </>
+                        )}
+                        {item.id === "Maths" && (
+                          <>
+                            <div className="absolute bottom-2 left-2 text-base select-none">✏️</div>
+                            <div className="absolute bottom-2 right-2 text-lg select-none">🧮</div>
+                            <div className="absolute bottom-2 right-8 text-base select-none">📐</div>
+                          </>
+                        )}
+                        {item.id === "Deep" && (
+                          <>
+                            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#172554]/50 to-transparent" />
+                            <div className="absolute bottom-1.5 right-2 text-2xl select-none">🐋</div>
+                            <div className="absolute top-2 left-2 text-xs select-none">🐟</div>
+                            <div className="absolute top-3 right-8 text-xs select-none">🐟</div>
+                          </>
+                        )}
+                        {item.id === "Classic" && (
+                          <>
+                            <div className="absolute top-[-10%] right-[-10%] w-16 h-16 rounded-full bg-[#fca5a5]/18 blur-md" />
+                            <div className="absolute bottom-[-10%] left-[-10%] w-14 h-14 rounded-full bg-[#cbd5e1]/25 blur-md" />
+                            <div className="absolute bottom-1 left-2 text-xs select-none">🎨</div>
+                          </>
+                        )}
+                        {item.id === "Dark" && (
+                          <>
+                            <div className="absolute top-2 right-3 text-sm select-none">🌙</div>
+                            <div className="absolute bottom-2 left-2 text-xs select-none">💫</div>
+                          </>
+                        )}
+                        {item.id === "Bold" && (
+                          <>
+                            <div className="absolute top-2 left-2 w-10 h-10 rounded-full bg-amber-400/20 blur-sm" />
+                            <div className="absolute bottom-2 right-2 w-12 h-12 rounded-full bg-orange-400/20 blur-sm" />
+                          </>
+                        )}
+                        {item.id === "Bright" && (
+                          <>
+                            <div className="absolute bottom-1 right-2 text-sm select-none">✨</div>
+                            <div className="absolute top-2 left-2 text-sm select-none">☀️</div>
+                          </>
+                        )}
+                        {item.id === "Pink" && (
+                          <>
+                            <div className="absolute top-1 left-2 text-sm select-none">🌸</div>
+                            <div className="absolute bottom-2 right-2 text-sm select-none">💖</div>
+                          </>
+                        )}
+                        
+                        <div className="relative z-10 flex flex-col items-center">
+                          <span className={cn("text-lg font-black tracking-tight", item.titleColor)}>
+                            {item.label}
+                          </span>
+                          <span className={cn("mt-1 text-xs font-semibold", item.descColor)}>
+                            {item.desc}
+                          </span>
+                        </div>
+
+                        {/* Selected Indicator */}
+                        {active && (
+                          <div className="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-md animate-[slide-appear_0.2s_ease-out]">
+                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
               {/* Success Card */}
-              <div className="rounded-2xl border border-[#ffd9de] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-[#ffd9de] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm mb-6">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
@@ -782,14 +958,15 @@ export default function PresentationGeneratorPage() {
                 </div>
               </div>
 
-              {/* Step 2 Navigation */}
+              {/* Step 3 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
-                <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button type="button" onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
                 </div>

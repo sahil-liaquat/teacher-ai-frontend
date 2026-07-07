@@ -234,6 +234,7 @@ export type PresentationGeneration = {
   include_activities: boolean;
   include_quiz: boolean;
   include_images: boolean;
+  instructions?: string | null;
   status?: "pending" | "processing" | "completed" | "failed" | null;
   output_json: any;
   error_message?: string | null;
