@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight } from "lucide-react";
+import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -256,102 +256,112 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => setCurrentScreen("menu")}
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-[#0B73FF] transition-colors focus:outline-none"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg focus:outline-none"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to Settings
         </button>
       )}
 
       {currentScreen === "menu" && (
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 xl:gap-4">
           {/* Account Card */}
           <button
             type="button"
             onClick={() => setCurrentScreen("account")}
-            className="flex items-center justify-between p-6 rounded-[20px] bg-white border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-[#0B73FF]/30 transition-all duration-200 text-left hover:-translate-y-0.5 group focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-xl shadow-xs">👤</span>
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Account</h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">Profile photo, full name, mobile and email settings</p>
-              </div>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#bfdbfe]/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <User className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#0B73FF] group-hover:translate-x-0.5 transition-all" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Account</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Profile photo, name, email &amp; mobile</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Security Card */}
           <button
             type="button"
             onClick={() => setCurrentScreen("security")}
-            className="flex items-center justify-between p-6 rounded-[20px] bg-white border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-[#0B73FF]/30 transition-all duration-200 text-left hover:-translate-y-0.5 group focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#f0fdff] via-cyan-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-xl shadow-xs">🔒</span>
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Security</h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">Manage password credentials and reset links</p>
-              </div>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-cyan-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#0B73FF] group-hover:translate-x-0.5 transition-all" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Security</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Password credentials &amp; reset links</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Teaching Preferences Card */}
           <button
             type="button"
             onClick={() => setCurrentScreen("preferences")}
-            className="flex items-center justify-between p-6 rounded-[20px] bg-white border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-[#0B73FF]/30 transition-all duration-200 text-left hover:-translate-y-0.5 group focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-pink-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-xl shadow-xs">📚</span>
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Teaching Preferences</h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">Prefill default curriculum board preferences</p>
-              </div>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-pink-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <GraduationCap className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#0B73FF] group-hover:translate-x-0.5 transition-all" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Teaching Preferences</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Default curriculum &amp; board preferences</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Referral Program Card */}
           <button
             type="button"
             onClick={() => setCurrentScreen("referral")}
-            className="flex items-center justify-between p-6 rounded-[20px] bg-white border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-[#0B73FF]/30 transition-all duration-200 text-left hover:-translate-y-0.5 group focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-emerald-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-xl shadow-xs">🤝</span>
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Referral Program</h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">Invite fellow teachers and track referral rewards</p>
-              </div>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <Heart className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#0B73FF] group-hover:translate-x-0.5 transition-all" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Referral Program</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Invite teachers &amp; earn rewards</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Appearance Card */}
           <button
             type="button"
             onClick={() => setCurrentScreen("appearance")}
-            className="flex items-center justify-between p-6 rounded-[20px] bg-white border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-[#0B73FF]/30 transition-all duration-200 text-left hover:-translate-y-0.5 group focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-xl shadow-xs">🎨</span>
-              <div>
-                <h4 className="font-bold text-slate-800 text-sm">Appearance</h4>
-                <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">Configure sidebar views and dashboard layouts</p>
-              </div>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-amber-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
-            <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-[#0B73FF] group-hover:translate-x-0.5 transition-all" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Appearance</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Sidebar &amp; dashboard layout config</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
         </div>
       )}
 
       {currentScreen === "account" && (
-        <section className="rounded-[20px] border border-slate-200/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">👤 Account</h3>
-            <p className="text-xs text-slate-500 font-medium mt-1">Manage your basic teacher profile information and contact details.</p>
+        <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_10px_24px_rgba(59,130,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+              <User className="h-5 w-5 stroke-[2.3]" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Account</h3>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Manage your profile information and contact details.</p>
+            </div>
           </div>
 
           <form onSubmit={submit} className="space-y-6 pt-2 border-t border-slate-100">
@@ -423,10 +433,15 @@ export default function SettingsPage() {
       )}
 
       {currentScreen === "security" && (
-        <section className="rounded-[20px] border border-slate-200/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">🔒 Security</h3>
-            <p className="text-xs text-slate-500 font-medium mt-1">Manage password credentials and active session resets.</p>
+        <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_10px_24px_rgba(22,169,182,0.14),inset_0_1px_0_rgba(255,255,255,0.92)]">
+              <ShieldCheck className="h-5 w-5 stroke-[2.3]" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Security</h3>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Manage password credentials and active session resets.</p>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-5 border-t border-slate-100">
@@ -456,10 +471,15 @@ export default function SettingsPage() {
       )}
 
       {currentScreen === "preferences" && (
-        <section className="rounded-[20px] border border-slate-200/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">📚 Teaching Preferences</h3>
-            <p className="text-xs text-slate-500 font-medium mt-1">Prefill board configurations to automate curriculum loading across AI tools.</p>
+        <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_10px_24px_rgba(244,95,152,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+              <GraduationCap className="h-5 w-5 stroke-[2.3]" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Teaching Preferences</h3>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Prefill board configurations to automate curriculum loading.</p>
+            </div>
           </div>
 
           <div className="space-y-4 pt-5 border-t border-slate-100">
@@ -540,10 +560,15 @@ export default function SettingsPage() {
       )}
 
       {currentScreen === "referral" && (
-        <section className="rounded-[20px] border border-slate-200/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">🤝 Referral Program</h3>
-            <p className="text-xs text-slate-500 font-medium mt-1">Invite fellow teachers to TeachPad and earn subscription benefits and rewards.</p>
+        <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_10px_24px_rgba(36,183,122,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+              <Heart className="h-5 w-5 stroke-[2.3]" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Referral Program</h3>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Invite fellow teachers and earn subscription rewards.</p>
+            </div>
           </div>
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
@@ -626,10 +651,15 @@ export default function SettingsPage() {
       )}
 
       {currentScreen === "appearance" && (
-        <section className="rounded-[20px] border border-slate-200/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">🎨 Appearance</h3>
-            <p className="text-xs text-slate-500 font-medium mt-1">Configure layout densities and theme alignments for your workspace.</p>
+        <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_10px_24px_rgba(240,162,47,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+              <Sparkles className="h-5 w-5 stroke-[2.3]" />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Appearance</h3>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Configure layout densities and theme alignments.</p>
+            </div>
           </div>
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
