@@ -284,6 +284,17 @@ export type LibraryItem = {
   created_at: string;
 };
 
+export type RecentGenerationItem = {
+  id: string;
+  type: "lesson_plan" | "worksheet" | "presentation" | "notes" | "activity";
+  title: string;
+  subject: string;
+  class_name: string;
+  chapter_name: string;
+  created_at: string;
+  href: string;
+};
+
 
 
 export type AdminSummary = {
@@ -1072,6 +1083,8 @@ export const backendApi = {
     if (params.subject) qStr.set("subject", params.subject);
     return apiFetch<PaginatedResponse<LibraryItem>>(`/library?${qStr.toString()}`);
   },
+  recentGenerations: (skip = 0, limit = 10) =>
+    apiFetch<PaginatedResponse<RecentGenerationItem>>(`/dashboard/recent-generations?skip=${skip}&limit=${limit}`),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
   updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
     apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),

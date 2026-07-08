@@ -15,7 +15,6 @@ import {
   StickyNote
 } from "lucide-react";
 import { backendApi } from "@/lib/api";
-import { listWorksheetGenerations, WORKSHEET_STORAGE_EVENT } from "@/lib/worksheet-storage";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -49,6 +48,14 @@ const typeColors: Record<GenerationType, string> = {
   presentation: "bg-rose-50 text-rose-600 ring-rose-200",
 };
 
+const typeMapping: Record<string, GenerationType> = {
+  lesson_plan: "lesson plan",
+  worksheet: "worksheet",
+  presentation: "presentation",
+  notes: "notes",
+  activity: "activity"
+};
+
 function normalizeClassName(raw: string | undefined): string {
   if (!raw) return "";
   const match = raw.toLowerCase().match(/\b(?:class|grade)?\s*(\d{1,2})(?:st|nd|rd|th)?\b/);
@@ -75,126 +82,32 @@ function formatDate(dateStr: string): string {
 }
 
 export default function RecentGenerationsPage() {
-  const lessonPlans = useQuery({ queryKey: ["recent-lesson-plans"], queryFn: () => backendApi.lessonPlans(0, 30), staleTime: 0, refetchOnMount: "always" });
-  const worksheets = useQuery({ queryKey: ["recent-worksheets"], queryFn: () => backendApi.worksheets(0, 30), staleTime: 0, refetchOnMount: "always" });
-  const notes = useQuery({ queryKey: ["recent-notes"], queryFn: () => backendApi.notesGenerations(0, 30), staleTime: 0, refetchOnMount: "always" });
-  const activities = useQuery({ queryKey: ["recent-activities"], queryFn: () => backendApi.activities(0, 30), staleTime: 0, refetchOnMount: "always" });
-  const presentations = useQuery({ queryKey: ["recent-presentations"], queryFn: () => backendApi.presentations(0, 30), staleTime: 0, refetchOnMount: "always" });
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const skip = (page - 1) * limit;
 
-  const [localWorksheets, setLocalWorksheets] = useState<any[]>([]);
+  const { data: recentData, isLoading } = useQuery({
+    queryKey: ["recent-generations-history", page],
+    queryFn: () => backendApi.recentGenerations(skip, limit),
+    staleTime: 0,
+    refetchOnMount: "always"
+  });
 
-  useEffect(() => {
-    function sync() { setLocalWorksheets(listWorksheetGenerations()); }
-    sync();
-    window.addEventListener(WORKSHEET_STORAGE_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(WORKSHEET_STORAGE_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+  const generations: GenerationItem[] = useMemo(() => {
+    const items = recentData?.items || [];
+    return items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      type: typeMapping[item.type] || (item.type as any),
+      createdAt: item.created_at,
+      href: item.href,
+      subject: item.subject || undefined,
+      className: normalizeClassName(item.class_name),
+      chapterName: item.chapter_name || undefined
+    }));
+  }, [recentData]);
 
-  const allGenerations: GenerationItem[] = useMemo(() => {
-    const items: GenerationItem[] = [];
-
-    (lessonPlans.data?.items || []).forEach((item: any) => {
-      items.push({
-        id: `lp-${item.id}`,
-        title: item.topic || item.chapter_name || "Generated Lesson Plan",
-        type: "lesson plan",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/lesson-plans/${item.id}`,
-        subject: item.subject,
-        className: normalizeClassName(item.class_name),
-        chapterName: item.chapter_name,
-      });
-    });
-
-    // Merge backend worksheets with local-only worksheets, deduplicating by id
-    const backendWorksheetItems = worksheets.data?.items || [];
-    const seenWorksheetIds = new Set<string>();
-
-    backendWorksheetItems.forEach((item: any) => {
-      seenWorksheetIds.add(String(item.id));
-      const meta = item.output_json?.metadata || {};
-      items.push({
-        id: `ws-${item.id}`,
-        title: meta.title || item.output_json?.title || meta.topic || "Generated Worksheet",
-        type: "worksheet",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/worksheets/${item.id}`,
-        subject: meta.subject,
-        className: meta.grade ? `Class ${meta.grade}` : undefined,
-        chapterName: meta.chapter,
-      });
-    });
-
-    localWorksheets.forEach((item: any) => {
-      if (seenWorksheetIds.has(String(item.id))) return;
-      const meta = item.output_json?.metadata || {};
-      items.push({
-        id: `ws-${item.id}`,
-        title: meta.title || item.output_json?.title || meta.topic || "Generated Worksheet",
-        type: "worksheet",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/worksheets/${item.id}`,
-        subject: meta.subject,
-        className: meta.grade ? `Class ${meta.grade}` : undefined,
-        chapterName: meta.chapter,
-      });
-    });
-
-    (notes.data?.items || []).forEach((item: any) => {
-      const meta = item.output_json?.metadata || {};
-      items.push({
-        id: `notes-${item.id}`,
-        title: meta.title || item.topic || "Generated Notes",
-        type: "notes",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/notes-generator?id=${item.id}`,
-        subject: meta.subject || item.subject,
-        className: normalizeClassName(meta.class || item.class_name),
-        chapterName: meta.chapter || item.chapter_name,
-      });
-    });
-
-    (activities.data?.items || []).forEach((item: any) => {
-      const meta = item.output_json?.metadata || {};
-      items.push({
-        id: `activity-${item.id}`,
-        title: meta.title || item.topic || "Generated Activity",
-        type: "activity",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/activity-generator?id=${item.id}`,
-        subject: meta.subject || item.subject,
-        className: normalizeClassName(meta.class || item.class_name),
-        chapterName: meta.chapter || item.chapter_name,
-      });
-    });
-
-    (presentations.data?.items || []).forEach((item: any) => {
-      items.push({
-        id: `pres-${item.id}`,
-        title: item.topic || "Generated Presentation",
-        type: "presentation",
-        createdAt: item.created_at || item.updated_at || "",
-        href: `/dashboard/presentation-generator/output?id=${item.id}`,
-        subject: undefined,
-        className: item.audience,
-        chapterName: undefined,
-      });
-    });
-
-    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [lessonPlans.data, worksheets.data, notes.data, activities.data, presentations.data, localWorksheets]);
-
-  const isLoading = lessonPlans.isLoading || worksheets.isLoading || notes.isLoading || activities.isLoading || presentations.isLoading;
-  const [page, setPage] = useState(0);
-  const PER_PAGE = 10;
-  const totalPages = Math.max(1, Math.ceil(allGenerations.length / PER_PAGE));
-  const paginated = allGenerations.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
-
-  useEffect(() => { setPage(0); }, [allGenerations.length]);
+  const totalPages = recentData?.pages || 1;
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
@@ -221,7 +134,7 @@ export default function RecentGenerationsPage() {
             ))}
           </div>
         </div>
-      ) : allGenerations.length === 0 ? (
+      ) : generations.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-[#d8f1e5] bg-white/60 py-16">
           <Clock3 className="h-12 w-12 text-[#9CA0AA]" />
           <h3 className="text-lg font-bold text-[#25262b]">No generations yet</h3>
@@ -237,7 +150,7 @@ export default function RecentGenerationsPage() {
       ) : (
         <>
           <div className="grid gap-2">
-            {paginated.map((gen) => {
+            {generations.map((gen) => {
               const meta = typeMeta[gen.type];
               const Icon = meta.icon;
               return (
@@ -259,8 +172,18 @@ export default function RecentGenerationsPage() {
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
                       {gen.className && <span>{gen.className}</span>}
-                      {gen.subject && <span>{gen.subject}</span>}
-                      {gen.chapterName && <span className="truncate">{gen.chapterName}</span>}
+                      {gen.subject && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span>{gen.subject}</span>
+                        </>
+                      )}
+                      {gen.chapterName && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="truncate">{gen.chapterName}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="hidden shrink-0 text-right sm:block">
@@ -275,21 +198,21 @@ export default function RecentGenerationsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm">
               <span className="text-sm text-slate-500">
-                Page {page + 1} of {totalPages}
+                Page {page} of {totalPages}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   type="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next
