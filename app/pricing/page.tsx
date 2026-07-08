@@ -64,7 +64,7 @@ const plans = [
   {
     name: "Pro",
     eyebrow: "For teachers",
-    price: "₹199",
+    price: "₹299",
     period: "/month",
     altPrice: "or ₹1,699/year",
     description: "For teachers who want every classroom resource ready in seconds.",
@@ -154,7 +154,7 @@ const structuredData = [
         {
           "@type": "Offer",
           name: "TeachPad Pro Monthly",
-          price: "199",
+          price: "299",
           priceCurrency: "INR",
           availability: "https://schema.org/InStock",
           url: `${siteUrl}/signup`
@@ -197,7 +197,7 @@ const structuredData = [
         {
           "@type": "Offer",
           name: "Pro Monthly",
-          price: "199",
+          price: "299",
           priceCurrency: "INR",
           url: `${siteUrl}/signup`
         },

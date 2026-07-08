@@ -66,7 +66,7 @@ const PLANS: PlanOption[] = [
   {
     id: "pro_monthly",
     label: "Pro Monthly",
-    price: "₹199",
+    price: "₹299",
     period: "/month",
   },
   {
@@ -175,7 +175,7 @@ function UpgradeModalUI({
   const showTrialNote =
     (billing?.status === "trialing" && (billing?.days_left ?? 0) > 0) ||
     !!billing?.can_setup_mandate;
-  const priceLabel = selected === "pro_annual" ? "₹1,699/year" : "₹199/month";
+  const priceLabel = selected === "pro_annual" ? "₹1,699/year" : "₹299/month";
   const trialEnds = (() => {
     if (!billing?.access_until) return "when your free access ends";
     const d = new Date(billing.access_until);
