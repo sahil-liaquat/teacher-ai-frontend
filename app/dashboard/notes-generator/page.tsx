@@ -17,6 +17,7 @@ import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
+import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 
 const styleOptions = ["Exam revision", "Classroom blackboard", "Student notebook", "Quick recap"];
 const detailOptions = ["Brief", "Balanced", "Detailed"];
@@ -78,6 +79,24 @@ export default function NotesGeneratorPage() {
   const [savedGenerationError, setSavedGenerationError] = useState("");
   const [notes, setNotes] = useState<any>(null);
   const [draftReady, setDraftReady] = useState(false);
+  const [currentNotesId, setCurrentNotesId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (currentNotesId) {
+      setIsSaved(isResourceSaved(`notes-${currentNotesId}`));
+    } else {
+      setIsSaved(false);
+    }
+  }, [currentNotesId]);
+
+  const handleSaveToLibrary = () => {
+    if (currentNotesId) {
+      saveResourceId(`notes-${currentNotesId}`);
+      setIsSaved(true);
+      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+    }
+  };
 
   useEffect(() => {
     if (!generationId) {
@@ -90,7 +109,10 @@ export default function NotesGeneratorPage() {
     setSavedGenerationError("");
     backendApi.notesGeneration(generationId)
       .then((generation) => {
-        if (!cancelled) setNotes(generation.output_json);
+        if (!cancelled) {
+          setNotes(generation.output_json);
+          setCurrentNotesId(generation.id);
+        }
       })
       .catch((error) => {
         if (!cancelled) {
@@ -392,6 +414,8 @@ export default function NotesGeneratorPage() {
         include_questions: includeQuestions
       });
       setNotes(generation.output_json);
+      setCurrentNotesId(generation.id);
+      setIsSaved(false);
       toast({ title: "Notes generated", description: "Your classroom notes are ready below." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate notes.");
@@ -504,7 +528,7 @@ export default function NotesGeneratorPage() {
   if (notes) {
     return (
       <div className="mx-auto w-full max-w-[1240px]">
-        <NotesOutput notes={notes} onCopy={copyNotes} onPdf={downloadNotesPdf} onShare={shareNotes} onSave={downloadNotes} onBack={() => setNotes(null)} />
+        <NotesOutput notes={notes} onCopy={copyNotes} onPdf={downloadNotesPdf} onShare={shareNotes} onSave={downloadNotes} isSaved={isSaved} onSaveToLibrary={handleSaveToLibrary} onBack={() => setNotes(null)} />
       </div>
     );
   }
@@ -847,7 +871,7 @@ export default function NotesGeneratorPage() {
   );
 }
 
-function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes: any; onCopy: () => void; onPdf: (handwritten?: boolean) => void; onShare: () => void; onSave: () => void; onBack: () => void }) {
+function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack, isSaved, onSaveToLibrary }: { notes: any; onCopy: () => void; onPdf: (handwritten?: boolean) => void; onShare: () => void; onSave: () => void; onBack: () => void; isSaved: boolean; onSaveToLibrary: () => void }) {
   const metadata = notes.metadata || {};
   const [handwritten, setHandwritten] = useState(false);
 
@@ -878,7 +902,15 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack }: { notes:
           <Button type="button" variant="outline" size="sm" onClick={onCopy}><ClipboardCopy className="h-4 w-4" /> Copy</Button>
           <Button type="button" variant="outline" size="sm" onClick={() => onPdf(handwritten)}><Download className="h-4 w-4" /> PDF</Button>
           <Button type="button" variant="outline" size="sm" onClick={onShare}><Share2 className="h-4 w-4" /> Share</Button>
-          <Button type="button" variant="outline" size="sm" onClick={onSave}><Save className="h-4 w-4" /> Save</Button>
+          {isSaved ? (
+            <Button type="button" variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
+              <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={onSaveToLibrary}>
+              <Save className="h-4 w-4" /> Save to Library
+            </Button>
+          )}
         </div>
       </div>
       <div className={`p-5 ${handwritten ? "notes-handwritten" : ""}`}>

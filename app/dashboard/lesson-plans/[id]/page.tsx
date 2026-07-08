@@ -7,6 +7,7 @@ import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { CompanionResourcesPanel } from "@/components/companion-resources-panel";
 import { LessonPlanOutput } from "@/components/generation-output";
+import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } from "@/lib/lesson-plan-export";
@@ -17,6 +18,21 @@ export default function LessonPlanDetailPage() {
   const queryClient = useQueryClient();
   const [editedOutput, setEditedOutput] = useState<any>(null);
   const [autoSaveFailed, setAutoSaveFailed] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (params.id) {
+      setIsSaved(isResourceSaved(`lp-${params.id}`));
+    }
+  }, [params.id]);
+
+  const handleSaveToLibrary = () => {
+    if (params.id) {
+      saveResourceId(`lp-${params.id}`);
+      setIsSaved(true);
+      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+    }
+  };
   const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
   const output = editedOutput || (lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null);
 
@@ -99,6 +115,8 @@ export default function LessonPlanDetailPage() {
           onShare={share}
           onSave={editsSaved}
           onChange={setEditedOutput}
+          isSaved={isSaved}
+          onSaveToLibrary={handleSaveToLibrary}
         />
       </div>
       <CompanionResourcesPanel

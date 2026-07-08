@@ -8,6 +8,7 @@ import { backendApi } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getWorksheetGeneration, saveWorksheetGeneration } from "@/lib/worksheet-storage";
 import { getErrorMessage } from "@/lib/errors";
+import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 
 export default function WorksheetDetailPage() {
   const params = useParams<{ id: string }>();
@@ -17,6 +18,21 @@ export default function WorksheetDetailPage() {
   const [autoSaveFailed, setAutoSaveFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (params.id) {
+      setIsSaved(isResourceSaved(`ws-${params.id}`));
+    }
+  }, [params.id]);
+
+  const handleSaveToLibrary = () => {
+    if (params.id) {
+      saveResourceId(`ws-${params.id}`);
+      setIsSaved(true);
+      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -167,6 +183,8 @@ export default function WorksheetDetailPage() {
         onExport={exportPdf}
         onShare={share}
         onChange={handleWorksheetChange}
+        isSaved={isSaved}
+        onSaveToLibrary={handleSaveToLibrary}
       />
     </div>
   );

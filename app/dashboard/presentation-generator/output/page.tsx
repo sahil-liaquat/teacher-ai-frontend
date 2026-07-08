@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FocusEvent } from "react";
-import { ArrowLeft, ArrowRight, Download, FileText, ImageIcon, Maximize2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Download, FileText, ImageIcon, Maximize2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { backendApi, isPaymentRequiredError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
+import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import {
   loadLatestPresentationId,
@@ -33,6 +34,22 @@ export default function PresentationOutputPage() {
   const [presenting, setPresenting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [currentPresentationId, setCurrentPresentationId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (currentPresentationId) {
+      setIsSaved(isResourceSaved(`pres-${currentPresentationId}`));
+    }
+  }, [currentPresentationId]);
+
+  const handleSaveToLibrary = () => {
+    if (currentPresentationId) {
+      saveResourceId(`pres-${currentPresentationId}`);
+      setIsSaved(true);
+      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,6 +72,7 @@ export default function PresentationOutputPage() {
           return;
         }
         setDeck(nextDeck);
+        setCurrentPresentationId(id);
         setActiveSlide(0);
       })
       .catch((error) => {
@@ -216,6 +234,8 @@ export default function PresentationOutputPage() {
             onPresent={enterPresentMode}
             onExportPdf={exportPdf}
             onExportPpt={exportPpt}
+            isSaved={isSaved}
+            onSaveToLibrary={handleSaveToLibrary}
           />
           <section className="grid min-h-0 min-w-0 flex-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-5">
             <div className="flex min-w-0 flex-col gap-3 rounded-[20px] border border-white/80 bg-white/40 p-3 shadow-[0_20px_50px_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-5 sm:rounded-[32px] sm:p-6">
@@ -307,12 +327,16 @@ function Toolbar({
   deck,
   onPresent,
   onExportPdf,
-  onExportPpt
+  onExportPpt,
+  isSaved,
+  onSaveToLibrary
 }: {
   deck: PresentationDeck;
   onPresent: () => void;
   onExportPdf: () => void;
   onExportPpt: () => void;
+  isSaved?: boolean;
+  onSaveToLibrary?: () => void;
 }) {
   return (
     <header className="rounded-[24px] border border-white/80 bg-white/70 p-3.5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] backdrop-blur-md flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
@@ -323,7 +347,20 @@ function Toolbar({
         </Link>
         <h1 className="mt-1.5 truncate text-base font-extrabold text-slate-900 sm:text-xl tracking-tight leading-none">{deck.topic}</h1>
       </div>
-      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {onSaveToLibrary && (
+          isSaved ? (
+            <Button type="button" variant="outline" disabled className="h-10 bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed rounded-xl px-4 text-xs font-bold flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600" />
+              Saved to Library
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={onSaveToLibrary} className="h-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl px-4 text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all duration-200 flex items-center gap-2">
+              <Save className="h-4 w-4" />
+              Save to Library
+            </Button>
+          )
+        )}
         <Button type="button" onClick={onPresent} className="h-10 bg-slate-900 hover:bg-slate-800 rounded-xl px-4 text-xs font-bold text-white shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-95 transition-all duration-200 flex items-center gap-2">
           <Maximize2 className="h-4 w-4" />
           Present

@@ -16,6 +16,7 @@ import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
+import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 
 const activityTypes = ["Group activity", "Hands-on activity", "Discussion activity", "Quick recap", "Project task"];
 const groupSizes = ["Whole class", "Pairs", "Small groups", "Individual"];
@@ -80,6 +81,24 @@ export default function ActivityGeneratorPage() {
   const [savedGenerationError, setSavedGenerationError] = useState("");
   const [activity, setActivity] = useState<any>(null);
   const [draftReady, setDraftReady] = useState(false);
+  const [currentActivityId, setCurrentActivityId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (currentActivityId) {
+      setIsSaved(isResourceSaved(`activity-${currentActivityId}`));
+    } else {
+      setIsSaved(false);
+    }
+  }, [currentActivityId]);
+
+  const handleSaveToLibrary = () => {
+    if (currentActivityId) {
+      saveResourceId(`activity-${currentActivityId}`);
+      setIsSaved(true);
+      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+    }
+  };
 
   useEffect(() => {
     if (!generationId) {
@@ -92,7 +111,10 @@ export default function ActivityGeneratorPage() {
     setSavedGenerationError("");
     backendApi.activity(generationId)
       .then((generation) => {
-        if (!cancelled) setActivity(generation.output_json);
+        if (!cancelled) {
+          setActivity(generation.output_json);
+          setCurrentActivityId(generation.id);
+        }
       })
       .catch((error) => {
         if (!cancelled) {
@@ -397,6 +419,8 @@ export default function ActivityGeneratorPage() {
         include_differentiation: includeDifferentiation
       });
       setActivity(generation.output_json);
+      setCurrentActivityId(generation.id);
+      setIsSaved(false);
       toast({ title: "Activity generated", description: "Your classroom activity is ready." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate activity.");
@@ -506,7 +530,7 @@ export default function ActivityGeneratorPage() {
   if (activity) {
     return (
       <div className="mx-auto w-full max-w-[1240px]">
-        <ActivityOutput activity={activity} onCopy={copyActivity} onPdf={downloadActivityPdf} onShare={shareActivity} onSave={downloadActivity} onBack={() => setActivity(null)} />
+        <ActivityOutput activity={activity} onCopy={copyActivity} onPdf={downloadActivityPdf} onShare={shareActivity} onSave={downloadActivity} isSaved={isSaved} onSaveToLibrary={handleSaveToLibrary} onBack={() => setActivity(null)} />
       </div>
     );
   }
@@ -882,7 +906,7 @@ export default function ActivityGeneratorPage() {
   );
 }
 
-function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack }: { activity: any; onCopy: () => void; onPdf: () => void; onShare: () => void; onSave: () => void; onBack: () => void }) {
+function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack, isSaved, onSaveToLibrary }: { activity: any; onCopy: () => void; onPdf: () => void; onShare: () => void; onSave: () => void; onBack: () => void; isSaved: boolean; onSaveToLibrary: () => void }) {
   const metadata = activity.metadata || {};
 
   return (
@@ -903,7 +927,15 @@ function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack }: { 
           <Button type="button" variant="outline" size="sm" onClick={onCopy}><ClipboardCopy className="h-4 w-4" /> Copy</Button>
           <Button type="button" variant="outline" size="sm" onClick={onPdf}><Download className="h-4 w-4" /> PDF</Button>
           <Button type="button" variant="outline" size="sm" onClick={onShare}><Share2 className="h-4 w-4" /> Share</Button>
-          <Button type="button" variant="outline" size="sm" onClick={onSave}><Save className="h-4 w-4" /> Save</Button>
+          {isSaved ? (
+            <Button type="button" variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
+              <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={onSaveToLibrary}>
+              <Save className="h-4 w-4" /> Save to Library
+            </Button>
+          )}
         </div>
       </div>
       <div className="p-5">

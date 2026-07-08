@@ -1032,12 +1032,14 @@ export const backendApi = {
   notesGeneration: (id: string) => apiFetch<NotesGeneration>(`/notes/${id}`),
   updateNotesGeneration: (id: string, payload: Partial<Pick<NotesGeneration, "output_json">>) =>
     apiFetch<NotesGeneration>(`/notes/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteNotes: (id: string) => apiFetch<void>(`/notes/${id}`, { method: "DELETE" }),
   createActivity: (payload: ActivityGeneratePayload) =>
     apiFetch<ActivityGeneration>("/activities", { method: "POST", body: JSON.stringify(payload) }),
   activities: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<ActivityGeneration>>(`/activities?skip=${skip}&limit=${limit}`),
   activity: (id: string) => apiFetch<ActivityGeneration>(`/activities/${id}`),
   updateActivity: (id: string, payload: Partial<Pick<ActivityGeneration, "output_json">>) =>
     apiFetch<ActivityGeneration>(`/activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteActivity: (id: string) => apiFetch<void>(`/activities/${id}`, { method: "DELETE" }),
   createPresentation: (payload: PresentationGeneratePayload) =>
     apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),

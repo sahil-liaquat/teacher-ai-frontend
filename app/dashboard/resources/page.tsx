@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   BookOpen,
   CalendarDays,
-  ChevronRight,
   ClipboardCheck,
   Clock3,
   Download,
@@ -26,7 +24,6 @@ import {
   WORKSHEET_STORAGE_EVENT,
 } from "@/lib/worksheet-storage";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { cn } from "@/lib/utils";
+import { isResourceSaved, initializeSavedResourceIds } from "@/lib/saved-resources";
 
 type ResourceType = "lesson plan" | "worksheet" | "notes" | "activity" | "presentation";
 
@@ -51,11 +49,11 @@ interface ResourceItem {
 }
 
 const typeMeta: Record<ResourceType, { label: string; icon: typeof BookOpen; colors: { bg: string; text: string; border: string } }> = {
-  "lesson plan": { label: "Lesson Plan", icon: BookOpen, colors: { bg: "bg-blue-50", text: "text-teachpad-blue", border: "border-blue-200" } },
-  worksheet: { label: "Worksheet", icon: ClipboardCheck, colors: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-[#bdebd7]" } },
-  notes: { label: "Notes", icon: StickyNote, colors: { bg: "bg-[#fff1f7]", text: "text-[#d9467d]", border: "border-[#f9a8d4]" } },
-  activity: { label: "Activity", icon: Lightbulb, colors: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]", border: "border-[#8eecf5]" } },
-  presentation: { label: "Presentation", icon: Presentation, colors: { bg: "bg-[#fff1f2]", text: "text-[#eb3b5a]", border: "border-[#fda4af]" } },
+  "lesson plan": { label: "Lesson Plan", icon: BookOpen, colors: { bg: "bg-blue-50/80", text: "text-teachpad-blue", border: "border-blue-100" } },
+  worksheet: { label: "Worksheet", icon: ClipboardCheck, colors: { bg: "bg-emerald-50/80", text: "text-emerald-600", border: "border-emerald-100" } },
+  notes: { label: "Notes", icon: StickyNote, colors: { bg: "bg-pink-50/80", text: "text-pink-600", border: "border-pink-100" } },
+  activity: { label: "Activity", icon: Lightbulb, colors: { bg: "bg-cyan-50/80", text: "text-cyan-600", border: "border-cyan-100" } },
+  presentation: { label: "Presentation", icon: Presentation, colors: { bg: "bg-rose-50/80", text: "text-rose-600", border: "border-rose-100" } },
 };
 
 function normalizeClassName(raw: string | undefined): string {
@@ -77,14 +75,6 @@ function extractClass(raw: any): string {
   return normalizeClassName(classVal ? String(classVal) : undefined);
 }
 
-function extractChapter(raw: any): string {
-  return raw?.chapter_name || raw?.output_json?.metadata?.chapter || raw?.output_json?.metadata?.topic || "";
-}
-
-function extractTopic(raw: any): string {
-  return raw?.topic || raw?.output_json?.metadata?.topic || raw?.output_json?.title || "";
-}
-
 export default function ResourcesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -93,7 +83,6 @@ export default function ResourcesPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
-  const [detailView, setDetailView] = useState<{ className: string; subject: string } | null>(null);
 
   const lessonPlans = useQuery({ queryKey: ["resources-lesson-plans"], queryFn: () => backendApi.lessonPlans(0, 50), staleTime: 0, refetchOnMount: "always" });
   const notes = useQuery({ queryKey: ["resources-notes"], queryFn: () => backendApi.notesGenerations(0, 50), staleTime: 0, refetchOnMount: "always" });
@@ -201,214 +190,65 @@ export default function ResourcesPage() {
     return items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }, [lessonPlans.data, notes.data, activities.data, presentations.data, localWorksheets]);
 
-  const recentResources = useMemo(() => allResources.slice(0, 8), [allResources]);
-
-  const groupedBySubject = useMemo(() => {
-    const map = new Map<string, { className: string; subject: string; resources: ResourceItem[] }>();
-    for (const r of allResources) {
-      const key = `${r.className}||${r.subject}`;
-      if (!map.has(key)) map.set(key, { className: r.className, subject: r.subject, resources: [] });
-      map.get(key)!.resources.push(r);
-    }
-    return Array.from(map.values()).sort((a, b) => a.className.localeCompare(b.className) || a.subject.localeCompare(b.subject));
-  }, [allResources]);
-
-  const filteredGroups = useMemo(() => {
+  const filteredResources = useMemo(() => {
     const filterText = searchQuery.toLowerCase().trim();
-    return groupedBySubject.filter((group) => {
-      if (typeFilter !== "all" && !group.resources.some((r) => r.type === typeFilter)) return false;
-      if (classFilter && group.className !== classFilter) return false;
-      if (subjectFilter && group.subject !== subjectFilter) return false;
+    return allResources.filter((r) => {
+      if (!isResourceSaved(r.id)) return false;
+      if (typeFilter !== "all" && r.type !== typeFilter) return false;
+      if (classFilter && r.className !== classFilter) return false;
+      if (subjectFilter && r.subject !== subjectFilter) return false;
       if (filterText) {
-        const matches = (s: string) => s.toLowerCase().includes(filterText);
-        if (!matches(group.className) && !matches(group.subject) && !group.resources.some((r) => matches(r.title) || matches(r.chapterName))) return false;
+        const matches = (s: string) => (s || "").toLowerCase().includes(filterText);
+        if (
+          !matches(r.title) &&
+          !matches(r.subject) &&
+          !matches(r.className) &&
+          !matches(r.chapterName)
+        ) return false;
       }
       return true;
     });
-  }, [groupedBySubject, typeFilter, classFilter, subjectFilter, searchQuery]);
+  }, [allResources, typeFilter, classFilter, subjectFilter, searchQuery]);
 
-  const allClasses = useMemo(() => groupedBySubject.reduce<string[]>((acc, g) => acc.includes(g.className) ? acc : [...acc, g.className], []), [groupedBySubject]);
-  const allSubjects = useMemo(() => groupedBySubject.reduce<string[]>((acc, g) => acc.includes(g.subject) ? acc : [...acc, g.subject], []), [groupedBySubject]);
+  const resourcesByMonth = useMemo(() => {
+    const groups: { monthYear: string; label: string; items: ResourceItem[] }[] = [];
+    
+    filteredResources.forEach((item) => {
+      const date = new Date(item.createdAt || 0);
+      const year = date.getFullYear();
+      const monthIndex = date.getMonth();
+      const monthName = isNaN(monthIndex) ? "Earlier" : date.toLocaleString("default", { month: "long" });
+      const monthYear = isNaN(year) ? "Earlier" : `${monthName} ${year}`;
+      
+      let group = groups.find((g) => g.monthYear === monthYear);
+      if (!group) {
+        group = { monthYear, label: monthYear, items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+    
+    return groups.sort((a, b) => {
+      const dateA = new Date(a.items[0]?.createdAt || 0).getTime();
+      const dateB = new Date(b.items[0]?.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [filteredResources]);
+
+  const allClasses = useMemo(() => allResources.reduce<string[]>((acc, r) => acc.includes(r.className) ? acc : [...acc, r.className], []), [allResources]);
+  const allSubjects = useMemo(() => allResources.reduce<string[]>((acc, r) => acc.includes(r.subject) ? acc : [...acc, r.subject], []), [allResources]);
 
   const activeFilterCount = [typeFilter !== "all", !!classFilter, !!subjectFilter, !!searchQuery].filter(Boolean).length;
   const clearFilters = () => { setSearchQuery(""); setTypeFilter("all"); setClassFilter(""); setSubjectFilter(""); };
 
   const isLoading = lessonPlans.isLoading || notes.isLoading || activities.isLoading || presentations.isLoading;
 
-  if (detailView) {
-    return (
-      <SubjectDetailView
-        className={detailView.className}
-        subject={detailView.subject}
-        resources={allResources}
-        onBack={() => setDetailView(null)}
-      />
-    );
-  }
-
-  return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <DashboardBannerHeader
-        titleTop="Saved"
-        titleHighlight="Resources"
-        imageSrc="/assets/illustrations/saved-resources-header.png"
-      />
-
-      {/* Filter bar */}
-      <div className="rounded-[22px] border border-teachpad-cardBorder bg-white/86 p-3 shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm sm:p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="relative flex-1 min-w-0">
-            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-teachpad-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by class, subject, chapter, topic..." className="pl-9 pr-9 w-full" />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-teachpad-muted hover:text-teachpad-ink">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-[140px]">
-              <option value="all">All Types</option>
-              {Object.entries(typeMeta).map(([key, m]) => <option key={key} value={key}>{m.label}s</option>)}
-            </Select>
-            {allClasses.length > 0 && (
-              <Select value={classFilter} onChange={(e) => { setClassFilter(e.target.value); setSubjectFilter(""); }} className="w-[130px]">
-                <option value="">All Classes</option>
-                {allClasses.sort().map((c) => <option key={c} value={c}>{c}</option>)}
-              </Select>
-            )}
-            {allSubjects.length > 0 && (
-              <Select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} className="w-[130px]">
-                <option value="">All Subjects</option>
-                {allSubjects.sort().map((s) => <option key={s} value={s}>{s}</option>)}
-              </Select>
-            )}
-            {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-xs">
-                <X className="h-3 w-3" /> Clear
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <div className="grid gap-5">
-          {[1, 2, 3].map((i) => <ClassSectionSkeleton key={i} />)}
-        </div>
-      ) : filteredGroups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-teachpad-cardBorder bg-white/70 p-8 text-center shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm">
-          <PastelIconTile name="search" className="mb-4 h-16 w-16" />
-          <h3 className="text-lg font-bold text-teachpad-ink">
-            {activeFilterCount > 0 ? "No resources match your filters" : "No saved resources yet"}
-          </h3>
-          <p className="mt-2 max-w-sm text-center text-sm text-teachpad-muted">
-            {activeFilterCount > 0 ? "Try adjusting your search or filters." : "Generate a lesson plan, worksheet, notes, activity, or presentation to start building your library."}
-          </p>
-          {activeFilterCount > 0 ? (
-            <Button variant="secondary" onClick={clearFilters} className="mt-4">Clear all filters</Button>
-          ) : (
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <Link href="/dashboard/lesson-plans/new"><Button size="sm"><Sparkles className="h-4 w-4" /> Lesson Plan</Button></Link>
-              <Link href="/dashboard/worksheets/new"><Button size="sm" variant="secondary"><ClipboardCheck className="h-4 w-4" /> Worksheet</Button></Link>
-              <Link href="/dashboard/notes-generator"><Button size="sm" variant="secondary"><StickyNote className="h-4 w-4" /> Notes</Button></Link>
-              <Link href="/dashboard/activity-generator"><Button size="sm" variant="secondary"><Lightbulb className="h-4 w-4" /> Activity</Button></Link>
-              <Link href="/dashboard/presentation-generator"><Button size="sm" variant="secondary"><Presentation className="h-4 w-4" /> Presentation</Button></Link>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredGroups.map((group) => {
-            const typeCounts = new Map<ResourceType, number>();
-            group.resources.forEach((r) => typeCounts.set(r.type, (typeCounts.get(r.type) || 0) + 1));
-            const total = group.resources.length;
-            const latest = group.resources.reduce((latest, r) => {
-              const d = new Date(r.createdAt || 0).getTime();
-              return d > latest ? d : latest;
-            }, 0);
-
-            return (
-              <button
-                key={`${group.className}||${group.subject}`}
-                onClick={() => setDetailView({ className: group.className, subject: group.subject })}
-                className="clickable-card group rounded-2xl border border-teachpad-cardBorder bg-white p-4 text-left shadow-[0_12px_26px_var(--teachpad-shadowToolCard)] transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold text-teachpad-muted">{group.className}</h3>
-                    <h2 className="truncate text-lg font-extrabold text-teachpad-ink">{group.subject}</h2>
-                  </div>
-                  <ChevronRight className="mt-1.5 h-4 w-4 shrink-0 text-teachpad-muted transition group-hover:translate-x-0.5 group-hover:text-teachpad-blue" />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {Array.from(typeCounts.entries()).map(([type, count]) => {
-                    const meta = typeMeta[type];
-                    return (
-                      <span key={type} className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold ${meta.colors.bg} ${meta.colors.text}`}>
-                        <meta.icon className="h-3 w-3" /> {count}
-                      </span>
-                    );
-                  })}
-                </div>
-                {latest > 0 && (
-                  <p className="mt-2 text-xs text-teachpad-muted">
-                    Last saved {new Date(latest).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </p>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ClassSectionSkeleton() {
-  return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-      <div className="mb-5 flex items-center gap-3">
-        <Skeleton className="h-14 w-14 rounded-[20px]" />
-        <div className="grid flex-1 gap-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-      </div>
-      <p className="mb-4 text-sm font-bold text-teachpad-muted">Loading resources...</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-[20px]" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SubjectDetailView({
-  className,
-  subject,
-  resources,
-  onBack,
-}: {
-  className: string;
-  subject: string;
-  resources: ResourceItem[];
-  onBack: () => void;
-}) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [tab, setTab] = useState<ResourceType | "all">("all");
-
-  const subjectResources = useMemo(() => resources.filter((r) => r.className === className && r.subject === subject), [resources, className, subject]);
-  const filtered = useMemo(() => tab === "all" ? subjectResources : subjectResources.filter((r) => r.type === tab), [subjectResources, tab]);
-
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    subjectResources.forEach((r) => { counts[r.type] = (counts[r.type] || 0) + 1; });
-    return counts;
-  }, [subjectResources]);
+  useEffect(() => {
+    if (!isLoading && allResources.length > 0) {
+      const allIds = allResources.map((r) => r.id);
+      initializeSavedResourceIds(allIds);
+    }
+  }, [isLoading, allResources]);
 
   const handleDelete = useCallback(async (resource: ResourceItem) => {
     try {
@@ -423,8 +263,14 @@ function SubjectDetailView({
         await backendApi.deletePresentation(resource.raw.id);
         queryClient.invalidateQueries({ queryKey: ["resources-presentations"] });
         toast({ title: "Deleted" });
-      } else {
-        toast({ title: "Delete not available" });
+      } else if (resource.type === "notes") {
+        await backendApi.deleteNotes(resource.raw.id);
+        queryClient.invalidateQueries({ queryKey: ["resources-notes"] });
+        toast({ title: "Deleted" });
+      } else if (resource.type === "activity") {
+        await backendApi.deleteActivity(resource.raw.id);
+        queryClient.invalidateQueries({ queryKey: ["resources-activities"] });
+        toast({ title: "Deleted" });
       }
     } catch {
       toast({ title: "Delete failed" });
@@ -453,99 +299,206 @@ function SubjectDetailView({
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-5">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        <div className="h-5 w-px bg-teachpad-cardBorder" />
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-extrabold text-teachpad-ink">{className} · {subject}</h1>
-          <p className="text-xs text-teachpad-muted sm:text-sm">
-            {Object.entries(typeCounts).map(([type, count]) => (
-              <span key={type} className="mr-3">{typeMeta[type as ResourceType].label}{count !== 1 ? "s" : ""}: {count}</span>
-            ))}
-          </p>
+      <DashboardBannerHeader
+        titleTop="Saved"
+        titleHighlight="Resources"
+        imageSrc="/assets/illustrations/saved-resources-header.png"
+      />
+
+      {/* Filter bar */}
+      <div className="rounded-[22px] border border-teachpad-cardBorder bg-white/86 p-3 shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm sm:p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1 min-w-0">
+            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-teachpad-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by class, subject, chapter, topic..." className="pl-9 pr-9 w-full" />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-teachpad-muted hover:text-teachpad-ink">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-[140px]">
+              <option value="all">All Types</option>
+              {Object.entries(typeMeta).map(([key, m]) => <option key={key} value={key}>{m.label}s</option>)}
+            </Select>
+            {allClasses.length > 0 && (
+              <Select value={classFilter} onChange={(e) => { setClassFilter(e.target.value); }} className="w-[130px]">
+                <option value="">All Classes</option>
+                {allClasses.sort().map((c) => <option key={c} value={c}>{c}</option>)}
+              </Select>
+            )}
+            {allSubjects.length > 0 && (
+              <Select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} className="w-[130px]">
+                <option value="">All Subjects</option>
+                {allSubjects.sort().map((s) => <option key={s} value={s}>{s}</option>)}
+              </Select>
+            )}
+            {activeFilterCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-xs">
+                <X className="h-3 w-3" /> Clear
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="inline-flex rounded-[16px] border border-teachpad-cardBorder bg-white/70 p-1 shadow-[0_8px_24px_var(--teachpad-shadowCard)] backdrop-blur-sm">
-        {(["all", "lesson plan", "worksheet", "notes", "activity", "presentation"] as const).map((t) => {
-          if (t !== "all" && !typeCounts[t]) return null;
-          return (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn(
-                "relative px-4 py-2 text-xs sm:text-sm font-semibold transition-all rounded-xl",
-                tab === t ? "bg-white text-teachpad-ink shadow-sm" : "text-teachpad-muted hover:text-teachpad-ink"
-              )}
-            >
-              {t === "all" ? "All" : typeMeta[t].label + "s"}
-            </button>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 ? (
+      {/* Content */}
+      {isLoading ? (
+        <TimelineSkeleton />
+      ) : resourcesByMonth.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-teachpad-cardBorder bg-white/70 p-8 text-center shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm">
-          <PastelIconTile name="fileText" className="mb-4 h-16 w-16" />
-          <h3 className="text-lg font-bold text-teachpad-ink">No resources found</h3>
-          <p className="mt-2 text-center text-sm text-teachpad-muted">Be the first to create something for {className} {subject}.</p>
+          <PastelIconTile name="search" className="mb-4 h-16 w-16" />
+          <h3 className="text-lg font-bold text-teachpad-ink">
+            {activeFilterCount > 0 ? "No resources match your filters" : "No saved resources yet"}
+          </h3>
+          <p className="mt-2 max-w-sm text-center text-sm text-teachpad-muted">
+            {activeFilterCount > 0 ? "Try adjusting your search or filters." : "Generate a lesson plan, worksheet, notes, activity, or presentation to start building your library."}
+          </p>
+          {activeFilterCount > 0 ? (
+            <Button variant="secondary" onClick={clearFilters} className="mt-4">Clear all filters</Button>
+          ) : (
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link href="/dashboard/lesson-plans/new"><Button size="sm"><Sparkles className="h-4 w-4" /> Lesson Plan</Button></Link>
+              <Link href="/dashboard/worksheets/new"><Button size="sm" variant="secondary"><ClipboardCheck className="h-4 w-4" /> Worksheet</Button></Link>
+              <Link href="/dashboard/notes-generator"><Button size="sm" variant="secondary"><StickyNote className="h-4 w-4" /> Notes</Button></Link>
+              <Link href="/dashboard/activity-generator"><Button size="sm" variant="secondary"><Lightbulb className="h-4 w-4" /> Activity</Button></Link>
+              <Link href="/dashboard/presentation-generator"><Button size="sm" variant="secondary"><Presentation className="h-4 w-4" /> Presentation</Button></Link>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((resource, i) => {
-            const meta = typeMeta[resource.type];
-            const Icon = meta.icon;
-            const canDelete = resource.type === "lesson plan" || resource.type === "worksheet" || resource.type === "presentation";
-            return (
-              <div key={`${resource.type}-${resource.id}`} className="overflow-hidden rounded-[20px] border border-teachpad-cardBorder bg-white/84 shadow-[0_12px_30px_var(--teachpad-shadowCard)] backdrop-blur-sm"
-                style={{ animationDelay: `${i * 50}ms` }}
-              >
-                <div className="p-4">
-                  <div className="mb-3 flex items-start gap-3">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${meta.colors.bg} ${meta.colors.text}`}>
-                      <Icon className="h-5 w-5" />
+        <div className="space-y-8">
+          {resourcesByMonth.map((group) => (
+            <div key={group.monthYear} className="space-y-4">
+              <h2 className="text-lg font-extrabold text-slate-800 px-1 flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-blue-500" />
+                <span>{group.label}</span>
+                <span className="text-xs font-semibold text-slate-400">({group.items.length} item{group.items.length !== 1 ? "s" : ""})</span>
+              </h2>
+              <div className="space-y-3">
+                {group.items.map((resource) => {
+                  const meta = typeMeta[resource.type];
+                  const Icon = meta.icon;
+                  const canDelete = true;
+                  return (
+                    <div key={`${resource.type}-${resource.id}`} className="flex gap-4 items-start relative group">
+                      {/* Timeline connector and badge */}
+                      <div className="flex flex-col items-center shrink-0 self-stretch">
+                        <CalendarDateBadge dateString={resource.createdAt} />
+                        <div className="w-0.5 bg-slate-200/70 flex-1 my-2 group-last:hidden" />
+                      </div>
+                      
+                      {/* Resource Card */}
+                      <div className="flex-1 min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)] hover:border-slate-200/80 transition-all duration-200">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", meta.colors.bg, meta.colors.text)}>
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className={cn("inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-bold border", meta.colors.border, meta.colors.bg, meta.colors.text)}>
+                                  {meta.label}
+                                </span>
+                                <span className="text-[11px] font-semibold text-slate-400">
+                                  {new Date(resource.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                                </span>
+                              </div>
+                              <h3 className="mt-1.5 text-base font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">
+                                {resource.title}
+                              </h3>
+                              <p className="mt-1 text-xs font-semibold text-slate-500 flex flex-wrap items-center gap-1">
+                                <span>{resource.className}</span>
+                                <span className="text-slate-300">•</span>
+                                <span>{resource.subject}</span>
+                                {resource.chapterName && (
+                                  <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="truncate max-w-[200px]" title={resource.chapterName}>{resource.chapterName}</span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-1.5 sm:self-center shrink-0">
+                            <Link href={resource.href} target="_blank">
+                              <Button variant="default" size="sm" className="h-9 px-3 gap-1.5 text-xs font-bold rounded-xl">
+                                View
+                              </Button>
+                            </Link>
+                            <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="h-9 px-3 gap-1.5 text-xs font-bold rounded-xl text-slate-655 hover:text-slate-800 border-slate-200">
+                              <Download className="h-3.5 w-3.5" /> PDF
+                            </Button>
+                            {canDelete && (
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-650">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-bold leading-tight text-teachpad-ink">{resource.title}</h3>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-teachpad-muted">{resource.chapterName || "No chapter"}</p>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CalendarDateBadge({ dateString }: { dateString: string }) {
+  const date = useMemo(() => new Date(dateString), [dateString]);
+  const isValid = !isNaN(date.getTime());
+  const month = isValid ? date.toLocaleString("default", { month: "short" }).toUpperCase() : "---";
+  const day = isValid ? date.getDate().toString().padStart(2, "0") : "--";
+  
+  return (
+    <div className="flex flex-col items-center justify-center shrink-0 w-11 h-[48px] rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm select-none">
+      <div className="w-full text-center text-[9px] font-black tracking-wider text-white bg-blue-500 py-0.5 px-1 leading-none uppercase">
+        {month}
+      </div>
+      <div className="w-full text-center text-base font-extrabold text-slate-800 bg-slate-50 py-1 leading-none">
+        {day}
+      </div>
+    </div>
+  );
+}
+
+function TimelineSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[1, 2].map((i) => (
+        <div key={i} className="space-y-4">
+          <Skeleton className="h-6 w-32 rounded-lg" />
+          <div className="space-y-3">
+            {[1, 2].map((j) => (
+              <div key={j} className="flex gap-4 items-start">
+                <Skeleton className="h-12 w-11 rounded-lg shrink-0" />
+                <div className="flex-1 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24 rounded" />
+                      <Skeleton className="h-5 w-3/4 rounded" />
+                      <Skeleton className="h-3 w-1/2 rounded" />
                     </div>
-                    <Badge className={`shrink-0 text-[10px] ${meta.colors.border} ${meta.colors.bg} ${meta.colors.text}`}>
-                      {meta.label}
-                    </Badge>
-                  </div>
-                  <div className="mb-3 flex items-center gap-3 text-xs text-teachpad-muted">
-                    {resource.type === "lesson plan" && resource.raw?.duration_minutes && (
-                      <span className="flex items-center gap-1"><Clock3 className="h-3 w-3" /> {resource.raw.duration_minutes} min</span>
-                    )}
-                    {resource.type === "worksheet" && resource.raw?.output_json?.metadata?.question_count && (
-                      <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> {resource.raw.output_json.metadata.question_count} Qs</span>
-                    )}
-                    <span className="ml-auto flex items-center gap-1">
-                      <CalendarDays className="h-3 w-3" />
-                      {new Date(resource.createdAt || 0).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={resource.href} target="_blank" className="flex-1">
-                      <Button variant="default" size="sm" className="w-full gap-1.5 text-xs">
-                        View
-                      </Button>
-                    </Link>
-                    <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="flex-1 gap-1.5 text-xs">
-                      <Download className="h-3.5 w-3.5" /> PDF
-                    </Button>
-                    {canDelete && (
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(resource)} className="px-2 text-red-500 hover:bg-red-50 hover:text-red-600">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
+                    <Skeleton className="h-9 w-16 rounded-xl" />
+                    <Skeleton className="h-9 w-16 rounded-xl" />
                   </div>
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   BookOpen,
   Box,
   CalendarDays,
+  Check,
   CheckCircle2,
   ClipboardCheck,
   Clock,
@@ -79,7 +80,9 @@ function LessonPlanDocumentOutput({
   onChange,
   onExport,
   onCopy,
-  onShare
+  onShare,
+  isSaved,
+  onSaveToLibrary
 }: {
   output: any;
   onSave?: (output?: any) => void;
@@ -87,6 +90,8 @@ function LessonPlanDocumentOutput({
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
   onShare?: (output?: any) => void;
+  isSaved?: boolean;
+  onSaveToLibrary?: () => void;
 }) {
   const [documentOutput, setDocumentOutput] = useState(output);
   const [draft, setDraft] = useState<LessonDocumentDraft>(() => buildLessonDocumentDraft(output));
@@ -147,7 +152,18 @@ function LessonPlanDocumentOutput({
           <Button variant="outline" size="sm" onClick={() => onCopy?.(documentOutput)}><Copy className="h-4 w-4" /> Copy</Button>
           <Button variant="outline" size="sm" onClick={() => onExport?.(documentOutput)}><Download className="h-4 w-4" /> PDF</Button>
           {onShare ? <Button variant="outline" size="sm" onClick={() => onShare(documentOutput)}><Share2 className="h-4 w-4" /> Share</Button> : null}
-          {onSave ? <Button variant="outline" size="sm" onClick={saveDocument}><Save className="h-4 w-4" /> Save</Button> : null}
+          {onSaveToLibrary && (
+            isSaved ? (
+              <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
+                <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
+                <Save className="h-4 w-4" /> Save to Library
+              </Button>
+            )
+          )}
+          {onSave ? <Button variant="outline" size="sm" onClick={saveDocument}><Save className="h-4 w-4" /> Save Changes</Button> : null}
         </div>
         </div>
       </div>
@@ -861,7 +877,9 @@ export function LessonPlanOutput({
   onChange,
   onExport,
   onCopy,
-  onShare
+  onShare,
+  isSaved,
+  onSaveToLibrary
 }: {
   output: any;
   streamKey?: string;
@@ -871,8 +889,10 @@ export function LessonPlanOutput({
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
   onShare?: (output?: any) => void;
+  isSaved?: boolean;
+  onSaveToLibrary?: () => void;
 }) {
-  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} />;
+  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} isSaved={isSaved} onSaveToLibrary={onSaveToLibrary} />;
 
   const metadata = output?.metadata || {};
   const outline = output?.lesson_outline || [];
@@ -1149,7 +1169,9 @@ export function WorksheetOutput({
   onChange,
   onExport,
   onCopy,
-  onShare
+  onShare,
+  isSaved,
+  onSaveToLibrary
 }: {
   output: any;
   tab: string;
@@ -1159,6 +1181,8 @@ export function WorksheetOutput({
   onExport?: (output?: any) => void;
   onCopy?: (output?: any) => void;
   onShare?: (output?: any) => void;
+  isSaved?: boolean;
+  onSaveToLibrary?: () => void;
 }) {
   const [worksheetOutput, setWorksheetOutput] = useState(output);
   const metadata = worksheetOutput?.metadata || {};
@@ -1254,7 +1278,18 @@ export function WorksheetOutput({
             <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> Copy</Button>
             <Button variant="outline" size="sm" onClick={() => onExport?.(worksheetOutput)}><Download className="h-4 w-4" /> PDF</Button>
             <Button variant="outline" size="sm" onClick={() => onShare?.(worksheetOutput)}><Share2 className="h-4 w-4" /> Share</Button>
-            <Button variant="outline" size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save</Button>
+            {onSaveToLibrary && (
+              isSaved ? (
+                <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
+                  <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
+                  <Save className="h-4 w-4" /> Save to Library
+                </Button>
+              )
+            )}
+            <Button variant="outline" size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save Changes</Button>
           </div>
         </div>
 
