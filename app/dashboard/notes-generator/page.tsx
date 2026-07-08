@@ -173,10 +173,20 @@ export default function NotesGeneratorPage() {
   useEffect(() => {
     setFetching(true);
     backendApi.boards(0, 100)
-      .then((res) => setBoards(res.items.filter((board) => board.is_active !== false)))
+      .then((res) => {
+        const filtered = res.items.filter((board) => board.is_active !== false);
+        setBoards(filtered);
+        const defaultBoardId = localStorage.getItem("teachpad_default_board_id");
+        if (defaultBoardId && !boardId) {
+          const match = filtered.find((b) => b.id === defaultBoardId);
+          if (match) {
+            chooseBoard(match.id);
+          }
+        }
+      })
       .catch((err) => toast({ title: "Could not load boards", description: getErrorMessage(err, "Could not load boards. Try again."), variant: "error" }))
       .finally(() => setFetching(false));
-  }, [toast]);
+  }, [toast, boardId]);
 
   useEffect(() => {
     if (!boardId) {
