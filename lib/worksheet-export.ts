@@ -119,10 +119,12 @@ class WorksheetPdfDocument {
     if (options.length) {
       for (let i = 0; i < options.length; i += 2) {
         this.ensureSpace(16);
-        const leftOption = `( ) ${cleanPdfText(options[i])}`;
-        const rightOption = options[i + 1] ? `( ) ${cleanPdfText(options[i + 1])}` : "";
-        this.writeAt(leftOption, this.marginX + 28, this.y, { size: 9.5, color: DARK });
-        if (rightOption) this.writeAt(rightOption, this.marginX + 255, this.y, { size: 9.5, color: DARK });
+        this.circle(this.marginX + 34, this.y + 2.8, 3.5, MUTED);
+        this.writeAt(cleanPdfText(options[i]), this.marginX + 44, this.y, { size: 9.5, color: DARK });
+        if (options[i + 1]) {
+          this.circle(this.marginX + 261, this.y + 2.8, 3.5, MUTED);
+          this.writeAt(cleanPdfText(options[i + 1]), this.marginX + 271, this.y, { size: 9.5, color: DARK });
+        }
         this.y -= 15;
       }
       this.y -= 7;
@@ -235,6 +237,30 @@ class WorksheetPdfDocument {
 
   private line(x1: number, y1: number, x2: number, y2: number, color: RGB, width = 1) {
     this.currentPage().push(`${rgb(color, "stroke")} ${width} w ${x1} ${y1} m ${x2} ${y2} l S`);
+  }
+
+  private circle(x: number, y: number, r: number, stroke: RGB) {
+    const k = r * 0.5522847498;
+    const xR = (x + r).toFixed(2);
+    const xL = (x - r).toFixed(2);
+    const yT = (y + r).toFixed(2);
+    const yB = (y - r).toFixed(2);
+    const xKPlus = (x + k).toFixed(2);
+    const xKMinus = (x - k).toFixed(2);
+    const yKPlus = (y + k).toFixed(2);
+    const yKMinus = (y - k).toFixed(2);
+    const xStr = x.toFixed(2);
+    const yStr = y.toFixed(2);
+
+    this.currentPage().push(
+      `${rgb(stroke, "stroke")} 0.7 w ` +
+      `${xR} ${yStr} m ` +
+      `${xR} ${yKPlus} ${xKPlus} ${yT} ${xStr} ${yT} c ` +
+      `${xKMinus} ${yT} ${xL} ${yKPlus} ${xL} ${yStr} c ` +
+      `${xL} ${yKMinus} ${xKMinus} ${yB} ${xStr} ${yB} c ` +
+      `${xKPlus} ${yB} ${xR} ${yKMinus} ${xR} ${yStr} c ` +
+      `S`
+    );
   }
 
   private ensureSpace(height: number) {

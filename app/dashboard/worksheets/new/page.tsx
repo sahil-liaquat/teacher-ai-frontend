@@ -114,8 +114,6 @@ export default function NewWorksheetPage() {
   const [questionTypeMarks, setQuestionTypeMarks] = useState<Record<string, number>>(
     Object.fromEntries(questionTypeOptions.map(t => [t, defaultMarks[t]]))
   );
-  const [countDrafts, setCountDrafts] = useState<Record<string, string>>({});
-  const [marksDrafts, setMarksDrafts] = useState<Record<string, string>>({});
   const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
   const [includeMarkingScheme, setIncludeMarkingScheme] = useState(true);
   const [includeHints, setIncludeHints] = useState(false);
@@ -699,81 +697,48 @@ export default function NewWorksheetPage() {
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {questionTypeOptions.map((type) => {
                     const active = questionTypes.includes(type);
-                    return (
+                    return active ? (
                       <div
                         key={type}
-                        className={cn(
-                          "rounded-xl border p-3 transition-all duration-200",
-                          active
-                            ? "border-[#bdebd7] bg-[#ecfff7] shadow-[0_10px_22px_rgba(22,163,99,0.10)]"
-                            : "border-[#dffafa] bg-white hover:border-[#bdebd7]"
-                        )}
+                        className="rounded-xl border p-3.5 transition-all duration-200 flex flex-col justify-between border-[#bdebd7] bg-[#ecfff7]/70 shadow-[0_10px_22px_rgba(22,163,99,0.06)] ring-2 ring-[#159565]/10"
                       >
                         <button
                           type="button"
                           onClick={() => toggleQuestionType(type)}
                           aria-pressed={active}
-                          className="flex w-full items-center gap-3 text-left"
+                          className="flex w-full items-center justify-between gap-3 text-left"
                         >
-                          <span className={cn(
-                            "grid h-8 w-8 flex-shrink-0 place-items-center rounded-full border-2 text-xs font-black",
-                            active ? "border-[#159565] bg-[#159565] text-white" : "border-slate-300 text-transparent"
-                          )}>✓</span>
-                          <span className="text-sm font-black">{type}</span>
+                          <span className="text-sm font-bold text-[#25262b]">{type}</span>
+                          <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-[#159565] bg-[#159565] text-white">✓</span>
                         </button>
-                        {active && (
-                          <div className="mt-3 flex items-center gap-2">
-                            <div className="flex-1">
-                              <label className="text-xs font-medium text-[#55516e]">Count</label>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={countDrafts[type] ?? questionTypeCounts[type] ?? 5}
-                                onChange={(e) => {
-                                  const raw = e.target.value;
-                                  if (raw === "" || /^\d{1,2}$/.test(raw)) {
-                                    setCountDrafts((prev) => ({ ...prev, [type]: raw }));
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  const val = Math.max(1, Math.min(60, Number(e.target.value) || 1));
-                                  setQuestionTypeCounts((prev) => ({ ...prev, [type]: val }));
-                                  setCountDrafts((prev) => {
-                                    const next = { ...prev };
-                                    delete next[type];
-                                    return next;
-                                  });
-                                }}
-                                className="mt-0.5 block w-full rounded-lg border border-[#d8f1e5] bg-white px-2 py-1 text-sm text-[#25262b] outline-none focus:border-[#159565] focus:ring-1 focus:ring-[#159565]"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="text-xs font-medium text-[#55516e]">Marks</label>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={marksDrafts[type] ?? questionTypeMarks[type] ?? defaultMarks[type]}
-                                onChange={(e) => {
-                                  const raw = e.target.value;
-                                  if (raw === "" || /^\d{1,2}$/.test(raw)) {
-                                    setMarksDrafts((prev) => ({ ...prev, [type]: raw }));
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  const val = Math.max(1, Number(e.target.value) || 1);
-                                  setQuestionTypeMarks((prev) => ({ ...prev, [type]: val }));
-                                  setMarksDrafts((prev) => {
-                                    const next = { ...prev };
-                                    delete next[type];
-                                    return next;
-                                  });
-                                }}
-                                className="mt-0.5 block w-full rounded-lg border border-[#d8f1e5] bg-white px-2 py-1 text-sm text-[#25262b] outline-none focus:border-[#159565] focus:ring-1 focus:ring-[#159565]"
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <div className="mt-3 pt-2.5 border-t border-[#d8f1e5] flex items-center gap-3">
+                          <NumericStepper
+                            label="Count"
+                            value={questionTypeCounts[type] ?? 5}
+                            min={1}
+                            max={60}
+                            onChange={(val) => setQuestionTypeCounts((prev) => ({ ...prev, [type]: val }))}
+                          />
+                          <NumericStepper
+                            label="Marks"
+                            value={questionTypeMarks[type] ?? defaultMarks[type]}
+                            min={1}
+                            max={20}
+                            onChange={(val) => setQuestionTypeMarks((prev) => ({ ...prev, [type]: val }))}
+                          />
+                        </div>
                       </div>
+                    ) : (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleQuestionType(type)}
+                        aria-pressed={active}
+                        className="rounded-xl border p-3.5 transition-all duration-200 flex items-center justify-between gap-3 text-left border-[#e3ebd6] bg-white hover:border-[#bdebd7] hover:bg-[#f8fffb] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-[#159565]"
+                      >
+                        <span className="text-sm font-bold text-[#25262b]">{type}</span>
+                        <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-slate-300 bg-white text-transparent hover:border-slate-400">✓</span>
+                      </button>
                     );
                   })}
                 </div>
@@ -970,6 +935,79 @@ function Placeholder({ children }: { children: ReactNode }) {
   );
 }
 
+interface NumericStepperProps {
+  value: number;
+  onChange: (val: number) => void;
+  min?: number;
+  max?: number;
+  label: string;
+}
+
+function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericStepperProps) {
+  const [localVal, setLocalVal] = useState(value.toString());
+
+  useEffect(() => {
+    setLocalVal(value.toString());
+  }, [value]);
+
+  const handleBlur = () => {
+    const num = Math.max(min, Math.min(max, Number(localVal) || min));
+    onChange(num);
+    setLocalVal(num.toString());
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <span className="text-xs font-semibold text-[#55516e]">{label}</span>
+      <div className="flex items-center justify-between gap-1 overflow-hidden rounded-xl border border-[#d8f1e5] bg-white p-1 shadow-sm">
+        <button
+          type="button"
+          disabled={value <= min}
+          onClick={() => {
+            const newVal = Math.max(min, value - 1);
+            onChange(newVal);
+          }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          -
+        </button>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={localVal}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === "" || /^\d*$/.test(raw)) {
+              setLocalVal(raw);
+            }
+          }}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className="w-8 bg-transparent text-center text-sm font-bold text-[#25262b] outline-none"
+        />
+        <button
+          type="button"
+          disabled={value >= max}
+          onClick={() => {
+            const newVal = Math.min(max, value + 1);
+            onChange(newVal);
+          }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 interface MultiSelectProps {
   options: { value: string; label: string }[];
   selectedValues: string[];
@@ -990,7 +1028,6 @@ function MultiSelect({
   loadingLabel = "Loading..."
 }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1003,12 +1040,6 @@ function MultiSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredOptions = useMemo(() => {
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [options, searchQuery]);
-
   function handleToggle(value: string) {
     if (selectedValues.includes(value)) {
       onChange(selectedValues.filter((v) => v !== value));
@@ -1017,15 +1048,8 @@ function MultiSelect({
     }
   }
 
-  function handleSelectAll() {
-    const allValues = filteredOptions.map((o) => o.value);
-    const newValues = Array.from(new Set([...selectedValues, ...allValues]));
-    onChange(newValues);
-  }
-
   function handleClear() {
-    const filteredValues = filteredOptions.map((o) => o.value);
-    onChange(selectedValues.filter((v) => !filteredValues.includes(v)));
+    onChange([]);
   }
 
   const triggerLabel = useMemo(() => {
@@ -1061,23 +1085,7 @@ function MultiSelect({
 
       {isOpen && (
         <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-xl border border-[#d8f1e5] bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
-          <div className="flex items-center border-b border-[#d8f1e5] px-2.5 py-1.5">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search chapters..."
-              className="w-full bg-transparent text-sm font-medium text-[#25262b] outline-none placeholder:text-[#9CA0AA]"
-            />
-          </div>
-          <div className="flex items-center justify-between border-b border-[#d8f1e5] px-3 py-1.5 bg-[#f8fffb]">
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className="text-xs font-bold text-[#159565] hover:underline"
-            >
-              Select All
-            </button>
+          <div className="flex items-center justify-end border-b border-[#d8f1e5] px-3 py-1.5 bg-[#f8fffb]">
             <button
               type="button"
               onClick={handleClear}
@@ -1087,12 +1095,12 @@ function MultiSelect({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-1.5 max-h-[180px]">
-            {filteredOptions.length === 0 ? (
+            {options.length === 0 ? (
               <div className="px-2.5 py-4 text-center text-xs font-semibold text-[#9CA0AA]">
                 No chapters found
               </div>
             ) : (
-              filteredOptions.map((option) => {
+              options.map((option) => {
                 const isChecked = selectedValues.includes(option.value);
                 return (
                   <button

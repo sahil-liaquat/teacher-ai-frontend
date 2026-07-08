@@ -93,13 +93,18 @@ const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: str
   }
 };
 
-const quickAccess = [
-  { title: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "blue" },
-  { title: "Worksheet Generator", desc: "Generate printable worksheets with answers.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green" },
-  { title: "Explore Resources", desc: "Find high-quality teaching resources and materials.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
-  { title: "AI Chat Assistant", desc: "Ask anything and get instant help from AI.", href: "/dashboard/classroom-tools", icon: Bot, tone: "red" },
-  { title: "Classroom Tools", desc: "Use tools like notes, worksheets, and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" }
+const ALL_QUICK_ACCESS_OPTIONS = [
+  { id: "lesson-planner", title: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "blue" },
+  { id: "worksheet-generator", title: "Worksheet Generator", desc: "Generate printable worksheets with answers.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green" },
+  { id: "notes-generator", title: "Notes Generator", desc: "Create textbook-grounded chapter notes and key terms.", href: "/dashboard/notes-generator", icon: NotebookPen, tone: "red" },
+  { id: "saved-resources", title: "Saved Resources", desc: "Access your saved lessons, worksheets, and resources.", href: "/dashboard/recent-generations", icon: FolderOpen, tone: "orange" },
+  { id: "classroom-tools", title: "Classroom Tools", desc: "Use tools like notes, worksheets, and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" },
+  { id: "explore-resources", title: "Explore Resources", desc: "Find high-quality teaching resources and materials.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
+  { id: "presentation-generator", title: "Presentation Generator", desc: "Turn any topic into a clean classroom slide deck.", href: "/dashboard/presentation-generator", icon: Presentation, tone: "pink" },
+  { id: "activity-generator", title: "Activity Generator", desc: "Create hands-on activities and group tasks.", href: "/dashboard/activity-generator", icon: Sparkles, tone: "aqua" }
 ];
+
+
 
 const dashboardTools = [
   {
@@ -214,6 +219,28 @@ export default function DashboardClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [placeholderText, setPlaceholderText] = useState("Search AI tools...");
+  const [selectedQuickAccessIds, setSelectedQuickAccessIds] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("teachpad_quick_access_ids");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // If the stored list contains the old 'ai-chat-assistant', filter it out
+          return parsed.filter((id: string) => id !== "ai-chat-assistant");
+        } catch {
+          // ignore
+        }
+      }
+    }
+    return ["lesson-planner", "worksheet-generator", "notes-generator", "saved-resources", "classroom-tools"];
+  });
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([]);
+
+  const quickAccess = useMemo(() => {
+    return ALL_QUICK_ACCESS_OPTIONS.filter((item) => selectedQuickAccessIds.includes(item.id));
+  }, [selectedQuickAccessIds]);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -360,6 +387,127 @@ export default function DashboardClient() {
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
+  function renderCustomizeModal() {
+    if (!isCustomizing) return null;
+
+    const handleToggle = (id: string) => {
+      setTempSelectedIds((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((item) => item !== id);
+        }
+        if (prev.length >= 5) {
+          return prev;
+        }
+        return [...prev, id];
+      });
+    };
+
+    const handleSave = () => {
+      setSelectedQuickAccessIds(tempSelectedIds);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("teachpad_quick_access_ids", JSON.stringify(tempSelectedIds));
+      }
+      setIsCustomizing(false);
+    };
+
+    return (
+      <div 
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={() => setIsCustomizing(false)}
+      >
+        <div 
+          className="relative w-full max-w-[540px] rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Customize Quick Access</h3>
+              <p className={cn("text-xs font-medium mt-0.5 transition-colors", tempSelectedIds.length >= 5 ? "text-amber-600 font-semibold" : "text-slate-500")}>
+                Select up to 5 shortcuts. ({tempSelectedIds.length}/5 selected)
+              </p>
+            </div>
+            <button 
+              type="button"
+              onClick={() => setIsCustomizing(false)}
+              className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-655 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* List of shortcuts */}
+          <div className="flex-1 overflow-y-auto py-4 space-y-2.5 max-h-[50vh] pr-1">
+            {ALL_QUICK_ACCESS_OPTIONS.map((item) => {
+              const Icon = item.icon;
+              const isChecked = tempSelectedIds.includes(item.id);
+              const isDisabled = !isChecked && tempSelectedIds.length >= 5;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => handleToggle(item.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3.5 rounded-2xl border p-3 text-left transition-all",
+                    isChecked
+                      ? "border-blue-200 bg-blue-50/40 shadow-sm"
+                      : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50/50",
+                    isDisabled && "opacity-50 cursor-not-allowed hover:bg-white hover:border-slate-100"
+                  )}
+                >
+                  <div className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all",
+                    isChecked
+                      ? "border-blue-500 bg-blue-500 text-white"
+                      : "border-slate-300 bg-white text-transparent"
+                  )}>
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  </div>
+                  <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                    <p className="mt-0.5 text-xs font-medium leading-relaxed text-slate-500 line-clamp-1">{item.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setTempSelectedIds(["lesson-planner", "worksheet-generator", "notes-generator", "saved-resources", "classroom-tools"])}
+              className="text-xs font-bold text-[#159565] hover:underline"
+            >
+              Reset to Defaults
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsCustomizing(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={tempSelectedIds.length === 0}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (dashboardLayout === "original") {
     const currentMonthName = new Date().toLocaleString("default", { month: "long" });
     const originalStatCards = [
@@ -407,22 +555,7 @@ export default function DashboardClient() {
 
         {/* Original Grid of 4 cards (stats-first, launching tools) */}
         <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
-          {statsLoading ? (
-            <>
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
-                  <div className="flex h-full items-center gap-3 sm:gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-slate-200 sm:h-14 sm:w-14" />
-                    <div className="flex-1">
-                      <div className="mb-2 h-3 w-24 rounded bg-slate-200 sm:h-4" />
-                      <div className="mb-2 h-7 w-14 rounded bg-slate-200" />
-                      <div className="h-2 w-16 rounded bg-slate-200 sm:h-3" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : statsError ? (
+          {statsError ? (
             <>
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
@@ -438,12 +571,6 @@ export default function DashboardClient() {
             </>
           ) : (
             originalStatCards.map((stat, index) => {
-              const isError = statsError;
-
-              if (isError) {
-                return <StatsErrorCard key={stat.label} />;
-              }
-
               const numericVal =
                 index === 0 ? lessonTotal :
                 index === 1 ? worksheetTotal :
@@ -456,6 +583,7 @@ export default function DashboardClient() {
                   {...stat}
                   value={formatNumber(numericVal, stat.fallback)}
                   numericValue={numericVal}
+                  isLoading={statsLoading}
                 />
               );
             })
@@ -660,7 +788,13 @@ export default function DashboardClient() {
         <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm mb-16">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">Quick Access</h2>
-            <button className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm">
+            <button 
+              onClick={() => {
+                setTempSelectedIds(selectedQuickAccessIds);
+                setIsCustomizing(true);
+              }}
+              className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
+            >
               Customize <Settings2 className="h-4 w-4" />
             </button>
           </div>
@@ -686,6 +820,7 @@ export default function DashboardClient() {
             })}
           </div>
         </section>
+        {renderCustomizeModal()}
       </div>
     );
   }
@@ -800,22 +935,7 @@ export default function DashboardClient() {
 
       {/* Cards Grid */}
       <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
-        {statsLoading ? (
-          <>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="min-h-[116px] rounded-[18px] border border-white/70 bg-gradient-to-br from-slate-50 to-white p-4 sm:min-h-[126px] sm:p-5 animate-pulse">
-                <div className="flex h-full items-center gap-3 sm:gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-slate-200 sm:h-14 sm:w-14" />
-                  <div className="flex-1">
-                    <div className="mb-2 h-3 w-24 rounded bg-slate-200 sm:h-4" />
-                    <div className="mb-2 h-7 w-14 rounded bg-slate-200" />
-                    <div className="h-2 w-16 rounded bg-slate-200 sm:h-3" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        ) : statsError ? (
+        {statsError ? (
           <>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
@@ -831,12 +951,6 @@ export default function DashboardClient() {
           </>
         ) : (
           statCards.map((stat, index) => {
-            const isError = statsError;
-
-            if (isError) {
-              return <StatsErrorCard key={stat.label} />;
-            }
-
             const numericVal =
               index === 0 ? lessonTotal :
               index === 1 ? worksheetTotal :
@@ -850,6 +964,7 @@ export default function DashboardClient() {
                 value={formatNumber(numericVal, stat.fallback)}
                 numericValue={numericVal}
                 hoverLift={true}
+                isLoading={statsLoading}
               />
             );
           })
@@ -928,7 +1043,13 @@ export default function DashboardClient() {
       <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Quick Access</h2>
-          <button className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm">
+          <button 
+            onClick={() => {
+              setTempSelectedIds(selectedQuickAccessIds);
+              setIsCustomizing(true);
+            }}
+            className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
+          >
             Customize <Settings2 className="h-4 w-4" />
           </button>
         </div>
@@ -954,6 +1075,7 @@ export default function DashboardClient() {
           })}
         </div>
       </section>
+      {renderCustomizeModal()}
     </div>
   );
 }
@@ -972,7 +1094,7 @@ function StatsErrorCard() {
   );
 }
 
-function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift, showOnlyLabel, desc }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean; showOnlyLabel?: boolean; desc?: string }) {
+function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hoverLift, showOnlyLabel, desc, isLoading }: { label: string; value: string; sub: string; numericValue: number; trend?: string; icon: any; tone: string; href?: string; hoverLift?: boolean; showOnlyLabel?: boolean; desc?: string; isLoading?: boolean }) {
   const gradients = {
     pink: {
       card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
@@ -1038,10 +1160,19 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
         ) : (
           <>
             <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-[15.5px] transition-colors group-hover/card:text-blue-600">{label}</p>
-            <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
-              <CountUpNumber value={numericValue} />
-            </p>
-            <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
+            {isLoading ? (
+              <>
+                <div className="h-7 w-12 rounded-lg bg-slate-200/80 animate-pulse my-1.5" />
+                <div className="h-3 w-16 rounded bg-slate-100/80 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
+                  <CountUpNumber value={numericValue} />
+                </p>
+                <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
+              </>
+            )}
           </>
         )}
       </div>
