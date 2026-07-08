@@ -258,7 +258,7 @@ function HeroSection() {
             <Sparkles className="h-4 w-4" />
             Simple pricing
           </span>
-          <h1 className="mx-auto mt-5 max-w-3xl text-[40px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[46px] sm:text-6xl lg:mx-0 lg:text-[72px]">
+          <h1 className="mx-auto mt-5 max-w-3xl text-[32px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[40px] sm:text-6xl lg:mx-0 lg:text-[72px]">
             Start free. Upgrade when TeachPad becomes part of your classroom.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8 lg:mx-0">
@@ -278,11 +278,11 @@ function HeroSection() {
         <div className="relative mx-auto w-full max-w-[760px] lg:-mr-10 lg:max-w-none">
           <Image
             src="/landing/teachpad-main-hero-centered.png"
-            alt="TeachPad creates teaching resources from one textbook."
+            alt="TeachPad dashboard with AI teaching tools for lesson planning and classroom resources."
             width={1672}
             height={941}
             priority
-            className="h-auto w-full drop-shadow-[0_34px_54px_rgba(47,79,129,0.16)]"
+            className="h-auto w-full drop-shadow-[0_28px_48px_rgba(47,79,129,0.15)]"
           />
         </div>
       </div>
@@ -300,7 +300,7 @@ function PlansSection() {
         </h2>
       </div>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-3">
+      <div className="mt-10 grid gap-5 md:grid-cols-3 max-w-md mx-auto md:max-w-none">
         {plans.map((plan) => (
           <article
             key={plan.name}

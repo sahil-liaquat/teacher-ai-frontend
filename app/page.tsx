@@ -199,7 +199,7 @@ function HeroSection() {
     <section className="relative bg-[radial-gradient(circle_at_16%_10%,#eef6ff_0,transparent_30%),radial-gradient(circle_at_90%_12%,#f5fbff_0,transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-5 pb-4 pt-9 text-center sm:px-6 md:pb-8 lg:px-8 lg:pb-10 lg:pt-14">
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-center">
-          <h1 className="max-w-full text-[38px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[42px] sm:text-6xl lg:text-[72px]">
+          <h1 className="max-w-full text-[32px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[38px] sm:text-6xl lg:text-[72px]">
             Teach from your <span className="text-blue-600">textbook.</span>
             <br />
             Let AI do the <span className="text-blue-600">preparation.</span>

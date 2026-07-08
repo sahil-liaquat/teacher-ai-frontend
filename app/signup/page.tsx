@@ -66,8 +66,8 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:min-h-screen lg:grid-cols-[minmax(520px,0.76fr)_minmax(0,0.94fr)] lg:gap-4">
-      <section className="relative flex min-h-[calc(100vh-2rem)] w-full max-w-full justify-center overflow-x-hidden overflow-y-auto rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
+    <main className="min-h-screen w-full max-w-full overflow-x-clip bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,0.76fr)_minmax(0,0.94fr)] lg:gap-4">
+      <section className="relative flex min-h-[calc(100vh-2rem)] w-full max-w-full justify-center rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 overflow-x-clip lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden">
         <AuthDecorations />
         <div className="absolute left-5 right-5 top-5 z-20 flex min-w-0 items-center justify-between gap-3 sm:left-8 sm:right-8">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
@@ -75,7 +75,7 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 w-full max-w-[78vw] pb-8 pt-20 sm:max-w-[460px] lg:pt-24">
+        <div className="relative z-10 w-full max-w-[90vw] pb-8 pt-20 sm:max-w-[460px] lg:pt-24">
           <div className="mb-6">
             <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950">
               {confirmation ? "Confirm your email" : "Create account"}
@@ -297,7 +297,7 @@ function AuthDecorations() {
       <img
         src="/ai-tools/tree-scene.png"
         alt="Illustrated tree and classroom scenery for the TeachPad signup page."
-        className="pointer-events-none absolute -bottom-8 left-1/2 w-[420px] max-w-[135%] -translate-x-1/2 select-none object-contain opacity-65 sm:w-[560px] lg:hidden"
+        className="pointer-events-none absolute -bottom-8 left-1/2 w-[420px] max-w-[100%] -translate-x-1/2 select-none object-contain opacity-65 sm:w-[560px] lg:hidden"
       />
       <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-white via-white/80 to-transparent" />
     </>

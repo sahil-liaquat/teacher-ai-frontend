@@ -209,8 +209,8 @@ export default function PresentationOutputPage() {
 
   return (
     <>
-      <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[24px] p-3 sm:min-h-[calc(100vh-96px)] sm:rounded-[32px] sm:p-6 bg-slate-50/50 shadow-inner")}>
-        <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-4 sm:min-h-[calc(100vh-128px)] sm:gap-5">
+      <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[20px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[32px] sm:p-4 md:p-6 bg-slate-50/50 shadow-inner")}>
+        <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-3 sm:min-h-[calc(100vh-128px)] sm:gap-5">
           <Toolbar
             deck={deck}
             onPresent={enterPresentMode}
@@ -218,7 +218,7 @@ export default function PresentationOutputPage() {
             onExportPpt={exportPpt}
           />
           <section className="grid min-h-0 min-w-0 flex-1 gap-4 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-5">
-            <div className="flex min-w-0 flex-col gap-4 rounded-[28px] border border-white/80 bg-white/40 p-4 shadow-[0_20px_50px_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-5 sm:rounded-[32px] sm:p-6">
+            <div className="flex min-w-0 flex-col gap-3 rounded-[20px] border border-white/80 bg-white/40 p-3 shadow-[0_20px_50px_rgba(15,23,42,0.04)] backdrop-blur-md sm:gap-5 sm:rounded-[32px] sm:p-6">
               <div className="relative flex-1 w-full min-h-0 flex items-center justify-center overflow-hidden">
                 <EditableSlide slide={active} onChange={updateActiveSlide} deckInstructions={deck.instructions} deckId={deck.id} slideIndex={activeSlide} />
               </div>
@@ -269,14 +269,14 @@ function SlidePreviewStrip({
         <p className="text-[13px] font-bold uppercase tracking-wider text-slate-500">Slides</p>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-500">{slides.length}</span>
       </div>
-      <div className="flex max-h-[140px] gap-3 overflow-x-auto pr-1 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
+      <div className="flex max-h-[130px] gap-2 overflow-x-auto pr-1 sm:gap-3 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
             type="button"
             onClick={() => onSelect(index)}
             className={cn(
-              "grid w-[200px] shrink-0 grid-cols-[56px_minmax(0,1fr)] gap-3.5 rounded-[20px] border p-3 text-left transition-all duration-300 md:w-full border-slate-100 bg-white/70 shadow-[0_4px_12px_rgba(0,0,0,0.015)]",
+              "grid w-[160px] shrink-0 grid-cols-[48px_minmax(0,1fr)] gap-2.5 rounded-[16px] border p-2.5 text-left transition-all duration-300 sm:w-[200px] sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-3.5 sm:rounded-[20px] sm:p-3 md:w-full border-slate-100 bg-white/70 shadow-[0_4px_12px_rgba(0,0,0,0.015)]",
               activeSlide === index
                 ? "border-blue-300 bg-blue-50/70 shadow-[0_12px_32px_rgba(37,99,235,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)]"
                 : "hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_12px_24px_rgba(59,86,128,0.08)]"

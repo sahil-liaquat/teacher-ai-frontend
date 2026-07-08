@@ -149,13 +149,13 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen w-full max-w-full overflow-hidden bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:grid-cols-[minmax(0,0.95fr)_minmax(520px,0.75fr)] lg:gap-4">
+    <main className="min-h-screen w-full max-w-full overflow-x-clip bg-[#f6f9ff] px-4 py-4 text-[#07111f] sm:px-6 lg:grid lg:h-screen lg:overflow-hidden lg:grid-cols-[minmax(0,0.95fr)_minmax(0,0.75fr)] lg:gap-4">
       <section className="relative hidden overflow-hidden rounded-lg bg-[radial-gradient(circle_at_18%_14%,#e9f4ff_0,transparent_34%),radial-gradient(circle_at_86%_82%,#e7fff4_0,transparent_38%),linear-gradient(180deg,#ffffff_0%,#f6fbff_100%)] p-8 lg:flex lg:flex-col lg:justify-between">
         <img
           src="/ai-tools/tree-scene.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 right-[-6%] w-[620px] select-none object-contain opacity-95"
+          className="pointer-events-none absolute bottom-0 right-[-6%] w-[540px] max-w-[92%] select-none object-contain opacity-95"
         />
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
@@ -176,7 +176,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="relative grid min-h-[calc(100vh-2rem)] w-full max-w-full place-items-center overflow-hidden rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0">
+      <section className="relative grid min-h-[calc(100vh-2rem)] w-full max-w-full place-items-center overflow-x-clip rounded-lg bg-white px-5 py-8 shadow-[0_20px_70px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-0 lg:overflow-hidden">
         <AuthDecorations />
         <div className="absolute left-5 right-5 top-5 z-20 flex min-w-0 items-center justify-between gap-3 sm:left-8 sm:right-8">
           <Link href="/" aria-label="TeachPad home" className="inline-flex lg:hidden">
@@ -184,7 +184,7 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 mt-16 w-full max-w-[78vw] sm:max-w-[460px] lg:mt-0">
+        <div className="relative z-10 mt-16 w-full max-w-[90vw] sm:max-w-[460px] lg:mt-0">
           <div className="mb-7">
             <div className="mb-5 inline-grid h-12 w-12 place-items-center rounded-lg bg-blue-50 text-blue-600">
               {mode === "forgot" && resetSentEmail ? <MailCheck className="h-6 w-6" /> : <LockKeyhole className="h-6 w-6" />}
@@ -410,7 +410,7 @@ function AuthDecorations() {
         src="/ai-tools/landscape-scene.png"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-8 left-1/2 w-[540px] max-w-[145%] -translate-x-1/2 select-none object-contain opacity-70 sm:w-[680px] lg:hidden"
+        className="pointer-events-none absolute -bottom-8 left-1/2 w-[540px] max-w-[100%] -translate-x-1/2 select-none object-contain opacity-70 sm:w-[680px] lg:hidden"
       />
       <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-white via-white/80 to-transparent" />
     </>

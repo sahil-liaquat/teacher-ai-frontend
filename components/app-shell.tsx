@@ -185,7 +185,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
       )}
 
-      <main className="min-h-screen pb-24 pt-16 lg:pb-0 lg:pt-0">
+      <main className="min-h-screen pb-20 pt-16 lg:pb-0 lg:pt-0">
         <div className={cn(
           "mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 xl:py-5",
           sidebarLayout === "expanded" ? "lg:pl-[260px]" : "lg:pl-24"
