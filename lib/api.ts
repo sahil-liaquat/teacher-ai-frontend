@@ -505,6 +505,10 @@ async function parseError(res: Response) {
 export type BillingMe = {
   status: string;
   plan_code: string;
+  // Price actually charged to this subscriber (snapshotted at checkout) — not
+  // the current marketing price, so a grandfathered price displays correctly.
+  // Null for free/trial-only users who never checked out.
+  price_inr: number | null;
   is_pro: boolean;
   // True only when there's a live paid subscription left to cancel. Comp/gift/
   // trial grants are false — don't show "Cancel subscription" for them.

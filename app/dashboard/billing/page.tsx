@@ -238,7 +238,7 @@ function PlanCard({
   data: ReturnType<typeof useBilling>["data"] & object;
   onUpgrade: () => void;
 }) {
-  const { is_pro, status, plan_code, access_until, gift, paid_starts_at } = data;
+  const { is_pro, status, plan_code, price_inr, access_until, gift, paid_starts_at } = data;
 
   const isGift = gift.granted;
   const isTrial = status === "trialing";
@@ -325,7 +325,7 @@ function PlanCard({
               plan_code === "pro_annual"
                 ? "Pro — Annual (₹1,699/yr)"
                 : plan_code === "pro_monthly"
-                  ? "Pro — Monthly (₹199/mo)"
+                  ? `Pro — Monthly (₹${price_inr ?? 299}/mo)`
                   : plan_code
             }
           />
