@@ -807,7 +807,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
       )}
 
       {/* Center Stage Greeting */}
-      <div className="flex flex-col items-center text-center mt-12 mb-8 px-4">
+      <div className="flex flex-col items-center text-center mt-4 mb-4 px-4 sm:mt-12 sm:mb-8">
         <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-[25px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
           <span>{greeting.text}, {firstName}</span>
           {greeting.icon ? (
@@ -825,15 +825,15 @@ const last7DaysBars = getLast7DaysBars(allItems);
       </div>
 
       {/* Long Google-like Search Bar */}
-      <div className="mx-auto w-full max-w-[680px] mb-10 relative group px-4">
-        <Search className="absolute left-8 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
+      <div className="mx-auto w-full max-w-[680px] mt-1 sm:mt-0 mb-6 sm:mb-10 relative group px-4">
+        <Search className="absolute left-7 sm:left-8 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200" />
         <input
           ref={searchInputRef}
           type="text"
           placeholder={isListening ? "Listening..." : placeholderText}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-14 pl-12 pr-24 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
+          className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
         />
         
         <div className="absolute right-5 sm:right-7 top-1/2 -translate-y-1/2 flex items-center gap-2">
