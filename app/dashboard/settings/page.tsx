@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Phone, Save, UserRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, FolderOpen, KeyRound, Mail, Phone, Save, UserRound, Layout, Settings2, BarChart3, Settings } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile, type PastelIconTileName } from "@/components/pastel-icon-tile";
 import { ReferralCodeCard } from "@/components/influencer/referral-code-card";
@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [resetSent, setResetSent] = useState(false);
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
   const [dashboardLayout, setDashboardLayout] = useState<"search-first" | "original">("search-first");
+  const [activeTab, setActiveTab] = useState<"profile" | "usage" | "preferences">("profile");
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
 
   useEffect(() => {
@@ -240,255 +241,334 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-6">
+      {/* Premium Header */}
       <DashboardBannerHeader
-        titleTop="Profile and"
-        titleHighlight="usage settings"
+        titleTop="Manage your"
+        titleHighlight="settings"
         imageSrc="/assets/illustrations/profile-settings-header.png"
       />
 
-      <section className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-          <div className="flex items-center gap-4">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-[24px] bg-[#dffafa] shadow-[0_14px_34px_var(--teachpad-shadowToolCard)]">
-              <PastelIconTile name="settings" className="h-16 w-16 rounded-[22px]" />
+      <div className="flex flex-col gap-6 lg:flex-row items-start">
+        {/* Navigation Sidebar */}
+        <aside className="w-full lg:w-[280px] shrink-0 rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+          <div className="hidden lg:flex items-center gap-3 px-3 py-2.5 mb-4 border-b border-slate-100 pb-4">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+              <Settings className="h-5 w-5" />
             </div>
-            <div className="min-w-0">
-              <h2 className="truncate text-xl font-black tracking-tight text-teachpad-ink">{displayName}</h2>
-              <p className="mt-1 truncate text-sm font-semibold text-teachpad-muted">{email}</p>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Settings</h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">Manage your account</p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3">
-            <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value={roleLabel} />
-            <AccountLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} />
-            <AccountLine icon={<Phone className="h-4 w-4" />} label="Mobile" value={billing?.billing_phone || "Not added"} />
-          </div>
+          <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-1.5 p-1 lg:p-0 border-b lg:border-0 border-slate-100 max-w-full">
+            <button
+              type="button"
+              onClick={() => setActiveTab("profile")}
+              className={cn(
+                "flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap lg:w-full",
+                activeTab === "profile"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              )}
+            >
+              <UserRound className="h-4 w-4" />
+              Profile & Account
+            </button>
+            {!isInfluencer && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("usage")}
+                className={cn(
+                  "flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap lg:w-full",
+                  activeTab === "usage"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                )}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Monthly Usage
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab("preferences")}
+              className={cn(
+                "flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap lg:w-full",
+                activeTab === "preferences"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              )}
+            >
+              <Layout className="h-4 w-4" />
+              Workspace Preferences
+            </button>
+          </nav>
         </aside>
 
-        <form onSubmit={submit} className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Profile details</h2>
-              <p className="mt-1 text-sm font-semibold text-teachpad-muted">These details personalize your dashboard and saved resources.</p>
+        {/* Tab Content Panels */}
+        <main className="flex-1 w-full min-w-0">
+          {activeTab === "profile" && (
+            <div className="space-y-6">
+              {/* Profile Card & Details Form */}
+              <div className="grid gap-6 md:grid-cols-[1fr_minmax(0,1.5fr)]">
+                {/* Left profile info summary card */}
+                <div className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-4 border-b border-slate-100 pb-5 mb-5">
+                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#ecfff7] text-[#159565] shadow-sm font-black text-xl">
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-bold text-slate-900">{displayName}</h3>
+                        <p className="truncate text-xs font-medium text-slate-500 mt-0.5">{email}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <AccountLine icon={<UserRound className="h-4 w-4" />} label="Role" value={roleLabel} />
+                      <AccountLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} />
+                      <AccountLine icon={<Phone className="h-4 w-4" />} label="Mobile" value={billing?.billing_phone || "Not added"} />
+                    </div>
+                  </div>
+
+                  {isInfluencer && (
+                    <div className="mt-6 border-t border-slate-100 pt-5">
+                      <ReferralCodeCard variant="compact" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Right profile edit form */}
+                <form onSubmit={submit} className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm space-y-5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">Profile Details</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Update your contact and display name settings.</p>
+                    </div>
+                    <Button type="submit" disabled={saving || currentUser.isLoading} className="rounded-xl px-4 py-2 font-bold text-xs">
+                      <Save className="h-3.5 w-3.5 mr-1.5" />
+                      {saving ? "Saving..." : "Save profile"}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <ProfileField label="Name" icon={<UserRound className="h-4 w-4" />}>
+                      <Input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="Teacher name" className="rounded-xl border-slate-200 bg-white/50 focus-visible:ring-[#159565]" />
+                    </ProfileField>
+                    <ProfileField label="Mobile number" icon={<Phone className="h-4 w-4" />}>
+                      <Input
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        placeholder="10-digit mobile number"
+                        className="rounded-xl border-slate-200 bg-white/50 focus-visible:ring-[#159565]"
+                      />
+                    </ProfileField>
+                  </div>
+                </form>
+              </div>
+
+              {/* Password & Security Section */}
+              <div className="rounded-3xl border border-white/70 bg-gradient-to-br from-[#f8ffff] to-white p-6 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm">
+                      <KeyRound className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">Password</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed max-w-[500px]">
+                        {resetSent ? `Reset link sent to ${email}.` : "Send a secure password reset link to your email."}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-xl h-11 px-5 font-bold text-xs"
+                    disabled={sendingReset || currentUser.isLoading || !currentUser.data?.email}
+                    onClick={sendPasswordReset}
+                  >
+                    <KeyRound className="h-3.5 w-3.5 mr-1.5" />
+                    {sendingReset ? "Sending..." : resetSent ? "Send again" : "Reset password"}
+                  </Button>
+                </div>
+
+                <div className="mt-6 border-t border-slate-100 pt-5 grid gap-4 sm:grid-cols-3">
+                  <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Session" value={currentUser.isLoading ? "Checking" : "Active"} />
+                  <StatusRow icon={<CalendarDays className="h-4 w-4" />} label="Workspace" value={workspaceLabel} />
+                  <StatusRow icon={<FolderOpen className="h-4 w-4" />} label="Library" value={`${usage.savedResources} saved`} />
+                </div>
+              </div>
             </div>
-            <Button type="submit" disabled={saving || currentUser.isLoading}>
-              <Save className="h-4 w-4" />
-              {saving ? "Saving..." : "Save profile"}
-            </Button>
-          </div>
+          )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <ProfileField label="Name" icon={<UserRound className="h-4 w-4" />}>
-              <Input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="Teacher name" />
-            </ProfileField>
-            <ProfileField label="Mobile number" icon={<Phone className="h-4 w-4" />}>
-              <Input
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="10-digit mobile number"
-              />
-            </ProfileField>
-          </div>
-        </form>
-      </section>
+          {activeTab === "usage" && !isInfluencer && (
+            <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Monthly usage</h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">Generation activity for the current month.</p>
+                </div>
+                <div className="rounded-full bg-[#e5ffc6] px-3.5 py-1.5 text-xs font-bold text-[#3d7b0f] border border-emerald-100 shadow-sm">
+                  {isLoadingUsage ? "Loading" : `${usage.total}/${usageLimit} used`}
+                </div>
+              </div>
 
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        {!isInfluencer ? (
-          <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="h-3 overflow-hidden rounded-full bg-slate-100 border border-slate-100 shadow-inner">
+                  <div className="h-full rounded-full bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-500 transition-all duration-500" style={{ width: `${isLoadingUsage ? 0 : usage.percent}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 px-0.5">
+                  <span>0% Used</span>
+                  <span>{isLoadingUsage ? "..." : `${usage.percent}% Used`}</span>
+                  <span>100% Limit ({usageLimit})</span>
+                </div>
+              </div>
+
+              {/* Usage Grid Tiles */}
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 pt-2">
+                <UsageMetric icon="bookOpen" label="Lesson plans" value={isLoadingUsage ? "..." : usage.monthlyLessons} tone="bg-[#ffdce8] text-pink-600" />
+                <UsageMetric icon="clipboardList" label="Worksheets" value={isLoadingUsage ? "..." : usage.monthlyWorksheets} tone="bg-[#e5ffc6] text-emerald-700" />
+                <UsageMetric icon="presentation" label="Presentations" value={isLoadingUsage ? "..." : usage.monthlyPresentations} tone="bg-[#ffe1e8] text-rose-500" />
+                <UsageMetric icon="notebookPen" label="Notes" value={isLoadingUsage ? "..." : usage.monthlyNotes} tone="bg-[#f1e8ff] text-indigo-600" />
+                <UsageMetric icon="sparkles" label="Activities" value={isLoadingUsage ? "..." : usage.monthlyActivities} tone="bg-[#dffafa] text-cyan-600" />
+                <UsageMetric icon="folderOpen" label="Saved resources" value={isLoadingUsage ? "..." : usage.savedResources} tone="bg-[#fff0bf] text-amber-600" />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "preferences" && (
+            <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm space-y-6">
               <div>
-                <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Monthly usage</h2>
-                <p className="mt-1 text-sm font-semibold text-teachpad-muted">Generation activity for the current month.</p>
+                <h3 className="text-base font-bold text-slate-900">Workspace Layout Preferences</h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Personalize the styling and navigation format of your workspace.</p>
               </div>
-              <div className="rounded-full bg-[#e5ffc6] px-3 py-1 text-sm font-black text-[#3d7b0f]">
-                {isLoadingUsage ? "Loading" : `${usage.total}/${usageLimit} used`}
+
+              {/* Sidebar View */}
+              <div className="space-y-3 border-t border-slate-100 pt-5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Sidebar View</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => changeSidebarLayout("floating")}
+                    className={cn(
+                      "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                      sidebarLayout === "floating"
+                        ? "border-[#159565] bg-[#ecfff7]/30 ring-2 ring-emerald-100"
+                        : "border-slate-200 bg-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "grid h-8 w-8 place-items-center rounded-lg",
+                        sidebarLayout === "floating" ? "bg-[#ecfff7] text-[#159565]" : "bg-slate-50 text-slate-400"
+                      )}>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                      </span>
+                      <span className="font-bold text-slate-800 text-sm">Floating Icons (Default)</span>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed">
+                      A floating, space-efficient toolbar showing icons with helper hover tooltips on the left.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => changeSidebarLayout("expanded")}
+                    className={cn(
+                      "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                      sidebarLayout === "expanded"
+                        ? "border-[#159565] bg-[#ecfff7]/30 ring-2 ring-emerald-100"
+                        : "border-slate-200 bg-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "grid h-8 w-8 place-items-center rounded-lg",
+                        sidebarLayout === "expanded" ? "bg-[#ecfff7] text-[#159565]" : "bg-slate-50 text-slate-400"
+                      )}>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a4 4 0 00-4-4H3m18 0h-2a4 4 0 00-4 4v2m0-10V4m0 8h.01M9 20h6" />
+                        </svg>
+                      </span>
+                      <span className="font-bold text-slate-800 text-sm">Expanded Sidebar</span>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed">
+                      A classic, docked navigation sidebar showing full text labels and the TeachPad brand header.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Dashboard Layout */}
+              <div className="space-y-3 border-t border-slate-100 pt-5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Dashboard Layout</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => changeDashboardLayout("search-first")}
+                    className={cn(
+                      "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                      dashboardLayout === "search-first"
+                        ? "border-[#159565] bg-[#ecfff7]/30 ring-2 ring-emerald-100"
+                        : "border-slate-200 bg-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "grid h-8 w-8 place-items-center rounded-lg",
+                        dashboardLayout === "search-first" ? "bg-[#ecfff7] text-[#159565]" : "bg-slate-50 text-slate-400"
+                      )}>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </span>
+                      <span className="font-bold text-slate-800 text-sm">Search-First Dashboard (Default)</span>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed">
+                      Focused AI search workspace layout displaying primary search launchers and recent lists first.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => changeDashboardLayout("original")}
+                    className={cn(
+                      "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
+                      dashboardLayout === "original"
+                        ? "border-[#159565] bg-[#ecfff7]/30 ring-2 ring-emerald-100"
+                        : "border-slate-200 bg-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "grid h-8 w-8 place-items-center rounded-lg",
+                        dashboardLayout === "original" ? "bg-[#ecfff7] text-[#159565]" : "bg-slate-50 text-slate-400"
+                      )}>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h3a1 1 0 011 1v6a1 1 0 01-1 1h-3a1 1 0 01-1-1v-6z" />
+                        </svg>
+                      </span>
+                      <span className="font-bold text-slate-800 text-sm">Original Layout</span>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed">
+                      The classic dashboard format displaying metrics grids and action panels.
+                    </p>
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="mt-5 h-3 overflow-hidden rounded-full bg-teachpad-tag">
-              <div className="h-full rounded-full bg-gradient-to-r from-teachpad-blue via-[#16c5d9] to-[#8ec63f]" style={{ width: `${isLoadingUsage ? 0 : usage.percent}%` }} />
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <UsageMetric icon="bookOpen" label="Lesson plans" value={isLoadingUsage ? "..." : usage.monthlyLessons} tone="bg-[#ffdce8]" />
-              <UsageMetric icon="clipboardList" label="Worksheets" value={isLoadingUsage ? "..." : usage.monthlyWorksheets} tone="bg-[#e5ffc6]" />
-              <UsageMetric icon="presentation" label="Presentations" value={isLoadingUsage ? "..." : usage.monthlyPresentations} tone="bg-[#ffe1e8]" />
-              <UsageMetric icon="notebookPen" label="Notes" value={isLoadingUsage ? "..." : usage.monthlyNotes} tone="bg-[#f1e8ff]" />
-              <UsageMetric icon="sparkles" label="Activities" value={isLoadingUsage ? "..." : usage.monthlyActivities} tone="bg-[#dffafa]" />
-              <UsageMetric icon="folderOpen" label="Saved resources" value={isLoadingUsage ? "..." : usage.savedResources} tone="bg-[#fff0bf]" />
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-            <PastelIconTile name="sparkles" className="h-14 w-14 rounded-[20px]" />
-            <h2 className="mt-4 text-xl font-black tracking-tight text-teachpad-ink">Influencer portal</h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-teachpad-muted">
-              Profile changes here apply to your influencer account. Commission and payout activity stays in the influencer dashboard.
-            </p>
-            <div className="mt-4">
-              <ReferralCodeCard variant="compact" />
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-[24px] border border-teachpad-cardBorder bg-gradient-to-br from-[#f8ffff] to-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-          <PastelIconTile name="sparkles" className="h-14 w-14 rounded-[20px]" />
-          <h2 className="mt-4 text-xl font-black tracking-tight text-teachpad-ink">Account status</h2>
-          <div className="mt-4 grid gap-3">
-            <StatusRow icon={<CheckCircle2 className="h-4 w-4" />} label="Session" value={currentUser.isLoading ? "Checking" : "Active"} />
-            <StatusRow icon={<CalendarDays className="h-4 w-4" />} label="Workspace" value={workspaceLabel} />
-            <StatusRow icon={<FolderOpen className="h-4 w-4" />} label="Library" value={`${usage.savedResources} saved`} />
-          </div>
-          <div className="mt-5 rounded-[20px] border border-teachpad-cardBorder bg-white/82 p-3">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef4ff] text-teachpad-blue">
-                <KeyRound className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-black text-teachpad-ink">Password</h3>
-                <p className="mt-1 text-xs font-semibold leading-5 text-teachpad-muted">
-                  {resetSent ? `Reset link sent to ${email}.` : "Send a secure password reset link to your email."}
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-3 h-11 w-full rounded-[14px]"
-              disabled={sendingReset || currentUser.isLoading || !currentUser.data?.email}
-              onClick={sendPasswordReset}
-            >
-              <KeyRound className="h-4 w-4" />
-              {sendingReset ? "Sending..." : resetSent ? "Send again" : "Reset password"}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-teachpad-ink">Layout preferences</h2>
-          <p className="mt-1 text-sm font-semibold text-teachpad-muted">Customize your workspace navigation and dashboard layouts.</p>
-        </div>
-        
-        <div className="mt-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-teachpad-muted mb-3">Sidebar View</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => changeSidebarLayout("floating")}
-              className={cn(
-                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-                sidebarLayout === "floating"
-                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                  : "border-teachpad-cardBorder bg-white"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                  sidebarLayout === "floating" ? "text-teachpad-blue" : "text-teachpad-muted"
-                )}>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
-                  </svg>
-                </span>
-                <span className="font-bold text-teachpad-ink text-sm">Floating Icons (Default)</span>
-              </div>
-              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-                A minimalist sidebar that floats on the left side of the workspace, showing only icons with text tooltips.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => changeSidebarLayout("expanded")}
-              className={cn(
-                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-                sidebarLayout === "expanded"
-                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                  : "border-teachpad-cardBorder bg-white"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                  sidebarLayout === "expanded" ? "text-teachpad-blue" : "text-teachpad-muted"
-                )}>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a4 4 0 00-4-4H3m18 0h-2a4 4 0 00-4 4v2m0-10V4m0 8h.01M9 20h6" />
-                  </svg>
-                </span>
-                <span className="font-bold text-teachpad-ink text-sm">Expanded Sidebar</span>
-              </div>
-              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-                A traditional sidebar docked to the left side of the page, showing full navigation links and brand logo.
-              </p>
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-8 border-t border-slate-100 pt-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-teachpad-muted mb-3">Dashboard View</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => changeDashboardLayout("search-first")}
-              className={cn(
-                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-                dashboardLayout === "search-first"
-                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                  : "border-teachpad-cardBorder bg-white"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                  dashboardLayout === "search-first" ? "text-teachpad-blue" : "text-teachpad-muted"
-                )}>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </span>
-                <span className="font-bold text-teachpad-ink text-sm">Search-First Dashboard (Default)</span>
-              </div>
-              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-                A modern, centered AI search workspace with primary tool launcher links and recent generations.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => changeDashboardLayout("original")}
-              className={cn(
-                "flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 hover:border-blue-200",
-                dashboardLayout === "original"
-                  ? "border-teachpad-blue bg-blue-50/30 ring-2 ring-blue-100"
-                  : "border-teachpad-cardBorder bg-white"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  "grid h-8 w-8 place-items-center rounded-lg bg-teachpad-tag",
-                  dashboardLayout === "original" ? "text-teachpad-blue" : "text-teachpad-muted"
-                )}>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h3a1 1 0 011 1v6a1 1 0 01-1 1h-3a1 1 0 01-1-1v-6z" />
-                  </svg>
-                </span>
-                <span className="font-bold text-teachpad-ink text-sm">Original Layout</span>
-              </div>
-              <p className="mt-2 text-xs font-semibold text-teachpad-muted leading-relaxed">
-                The original dashboard layout featuring metrics at the top and Textbook Generator action panels.
-              </p>
-            </button>
-          </div>
-        </div>
-      </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

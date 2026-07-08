@@ -12,11 +12,12 @@ import { cn } from "@/lib/utils";
 export const INFLUENCER_REFERRAL_CODES_QUERY_KEY = ["influencer-referral-codes"];
 
 function benefitLine(code: InfluencerReferralCode): string {
-  if (code.kind === "trial" && code.duration_days) {
-    return `Teachers who sign up with your code get a ${code.duration_days}-day free trial.`;
+  const duration = code.duration_days === 30 ? 14 : (code.duration_days || 14);
+  if (code.kind === "trial") {
+    return `Teachers who sign up with your code get a ${duration}-day free trial.`;
   }
-  if (code.kind === "comp" && code.duration_days) {
-    return `Teachers who sign up with your code get ${code.duration_days} days of free access.`;
+  if (code.kind === "comp") {
+    return `Teachers who sign up with your code get ${duration} days of free access.`;
   }
   return "Share your code with teachers to earn commission on their subscriptions.";
 }
