@@ -37,17 +37,20 @@ export default function PresentationOutputPage() {
   const [currentPresentationId, setCurrentPresentationId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
-  useEffect(() => {
+  const handleSaveToLibrary = async () => {
     if (currentPresentationId) {
-      setIsSaved(isResourceSaved(`pres-${currentPresentationId}`));
-    }
-  }, [currentPresentationId]);
-
-  const handleSaveToLibrary = () => {
-    if (currentPresentationId) {
-      saveResourceId(`pres-${currentPresentationId}`);
-      setIsSaved(true);
-      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+      try {
+        const nextSaved = !isSaved;
+        setIsSaved(nextSaved);
+        await backendApi.updateResourceSavedState("presentation", currentPresentationId, nextSaved);
+        toast({
+          title: nextSaved ? "Saved to Library" : "Removed from Library",
+          description: nextSaved ? "You can find this in your Saved Resources." : "Removed from your library."
+        });
+      } catch {
+        setIsSaved(isSaved);
+        toast({ title: "Error updating library", variant: "error" });
+      }
     }
   };
 
@@ -73,6 +76,7 @@ export default function PresentationOutputPage() {
         }
         setDeck(nextDeck);
         setCurrentPresentationId(id);
+        setIsSaved(generation.is_saved ?? false);
         setActiveSlide(0);
       })
       .catch((error) => {

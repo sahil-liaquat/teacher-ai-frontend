@@ -21,16 +21,26 @@ export default function WorksheetDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    if (params.id) {
-      setIsSaved(isResourceSaved(`ws-${params.id}`));
+    if (generation) {
+      setIsSaved(generation.is_saved ?? false);
     }
-  }, [params.id]);
+  }, [generation]);
 
-  const handleSaveToLibrary = () => {
+  const handleSaveToLibrary = async () => {
     if (params.id) {
-      saveResourceId(`ws-${params.id}`);
-      setIsSaved(true);
-      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+      try {
+        const nextSaved = !isSaved;
+        setIsSaved(nextSaved);
+        await backendApi.updateResourceSavedState("worksheet", params.id, nextSaved);
+        setGeneration((current: any) => current ? { ...current, is_saved: nextSaved } : current);
+        toast({
+          title: nextSaved ? "Saved to Library" : "Removed from Library",
+          description: nextSaved ? "You can find this in your Saved Resources." : "Removed from your library."
+        });
+      } catch {
+        setIsSaved(isSaved);
+        toast({ title: "Error updating library", variant: "error" });
+      }
     }
   };
 

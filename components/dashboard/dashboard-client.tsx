@@ -313,52 +313,12 @@ export default function DashboardClient() {
     return () => {
       window.removeEventListener("teachpad_sidebar_layout_changed", updateLayout);
       window.removeEventListener("teachpad_dashboard_layout_changed", updateLayout);
-      window.removeEventListener("storage", updateLayout);
     };
   }, []);
-  const lessonSummary = useQuery({
-    queryKey: ["lesson-plans-summary"],
-    queryFn: loadLessonPlanDashboardSummary,
-    enabled: !!token,
-    retry: false,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
-  const worksheets = useQuery({
-    queryKey: ["worksheets-summary"],
-    queryFn: () => backendApi.worksheets(0, 100),
-    enabled: !!token,
-    retry: false,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
-  const presentations = useQuery({
-    queryKey: ["presentations-summary"],
-    queryFn: () => backendApi.presentations(0, 100),
-    enabled: !!token,
-    retry: false,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
-  const notesGenerations = useQuery({
-    queryKey: ["notes-generations-summary"],
-    queryFn: () => backendApi.notesGenerations(0, 100),
-    enabled: !!token,
-    retry: false,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
-  const activityGenerations = useQuery({
-    queryKey: ["activity-generations-summary"],
-    queryFn: () => backendApi.activities(0, 100),
+
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: backendApi.dashboardSummary,
     enabled: !!token,
     retry: false,
     staleTime: 0,
@@ -374,89 +334,29 @@ export default function DashboardClient() {
   });
   const greeting = useMemo(() => getGreeting(), []);
   const firstName = getTeacherFirstName({ name: currentUser.data?.full_name || currentUser.data?.name || "", school: "", subjects: "" });
-  const statsLoading = lessonSummary.isLoading || worksheets.isLoading || presentations.isLoading || notesGenerations.isLoading || activityGenerations.isLoading;
-  const statsError = lessonSummary.isError && worksheets.isError && presentations.isError && notesGenerations.isError && activityGenerations.isError;
-  const apiLessonRecent = lessonSummary.data?.recent || [];
-  const lessonTotal = lessonSummary.data?.total ?? 0;
-  const lessonRecent = apiLessonRecent.length
-    ? apiLessonRecent.map((item: any) => ({
-        ...item,
-        topic: item.topic || item.chapter_name || "Generated Lesson Plan",
-        class_name: item.class_name || "8th Grade",
-        subject: item.subject || "Science",
-        type: "Lesson Plan",
-        href: `/dashboard/lesson-plans/${item.id}`,
-        created_at: item.created_at || item.updated_at || ""
-      }))
-    : [];
-  const worksheetItems = worksheets.data?.items || [];
-  const worksheetRecent = worksheetItems.map((item: any) => {
-    const output = item.output_json || {};
-    const metadata = output.metadata || {};
-    return {
-      id: item.id,
-      topic: output.title || metadata.topic || "Generated Worksheet",
-      class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
-      subject: metadata.subject || "Science",
-      type: "Worksheet",
-      href: `/dashboard/worksheets/${item.id}`,
-      created_at: item.created_at || ""
-    };
-  });
-  const presentationRecent = (presentations.data?.items || []).map((item: any) => {
-    const output = item.output_json || {};
-    return {
-      id: item.id,
-      topic: output.title || item.topic || "Generated Presentation",
-      class_name: item.audience || "Class",
-      subject: item.style || "Presentation",
-      type: "Presentation",
-      href: `/dashboard/presentation-generator/output?id=${item.id}`,
-      created_at: item.created_at || item.updated_at || ""
-    };
-  });
-  const notesRecent = (notesGenerations.data?.items || []).map((item: any) => {
-    const output = item.output_json || {};
-    const metadata = output.metadata || {};
-    return {
-      id: item.id,
-      topic: output.title || metadata.topic || metadata.chapter || "Generated Notes",
-      class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
-      subject: metadata.subject || "Notes",
-      type: "Notes",
-      href: `/dashboard/notes-generator?id=${item.id}`,
-      created_at: item.created_at || item.updated_at || ""
-    };
-  });
-  const activityRecent = (activityGenerations.data?.items || []).map((item: any) => {
-    const output = item.output_json || {};
-    const metadata = output.metadata || {};
-    return {
-      id: item.id,
-      topic: output.title || metadata.topic || metadata.chapter || "Generated Activity",
-      class_name: metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class",
-      subject: metadata.subject || "Activity",
-      type: "Activity",
-      href: `/dashboard/activity-generator?id=${item.id}`,
-      created_at: item.created_at || item.updated_at || ""
-    };
-  });
-  const recent = [...presentationRecent, ...worksheetRecent, ...lessonRecent, ...notesRecent, ...activityRecent]
-    .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-  const displayRecent = recent;
-  const worksheetTotal = worksheets.data?.total ?? 0;
-  const presentationTotal = presentations.data?.total ?? 0;
-  const notesTotal = notesGenerations.data?.total ?? 0;
-  const activityTotal = activityGenerations.data?.total ?? 0;
+  const statsLoading = dashboardQuery.isLoading;
+  const statsError = dashboardQuery.isError;
+  const totals = dashboardQuery.data?.totals;
+  const monthlyTotals = dashboardQuery.data?.monthly_totals;
+
+  const lessonTotal = totals?.lesson_plans ?? 0;
+  const worksheetTotal = totals?.worksheets ?? 0;
+  const presentationTotal = totals?.presentations ?? 0;
+  const notesTotal = totals?.notes ?? 0;
+  const activityTotal = totals?.activities ?? 0;
   const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal + notesTotal + activityTotal;
-  const lessonMonthlyTotal = lessonSummary.data?.monthly_total ?? 0;
-  const worksheetMonthlyTotal = countItemsThisMonth(worksheetItems);
-  const presentationMonthlyTotal = countItemsThisMonth(presentations.data?.items || []);
-  const notesMonthlyTotal = countItemsThisMonth(notesGenerations.data?.items || []);
-  const activityMonthlyTotal = countItemsThisMonth(activityGenerations.data?.items || []);
+
+  const lessonMonthlyTotal = monthlyTotals?.lesson_plans ?? 0;
+  const worksheetMonthlyTotal = monthlyTotals?.worksheets ?? 0;
+  const presentationMonthlyTotal = monthlyTotals?.presentations ?? 0;
+  const notesMonthlyTotal = monthlyTotals?.notes ?? 0;
+  const activityMonthlyTotal = monthlyTotals?.activities ?? 0;
   const monthlyGenerationsTotal = lessonMonthlyTotal + worksheetMonthlyTotal + presentationMonthlyTotal + notesMonthlyTotal + activityMonthlyTotal;
-  const allItems = [...apiLessonRecent, ...worksheetItems, ...(presentations.data?.items || []), ...(notesGenerations.data?.items || []), ...(activityGenerations.data?.items || [])];
-const last7DaysBars = getLast7DaysBars(allItems);
+
+  const displayRecent = dashboardQuery.data?.recent_generations ?? [];
+
+  const allItems = (dashboardQuery.data?.last_7_days_timestamps || []).map((ts) => ({ created_at: ts }));
+  const last7DaysBars = getLast7DaysBars(allItems);
   const maxLast7Days = Math.max(1, ...last7DaysBars.map((bar) => bar.value));
   const estimatedHoursSaved = formatHours(monthlyGenerationsTotal * 0.25);
 
@@ -538,11 +438,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
             </>
           ) : (
             originalStatCards.map((stat, index) => {
-              const isError =
-                index === 0 ? lessonSummary.isError :
-                index === 1 ? worksheets.isError :
-                index === 2 ? (lessonSummary.isError || worksheets.isError) :
-                (lessonSummary.isError || worksheets.isError || presentations.isError || notesGenerations.isError || activityGenerations.isError);
+              const isError = statsError;
 
               if (isError) {
                 return <StatsErrorCard key={stat.label} />;
@@ -935,11 +831,7 @@ const last7DaysBars = getLast7DaysBars(allItems);
           </>
         ) : (
           statCards.map((stat, index) => {
-            const isError =
-              index === 0 ? lessonSummary.isError :
-              index === 1 ? worksheets.isError :
-              index === 2 ? notesGenerations.isError :
-              presentations.isError;
+            const isError = statsError;
 
             if (isError) {
               return <StatsErrorCard key={stat.label} />;

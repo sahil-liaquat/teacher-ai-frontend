@@ -19,21 +19,32 @@ export default function LessonPlanDetailPage() {
   const [editedOutput, setEditedOutput] = useState<any>(null);
   const [autoSaveFailed, setAutoSaveFailed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
 
   useEffect(() => {
-    if (params.id) {
-      setIsSaved(isResourceSaved(`lp-${params.id}`));
+    if (lesson.data) {
+      setIsSaved(lesson.data.is_saved ?? false);
     }
-  }, [params.id]);
+  }, [lesson.data]);
 
-  const handleSaveToLibrary = () => {
+  const handleSaveToLibrary = async () => {
     if (params.id) {
-      saveResourceId(`lp-${params.id}`);
-      setIsSaved(true);
-      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+      try {
+        const nextSaved = !isSaved;
+        setIsSaved(nextSaved);
+        await backendApi.updateResourceSavedState("lesson_plan", params.id, nextSaved);
+        queryClient.invalidateQueries({ queryKey: ["lesson-plan", params.id] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+        toast({
+          title: nextSaved ? "Saved to Library" : "Removed from Library",
+          description: nextSaved ? "You can find this in your Saved Resources." : "Removed from your library."
+        });
+      } catch {
+        setIsSaved(isSaved);
+        toast({ title: "Error updating library", variant: "error" });
+      }
     }
   };
-  const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
   const output = editedOutput || (lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null);
 
   useEffect(() => {

@@ -82,19 +82,20 @@ export default function NotesGeneratorPage() {
   const [currentNotesId, setCurrentNotesId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
-  useEffect(() => {
+  const handleSaveToLibrary = async () => {
     if (currentNotesId) {
-      setIsSaved(isResourceSaved(`notes-${currentNotesId}`));
-    } else {
-      setIsSaved(false);
-    }
-  }, [currentNotesId]);
-
-  const handleSaveToLibrary = () => {
-    if (currentNotesId) {
-      saveResourceId(`notes-${currentNotesId}`);
-      setIsSaved(true);
-      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+      try {
+        const nextSaved = !isSaved;
+        setIsSaved(nextSaved);
+        await backendApi.updateResourceSavedState("notes", currentNotesId, nextSaved);
+        toast({
+          title: nextSaved ? "Saved to Library" : "Removed from Library",
+          description: nextSaved ? "You can find this in your Saved Resources." : "Removed from your library."
+        });
+      } catch {
+        setIsSaved(isSaved);
+        toast({ title: "Error updating library", variant: "error" });
+      }
     }
   };
 
@@ -112,6 +113,7 @@ export default function NotesGeneratorPage() {
         if (!cancelled) {
           setNotes(generation.output_json);
           setCurrentNotesId(generation.id);
+          setIsSaved(generation.is_saved ?? false);
         }
       })
       .catch((error) => {
@@ -415,7 +417,7 @@ export default function NotesGeneratorPage() {
       });
       setNotes(generation.output_json);
       setCurrentNotesId(generation.id);
-      setIsSaved(false);
+      setIsSaved(generation.is_saved ?? true);
       toast({ title: "Notes generated", description: "Your classroom notes are ready below." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate notes.");

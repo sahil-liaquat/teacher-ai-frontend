@@ -84,19 +84,20 @@ export default function ActivityGeneratorPage() {
   const [currentActivityId, setCurrentActivityId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
-  useEffect(() => {
+  const handleSaveToLibrary = async () => {
     if (currentActivityId) {
-      setIsSaved(isResourceSaved(`activity-${currentActivityId}`));
-    } else {
-      setIsSaved(false);
-    }
-  }, [currentActivityId]);
-
-  const handleSaveToLibrary = () => {
-    if (currentActivityId) {
-      saveResourceId(`activity-${currentActivityId}`);
-      setIsSaved(true);
-      toast({ title: "Saved to Library", description: "You can find this in your Saved Resources." });
+      try {
+        const nextSaved = !isSaved;
+        setIsSaved(nextSaved);
+        await backendApi.updateResourceSavedState("activity", currentActivityId, nextSaved);
+        toast({
+          title: nextSaved ? "Saved to Library" : "Removed from Library",
+          description: nextSaved ? "You can find this in your Saved Resources." : "Removed from your library."
+        });
+      } catch {
+        setIsSaved(isSaved);
+        toast({ title: "Error updating library", variant: "error" });
+      }
     }
   };
 
@@ -114,6 +115,7 @@ export default function ActivityGeneratorPage() {
         if (!cancelled) {
           setActivity(generation.output_json);
           setCurrentActivityId(generation.id);
+          setIsSaved(generation.is_saved ?? false);
         }
       })
       .catch((error) => {
@@ -420,7 +422,7 @@ export default function ActivityGeneratorPage() {
       });
       setActivity(generation.output_json);
       setCurrentActivityId(generation.id);
-      setIsSaved(false);
+      setIsSaved(generation.is_saved ?? true);
       toast({ title: "Activity generated", description: "Your classroom activity is ready." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate activity.");

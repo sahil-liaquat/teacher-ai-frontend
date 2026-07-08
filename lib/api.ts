@@ -104,6 +104,7 @@ export type LessonPlan = {
   topic: string;
   duration_minutes: number;
   plan: any;
+  is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -148,6 +149,7 @@ export type WorksheetGeneration = {
   id: string;
   user_id?: string;
   output_json: any;
+  is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -170,6 +172,7 @@ export type NotesGeneration = {
   id: string;
   user_id?: string;
   output_json: any;
+  is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -193,6 +196,7 @@ export type ActivityGeneration = {
   id: string;
   user_id?: string;
   output_json: any;
+  is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -240,9 +244,47 @@ export type PresentationGeneration = {
   error_message?: string | null;
   pptx_file_url?: string | null;
   pdf_file_url?: string | null;
+  is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
 };
+
+export type DashboardCountSchema = {
+  lesson_plans: number;
+  worksheets: number;
+  presentations: number;
+  notes: number;
+  activities: number;
+};
+
+export type DashboardRecentItemSchema = {
+  id: string;
+  type: "Lesson Plan" | "Worksheet" | "Presentation" | "Notes" | "Activity";
+  topic: string;
+  class_name: string;
+  subject: string;
+  created_at: string;
+  href: string;
+};
+
+export type DashboardSummaryResponse = {
+  totals: DashboardCountSchema;
+  monthly_totals: DashboardCountSchema;
+  recent_generations: DashboardRecentItemSchema[];
+  last_7_days_timestamps: string[];
+};
+
+export type LibraryItem = {
+  id: string;
+  type: "lesson_plan" | "worksheet" | "presentation" | "notes" | "activity";
+  title: string;
+  subject: string;
+  class_name: string;
+  chapter_name: string;
+  created_at: string;
+};
+
+
 
 export type AdminSummary = {
   total_users: number;
@@ -1014,6 +1056,22 @@ export const backendApi = {
     apiFetch<SchoolFormatTemplate>(`/schools/admin/templates/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
   lessonPlanSummary: () => apiFetch<LessonPlanDashboardSummary>("/lesson-plans/summary"),
+  dashboardSummary: () => apiFetch<DashboardSummaryResponse>("/dashboard/summary"),
+  updateResourceSavedState: (type: string, id: string, isSaved: boolean) =>
+    apiFetch<{ ok: boolean }>(`/library/${type}/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_saved: isSaved }),
+    }),
+  getLibrary: (params: { skip?: number; limit?: number; q?: string; type?: string; class?: string; subject?: string }) => {
+    const qStr = new URLSearchParams();
+    if (params.skip !== undefined) qStr.set("skip", params.skip.toString());
+    if (params.limit !== undefined) qStr.set("limit", params.limit.toString());
+    if (params.q) qStr.set("q", params.q);
+    if (params.type && params.type !== "all") qStr.set("resource_type", params.type);
+    if (params.class) qStr.set("class_name", params.class);
+    if (params.subject) qStr.set("subject", params.subject);
+    return apiFetch<PaginatedResponse<LibraryItem>>(`/library?${qStr.toString()}`);
+  },
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
   updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
     apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
