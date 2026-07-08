@@ -75,6 +75,7 @@ export default function ResourcesPage() {
   const [classFilter, setClassFilter] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [resourceToDelete, setResourceToDelete] = useState<ResourceItem | null>(null);
+  const [optimisticDeletedIds, setOptimisticDeletedIds] = useState<string[]>([]);
   const observerRef = useRef<HTMLDivElement | null>(null);
 
   // Background query to build classes and subjects filters (pulls up to 1000 items metadata)
@@ -154,19 +155,21 @@ export default function ResourcesPage() {
   const filteredResources: ResourceItem[] = useMemo(() => {
     const pages = libraryData?.pages || [];
     const items = pages.flatMap((page) => page.items);
-    return items.map((item) => ({
-      id: item.id,
-      title: item.title,
-      subject: item.subject,
-      className: normalizeClassName(item.class_name),
-      chapterName: item.chapter_name || "",
-      detail: [normalizeClassName(item.class_name), item.chapter_name].filter(Boolean).join(" • "),
-      href: getResourceHref(item.type, item.id),
-      type: typeMapping[item.type] || (item.type as any),
-      createdAt: item.created_at,
-      raw: item
-    }));
-  }, [libraryData]);
+    return items
+      .map((item) => ({
+        id: item.id,
+        title: item.title,
+        subject: item.subject,
+        className: normalizeClassName(item.class_name),
+        chapterName: item.chapter_name || "",
+        detail: [normalizeClassName(item.class_name), item.chapter_name].filter(Boolean).join(" • "),
+        href: getResourceHref(item.type, item.id),
+        type: typeMapping[item.type] || (item.type as any),
+        createdAt: item.created_at,
+        raw: item
+      }))
+      .filter((item) => !optimisticDeletedIds.includes(item.id));
+  }, [libraryData, optimisticDeletedIds]);
 
   const resourcesByMonth = useMemo(() => {
     const groups: { monthYear: string; label: string; items: ResourceItem[] }[] = [];
@@ -197,13 +200,26 @@ export default function ResourcesPage() {
   const clearFilters = () => { setSearchQuery(""); setTypeFilter("all"); setClassFilter(""); setSubjectFilter(""); };
 
   const handleDelete = useCallback(async (resource: ResourceItem) => {
+    // Add to optimistic deletes immediately so it vanishes from UI instantly
+    setOptimisticDeletedIds((prev) => [...prev, resource.id]);
+
     try {
       const backendType = Object.keys(typeMapping).find(key => typeMapping[key] === resource.type) || resource.type;
       await backendApi.updateResourceSavedState(backendType, resource.raw.id || resource.id, false);
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      queryClient.invalidateQueries({ queryKey: ["library-filters"] });
+      
+      // Trigger query invalidation in parallel and wait for them to finish
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["library"] }),
+        queryClient.invalidateQueries({ queryKey: ["library-filters"] })
+      ]);
+      
+      // Clear the ID from optimistic delete tracker once DB is in sync
+      setOptimisticDeletedIds((prev) => prev.filter((id) => id !== resource.id));
+      
       toast({ title: "Removed from Library", description: "Resource has been removed from your saved list." });
     } catch {
+      // Rollback optimistic delete if API fails
+      setOptimisticDeletedIds((prev) => prev.filter((id) => id !== resource.id));
       toast({ title: "Failed to remove resource", variant: "error" });
     }
   }, [queryClient, toast]);
