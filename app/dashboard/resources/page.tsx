@@ -245,7 +245,7 @@ export default function ResourcesPage() {
   }, [toast]);
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-5 px-4 sm:px-6 lg:px-8">
       <DashboardBannerHeader
         titleTop="Saved"
         titleHighlight="Resources"
@@ -264,25 +264,25 @@ export default function ResourcesPage() {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); }} className="w-[140px]">
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+            <Select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); }} className="w-full min-[400px]:flex-1 sm:w-[140px]">
               <option value="all">All Types</option>
               {Object.entries(typeMeta).map(([key, m]) => <option key={key} value={key}>{m.label}s</option>)}
             </Select>
             {allClasses.length > 0 && (
-              <Select value={classFilter} onChange={(e) => { setClassFilter(e.target.value); }} className="w-[130px]">
+              <Select value={classFilter} onChange={(e) => { setClassFilter(e.target.value); }} className="w-full min-[400px]:flex-1 sm:w-[130px]">
                 <option value="">All Classes</option>
                 {allClasses.sort().map((c) => <option key={c} value={c}>{c}</option>)}
               </Select>
             )}
             {allSubjects.length > 0 && (
-              <Select value={subjectFilter} onChange={(e) => { setSubjectFilter(e.target.value); }} className="w-[130px]">
+              <Select value={subjectFilter} onChange={(e) => { setSubjectFilter(e.target.value); }} className="w-[130px] w-full min-[400px]:flex-1 sm:w-[130px]">
                 <option value="">All Subjects</option>
                 {allSubjects.sort().map((s) => <option key={s} value={s}>{s}</option>)}
               </Select>
             )}
             {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-xs">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full min-[400px]:w-auto justify-center gap-1 text-xs shrink-0">
                 <X className="h-3 w-3" /> Clear
               </Button>
             )}
@@ -337,7 +337,7 @@ export default function ResourcesPage() {
                     return (
                       <div key={`${resource.type}-${resource.id}`} className="flex gap-4 items-start relative group">
                         {/* Timeline connector and badge */}
-                        <div className="flex flex-col items-center shrink-0 self-stretch">
+                        <div className="hidden sm:flex flex-col items-center shrink-0 self-stretch">
                           <CalendarDateBadge dateString={resource.createdAt} />
                           <div className="w-0.5 bg-slate-200/70 flex-1 my-2 group-last:hidden" />
                         </div>
@@ -355,6 +355,7 @@ export default function ResourcesPage() {
                                     {meta.label}
                                   </span>
                                   <span className="text-[11px] font-semibold text-slate-400">
+                                    <span className="sm:hidden">{new Date(resource.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} • </span>
                                     {new Date(resource.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                                   </span>
                                 </div>
@@ -375,17 +376,17 @@ export default function ResourcesPage() {
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Link href={resource.href}>
-                                <Button size="sm" className="h-9 px-4 text-xs font-bold rounded-xl">
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start mt-2 sm:mt-0 shrink-0">
+                              <Link href={resource.href} className="flex-1 sm:flex-initial">
+                                <Button size="sm" className="w-full h-9 px-4 text-xs font-bold rounded-xl">
                                   View
                                 </Button>
                               </Link>
-                              <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="h-9 px-3 gap-1.5 text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 border-slate-200">
+                              <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="flex-1 sm:flex-initial h-9 px-3 gap-1.5 text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 border-slate-200">
                                 <Download className="h-3.5 w-3.5" /> PDF
                               </Button>
                               {canDelete && (
-                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600">
+                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               )}

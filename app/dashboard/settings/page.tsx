@@ -373,7 +373,6 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-800">Profile Picture</h4>
-                <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Auto-generated initial matching your display name.</p>
               </div>
             </div>
 

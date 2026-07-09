@@ -110,7 +110,7 @@ export default function RecentGenerationsPage() {
   const totalPages = recentData?.pages || 1;
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-5 px-4 sm:px-6 lg:px-8">
       <DashboardBannerHeader
         titleTop="Your"
         titleHighlight="Recent Generations"
@@ -166,27 +166,27 @@ export default function RecentGenerationsPage() {
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span className="truncate text-sm font-bold text-slate-900">{gen.title}</span>
                       <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">{meta.label}</span>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                       {gen.className && <span>{gen.className}</span>}
                       {gen.subject && (
                         <>
                           <span className="text-slate-300">•</span>
-                          <span>{gen.subject}</span>
+                          <span className="truncate">{gen.subject}</span>
                         </>
                       )}
                       {gen.chapterName && (
                         <>
                           <span className="text-slate-300">•</span>
-                          <span className="truncate">{gen.chapterName}</span>
+                          <span className="truncate max-w-[120px] sm:max-w-none">{gen.chapterName}</span>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="hidden shrink-0 text-right sm:block">
+                  <div className="shrink-0 text-right">
                     <span className="text-xs font-medium text-slate-400">{formatDate(gen.createdAt)}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5" />

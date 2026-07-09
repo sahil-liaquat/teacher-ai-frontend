@@ -136,7 +136,7 @@ export function AiToolsShowcase() {
 
   return (
     <section id="showcase" className="bg-white">
-      <div className="mx-auto max-w-7xl px-5 pb-0 pt-8 text-center sm:px-6 lg:px-8 lg:pt-12">
+      <div className="mx-auto max-w-7xl px-5 pb-0 pt-24 text-center sm:px-6 lg:px-8 lg:pt-36">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">AI tools showcase</p>
         <h2 className="mx-auto mt-3 max-w-4xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
           Scroll through every resource TeachPad can create.
