@@ -45,10 +45,9 @@ export async function imageUrlToDataUri(url: string) {
     });
   }
 
-  // 1. Try fetching via our backend image proxy (avoids all CORS issues)
+  // 1. Try fetching via our Next.js server-side image proxy (avoids all CORS issues)
   try {
-    const { BACKEND_ROOT } = await import("@/lib/api");
-    const proxyUrl = `${BACKEND_ROOT}/api/v1/utils/image-proxy?url=${encodeURIComponent(fetchUrl)}`;
+    const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(fetchUrl)}`;
     const response = await fetch(proxyUrl);
     if (response.ok) {
       const blob = await response.blob();
