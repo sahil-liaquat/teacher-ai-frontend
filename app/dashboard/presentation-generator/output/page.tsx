@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FocusEvent } from "react";
 import { ArrowLeft, ArrowRight, Check, Download, FileText, ImageIcon, Maximize2, Save, X } from "lucide-react";
@@ -335,20 +336,31 @@ function Toolbar({
   isSaved,
   onSaveToLibrary
 }: {
-  deck: PresentationDeck;
+  deck: any;
   onPresent: () => void;
   onExportPdf: () => void;
   onExportPpt: () => void;
   isSaved?: boolean;
   onSaveToLibrary?: () => void;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNew = searchParams.get("new") === "true";
+
   return (
     <header className="rounded-[24px] border border-white/80 bg-white/70 p-3.5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] backdrop-blur-md flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
       <div className="min-w-0">
-        <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-blue-500 hover:text-blue-600 transition-colors duration-200">
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Inputs
-        </Link>
+        {isNew ? (
+          <Link href="/dashboard/presentation-generator" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-blue-500 hover:text-blue-600 transition-colors duration-200">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Inputs
+          </Link>
+        ) : (
+          <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-blue-500 hover:text-blue-600 transition-colors duration-200">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back
+          </button>
+        )}
         <h1 className="mt-1.5 truncate text-base font-extrabold text-slate-900 sm:text-xl tracking-tight leading-none">{deck.topic}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">

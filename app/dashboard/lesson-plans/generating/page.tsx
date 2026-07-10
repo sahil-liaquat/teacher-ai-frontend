@@ -70,7 +70,7 @@ export default function GeneratingLessonPlanPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["lesson-plans-summary"] });
       queryClient.invalidateQueries({ queryKey: ["resources-lesson-plans"] });
-      router.replace(`/dashboard/lesson-plans/${completed.id}`);
+      router.replace(`/dashboard/lesson-plans/${completed.id}?new=true`);
     } catch (err) {
       if (isPaymentRequiredError(err)) {
         openUpgrade("Lesson plan generation requires a Pro plan.");

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createElement, useEffect, useMemo, useState } from "react";
 import type { ComponentType, FocusEvent, KeyboardEvent, ReactNode } from "react";
 import {
@@ -94,6 +95,9 @@ function LessonPlanDocumentOutput({
   onSaveToLibrary?: () => void;
 }) {
   const [documentOutput, setDocumentOutput] = useState(output);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNew = searchParams.get("new") === "true";
   const [draft, setDraft] = useState<LessonDocumentDraft>(() => buildLessonDocumentDraft(output));
   const chapterDisplay = formatChapterDisplay(draft.metadata);
 
@@ -134,10 +138,17 @@ function LessonPlanDocumentOutput({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
-            <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#1677ff]">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Inputs
-            </Link>
+            {isNew ? (
+              <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#1677ff]">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to Inputs
+              </Link>
+            ) : (
+              <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#1677ff]">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back
+              </button>
+            )}
             <span>/</span>
             <span>Lesson Plan Output</span>
           </div>
@@ -1185,6 +1196,9 @@ export function WorksheetOutput({
   onSaveToLibrary?: () => void;
 }) {
   const [worksheetOutput, setWorksheetOutput] = useState(output);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNew = searchParams.get("new") === "true";
   const metadata = worksheetOutput?.metadata || {};
   const sections = worksheetOutput?.student_worksheet?.sections || [];
   const title = worksheetOutput?.title || "Worksheet";
@@ -1264,10 +1278,17 @@ export function WorksheetOutput({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
-              <Link href="/dashboard/worksheets/new" className="inline-flex items-center gap-1 text-[#159565]">
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Inputs
-              </Link>
+              {isNew ? (
+                <Link href="/dashboard/worksheets/new" className="inline-flex items-center gap-1 text-[#159565]">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to Inputs
+                </Link>
+              ) : (
+                <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#159565]">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back
+                </button>
+              )}
               <span>/</span>
               <span>Worksheet Output</span>
             </div>

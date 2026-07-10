@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, PenLine, Save, Share2, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
@@ -886,18 +886,31 @@ export default function NotesGeneratorPage() {
 function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack, isSaved, onSaveToLibrary }: { notes: any; onCopy: () => void; onPdf: (handwritten?: boolean) => void; onShare: () => void; onSave: () => void; onBack: () => void; isSaved: boolean; onSaveToLibrary: () => void }) {
   const metadata = notes.metadata || {};
   const [handwritten, setHandwritten] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSavedGeneration = Boolean(searchParams.get("id"));
 
   return (
     <aside className="rounded-[18px] border border-[#ffd9e8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
       <div className="flex flex-col gap-3 border-b border-[#ffd9e8] bg-gradient-to-br from-[#fff1f7] to-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
-          </button>
+          {isSavedGeneration ? (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
+            </button>
+          )}
           <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
           <p className="mt-1 text-sm font-semibold text-[#55516e]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
         </div>

@@ -450,7 +450,7 @@ export default function NewWorksheetPage() {
       setGenerationStatus("Formatting output...");
       saveWorksheetGeneration(generation);
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
-      router.push(`/dashboard/worksheets/${generation.id}`);
+      router.push(`/dashboard/worksheets/${generation.id}?new=true`);
     } catch (error) {
       if (isPaymentRequiredError(error)) {
         setGenerating(false);

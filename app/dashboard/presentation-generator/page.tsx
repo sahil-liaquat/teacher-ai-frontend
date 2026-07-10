@@ -423,7 +423,7 @@ export default function PresentationGeneratorPage() {
         localStorage.setItem(`presentation_theme_${generation.id}`, theme);
       }
       toast({ title: "Presentation generated", description: "Opening the output page." });
-      router.push(`/dashboard/presentation-generator/output?id=${generation.id}`);
+      router.push(`/dashboard/presentation-generator/output?id=${generation.id}&new=true`);
     } catch (error) {
       if (isPaymentRequiredError(error)) {
         setGenerating(false);
