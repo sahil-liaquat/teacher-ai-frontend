@@ -255,6 +255,59 @@ export default function ResourcesPage() {
         const { downloadPptx } = await import("@/lib/presentation-export");
         await downloadPptx(deck);
         toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
+      } else if (resource.type === "activity") {
+        const fullData = await backendApi.activity(resource.id);
+        const a = fullData.output_json;
+        const listTextA = (label: string, items: string[]) =>
+          items?.length ? `${label}\n${items.map((i: string) => `• ${i}`).join("\n")}` : "";
+        const text = [
+          a.title,
+          a.overview,
+          listTextA("Learning Objectives", a.learning_objectives),
+          listTextA("Materials", a.materials),
+          listTextA("Setup", a.setup),
+          "Activity Steps",
+          ...(a.activity_steps || []).map((step: any) => `${step.time} - ${step.phase}\nTeacher: ${step.teacher_action}\nStudents: ${step.student_action}`),
+          a.grouping_plan ? `Grouping Plan\n${a.grouping_plan}` : "",
+          listTextA("Discussion Prompts", a.discussion_prompts),
+          listTextA("Assessment", a.assessment),
+          a.differentiation ? `Differentiation\nSupport: ${a.differentiation.support || ""}\nChallenge: ${a.differentiation.challenge || ""}` : "",
+          listTextA("Exit Ticket", a.exit_ticket),
+          a.teacher_notes ? `Teacher Notes\n${a.teacher_notes}` : ""
+        ].filter(Boolean).join("\n\n");
+        const { downloadGeneratedTextPdf } = await import("@/lib/generated-text-pdf");
+        await downloadGeneratedTextPdf({
+          title: a.title || "Classroom Activity",
+          subtitle: a.topic || a.chapter_name || "Classroom activity",
+          text,
+          filenamePrefix: "classroom-activity"
+        });
+        toast({ title: "PDF downloaded" });
+      } else if (resource.type === "notes") {
+        const fullData = await backendApi.notesGeneration(resource.id);
+        const n = fullData.output_json;
+        const sections = (n.sections || []).map((section: any) =>
+          [section.heading, section.content, ...(section.subsections || []).map((s: any) => `${s.subheading}\n${s.content}`)].filter(Boolean).join("\n\n")
+        );
+        const listTextN = (label: string, items: string[]) =>
+          items?.length ? `${label}\n${items.map((i: string) => `• ${i}`).join("\n")}` : "";
+        const text = [
+          n.title,
+          n.quick_overview,
+          listTextN("Learning Goals", n.learning_goals),
+          ...(n.key_terms || []).map((t: any) => `${t.term}: ${t.definition}`),
+          ...sections,
+          listTextN("Blackboard Summary", n.blackboard_summary),
+          listTextN("Revision Questions", n.revision_questions)
+        ].filter(Boolean).join("\n\n");
+        const { downloadGeneratedTextPdf } = await import("@/lib/generated-text-pdf");
+        await downloadGeneratedTextPdf({
+          title: n.title || "Classroom Notes",
+          subtitle: n.chapter_name || n.topic || "Textbook grounded notes",
+          text,
+          filenamePrefix: "classroom-notes"
+        });
+        toast({ title: "PDF downloaded" });
       } else {
         window.open(resource.href, "_blank");
       }
