@@ -6,7 +6,6 @@ import { WorksheetOutput } from "@/components/generation-output";
 import { useToast } from "@/components/ui/toast";
 import { backendApi } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
-import { getWorksheetGeneration, saveWorksheetGeneration } from "@/lib/worksheet-storage";
 import { getErrorMessage } from "@/lib/errors";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 
@@ -51,11 +50,14 @@ export default function WorksheetDetailPage() {
       .then((worksheet) => {
         if (cancelled) return;
         setGeneration(worksheet);
-        saveWorksheetGeneration(worksheet);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
-        setGeneration(getWorksheetGeneration(params.id));
+        toast({
+          title: "Could not load worksheet",
+          description: getErrorMessage(err, "Try again"),
+          variant: "error"
+        });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -63,7 +65,7 @@ export default function WorksheetDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [params.id]);
+  }, [params.id, toast]);
 
   useEffect(() => {
     if (!generation?.output_json || !hasUnsavedWorksheetChanges) return;
@@ -83,11 +85,9 @@ export default function WorksheetDetailPage() {
   async function saveEditedWorksheet(output = generation?.output_json, options: { silent?: boolean } = {}) {
     if (!generation || !output) return;
     const nextGeneration = { ...generation, output_json: output };
-    saveWorksheetGeneration(nextGeneration);
     try {
       const saved = await backendApi.updateWorksheet(params.id, { output_json: output });
       setGeneration(saved);
-      saveWorksheetGeneration(saved);
       setHasUnsavedWorksheetChanges(false);
       if (!options.silent) {
         toast({ title: "Saved", description: "Worksheet saved.", variant: "success" });

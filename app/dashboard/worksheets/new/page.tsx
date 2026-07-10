@@ -13,7 +13,6 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
-import { saveWorksheetGeneration } from "@/lib/worksheet-storage";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
@@ -448,7 +447,6 @@ export default function NewWorksheetPage() {
         include_diagrams_images: includeDiagramsImages
       });
       setGenerationStatus("Formatting output...");
-      saveWorksheetGeneration(generation);
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
       router.push(`/dashboard/worksheets/${generation.id}?new=true`);
     } catch (error) {
