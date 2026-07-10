@@ -29,50 +29,49 @@ export async function imageUrlToDataUri(url: string) {
   if (!url || typeof url !== "string") return "";
   if (url.startsWith("data:")) return url;
 
+  // Normalize protocol-relative URLs
   let fetchUrl = url;
   if (fetchUrl.startsWith("//")) {
     fetchUrl = "https:" + fetchUrl;
   }
 
-  // Try fetching the original URL first
+  // Helper to convert a Response blob to a data URI
+  async function blobToDataUri(blob: Blob): Promise<string> {
+    return new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // 1. Try fetching via our backend image proxy (avoids all CORS issues)
+  try {
+    const { BACKEND_ROOT } = await import("@/lib/api");
+    const proxyUrl = `${BACKEND_ROOT}/api/v1/utils/image-proxy?url=${encodeURIComponent(fetchUrl)}`;
+    const response = await fetch(proxyUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      return await blobToDataUri(blob);
+    }
+  } catch (e) {
+    console.warn(`Proxy image fetch failed for: ${fetchUrl}`);
+  }
+
+  // 2. Fallback: try direct CORS fetch (works for same-origin / CORS-enabled CDNs)
   try {
     const response = await fetch(fetchUrl, { mode: "cors" });
     if (response.ok) {
       const blob = await response.blob();
-      return await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
-        reader.onerror = () => resolve("");
-        reader.readAsDataURL(blob);
-      });
+      return await blobToDataUri(blob);
     }
   } catch (e) {
-    console.warn(`Direct image fetch failed for: ${fetchUrl}`);
-  }
-
-  // If that fails, try with a cache-buster (unless it looks like a signed URL)
-  const isSigned = fetchUrl.includes("Signature=") || fetchUrl.includes("token=") || fetchUrl.includes("AWSAccessKeyId=") || fetchUrl.includes("X-Amz-");
-  if (!isSigned) {
-    try {
-      const cleanUrl = fetchUrl.split("#")[0];
-      const busterUrl = `${cleanUrl}${cleanUrl.includes("?") ? "&" : "?"}not-cached=${Date.now()}`;
-      const response = await fetch(busterUrl, { mode: "cors" });
-      if (response.ok) {
-        const blob = await response.blob();
-        return await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
-          reader.onerror = () => resolve("");
-          reader.readAsDataURL(blob);
-        });
-      }
-    } catch (e) {
-      console.warn(`Cache-busted image fetch failed for: ${fetchUrl}`);
-    }
+    console.warn(`Direct image fetch also failed for: ${fetchUrl}`);
   }
 
   return "";
 }
+
 
 export function downloadFromUrl(url: string, filename: string) {
   const anchor = document.createElement("a");
