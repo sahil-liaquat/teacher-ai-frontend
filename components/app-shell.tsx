@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrialStatusPill } from "@/components/billing/trial-status-pill";
+import { Button } from "@/components/ui/button";
 
 type NavItem = {
   href: string;
@@ -133,7 +134,14 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     }
   }, [admin, currentUser?.role, requiredRole, router]);
 
-  async function logout() {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  function logout() {
+    setShowLogoutConfirm(true);
+    setMobileOpen(false);
+  }
+
+  async function handleConfirmLogout() {
     await logoutSession();
     clearToken();
     queryClient.clear();
@@ -195,6 +203,33 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         </div>
       </main>
       {!admin && <MobileBottomNav nav={usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav} activePath={pathname} />}
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-800">Log Out?</h3>
+            <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+              Are you sure you want to log out of your account? You will need to sign in again to access TeachPad.
+            </p>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="h-10 px-4 text-sm font-bold rounded-xl text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleConfirmLogout}
+                className="h-10 px-4 text-sm font-bold rounded-xl text-white"
+              >
+                Log Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

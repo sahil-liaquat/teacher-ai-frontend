@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, ClipboardCheck, Download, Lightbulb, Presentation, Sparkles, StickyNote, Trash2, X } from "lucide-react";
 import { backendApi } from "@/lib/api";
@@ -69,6 +70,11 @@ function normalizeClassName(raw: string | undefined): string {
 export default function ResourcesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -421,7 +427,7 @@ export default function ResourcesPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {resourceToDelete && (
+      {mounted && resourceToDelete && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-slate-800">Remove from Saved Resources?</h3>
@@ -449,7 +455,8 @@ export default function ResourcesPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
