@@ -288,7 +288,7 @@ function SlidePreviewStrip({
 }) {
   return (
     <aside
-      className="flex flex-col min-h-0 min-w-0 md:max-h-[calc(100vh-230px)] rounded-[28px] border border-white/80 bg-white/70 p-4 font-sans text-slate-700 antialiased shadow-[0_16px_40px_rgba(15,23,42,0.04)] backdrop-blur-md"
+      className="flex flex-col min-h-0 min-w-0 md:h-0 md:min-h-full rounded-[28px] border border-white/80 bg-white/70 p-4 font-sans text-slate-700 antialiased shadow-[0_16px_40px_rgba(15,23,42,0.04)] backdrop-blur-md"
       style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
     >
       <div className="mb-4 flex items-center justify-between gap-3 px-1 shrink-0">
