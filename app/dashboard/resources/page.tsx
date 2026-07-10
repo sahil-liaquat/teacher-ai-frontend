@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/errors";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
 import { cn } from "@/lib/utils";
 
@@ -232,21 +233,42 @@ export default function ResourcesPage() {
 
   const handleDownload = useCallback(async (resource: ResourceItem) => {
     try {
+      toast({ title: "Downloading...", description: "Fetching full content..." });
+      
       if (resource.type === "lesson plan") {
+        const fullData = await backendApi.lessonPlan(resource.id);
         const { normalizeLessonPlanForOutput } = await import("@/lib/api");
-        const output = normalizeLessonPlanForOutput(resource.raw);
+        const output = normalizeLessonPlanForOutput(fullData);
         const { downloadLessonPlanPdf } = await import("@/lib/lesson-plan-export");
         await downloadLessonPlanPdf(output);
         toast({ title: "PDF downloaded" });
       } else if (resource.type === "worksheet") {
+        const fullData = await backendApi.worksheet(resource.id);
         const { downloadWorksheetPdf } = await import("@/lib/worksheet-export");
-        await downloadWorksheetPdf(resource.raw.output_json);
+        await downloadWorksheetPdf(fullData.output_json);
         toast({ title: "PDF downloaded" });
+      } else if (resource.type === "presentation") {
+        const fullData = await backendApi.presentation(resource.id);
+        if (fullData.pptx_file_url) {
+          window.open(fullData.pptx_file_url, "_blank");
+          toast({ title: "PPT downloaded" });
+        } else {
+          const { presentationGenerationToDeck } = await import("@/lib/presentation-generator");
+          const deck = presentationGenerationToDeck(fullData);
+          const { downloadPptx } = await import("@/lib/presentation-export");
+          await downloadPptx(deck);
+          toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
+        }
       } else {
         window.open(resource.href, "_blank");
       }
-    } catch {
-      window.print();
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Download failed",
+        description: getErrorMessage(err, "Could not export resource."),
+        variant: "error"
+      });
     }
   }, [toast]);
 
@@ -389,7 +411,7 @@ export default function ResourcesPage() {
                                 </Button>
                               </Link>
                               <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="flex-1 sm:flex-initial h-9 px-3 gap-1.5 text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 border-slate-200">
-                                <Download className="h-3.5 w-3.5" /> PDF
+                                <Download className="h-3.5 w-3.5" /> {resource.type === "presentation" ? "PPT" : "PDF"}
                               </Button>
                               {canDelete && (
                                 <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0">

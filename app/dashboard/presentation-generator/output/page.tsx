@@ -17,6 +17,7 @@ import {
   type PresentationDeck,
   type PresentationSlide
 } from "@/lib/presentation-generator";
+import { downloadPptx } from "@/lib/presentation-export";
 import { cn } from "@/lib/utils";
 
 const slideTheme = {
@@ -1047,133 +1048,7 @@ function slugify(value: string) {
   return (value || "presentation").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "presentation";
 }
 
-async function downloadPptx(deck: PresentationDeck) {
-  const { default: PptxGenJS } = await import("pptxgenjs");
-  const pptx = new PptxGenJS();
-  pptx.layout = "LAYOUT_WIDE";
-  pptx.author = "TeachPad";
-  pptx.company = "TeachPad";
-  pptx.subject = deck.topic;
-  pptx.title = deck.topic;
-  pptx.theme = {
-    headFontFace: "Aptos Display",
-    bodyFontFace: "Aptos"
-  };
-  pptx.defineLayout({ name: "TEACHPAD_WIDE", width: 13.333, height: 7.5 });
-  pptx.layout = "TEACHPAD_WIDE";
 
-  for (const slide of deck.slides) {
-    const pptSlide = pptx.addSlide();
-    const selectedImage = selectedSlideImage(slide);
-    const imageData = selectedImage ? await imageUrlToDataUri(selectedImage) : "";
-    const bullets = slideBullets(slide);
-
-    pptSlide.background = { color: "FFFFFF" };
-    pptSlide.addShape(pptx.ShapeType.rect, {
-      x: 0,
-      y: 0,
-      w: 5.35,
-      h: 7.5,
-      line: { color: "FFFFFF", transparency: 100 },
-      fill: { color: "F8FBFF" }
-    });
-    pptSlide.addShape(pptx.ShapeType.rect, {
-      x: 5.0,
-      y: 0,
-      w: 0.45,
-      h: 7.5,
-      line: { color: "FFFFFF", transparency: 100 },
-      fill: { color: "FFFFFF", transparency: 18 }
-    });
-    pptSlide.addShape(pptx.ShapeType.ellipse, {
-      x: 0.42,
-      y: 0.45,
-      w: 0.12,
-      h: 0.12,
-      line: { color: "7DD3FC", transparency: 100 },
-      fill: { color: "7DD3FC", transparency: 25 }
-    });
-    pptSlide.addShape(pptx.ShapeType.ellipse, {
-      x: 4.15,
-      y: 6.35,
-      w: 0.16,
-      h: 0.16,
-      line: { color: "F9A8D4", transparency: 100 },
-      fill: { color: "F9A8D4", transparency: 30 }
-    });
-
-    pptSlide.addText(slide.title || "Untitled slide", {
-      x: 0.58,
-      y: 0.82,
-      w: 4.18,
-      h: 1.62,
-      margin: 0,
-      breakLine: false,
-      fit: "shrink",
-      fontFace: "Aptos Display",
-      fontSize: 34,
-      bold: true,
-      color: "171717",
-      valign: "top"
-    });
-    pptSlide.addShape(pptx.ShapeType.rect, {
-      x: 0.66,
-      y: 2.5,
-      w: 1.05,
-      h: 0.05,
-      line: { color: "38BDF8", transparency: 100 },
-      fill: { color: "38BDF8" }
-    });
-
-    if (bullets.length) {
-      pptSlide.addText(bullets.join("\n"), {
-        x: 0.78,
-        y: 3.05,
-        w: 3.9,
-        h: 2.65,
-        margin: 0,
-        fit: "shrink",
-        fontFace: "Aptos",
-        fontSize: 18,
-        color: "5F6368",
-        breakLine: false,
-        valign: "middle",
-        bullet: { type: "bullet" },
-        paraSpaceAfter: 10
-      });
-    }
-
-    if (imageData) {
-      pptSlide.addImage({
-        data: imageData,
-        ...containImage(5.55, 0.38, 7.35, 6.74)
-      });
-    } else {
-      pptSlide.addShape(pptx.ShapeType.roundRect, {
-        x: 5.65,
-        y: 0.55,
-        w: 7.1,
-        h: 6.4,
-        rectRadius: 0.08,
-        line: { color: "E7E7EA", transparency: 0 },
-        fill: { color: "F8FAFC" }
-      });
-      pptSlide.addText(slide.visual || "Classroom visual", {
-        x: 6.0,
-        y: 3.35,
-        w: 6.4,
-        h: 0.45,
-        align: "center",
-        fontSize: 13,
-        bold: true,
-        color: "8A8F98",
-        margin: 0
-      });
-    }
-  }
-
-  await pptx.writeFile({ fileName: `${slugify(deck.topic)}.pptx` });
-}
 
 async function downloadPdf(deck: PresentationDeck) {
   const { jsPDF } = await import("jspdf");
