@@ -18,7 +18,7 @@ export function DashboardBannerHeader({
   return (
     <header
       className={cn(
-        "reveal-card relative min-h-[190px] overflow-hidden rounded-[24px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)] sm:min-h-[214px] sm:px-8 lg:min-h-[232px] lg:px-12",
+        "reveal-card relative min-h-[190px] overflow-hidden rounded-[32px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)] sm:min-h-[214px] sm:px-8 lg:min-h-[232px] lg:px-12",
         className
       )}
     >

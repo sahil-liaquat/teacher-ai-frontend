@@ -16,12 +16,12 @@ export function AdminPageHeader({
   meta?: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
+    <section className="rounded-[32px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-6 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>}
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{title}</h1>
-          {description && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">{description}</p>}
+          <h1 className="mt-1 text-2xl font-black tracking-normal text-[#071b49] sm:text-3xl">{title}</h1>
+          {description && <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-600">{description}</p>}
           {meta && <div className="mt-4 flex flex-wrap gap-2">{meta}</div>}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-3">{actions}</div>}
@@ -48,12 +48,12 @@ export function AdminPanel({
   contentClassName?: string;
 }) {
   return (
-    <section id={id} className={cn("rounded-xl border border-gray-200 bg-white shadow-sm", className)}>
+    <section id={id} className={cn("overflow-hidden rounded-[18px] border border-white/70 bg-white/86 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm", className)}>
       {(title || description || actions) && (
-        <div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-white/70 bg-gradient-to-br from-[#f8fbff] to-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            {title && <h2 className="text-base font-semibold text-gray-900">{title}</h2>}
-            {description && <p className="mt-0.5 text-sm text-gray-500">{description}</p>}
+            {title && <h2 className="text-base font-bold text-[#071b49]">{title}</h2>}
+            {description && <p className="mt-0.5 text-sm font-medium text-slate-500">{description}</p>}
           </div>
           {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
         </div>
@@ -85,12 +85,12 @@ export function MetricCard({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
-          {detail && <p className="mt-1 text-sm text-gray-500">{detail}</p>}
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-black tracking-tight text-[#071b49]">{value}</p>
+          {detail && <p className="mt-1 text-sm font-medium text-slate-500">{detail}</p>}
         </div>
         <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1", toneClasses[tone])}>{icon}</span>
       </div>
@@ -130,7 +130,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-[18px] border border-dashed border-teachpad-cardBorder bg-white/70 px-6 py-12 text-center shadow-sm">
       <AlertCircle className="h-10 w-10 text-gray-400" />
       <div>
         <p className="text-sm font-semibold text-gray-900">{title}</p>

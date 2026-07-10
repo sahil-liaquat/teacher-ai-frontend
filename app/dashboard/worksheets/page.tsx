@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function WorksheetsListPage() {
   const worksheets = useQuery({ queryKey: ["worksheets-list"], queryFn: () => backendApi.worksheets(0, 50) });
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <PageHeader title="Worksheets" description="AI-generated worksheets saved from your existing FastAPI backend." actions={<Link href="/dashboard/worksheets/new"><Button><Sparkles className="h-4 w-4" /> New Worksheet</Button></Link>} />
       {worksheets.isLoading ? <Card><CardContent className="p-6 text-sm font-semibold text-[#6d6f78]">Loading saved worksheets...</CardContent></Card> : null}
       {worksheets.error ? <Card><CardContent className="p-6 text-red-700">{getErrorMessage(worksheets.error, "Could not load worksheets")}</CardContent></Card> : null}
@@ -27,10 +27,11 @@ export default function WorksheetsListPage() {
           const chapter_name = metadata.chapter || "";
 
           return (
-            <Link key={worksheet.id} href={`/dashboard/worksheets/${worksheet.id}`} className="clickable-card premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm [--clickable-card-hover-bg:linear-gradient(135deg,#e6fbf4_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
+            <Link key={worksheet.id} href={`/dashboard/worksheets/${worksheet.id}`} className="clickable-card premium-hover-sm reveal-card relative overflow-hidden rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-emerald-50/70 to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] [--clickable-card-hover-bg:linear-gradient(135deg,#e6fbf4_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
+              <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
               <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#ecfff7] text-[#159565] sm:h-12 sm:w-12 sm:rounded-2xl">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/88 text-[#159565] shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-emerald-100 sm:h-12 sm:w-12 sm:rounded-2xl">
                     <ClipboardCheck className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -47,10 +48,10 @@ export default function WorksheetsListPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 shrink-0 self-end sm:self-center justify-end sm:justify-start">
-                  <Button variant="outline" size="sm" className="h-8 text-xs font-semibold px-3 flex-1 sm:flex-initial justify-center">
+                  <Button variant="outline" size="sm" className="h-8 text-xs font-semibold px-3 flex-1 sm:flex-initial justify-center rounded-full">
                     <Eye className="h-3.5 w-3.5 mr-1" /> Open
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs font-semibold text-slate-500 px-3 flex-1 sm:flex-initial justify-center">
+                  <Button variant="outline" size="sm" className="h-8 text-xs font-semibold text-slate-500 px-3 flex-1 sm:flex-initial justify-center rounded-full">
                     <CalendarDays className="h-3.5 w-3.5 mr-1" /> {worksheet.created_at ? new Date(worksheet.created_at).toLocaleDateString() : "Saved"}
                   </Button>
                 </div>

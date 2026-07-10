@@ -982,3 +982,21 @@ tbody tr:hover {
     background: white;
   }
 }
+
+@keyframes ai-shimmer {
+  0%, 40%, 60%, 100% {
+    color: #a855f7 !important;
+    transform: scale(1);
+  }
+  50% {
+    color: #f3e8ff !important;
+    transform: scale(1.1);
+  }
+}
+
+.animate-ai-glow {
+  animation: ai-shimmer 3.5s infinite ease-in-out;
+  color: #a855f7 !important;
+}
+
+

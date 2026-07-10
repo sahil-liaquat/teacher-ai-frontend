@@ -36,7 +36,15 @@ const typeMeta: Record<ResourceType, { label: string; icon: typeof BookOpen; col
   worksheet: { label: "Worksheet", icon: ClipboardCheck, colors: { bg: "bg-emerald-50/80", text: "text-emerald-600", border: "border-emerald-100" } },
   notes: { label: "Notes", icon: StickyNote, colors: { bg: "bg-pink-50/80", text: "text-pink-600", border: "border-pink-100" } },
   activity: { label: "Activity", icon: Lightbulb, colors: { bg: "bg-cyan-50/80", text: "text-cyan-600", border: "border-cyan-100" } },
-  presentation: { label: "Presentation", icon: Presentation, colors: { bg: "bg-rose-50/80", text: "text-rose-600", border: "border-rose-100" } },
+  presentation: { label: "Presentation", icon: Presentation, colors: { bg: "bg-violet-50/80", text: "text-violet-600", border: "border-violet-100" } },
+};
+
+const resourceCardColors: Record<ResourceType, string> = {
+  "lesson plan": "from-[#eff6ff] via-blue-50/55 to-white hover:border-blue-100",
+  worksheet: "from-white via-emerald-50/65 to-white hover:border-emerald-100",
+  notes: "from-white via-pink-50/65 to-white hover:border-pink-100",
+  activity: "from-[#f0fdff] via-cyan-50/65 to-white hover:border-cyan-100",
+  presentation: "from-white via-violet-50/65 to-white hover:border-violet-100",
 };
 
 const typeMapping: Record<string, ResourceType> = {
@@ -322,7 +330,7 @@ export default function ResourcesPage() {
   }, [toast]);
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <DashboardBannerHeader
         titleTop="Saved"
         titleHighlight="Resources"
@@ -330,7 +338,7 @@ export default function ResourcesPage() {
       />
 
       {/* Filter bar */}
-      <div className="rounded-[22px] border border-teachpad-cardBorder bg-white/86 p-3 shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm sm:p-4">
+      <div className="rounded-[22px] border border-white/70 bg-white/86 p-3 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1 min-w-0">
             <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-teachpad-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -376,7 +384,7 @@ export default function ResourcesPage() {
           <Skeleton className="h-[120px] w-full rounded-2xl bg-slate-100" />
         </div>
       ) : resourcesByMonth.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-teachpad-cardBorder bg-white/70 p-8 text-center shadow-[0_14px_35px_var(--teachpad-shadowCard)] backdrop-blur-sm">
+        <div className="flex flex-col items-center justify-center rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/70 p-8 text-center shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <PastelIconTile name="search" className="mb-4 h-16 w-16" />
           <h3 className="text-lg font-bold text-teachpad-ink">
             {activeFilterCount > 0 ? "No resources match your filters" : "No saved resources yet"}
@@ -420,7 +428,7 @@ export default function ResourcesPage() {
                         </div>
                         
                         {/* Resource Card */}
-                        <div className="flex-1 min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)] hover:border-slate-200/80 transition-all duration-200">
+                        <div className={cn("flex-1 min-w-0 rounded-2xl border border-white/70 bg-gradient-to-br p-4 shadow-[0_4px_20px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]", resourceCardColors[resource.type])}>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-start gap-3 min-w-0 flex-1">
                               <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", meta.colors.bg, meta.colors.text)}>
@@ -463,7 +471,7 @@ export default function ResourcesPage() {
                                 <Download className="h-3.5 w-3.5" /> {resource.type === "presentation" ? "PPT" : "PDF"}
                               </Button>
                               {canDelete && (
-                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 shrink-0">
+                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-slate-400 hover:bg-blue-50 hover:text-blue-600 shrink-0">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               )}

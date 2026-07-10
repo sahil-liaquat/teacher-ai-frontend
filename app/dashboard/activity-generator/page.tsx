@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +15,7 @@ import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
+import { HistoryBackButton } from "@/components/history-back-button";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 
 const activityTypes = ["Group activity", "Hands-on activity", "Discussion activity", "Quick recap", "Project task"];
@@ -549,10 +549,10 @@ export default function ActivityGeneratorPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#087c86] transition hover:text-[#16a9b6]">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#087c86] transition hover:text-[#16a9b6]">
         <ArrowLeft className="h-4 w-4" />
-        Back to tools
-      </Link>
+        Back
+      </HistoryBackButton>
 
       <div className="overflow-visible rounded-[18px] border border-[#c9f7fb] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
         {/* Header */}
@@ -717,9 +717,9 @@ export default function ActivityGeneratorPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-[#c9f7fb] pt-6">
-                <Link href="/dashboard/classroom-tools" className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#16a9b6]">
+                <HistoryBackButton className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#16a9b6]">
                   Cancel
-                </Link>
+                </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />

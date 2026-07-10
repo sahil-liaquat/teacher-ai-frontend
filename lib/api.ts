@@ -95,6 +95,60 @@ export type SchoolFormatTemplate = {
   created_at?: string;
   updated_at?: string;
 };
+export type Host = {
+  id: string;
+  full_name: string;
+  designation?: string | null;
+  organization?: string | null;
+  bio?: string | null;
+  years_of_experience?: number | null;
+  linkedin?: string | null;
+  website?: string | null;
+  is_active: boolean;
+  profile_photo?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type Workshop = {
+  id: string;
+  title: string;
+  description?: string | null;
+  scheduled_at: string;
+  duration_minutes?: number | null;
+  status: "draft" | "published";
+  is_featured: boolean;
+  registration_deadline?: string | null;
+  mode: "online" | "offline" | "hybrid";
+  meeting_link?: string | null;
+  venue_details?: string | null;
+  max_capacity?: number | null;
+  banner_url?: string | null;
+  thumbnail_url?: string | null;
+  enable_certificates: boolean;
+  enable_recordings: boolean;
+  publishing_destination: "landing_page" | "teachpad_app" | "both";
+  hosts: Host[];
+  registered_users_count: number;
+  is_registered: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type WorkshopRegistration = {
+  id: string;
+  workshop_id: string;
+  user_id: string;
+  attended: boolean;
+  certificate_issued: boolean;
+  feedback_rating?: number | null;
+  feedback_text?: string | null;
+  workshop: Workshop;
+  user: ApiUser;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type LessonPlan = {
   id: string;
   user_id?: string;
@@ -508,14 +562,14 @@ function clearAccountStorage() {
 
   for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
     const key = window.localStorage.key(index);
-    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_")) {
+    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_") || key?.startsWith("teacher_ai_tool_draft_")) {
       window.localStorage.removeItem(key);
     }
   }
 
   for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
     const key = window.sessionStorage.key(index);
-    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_")) {
+    if (key?.startsWith("teacher_ai_profile:") || key?.startsWith("teacher_ai_worksheet_") || key?.startsWith("teacher_ai_tool_draft_")) {
       window.sessionStorage.removeItem(key);
     }
   }
@@ -1131,6 +1185,59 @@ export const backendApi = {
   deleteBook: (id: string) => apiFetch<void>(`/books/${id}`, { method: "DELETE" }),
   uploadBook: (classId: string, form: FormData) =>
     apiFetch<Book>(`/books?class_id=${encodeURIComponent(classId)}`, { method: "POST", body: form }),
+
+  // ─── Workshops & Hosts ────────────────────────────────────────────────────────
+  hosts: (activeOnly = false, skip = 0, limit = 100) =>
+    apiFetch<PaginatedResponse<Host>>(`/workshops/hosts?active_only=${activeOnly}&skip=${skip}&limit=${limit}`),
+  host: (id: string) =>
+    apiFetch<Host>(`/workshops/hosts/${id}`),
+  createHost: (payload: Omit<Host, "id" | "created_at" | "updated_at">) =>
+    apiFetch<Host>("/workshops/hosts", { method: "POST", body: JSON.stringify(payload) }),
+  updateHost: (id: string, payload: Partial<Host>) =>
+    apiFetch<Host>(`/workshops/hosts/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteHost: (id: string) =>
+    apiFetch<void>(`/workshops/hosts/${id}`, { method: "DELETE" }),
+  
+  workshops: (params: { destination?: "landing_page" | "teachpad_app" | "both"; status?: "draft" | "published"; is_featured?: boolean; skip?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.destination) qs.set("destination", params.destination);
+    if (params.status) qs.set("status_filter", params.status);
+    if (params.is_featured !== undefined) qs.set("is_featured", String(params.is_featured));
+    if (params.skip !== undefined) qs.set("skip", String(params.skip));
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<PaginatedResponse<Workshop>>(`/workshops${suffix}`);
+  },
+  workshop: (id: string) =>
+    apiFetch<Workshop>(`/workshops/${id}`),
+  createWorkshop: (payload: any) =>
+    apiFetch<Workshop>("/workshops", { method: "POST", body: JSON.stringify(payload) }),
+  updateWorkshop: (id: string, payload: any) =>
+    apiFetch<Workshop>(`/workshops/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteWorkshop: (id: string) =>
+    apiFetch<void>(`/workshops/${id}`, { method: "DELETE" }),
+  duplicateWorkshop: (id: string) =>
+    apiFetch<Workshop>(`/workshops/${id}/duplicate`, { method: "POST" }),
+  
+  registerWorkshop: (id: string) =>
+    apiFetch<WorkshopRegistration>(`/workshops/${id}/register`, { method: "POST" }),
+  myRegistrations: () =>
+    apiFetch<WorkshopRegistration[]>("/workshops/my-registrations"),
+  workshopRegistrations: (id: string) =>
+    apiFetch<WorkshopRegistration[]>(`/workshops/${id}/registrations`),
+  cancelWorkshopRegistration: (id: string) =>
+    apiFetch<void>(`/workshops/${id}/register`, { method: "DELETE" }),
+  submitWorkshopFeedback: (id: string, payload: { feedback_rating: number; feedback_text?: string | null }) =>
+    apiFetch<WorkshopRegistration>(`/workshops/${id}/feedback`, { method: "PATCH", body: JSON.stringify(payload) }),
+  
+  uploadWorkshopMedia: (file: File, folder: "workshops" | "hosts") => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiFetch<{ path: string }>(`/workshops/upload?folder=${folder}`, {
+      method: "POST",
+      body: formData,
+    });
+  },
 
   // ─── Billing ────────────────────────────────────────────────────────────────
   billingMe: () =>

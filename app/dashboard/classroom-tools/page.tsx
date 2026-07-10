@@ -34,7 +34,7 @@ const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: str
   },
   yellow: {
     card: "bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white",
-    hoverCard: "hover:from-[#fef3c7] hover:via-amber-50/90 hover:to-white",
+    hoverCard: "hover:from-amber-100 hover:via-amber-50/80 hover:to-white",
     iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
     iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-amber-200/30"
@@ -43,12 +43,12 @@ const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: str
     card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
     hoverCard: "hover:from-pink-100 hover:via-pink-50/80 hover:to-white",
     iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
-    iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
+    iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.22),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-pink-200/30"
   },
   red: {
-    card: "bg-gradient-to-br from-white via-rose-50/80 to-white",
-    hoverCard: "hover:from-rose-100 hover:via-rose-50/90 hover:to-white",
+    card: "bg-gradient-to-br from-white via-rose-50/75 to-white",
+    hoverCard: "hover:from-rose-100 hover:via-rose-50/80 hover:to-white",
     iconBox: "bg-[#fff7f8] text-[#eb3b5a] ring-[#ffd9de]",
     iconShadow: "shadow-[0_14px_30px_rgba(235,59,90,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-rose-200/30"
@@ -61,10 +61,10 @@ const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: str
     glow: "bg-cyan-200/30"
   },
   lavender: {
-    card: "bg-gradient-to-br from-[#f6f1ff] via-violet-50/70 to-white",
-    hoverCard: "hover:from-[#e9e1ff] hover:via-violet-50/80 hover:to-white",
+    card: "bg-gradient-to-br from-white via-violet-50/70 to-white",
+    hoverCard: "hover:from-violet-100 hover:via-violet-50/80 hover:to-white",
     iconBox: "bg-[#f6f1ff] text-[#8b5cf6] ring-[#e9e1ff]",
-    iconShadow: "shadow-[0_14px_30px_rgba(139,92,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
+    iconShadow: "shadow-[0_14px_30px_rgba(139,92,246,0.19),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-violet-200/30"
   }
 };
@@ -157,7 +157,7 @@ const tools: Array<{
 
 export default function ClassroomToolsPage() {
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <DashboardBannerHeader
         titleTop="Choose the"
         titleHighlight="classroom tool"

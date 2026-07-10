@@ -19,7 +19,9 @@ import {
   Users,
   Activity,
   X,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  Contact
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -39,6 +41,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/usage", label: "Usage", icon: Coins },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
+  { href: "/admin/workshops", label: "Workshops", icon: Calendar },
   { href: "/admin/activity", label: "Activity", icon: ScrollText },
   { href: "/admin/system", label: "System", icon: Activity }
 ];

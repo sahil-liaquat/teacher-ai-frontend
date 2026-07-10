@@ -48,6 +48,7 @@ const navItems = [
   { label: "Home", href: "/", key: "home" },
   { label: "AI Tools", href: "/ai-tools", key: "ai-tools", children: aiToolPages },
   { label: "Boards & Curriculums", href: "/boards-curriculums", key: "boards-curriculums" },
+  { label: "AI Academy", href: "/academy", key: "academy" },
   { label: "Pricing", href: "/pricing", key: "pricing" }
 ];
 

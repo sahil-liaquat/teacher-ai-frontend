@@ -57,14 +57,14 @@ export function ReferralCodeCard({ variant }: { variant: "hero" | "compact" }) {
 
   if (isLoading) {
     return (
-      <div className={cn("animate-pulse rounded-[18px] border border-[#ffd9de] bg-white/70", isHero ? "h-[148px]" : "h-[120px]")} />
+      <div className={cn("animate-pulse rounded-[18px] border border-white/70 bg-white/70 shadow-[0_14px_34px_rgba(15,23,42,0.07)]", isHero ? "h-[148px]" : "h-[120px]")} />
     );
   }
 
   if (isError) {
     if (!isHero) return null;
     return (
-      <section className="rounded-[18px] border border-[#ffd9de] bg-white/86 p-4 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm sm:p-5">
+      <section className="rounded-[18px] border border-white/70 bg-white/86 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm sm:p-5">
         <p className="text-sm font-semibold text-teachpad-muted">
           {getErrorMessage(error, "Couldn't load your referral code — please refresh to try again.")}
         </p>
@@ -76,12 +76,12 @@ export function ReferralCodeCard({ variant }: { variant: "hero" | "compact" }) {
     return (
       <section
         className={cn(
-          "rounded-[18px] border border-dashed border-[#ffd9de] bg-white/70 backdrop-blur-sm",
+          "rounded-[18px] border border-dashed border-teachpad-cardBorder bg-white/70 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm",
           isHero ? "p-4 sm:p-5" : "p-4"
         )}
       >
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-100 to-pink-50 text-red-500">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef6ff] text-blue-600 shadow-sm ring-1 ring-blue-100">
             <Ticket className="h-5 w-5" />
           </span>
           <div>
@@ -97,19 +97,19 @@ export function ReferralCodeCard({ variant }: { variant: "hero" | "compact" }) {
 
   if (!isHero) {
     return (
-      <div className="rounded-2xl border border-[#ffd9de] bg-gradient-to-br from-[#fff7f8] to-white p-4">
-        <p className="text-xs font-black uppercase tracking-wider text-red-500">Your referral code</p>
+      <div className="rounded-2xl border border-white/70 bg-gradient-to-br from-[#eff6ff] via-white to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+        <p className="text-xs font-black uppercase tracking-wider text-blue-600">Your referral code</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-xl border border-[#ffd9de] bg-white px-3 py-1.5 font-mono text-lg font-black tracking-widest text-teachpad-ink">
+          <span className="rounded-xl border border-blue-100 bg-white px-3 py-1.5 font-mono text-lg font-black tracking-widest text-teachpad-ink shadow-sm">
             {primary.code}
           </span>
-          <Button type="button" size="sm" variant="outline" className="border-[#ffd9de] text-red-500" onClick={() => copyValue(primary.code, "code")}>
+          <Button type="button" size="sm" variant="outline" className="rounded-full border-blue-100 text-blue-600" onClick={() => copyValue(primary.code, "code")}>
             {copied === "code" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy
           </Button>
         </div>
         <p className="mt-2 text-sm font-medium leading-6 text-teachpad-muted">{benefitLine(primary)}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={() => copyValue(link, "link")}>
+          <Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => copyValue(link, "link")}>
             {copied === "link" ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} Copy share link
           </Button>
           <a href={buildWhatsappHref(primary)} target="_blank" rel="noopener noreferrer">
@@ -123,30 +123,31 @@ export function ReferralCodeCard({ variant }: { variant: "hero" | "compact" }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-[18px] border border-[#ffd9de] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
-      <div className="flex flex-col gap-4 bg-gradient-to-br from-[#fff7f8] via-white to-[#fff1f7] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+    <section className="overflow-hidden rounded-[18px] border border-white/70 bg-white/86 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+      <div className="relative flex flex-col gap-4 bg-gradient-to-br from-[#eff6ff] via-white to-[#f8fbff] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#bfdbfe]/30 blur-2xl" />
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ffd9de] bg-white/80 px-3 py-1.5 text-xs font-black text-red-500 shadow-sm backdrop-blur-sm">
+          <div className="relative z-10 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3 py-1.5 text-xs font-black text-blue-600 shadow-sm backdrop-blur-sm">
             <Ticket className="h-4 w-4" />
             Your referral code
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <span className="rounded-2xl border border-[#ffd9de] bg-white px-4 py-2 font-mono text-2xl font-black tracking-widest text-teachpad-ink shadow-sm sm:text-3xl">
+          <div className="relative z-10 mt-3 flex flex-wrap items-center gap-3">
+            <span className="rounded-2xl border border-blue-100 bg-white px-4 py-2 font-mono text-2xl font-black tracking-widest text-teachpad-ink shadow-sm sm:text-3xl">
               {primary.code}
             </span>
-            <Button type="button" variant="outline" className="border-[#ffd9de] text-red-500" onClick={() => copyValue(primary.code, "code")}>
+            <Button type="button" variant="outline" className="rounded-full border-blue-100 text-blue-600" onClick={() => copyValue(primary.code, "code")}>
               {copied === "code" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy code
             </Button>
           </div>
-          <p className="mt-3 max-w-[560px] text-sm font-medium leading-6 text-teachpad-muted">{benefitLine(primary)}</p>
+          <p className="relative z-10 mt-3 max-w-[560px] text-sm font-medium leading-6 text-teachpad-muted">{benefitLine(primary)}</p>
           {extras.length ? (
-            <p className="mt-2 text-xs font-semibold text-teachpad-muted">
+            <p className="relative z-10 mt-2 text-xs font-semibold text-teachpad-muted">
               Also active:{" "}
               {extras.map((extra, index) => (
                 <button
                   key={extra.code}
                   type="button"
-                  className="font-mono font-black text-red-500 underline-offset-2 hover:underline"
+                  className="font-mono font-black text-blue-600 underline-offset-2 hover:underline"
                   onClick={() => copyValue(extra.code, "code")}
                 >
                   {extra.code}
@@ -157,8 +158,8 @@ export function ReferralCodeCard({ variant }: { variant: "hero" | "compact" }) {
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
-          <Button type="button" variant="outline" onClick={() => copyValue(link, "link")}>
+        <div className="relative z-10 flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+          <Button type="button" variant="outline" className="rounded-full" onClick={() => copyValue(link, "link")}>
             {copied === "link" ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} Copy share link
           </Button>
           <a href={buildWhatsappHref(primary)} target="_blank" rel="noopener noreferrer">

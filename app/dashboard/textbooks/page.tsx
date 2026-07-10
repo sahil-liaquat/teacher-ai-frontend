@@ -16,9 +16,9 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const statTiles = [
-  { label: "Boards", key: "boards", icon: "layers", tone: "bg-[#e9e1ff]" },
-  { label: "Classes", key: "classes", icon: "graduationCap", tone: "bg-[#dffafa]" },
-  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-[#fff0bf]" }
+  { label: "Boards", key: "boards", icon: "layers", tone: "bg-[#eef6ff]" },
+  { label: "Classes", key: "classes", icon: "graduationCap", tone: "bg-[#f0fdff]" },
+  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-[#fff1f7]" }
 ] as const;
 
 export default function TeacherTextbooksPage() {
@@ -212,7 +212,7 @@ export default function TeacherTextbooksPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <DashboardBannerHeader
         titleTop="Textbook"
         titleHighlight="Library"
@@ -223,7 +223,7 @@ export default function TeacherTextbooksPage() {
         {statTiles.map((stat) => {
           const value = stat.key === "boards" ? boards.length : summary[stat.key];
           return (
-            <div key={stat.key} className="rounded-[22px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
+            <div key={stat.key} className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <PastelIconTile name={stat.icon} className={cn("h-12 w-12 rounded-2xl", stat.tone)} />
                 <div>
@@ -236,7 +236,7 @@ export default function TeacherTextbooksPage() {
         })}
       </section>
 
-      <section className="rounded-[24px] border border-teachpad-cardBorder bg-white/88 p-4 shadow-[0_14px_34px_var(--teachpad-shadowCard)]">
+      <section className="rounded-[22px] border border-white/70 bg-white/86 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 text-base font-bold text-teachpad-muted">
             <button type="button" onClick={goToBoards} className={cn("transition hover:text-teachpad-blue", !selectedBoard && "text-teachpad-blue")}>
@@ -386,9 +386,9 @@ function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) 
     <button
       type="button"
       onClick={onSelect}
-      className="clickable-card group overflow-hidden rounded-[24px] border border-teachpad-cardBorder bg-white text-left shadow-[0_18px_45px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
+      className="clickable-card group overflow-hidden rounded-[22px] border border-white/70 bg-white text-left shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
     >
-      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-r from-[#f8ffff] via-white to-[#fff7fb] p-5 transition-colors duration-200 group-hover:from-[#dbeafe] group-hover:via-white group-hover:to-[#ffd9e8]">
+      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-br from-white via-[#f8fbff] to-white p-5 transition-colors duration-200 group-hover:from-[#eef6ff] group-hover:via-white group-hover:to-white">
         <div className="flex min-w-0 items-start gap-3">
           {boardLogo ? (
             <span className="grid h-20 w-20 shrink-0 place-items-center rounded-[20px] bg-white p-2 shadow-sm">
@@ -419,7 +419,7 @@ function ClassCard({ cls, onSelect }: { cls: ClassItem; onSelect: () => void }) 
     <button
       type="button"
       onClick={onSelect}
-      className="clickable-card group rounded-[22px] border border-teachpad-cardBorder bg-gradient-to-br from-white to-[#f8ffff] p-4 text-left shadow-[0_14px_34px_var(--teachpad-shadowCard)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#ccfbf1_0%,#ffffff_74%)]"
+      className="clickable-card group rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -439,10 +439,10 @@ function SubjectShelf({ subject, books }: { subject: string; books: Book[] }) {
   const readyCount = books.filter((book) => book.is_ingested).length;
 
   return (
-    <article className="rounded-[24px] border border-teachpad-cardBorder bg-white p-4 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <article className="rounded-[22px] border border-white/70 bg-white/86 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <PastelIconTile name="bookOpen" className="h-12 w-12 rounded-[18px] bg-[#fff0bf]" />
+          <PastelIconTile name="bookOpen" className="h-12 w-12 rounded-[18px] bg-[#eef6ff]" />
           <div className="min-w-0">
             <h2 className="truncate text-lg font-black text-teachpad-ink">{subject}</h2>
             <p className="text-xs font-bold text-teachpad-muted">{books.length} {books.length === 1 ? "textbook" : "textbooks"}</p>
@@ -464,8 +464,8 @@ function SubjectShelf({ subject, books }: { subject: string; books: Book[] }) {
 
 function BookRow({ book }: { book: Book }) {
   return (
-    <div className="group flex items-center gap-3 rounded-2xl border border-teachpad-cardBorder bg-white p-3 shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#fff0bf] text-[#b97800]">
+    <div className="group flex items-center gap-3 rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-3 shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef6ff] text-[#3b82f6]">
         <BookOpen className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
@@ -490,7 +490,7 @@ function BookRow({ book }: { book: Book }) {
 
 function MiniMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-teachpad-cardBorder bg-white/76 px-3 py-2 text-center">
+    <div className="rounded-2xl border border-white/70 bg-white/76 px-3 py-2 text-center shadow-sm">
       <p className="text-lg font-black leading-5 text-teachpad-ink">{value}</p>
       <p className="mt-0.5 text-xs font-bold text-teachpad-muted">{label}</p>
     </div>
@@ -527,7 +527,7 @@ function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-[24px] border border-dashed border-teachpad-cardBorder bg-white/78 text-center shadow-[0_14px_34px_var(--teachpad-shadowCard)]",
+        "flex flex-col items-center justify-center rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/78 text-center shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
         compact ? "p-5" : "p-10"
       )}
     >
@@ -541,7 +541,7 @@ function EmptyState({
 
 function LibrarySkeleton({ label }: { label: string }) {
   return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="rounded-[22px] border border-white/70 bg-white/86 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <div className="mb-5 flex items-center gap-3">
         <Skeleton className="h-14 w-14 rounded-[20px]" />
         <div className="grid flex-1 gap-2">

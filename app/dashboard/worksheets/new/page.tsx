@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +15,7 @@ import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
+import { HistoryBackButton } from "@/components/history-back-button";
 
 const difficultyPresets = [
   { key: "easy", label: "Easy", values: { easy: 60, medium: 30, hard: 10 } },
@@ -490,10 +490,10 @@ export default function NewWorksheetPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#159565] transition hover:text-[#0f7a52]">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#159565] transition hover:text-[#0f7a52]">
         <ArrowLeft className="h-4 w-4" />
-        Back to tools
-      </Link>
+        Back
+      </HistoryBackButton>
 
       <div className="overflow-visible rounded-[18px] border border-[#d8f1e5] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
         {/* Header */}
@@ -673,9 +673,9 @@ export default function NewWorksheetPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-[#d8f1e5] pt-6">
-                <Link href="/dashboard/classroom-tools" className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#159565]">
+                <HistoryBackButton className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#159565]">
                   Cancel
-                </Link>
+                </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />

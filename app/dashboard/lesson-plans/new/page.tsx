@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +13,7 @@ import { useToast } from "@/components/ui/toast";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
 import { cn } from "@/lib/utils";
+import { HistoryBackButton } from "@/components/history-back-button";
 
 const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, color: "amber" },
@@ -321,10 +321,10 @@ export default function NewLessonPlanPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-teachpad-blue transition hover:text-teachpad-hoverBlue">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-teachpad-blue transition hover:text-teachpad-hoverBlue">
         <ArrowLeft className="h-4 w-4" />
-        Back to tools
-      </Link>
+        Back
+      </HistoryBackButton>
 
       <div className="overflow-visible rounded-[18px] border border-teachpad-cardBorder bg-white/86 shadow-[0_14px_34px_var(--teachpad-shadowCard)] backdrop-blur-sm">
         {/* Header */}
@@ -531,9 +531,9 @@ export default function NewLessonPlanPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-cardBorder pt-6">
-                <Link href="/dashboard/classroom-tools" className="text-sm font-semibold text-teachpad-muted transition-colors hover:text-red-500">
+                <HistoryBackButton className="text-sm font-semibold text-teachpad-muted transition-colors hover:text-red-500">
                   Cancel
-                </Link>
+                </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />

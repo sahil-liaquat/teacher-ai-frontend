@@ -117,7 +117,7 @@ export default function BillingPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <DashboardBannerHeader
         titleTop="Billing &"
         titleHighlight="subscription"
@@ -126,7 +126,7 @@ export default function BillingPage() {
       />
 
       {isLoading && (
-        <div className="grid place-items-center rounded-[24px] border border-teachpad-cardBorder bg-white py-16 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+        <div className="grid place-items-center rounded-[22px] border border-white/70 bg-white/86 py-16 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <Loader2 className="h-8 w-8 animate-spin text-teachpad-blue" />
           <p className="mt-3 text-sm font-semibold text-teachpad-muted">
             Loading billing info...
@@ -212,7 +212,7 @@ function MandateNudge({
   onSetup: () => void;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[24px] border border-blue-100 bg-blue-50 px-5 py-4 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="flex items-start gap-3 rounded-[22px] border border-white/70 bg-gradient-to-br from-[#eff6ff] via-white to-[#f8fbff] px-5 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-teachpad-blue" />
       <div className="min-w-0 flex-1">
         <p className="font-extrabold text-teachpad-ink">Keep your access uninterrupted</p>
@@ -271,14 +271,14 @@ function PlanCard({
           : "Basic access with monthly generation limits";
 
   return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-violet-50/55 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-start gap-4">
         <span
           className={cn(
             "grid h-14 w-14 shrink-0 place-items-center rounded-[18px]",
             isGift
-              ? "bg-purple-100 text-purple-600"
+              ? "bg-[#f6f1ff] text-[#8b5cf6]"
               : proLook
                 ? "bg-[#dbeafe] text-teachpad-blue"
                 : "bg-teachpad-tag text-teachpad-muted"
@@ -300,7 +300,7 @@ function PlanCard({
             </h2>
             {/* Badge: only gift or genuine active paid — never reveals trial status */}
             {isGift ? (
-              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-purple-700">
+              <span className="rounded-full bg-[#eff6ff] px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-[#1e40af]">
                 Gift
               </span>
             ) : isActivePaid ? (
@@ -385,9 +385,9 @@ function RedeemCard({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-amber-50/60 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-[#dffafa] text-teachpad-blue">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-[#fff6df] text-[#f0a22f] ring-1 ring-amber-100">
           <Tag className="h-5 w-5" />
         </span>
         <div className="min-w-0">
@@ -443,7 +443,7 @@ function UsageCard({
   const atLimit = quota !== null && quota !== undefined && used >= quota;
 
   return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-gradient-to-br from-[#f8ffff] to-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-emerald-50/60 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <h3 className="text-base font-black tracking-tight text-teachpad-ink">
         Monthly usage
       </h3>
@@ -481,7 +481,7 @@ function UsageCard({
                   ? "bg-gradient-to-r from-red-400 to-red-500"
                   : nearLimit
                     ? "bg-gradient-to-r from-amber-400 to-orange-500"
-                    : "bg-gradient-to-r from-teachpad-blue via-[#16c5d9] to-[#8ec63f]"
+                  : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb]"
               )}
               style={{ width: `${pct}%` }}
             />
@@ -512,7 +512,7 @@ function CancelCard({
   onAbort: () => void;
 }) {
   return (
-    <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+    <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-rose-50/55 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <h3 className="text-base font-black tracking-tight text-teachpad-ink">
         Cancel subscription
       </h3>
@@ -578,7 +578,7 @@ function InfoRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-teachpad-cardBorder bg-[#f8ffff] px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white text-teachpad-blue shadow-[0_6px_14px_var(--teachpad-shadowToolCard)]">
           {icon}

@@ -20,7 +20,8 @@ import {
   Shield,
   Sparkles,
   Users,
-  X
+  X,
+  Calendar
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ type NavItem = {
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
+  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
   { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
   { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
@@ -49,6 +51,7 @@ const influencerWorkspaceNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/influencer", label: "Influencer", icon: HandCoins },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
+  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
   { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
   { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
   { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
@@ -179,8 +182,8 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
                 <MobileNavItem key={item.href} item={item} active={isActive(item.href, pathname)} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
-            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-teachpad-muted transition-all hover:bg-teachpad-red hover:text-[#eb3b5a]">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-teachpad-tag"><LogOut className="h-5 w-5" /></span>
+            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50"><LogOut className="h-5 w-5" /></span>
               Logout
             </button>
           </aside>
@@ -236,22 +239,24 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
 
 const navIconColors: Record<string, string> = {
   Home: "text-blue-500",
-  "AI Tools": "text-blue-500",
-  Recent: "text-teal-500",
-  Saved: "text-orange-500",
-  Books: "text-green-600",
-  Billing: "text-purple-500",
-  Settings: "text-gray-500",
+  "AI Tools": "animate-ai-glow",
+  "Growth Hub": "text-lime-500",
+  Recent: "text-yellow-500",
+  Saved: "text-green-500",
+  Books: "text-sky-400",
+  Billing: "text-pink-500",
+  Settings: "text-gray-400",
   Overview: "text-blue-500",
-  Users: "text-sky-500",
-  Curriculum: "text-emerald-500",
-  Textbooks: "text-green-600",
-  System: "text-gray-500",
+  Users: "text-red-500",
+  Curriculum: "text-blue-500",
+  Textbooks: "text-sky-400",
+  System: "text-gray-400",
   Dashboard: "text-blue-500",
-  Commissions: "text-emerald-500",
-  Payouts: "text-purple-500",
+  Commissions: "text-red-500",
+  Payouts: "text-red-500",
   Influencer: "text-red-500",
 };
+
 
 function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
   const logout = (e: React.MouseEvent) => {
@@ -263,31 +268,37 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
     <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
       <TooltipProvider delayDuration={0} skipDelayDuration={0}>
         <nav className="flex h-full flex-col items-center justify-center">
-          <div className="flex flex-col items-center justify-center gap-2 rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
-            {nav.map((item) => (
-              <FloatingNavItem
-                key={item.href}
-                item={item}
-                active={isActive(item.href, activePath)}
-                onClick={onNavigate}
-              />
-            ))}
+          <div className="relative overflow-hidden flex flex-col items-center justify-center rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
+            <div className="relative z-10 flex flex-col items-center gap-2">
+              {nav.map((item) => (
+                <FloatingNavItem
+                  key={item.href}
+                  item={item}
+                  active={isActive(item.href, activePath)}
+                  onClick={onNavigate}
+                />
+              ))}
 
-            <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
+              <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={logout}
-                  aria-label="Logout"
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl text-teachpad-muted transition-all duration-300 hover:scale-105 hover:bg-teachpad-red hover:text-[#eb3b5a]"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Logout</TooltipContent>
-            </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    aria-label="Logout"
+                    className="group flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-[#eb3b5a] transition-all duration-300 hover:scale-105 hover:bg-teachpad-red"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Logout</TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Gradient blurry blobs at bottom */}
+            <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-blue-500/15 blur-2xl z-0" />
+            <div className="pointer-events-none absolute -bottom-10 -right-10 h-28 w-28 rounded-full bg-fuchsia-500/15 blur-2xl z-0" />
           </div>
         </nav>
       </TooltipProvider>
@@ -297,7 +308,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
 
 function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
-  const colorClass = navIconColors[item.label] || "text-teachpad-muted";
+  const colorClass = navIconColors[item.label] || "text-blue-500";
 
   return (
     <Tooltip>
@@ -322,7 +333,7 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
             <Icon
               className={cn(
                 "h-5 w-5 transition-colors duration-300",
-                active ? "text-teachpad-blue" : colorClass
+                colorClass
               )}
             />
           </span>
@@ -335,6 +346,7 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
 
 function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
+  const colorClass = navIconColors[item.label] || "text-blue-500";
 
   return (
     <Link
@@ -349,7 +361,8 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
     >
       <span className={cn(
         "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200",
-        active ? "bg-blue-100 text-teachpad-blue" : "bg-teachpad-tag text-teachpad-muted"
+        active ? "bg-blue-100" : "bg-teachpad-tag",
+        colorClass
       )}>
         <Icon className="h-5 w-5" />
       </span>
@@ -430,6 +443,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
 
 function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
+  const colorClass = navIconColors[item.label] || "text-blue-500";
   return (
     <Link
       href={item.href}
@@ -444,7 +458,7 @@ function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
       )}>
         <Icon className={cn(
           "h-5 w-5 transition-colors duration-200",
-          active ? "text-blue-600" : "text-gray-400"
+          active ? colorClass : "text-gray-400"
         )} />
       </span>
       <span className={cn(
@@ -475,8 +489,8 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { 
   };
 
   return (
-    <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between">
-      <div className="flex flex-col flex-1 min-h-0">
+    <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between overflow-hidden">
+      <div className="relative z-10 flex flex-col flex-1 min-h-0">
         <div className="mb-6 flex items-center justify-between">
           <Brand href={homeHref} compact={true} />
         </div>
@@ -492,24 +506,28 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { 
         </nav>
       </div>
 
-      <div className="pt-4 border-t border-teachpad-cardBorder">
+      <div className="relative z-10 pt-4 border-t border-teachpad-cardBorder">
         <button
           onClick={logout}
-          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-teachpad-muted transition-all duration-300 hover:bg-teachpad-red hover:text-[#eb3b5a]"
+          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red"
         >
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-teachpad-tag">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50">
             <LogOut className="h-5 w-5" />
           </span>
           Logout
         </button>
       </div>
+
+      {/* Gradient blurry blobs at bottom */}
+      <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-blue-500/15 blur-2xl z-0" />
+      <div className="pointer-events-none absolute -bottom-12 -right-12 h-36 w-36 rounded-full bg-fuchsia-500/15 blur-2xl z-0" />
     </aside>
   );
 }
 
 function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
-  const colorClass = navIconColors[item.label] || "text-teachpad-muted";
+  const colorClass = navIconColors[item.label] || "text-blue-500";
 
   return (
     <Link
@@ -524,7 +542,10 @@ function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; acti
     >
       <span className={cn(
         "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300",
-        active ? "bg-white text-teachpad-blue shadow-[0_4px_12px_rgba(59,130,246,0.12)]" : colorClass
+        active
+          ? "bg-white shadow-[0_4px_12px_rgba(59,130,246,0.12)]"
+          : "",
+        colorClass
       )}>
         <Icon className="h-5 w-5" />
       </span>

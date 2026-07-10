@@ -45,7 +45,15 @@ const typeColors: Record<GenerationType, string> = {
   worksheet: "bg-emerald-50 text-emerald-600 ring-emerald-200",
   notes: "bg-pink-50 text-pink-600 ring-pink-200",
   activity: "bg-cyan-50 text-cyan-600 ring-cyan-200",
-  presentation: "bg-rose-50 text-rose-600 ring-rose-200",
+  presentation: "bg-violet-50 text-violet-600 ring-violet-200",
+};
+
+const typeCardColors: Record<GenerationType, string> = {
+  "lesson plan": "from-[#eff6ff] via-blue-50/55 to-white hover:border-blue-100",
+  worksheet: "from-white via-emerald-50/65 to-white hover:border-emerald-100",
+  notes: "from-white via-pink-50/65 to-white hover:border-pink-100",
+  activity: "from-[#f0fdff] via-cyan-50/65 to-white hover:border-cyan-100",
+  presentation: "from-white via-violet-50/65 to-white hover:border-violet-100",
 };
 
 const typeMapping: Record<string, GenerationType> = {
@@ -110,7 +118,7 @@ export default function RecentGenerationsPage() {
   const totalPages = recentData?.pages || 1;
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-5 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <DashboardBannerHeader
         titleTop="Your"
         titleHighlight="Recent Generations"
@@ -119,7 +127,7 @@ export default function RecentGenerationsPage() {
       />
 
       {isLoading ? (
-        <div className="rounded-[24px] border border-teachpad-cardBorder bg-white p-5 shadow-[0_18px_45px_var(--teachpad-shadowCard)]">
+        <div className="rounded-[22px] border border-white/70 bg-white/86 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <div className="mb-5 flex items-center gap-3">
             <Skeleton className="h-14 w-14 rounded-[20px]" />
             <div className="grid flex-1 gap-2">
@@ -135,13 +143,13 @@ export default function RecentGenerationsPage() {
           </div>
         </div>
       ) : generations.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-[#d8f1e5] bg-white/60 py-16">
+        <div className="flex flex-col items-center gap-4 rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/70 py-16 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
           <Clock3 className="h-12 w-12 text-[#9CA0AA]" />
           <h3 className="text-lg font-bold text-[#25262b]">No generations yet</h3>
           <p className="max-w-sm text-center text-sm text-[#55516e]">Create your first lesson plan or worksheet to see it here.</p>
           <Link
             href="/dashboard/classroom-tools"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1fbc79] to-[#069462] px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#2563eb] px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
           >
             <Sparkles className="h-4 w-4" />
             AI Tools
@@ -157,7 +165,7 @@ export default function RecentGenerationsPage() {
                 <Link
                   key={gen.id}
                   href={gen.href}
-                  className="group flex items-center gap-4 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.1)]"
+                  className={cn("group flex items-center gap-4 rounded-2xl border border-white/70 bg-gradient-to-br px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.1)]", typeCardColors[gen.type])}
                 >
                   <span className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",

@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowLeft, RadioTower, Sparkles } from "lucide-react";
+import { HistoryBackButton } from "@/components/history-back-button";
 
 export default function CreateLiveQuizPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <Link href="/dashboard/classroom-tools" className="inline-flex items-center gap-1.5 text-sm font-black text-[#b97800] transition hover:text-[#8a5c00]">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#b97800] transition hover:text-[#8a5c00]">
         <ArrowLeft className="h-4 w-4" />
-        Back to tools
-      </Link>
+        Back
+      </HistoryBackButton>
 
       <div className="overflow-hidden rounded-[18px] border border-[#ffe9a8] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
         {/* Header */}
@@ -43,12 +43,11 @@ export default function CreateLiveQuizPage() {
           <p className="mt-3 max-w-[440px] text-center text-sm font-medium leading-6 text-[#55516e]">
             The Live Quiz Generator is being rebuilt with a new design and improved experience. Check back soon!
           </p>
-          <Link
-            href="/dashboard/classroom-tools"
+          <HistoryBackButton
             className="mt-8 inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffe9a8] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#f0a22f] hover:text-[#b97800]"
           >
-            <ArrowLeft className="h-4 w-4 shrink-0" /> Back to Tools
-          </Link>
+            <ArrowLeft className="h-4 w-4 shrink-0" /> Back
+          </HistoryBackButton>
         </div>
       </div>
     </div>

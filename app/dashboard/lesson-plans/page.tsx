@@ -13,16 +13,17 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function LessonPlansListPage() {
   const plans = useQuery({ queryKey: ["lesson-plans-list"], queryFn: () => backendApi.lessonPlans(0, 50) });
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <PageHeader title="Lesson Plans" description="AI-generated lesson plans saved from your existing FastAPI backend." actions={<Link href="/dashboard/lesson-plans/new"><Button><Sparkles className="h-4 w-4" /> New Lesson Plan</Button></Link>} />
       {plans.isLoading ? <Card><CardContent className="p-6 text-sm font-semibold text-[#6d6f78]">Loading saved lesson plans...</CardContent></Card> : null}
       {plans.error ? <Card><CardContent className="p-6 text-red-700">{getErrorMessage(plans.error, "Could not load lesson plans")}</CardContent></Card> : null}
       <div className="grid gap-4">
         {plans.data?.items?.length ? plans.data.items.map((plan, index) => (
-          <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="clickable-card premium-hover reveal-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
+          <Link key={plan.id} href={`/dashboard/lesson-plans/${plan.id}`} className="clickable-card premium-hover-sm reveal-card relative overflow-hidden rounded-[18px] border border-white/70 bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]" style={{ animationDelay: `${index * 60}ms` }}>
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#bfdbfe]/30 blur-2xl" />
             <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3 min-w-0 flex-1">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eee7ff] text-primary sm:h-12 sm:w-12 sm:rounded-2xl">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/88 text-primary shadow-[0_14px_30px_rgba(139,92,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-[#e9e1ff] sm:h-12 sm:w-12 sm:rounded-2xl">
                   <BookOpen className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -39,10 +40,10 @@ export default function LessonPlansListPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end sm:justify-start">
-                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold px-3 flex-1 sm:flex-initial justify-center">
+                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold px-3 flex-1 sm:flex-initial justify-center rounded-full">
                   <Eye className="h-3.5 w-3.5 mr-1" /> Open
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold text-slate-500 px-3 flex-1 sm:flex-initial justify-center">
+                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold text-slate-500 px-3 flex-1 sm:flex-initial justify-center rounded-full">
                   <CalendarDays className="h-3.5 w-3.5 mr-1" /> {plan.created_at ? new Date(plan.created_at).toLocaleDateString() : "Saved"}
                 </Button>
               </div>
