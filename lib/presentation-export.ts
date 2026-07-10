@@ -26,6 +26,9 @@ function containImage(x: number, y: number, w: number, h: number) {
 }
 
 export async function imageUrlToDataUri(url: string) {
+  if (!url || typeof url !== "string") return "";
+  if (url.startsWith("data:")) return url;
+
   // Try fetching the original URL first
   try {
     const response = await fetch(url, { mode: "cors" });
