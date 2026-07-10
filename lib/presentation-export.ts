@@ -96,33 +96,46 @@ export async function downloadPptx(deck: PresentationDeck) {
   pptx.defineLayout({ name: "TEACHPAD_WIDE", width: 13.333, height: 7.5 });
   pptx.layout = "TEACHPAD_WIDE";
 
-  // Pre-fetch ALL images in parallel with a per-image timeout.
-  // This ensures every image has the full timeout budget regardless of others,
-  // and slow/failing images don't block the rest of the deck.
+  // Pre-fetch images for all slides in parallel.
+  // For each slide, try ALL available image URLs in order and use the first one
+  // that loads successfully. This handles broken/unreachable index-0 URLs gracefully.
   const IMAGE_TIMEOUT_MS = 12000;
 
-  async function fetchWithTimeout(url: string): Promise<string> {
-    return Promise.race([
-      imageUrlToDataUri(url),
-      new Promise<string>((resolve) => setTimeout(() => resolve(""), IMAGE_TIMEOUT_MS))
-    ]);
+  async function fetchFirstWorkingImage(urls: string[]): Promise<string> {
+    for (const url of urls) {
+      if (!url) continue;
+      const data = await Promise.race([
+        imageUrlToDataUri(url),
+        new Promise<string>((resolve) => setTimeout(() => resolve(""), IMAGE_TIMEOUT_MS))
+      ]);
+      if (data) return data;
+    }
+    return "";
   }
 
-  const imageDataMap = new Map<string, string>();
+  // Build ordered URL list: preferred index first, then remaining URLs as fallbacks
+  function orderedImageUrls(slide: PresentationSlide): string[] {
+    const { imageUrls, selectedImageIndex } = slide;
+    if (!imageUrls?.length) return [];
+    const idx = typeof selectedImageIndex === "number" && !isNaN(selectedImageIndex)
+      ? Math.max(0, Math.min(imageUrls.length - 1, selectedImageIndex))
+      : 0;
+    return [imageUrls[idx], ...imageUrls.filter((_, i) => i !== idx)];
+  }
+
+  const imageDataMap = new Map<number, string>();
   await Promise.all(
-    deck.slides.map(async (slide) => {
-      const imgUrl = selectedSlideImage(slide);
-      if (imgUrl && !imageDataMap.has(imgUrl)) {
-        const data = await fetchWithTimeout(imgUrl);
-        imageDataMap.set(imgUrl, data);
-      }
+    deck.slides.map(async (slide, i) => {
+      const urls = orderedImageUrls(slide);
+      const data = await fetchFirstWorkingImage(urls);
+      imageDataMap.set(i, data);
     })
   );
 
-  for (const slide of deck.slides) {
+  for (let slideIndex = 0; slideIndex < deck.slides.length; slideIndex++) {
+    const slide = deck.slides[slideIndex];
     const pptSlide = pptx.addSlide();
-    const selectedImage = selectedSlideImage(slide);
-    const imageData = selectedImage ? (imageDataMap.get(selectedImage) ?? "") : "";
+    const imageData = imageDataMap.get(slideIndex) ?? "";
     const bullets = slideBullets(slide);
 
     pptSlide.background = { color: "FFFFFF" };
