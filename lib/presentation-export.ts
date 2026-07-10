@@ -96,10 +96,33 @@ export async function downloadPptx(deck: PresentationDeck) {
   pptx.defineLayout({ name: "TEACHPAD_WIDE", width: 13.333, height: 7.5 });
   pptx.layout = "TEACHPAD_WIDE";
 
+  // Pre-fetch ALL images in parallel with a per-image timeout.
+  // This ensures every image has the full timeout budget regardless of others,
+  // and slow/failing images don't block the rest of the deck.
+  const IMAGE_TIMEOUT_MS = 12000;
+
+  async function fetchWithTimeout(url: string): Promise<string> {
+    return Promise.race([
+      imageUrlToDataUri(url),
+      new Promise<string>((resolve) => setTimeout(() => resolve(""), IMAGE_TIMEOUT_MS))
+    ]);
+  }
+
+  const imageDataMap = new Map<string, string>();
+  await Promise.all(
+    deck.slides.map(async (slide) => {
+      const imgUrl = selectedSlideImage(slide);
+      if (imgUrl && !imageDataMap.has(imgUrl)) {
+        const data = await fetchWithTimeout(imgUrl);
+        imageDataMap.set(imgUrl, data);
+      }
+    })
+  );
+
   for (const slide of deck.slides) {
     const pptSlide = pptx.addSlide();
     const selectedImage = selectedSlideImage(slide);
-    const imageData = selectedImage ? await imageUrlToDataUri(selectedImage) : "";
+    const imageData = selectedImage ? (imageDataMap.get(selectedImage) ?? "") : "";
     const bullets = slideBullets(slide);
 
     pptSlide.background = { color: "FFFFFF" };
