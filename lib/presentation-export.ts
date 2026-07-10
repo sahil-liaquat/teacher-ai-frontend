@@ -25,20 +25,45 @@ function containImage(x: number, y: number, w: number, h: number) {
   return { x, y, w, h, sizing: { type: "contain" as const, x, y, w, h } };
 }
 
-async function imageUrlToDataUri(url: string) {
+export async function imageUrlToDataUri(url: string) {
+  // Try fetching the original URL first
   try {
     const response = await fetch(url, { mode: "cors" });
-    if (!response.ok) return "";
-    const blob = await response.blob();
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = () => resolve("");
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return "";
+    if (response.ok) {
+      const blob = await response.blob();
+      return await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (e) {
+    console.warn("Direct image fetch failed, retrying with cache-buster...", e);
   }
+
+  // If that fails, try with a cache-buster (unless it looks like a signed URL)
+  const isSigned = url.includes("Signature=") || url.includes("token=") || url.includes("AWSAccessKeyId=") || url.includes("X-Amz-");
+  if (!isSigned) {
+    try {
+      const cleanUrl = url.split("#")[0];
+      const busterUrl = `${cleanUrl}${cleanUrl.includes("?") ? "&" : "?"}not-cached=${Date.now()}`;
+      const response = await fetch(busterUrl, { mode: "cors" });
+      if (response.ok) {
+        const blob = await response.blob();
+        return await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
+          reader.onerror = () => resolve("");
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch (e) {
+      console.error("Cache-busted image fetch failed too:", e);
+    }
+  }
+
+  return "";
 }
 
 export function downloadFromUrl(url: string, filename: string) {

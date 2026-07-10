@@ -17,7 +17,7 @@ import {
   type PresentationDeck,
   type PresentationSlide
 } from "@/lib/presentation-generator";
-import { downloadPptx } from "@/lib/presentation-export";
+import { downloadPptx, imageUrlToDataUri } from "@/lib/presentation-export";
 import { cn } from "@/lib/utils";
 
 const slideTheme = {
@@ -288,14 +288,14 @@ function SlidePreviewStrip({
 }) {
   return (
     <aside
-      className="min-h-0 min-w-0 rounded-[28px] border border-white/80 bg-white/70 p-4 font-sans text-slate-700 antialiased shadow-[0_16px_40px_rgba(15,23,42,0.04)] backdrop-blur-md"
+      className="flex flex-col min-h-0 min-w-0 rounded-[28px] border border-white/80 bg-white/70 p-4 font-sans text-slate-700 antialiased shadow-[0_16px_40px_rgba(15,23,42,0.04)] backdrop-blur-md"
       style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
     >
-      <div className="mb-4 flex items-center justify-between gap-3 px-1">
+      <div className="mb-4 flex items-center justify-between gap-3 px-1 shrink-0">
         <p className="text-[13px] font-bold uppercase tracking-wider text-slate-500">Slides</p>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-500">{slides.length}</span>
       </div>
-      <div className="flex max-h-[130px] gap-2 overflow-x-auto pr-1 sm:gap-3 md:max-h-[calc(100vh-230px)] md:flex-col md:overflow-x-hidden md:overflow-y-auto">
+      <div className="flex flex-1 min-h-0 max-h-[130px] gap-2 overflow-x-auto pr-1 sm:gap-3 md:max-h-none md:flex-col md:overflow-x-hidden md:overflow-y-auto">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
@@ -1120,21 +1120,7 @@ async function downloadPdf(deck: PresentationDeck) {
   pdf.save(`${slugify(deck.topic)}.pdf`);
 }
 
-async function imageUrlToDataUri(url: string) {
-  try {
-    const response = await fetch(url, { mode: "cors" });
-    if (!response.ok) return "";
-    const blob = await response.blob();
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = () => resolve("");
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return "";
-  }
-}
+
 
 function containImage(x: number, y: number, w: number, h: number) {
   return { x, y, w, h, sizing: { type: "contain" as const, x, y, w, h } };
