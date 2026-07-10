@@ -29,9 +29,14 @@ export async function imageUrlToDataUri(url: string) {
   if (!url || typeof url !== "string") return "";
   if (url.startsWith("data:")) return url;
 
+  let fetchUrl = url;
+  if (fetchUrl.startsWith("//")) {
+    fetchUrl = "https:" + fetchUrl;
+  }
+
   // Try fetching the original URL first
   try {
-    const response = await fetch(url, { mode: "cors" });
+    const response = await fetch(fetchUrl, { mode: "cors" });
     if (response.ok) {
       const blob = await response.blob();
       return await new Promise<string>((resolve) => {
@@ -42,14 +47,14 @@ export async function imageUrlToDataUri(url: string) {
       });
     }
   } catch (e) {
-    console.warn("Direct image fetch failed, retrying with cache-buster...", e);
+    console.warn(`Direct image fetch failed for: ${fetchUrl}`);
   }
 
   // If that fails, try with a cache-buster (unless it looks like a signed URL)
-  const isSigned = url.includes("Signature=") || url.includes("token=") || url.includes("AWSAccessKeyId=") || url.includes("X-Amz-");
+  const isSigned = fetchUrl.includes("Signature=") || fetchUrl.includes("token=") || fetchUrl.includes("AWSAccessKeyId=") || fetchUrl.includes("X-Amz-");
   if (!isSigned) {
     try {
-      const cleanUrl = url.split("#")[0];
+      const cleanUrl = fetchUrl.split("#")[0];
       const busterUrl = `${cleanUrl}${cleanUrl.includes("?") ? "&" : "?"}not-cached=${Date.now()}`;
       const response = await fetch(busterUrl, { mode: "cors" });
       if (response.ok) {
@@ -62,7 +67,7 @@ export async function imageUrlToDataUri(url: string) {
         });
       }
     } catch (e) {
-      console.error("Cache-busted image fetch failed too:", e);
+      console.warn(`Cache-busted image fetch failed for: ${fetchUrl}`);
     }
   }
 
