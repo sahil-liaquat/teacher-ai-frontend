@@ -249,16 +249,12 @@ export default function ResourcesPage() {
         toast({ title: "PDF downloaded" });
       } else if (resource.type === "presentation") {
         const fullData = await backendApi.presentation(resource.id);
-        if (fullData.pptx_file_url) {
-          window.open(fullData.pptx_file_url, "_blank");
-          toast({ title: "PPT downloaded" });
-        } else {
-          const { presentationGenerationToDeck } = await import("@/lib/presentation-generator");
-          const deck = presentationGenerationToDeck(fullData);
-          const { downloadPptx } = await import("@/lib/presentation-export");
-          await downloadPptx(deck);
-          toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
-        }
+        // Always regenerate via downloadPptx so images are embedded via proxy
+        const { presentationGenerationToDeck } = await import("@/lib/presentation-generator");
+        const deck = presentationGenerationToDeck(fullData);
+        const { downloadPptx } = await import("@/lib/presentation-export");
+        await downloadPptx(deck);
+        toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
       } else {
         window.open(resource.href, "_blank");
       }

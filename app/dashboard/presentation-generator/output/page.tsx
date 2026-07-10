@@ -191,10 +191,7 @@ export default function PresentationOutputPage() {
   async function exportPpt() {
     const currentDeck = deck;
     if (!currentDeck) return;
-    if (currentDeck.pptxFileUrl) {
-      downloadFromUrl(currentDeck.pptxFileUrl, `${slugify(currentDeck.topic)}.pptx`);
-      return;
-    }
+    // Always regenerate via downloadPptx so images are embedded via proxy
     try {
       await downloadPptx(currentDeck);
       toast({ title: "PPT downloaded", description: "Exported as a proper .pptx deck." });
