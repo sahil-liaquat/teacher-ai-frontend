@@ -427,7 +427,7 @@ export default function NotesGeneratorPage() {
       });
       setNotes(generation.output_json);
       setCurrentNotesId(generation.id);
-      setIsSaved(generation.is_saved ?? true);
+      setIsSaved(generation.is_saved ?? false);
       toast({ title: "Notes generated", description: "Your classroom notes are ready below." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate notes.");

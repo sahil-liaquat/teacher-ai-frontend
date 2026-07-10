@@ -432,7 +432,7 @@ export default function ActivityGeneratorPage() {
       });
       setActivity(generation.output_json);
       setCurrentActivityId(generation.id);
-      setIsSaved(generation.is_saved ?? true);
+      setIsSaved(generation.is_saved ?? false);
       toast({ title: "Activity generated", description: "Your classroom activity is ready." });
     } catch (error) {
       const message = getErrorMessage(error, "Could not generate activity.");
