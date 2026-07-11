@@ -302,7 +302,7 @@ function WorkshopCard({
     <Card className="group/card relative flex h-full overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]">
       <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-blue-200/25 blur-2xl" />
       <div className="relative flex min-h-full w-full flex-col">
-        <div className="relative m-3 mb-0 h-36 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white">
+        <div className="relative m-3 mb-0 h-48 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white sm:h-56 lg:h-60">
           {workshop.banner_url ? (
             <img
               src={`${BACKEND_ROOT}/uploads/${workshop.banner_url}`}
