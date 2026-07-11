@@ -582,8 +582,7 @@ function isActive(href: string, pathname: string) {
       "/dashboard/worksheets/new",
       "/dashboard/presentation-generator",
       "/dashboard/notes-generator",
-      "/dashboard/activity-generator",
-      "/dashboard/live-quiz"
+      "/dashboard/activity-generator"
     ].some((path) => pathname === path || pathname.startsWith(`${path}/`));
   }
   return pathname === href || pathname.startsWith(`${href}/`);

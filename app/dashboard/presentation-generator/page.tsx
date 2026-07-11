@@ -354,11 +354,13 @@ export default function PresentationGeneratorPage() {
   }
 
   function chooseSubject(value: string) {
+    const matchingBook = books.find((book) => book.subject === value);
     setSubject(value);
-    setBookId("");
+    setBookId(matchingBook?.id || "");
     setChapterNames([]);
     setChapters([]);
     setChaptersError("");
+    setIsLoadingChapters(Boolean(matchingBook));
   }
 
   function chooseBook(value: string) {

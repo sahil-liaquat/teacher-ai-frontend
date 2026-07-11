@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type GenerationKind = "lesson-plan" | "worksheet" | "presentation" | "notes" | "activity" | "live-quiz";
+type GenerationKind = "lesson-plan" | "worksheet" | "presentation" | "notes" | "activity";
 type GenerationState = "loading" | "error";
 
 export function GenerationLoadingScreen({
@@ -31,8 +31,6 @@ export function GenerationLoadingScreen({
           ? ["Reading your textbook...", "Finding key explanations...", "Writing classroom notes...", "Preparing revision sections..."]
         : type === "activity"
           ? ["Reading your textbook...", "Designing classroom steps...", "Adding teacher and student actions...", "Preparing activity prompts..."]
-        : type === "live-quiz"
-          ? ["Reading your textbook...", "Preparing quiz questions...", "Adding marks and answers...", "Getting your live quiz ready..."]
           : ["Reading your textbook...", "Finding key concepts...", "Building your lesson plan...", "Preparing teacher-ready content..."],
     [type]
   );

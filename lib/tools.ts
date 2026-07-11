@@ -4,8 +4,8 @@ import {
   ClipboardList,
   FileText,
   NotebookPen,
+  PenLine,
   Presentation,
-  RadioTower,
 } from "lucide-react";
 
 export type ToolTone = "blue" | "green" | "orange" | "purple" | "aqua" | "yellow";
@@ -140,28 +140,27 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     },
   },
   {
-    id: "live-quiz",
-    name: "Live Quiz Generator",
-    shortName: "Live Quiz",
-    description: "Create textbook-based quizzes, share a join link with students, and review class understanding.",
-    publicHref: "/ai-tools#live-quiz",
-    dashboardHref: "/dashboard/live-quiz",
-    cta: "Open Live Quiz",
-    status: "beta",
+    id: "teacher-writing-assistant",
+    name: "Writing Assistant",
+    shortName: "Writing Assistant",
+    description: "Draft parent messages, remarks, feedback, circulars, letters, emails, and bilingual rewrites for Indian school communication.",
+    publicHref: "/ai-tools#teacher-writing-assistant",
+    dashboardHref: "/dashboard/writing-assistant",
+    cta: "Open Writing Assistant",
+    status: "ready",
     tone: "yellow",
-    Icon: RadioTower,
-    image: "/landing/live-quiz-3d-v2.png",
-    imageAlt: "TeachPad live quiz preview with classroom quiz participation.",
-    bullets: ["Join-code classroom flow", "Question-level checks", "Beta workflow"],
-    analyticsId: "tool_live_quiz",
+    Icon: PenLine,
+    image: "/ai-tools/showcase-notes.png",
+    imageAlt: "TeachPad writing assistant document editor preview.",
+    bullets: ["Indian school formats", "Editable shared document", "PDF and Word export"],
+    analyticsId: "tool_teacher_writing_assistant",
     planAvailability: {
-      starter: "Beta access when enabled",
-      pro: "Beta access",
-      school: "Beta access with teacher controls",
+      starter: "Limited trial access",
+      pro: "Included",
+      school: "Included",
     },
   },
 ];
 
 export const ACTIVE_TOOLS = TOOL_REGISTRY.filter((tool) => tool.status === "ready" || tool.status === "beta");
 export const READY_TOOLS = TOOL_REGISTRY.filter((tool) => tool.status === "ready");
-

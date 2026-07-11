@@ -389,14 +389,15 @@ export default function NewWorksheetPage() {
   }
 
   function chooseSubject(value: string) {
+    const matchingBook = books.find((book) => book.subject === value);
     setSubject(value);
-    setBookId("");
+    setBookId(matchingBook?.id || "");
     setChapters([]);
     setChapterNames([]);
     setBooksError("");
     setChaptersError("");
-    setIsLoadingBooks(Boolean(value));
-    window.requestAnimationFrame(() => setIsLoadingBooks(false));
+    setIsLoadingBooks(false);
+    setIsLoadingChapters(Boolean(matchingBook));
   }
 
   function chooseBook(value: string) {

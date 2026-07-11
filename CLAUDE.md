@@ -52,11 +52,11 @@ app/                Next App Router (file = route)
   layout.tsx        root layout → <Providers>; metadata title "TeachPad"
   login/ signup/ reset-password/ auth/confirm/   Supabase auth screens
   dashboard/        teacher area (lesson-plans, worksheets, presentation-generator,
-                    notes-generator, activity-generator, live-quiz, textbooks,
+                    notes-generator, activity-generator, textbooks,
                     resources, reports, settings, classroom-tools)
   admin/            admin area (curriculum, textbooks, users, generations, system)
 components/         UI; components/ui/* are the Radix-based primitives,
-                    components/admin/*, components/live-quiz/*
+                    components/admin/*
 lib/                non-UI logic (see below)
 public/             heavy themed assets (landing/, ai-tools/, assets/teachpad-theme/)
 ```
@@ -107,9 +107,6 @@ Path alias **`@/*` → `./*`** (see `tsconfig.json`), e.g. `@/components/...`,
   (`app/dashboard/notes-generator`, `.../activity-generator`) and payload types in
   `api.ts` exist, but the **backend has no notes/activity routes** — treat these
   as WIP until the backend catches up.
-- **Live Quiz is a mock prototype:** `components/live-quiz/quiz-data.ts` + hardcoded
-  `abc123` routes (`app/quiz/abc123/`, `app/dashboard/live-quiz/.../abc123/`); the
-  backend `quiz` route isn't even mounted.
 - Default API base points at a **remote Render server** — easy to forget you're
   not hitting local. Set `NEXT_PUBLIC_API_URL` explicitly when developing.
 - Committed artifacts to clean up: `login-design-check.png` at the project root,

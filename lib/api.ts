@@ -255,6 +255,60 @@ export type ActivityGeneration = {
   updated_at?: string;
 };
 
+export type WritingWorkflow =
+  | "parent_communication"
+  | "report_card_remarks"
+  | "student_feedback"
+  | "notice_circular"
+  | "official_letter_email"
+  | "rewrite_translate";
+
+export type WritingAction =
+  | "rewrite"
+  | "shorten"
+  | "expand"
+  | "make_polite"
+  | "make_professional"
+  | "simplify"
+  | "translate"
+  | "correct_grammar"
+  | "another_version";
+
+export type WritingGeneratePayload = {
+  workflow: WritingWorkflow;
+  document_type: string;
+  language?: string;
+  tone?: string;
+  audience?: string | null;
+  title?: string | null;
+  details?: Record<string, unknown>;
+  source_text?: string | null;
+  bilingual?: boolean;
+};
+
+export type WritingTransformPayload = {
+  action: WritingAction;
+  language?: string | null;
+  instructions?: string | null;
+  content: string;
+};
+
+export type WritingDocument = {
+  id: string;
+  user_id?: string;
+  workflow: string;
+  document_type: string;
+  title: string;
+  language: string;
+  status: "draft" | "saved" | string;
+  content: string;
+  input_json: Record<string, any>;
+  meta_json: Record<string, any>;
+  is_saved: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type PresentationGeneratePayload = {
   topic: string;
   audience: "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
@@ -1169,6 +1223,18 @@ export const backendApi = {
   updateActivity: (id: string, payload: Partial<Pick<ActivityGeneration, "output_json">>) =>
     apiFetch<ActivityGeneration>(`/activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteActivity: (id: string) => apiFetch<void>(`/activities/${id}`, { method: "DELETE" }),
+  createWritingDocument: (payload: WritingGeneratePayload) =>
+    apiFetch<WritingDocument>("/writing-assistant", { method: "POST", body: JSON.stringify(payload) }),
+  writingDocuments: (skip = 0, limit = 20) =>
+    apiFetch<PaginatedResponse<WritingDocument>>(`/writing-assistant?skip=${skip}&limit=${limit}`),
+  writingDocument: (id: string) =>
+    apiFetch<WritingDocument>(`/writing-assistant/${id}`),
+  updateWritingDocument: (id: string, payload: Partial<Pick<WritingDocument, "title" | "content" | "status" | "meta_json">>) =>
+    apiFetch<WritingDocument>(`/writing-assistant/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  transformWritingDocument: (id: string, payload: WritingTransformPayload) =>
+    apiFetch<WritingDocument>(`/writing-assistant/${id}/transform`, { method: "POST", body: JSON.stringify(payload) }),
+  deleteWritingDocument: (id: string) =>
+    apiFetch<void>(`/writing-assistant/${id}`, { method: "DELETE" }),
   createPresentation: (payload: PresentationGeneratePayload) =>
     apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),

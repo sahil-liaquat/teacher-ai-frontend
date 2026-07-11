@@ -300,7 +300,7 @@ export default function NotesGeneratorPage() {
     const match = findMatchingSubject(subjectOptions, companionContext.subject);
     if (!match) return;
     companionApplied.current.subject = true;
-    setSubject(match);
+    chooseSubject(match);
   }, [companionContext, subjectOptions]);
 
   useEffect(() => {
@@ -377,15 +377,16 @@ export default function NotesGeneratorPage() {
   }
 
   function chooseSubject(value: string) {
+    const matchingBook = books.find((book) => book.subject === value);
     setSubject(value);
-    setBookId("");
+    setBookId(matchingBook?.id || "");
     setChapters([]);
     setChapterNames([]);
     setNotes(null);
     setBooksError("");
     setChaptersError("");
-    setIsLoadingBooks(Boolean(value));
-    window.requestAnimationFrame(() => setIsLoadingBooks(false));
+    setIsLoadingBooks(false);
+    setIsLoadingChapters(Boolean(matchingBook));
   }
 
   function chooseBook(value: string) {

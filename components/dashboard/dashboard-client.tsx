@@ -22,7 +22,6 @@ import {
   TrendingUp,
   Search,
   X,
-  RadioTower,
   Mic,
   GraduationCap,
   CalendarDays

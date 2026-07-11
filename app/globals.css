@@ -49,6 +49,15 @@
   box-sizing: border-box;
 }
 
+*:focus,
+*:focus-visible,
+button:focus,
+button:focus-visible,
+a:focus,
+a:focus-visible {
+  outline: none !important;
+}
+
 html {
   width: 100%;
   max-width: 100%;
