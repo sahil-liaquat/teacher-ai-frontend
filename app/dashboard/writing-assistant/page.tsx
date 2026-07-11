@@ -28,6 +28,7 @@ import {
   Users,
 } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
+import { HistoryBackButton } from "@/components/history-back-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -418,12 +419,18 @@ export default function WritingAssistantPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       {screen === "home" && (
-        <DashboardBannerHeader
-          titleTop="Teacher"
-          titleHighlight="writing assistant"
-          imageSrc="/assets/illustrations/writing-assistant-header.png"
-          imageClassName="scale-[0.85] origin-bottom-right"
-        />
+        <div className="space-y-4">
+          <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#1677ff] transition hover:text-[#0969e8] self-start">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </HistoryBackButton>
+          <DashboardBannerHeader
+            titleTop="Teacher"
+            titleHighlight="writing assistant"
+            imageSrc="/assets/illustrations/writing-assistant-header.png"
+            imageClassName="scale-[0.85] origin-bottom-right"
+          />
+        </div>
       )}
 
       {screen !== "home" && (
@@ -597,6 +604,11 @@ export default function WritingAssistantPage() {
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
             <SectionHeading icon={FileText} title="Document Editor" description={document.document_type} tint="blue" />
             <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setScreen("home")}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                Back
+              </Button>
+
               <Button type="button" variant="outline" size="sm" onClick={copyContent}>
                 <Clipboard className="h-3.5 w-3.5 mr-1 text-slate-500" />
                 {copied ? "Copied!" : "Copy to Clipboard"}
