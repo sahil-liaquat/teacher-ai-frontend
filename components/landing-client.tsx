@@ -42,43 +42,11 @@ import {
   CrossfadeTabs,
   StrokeLine,
 } from "@/components/motion-primitives";
+import { READY_TOOLS } from "@/lib/tools";
 
 // ─── Data ────────────────────────────────────────────────────────────
 
-const tools = [
-  {
-    title: "Lesson Planner",
-    description: "Create structured chapter lesson plans in seconds.",
-    image: "/landing/lesson-planner-3d-v2.png",
-    imageAlt:
-      "3D lesson planner card showing textbook-based lesson planning.",
-    accent: "blue",
-  },
-  {
-    title: "Worksheet Generator",
-    description: "Generate matching practice questions and worksheets.",
-    image: "/landing/worksheet-3d-v2.png",
-    imageAlt:
-      "3D worksheet card showing practice questions generated from a textbook chapter.",
-    accent: "green",
-  },
-  {
-    title: "Presentation Generator",
-    description: "Turn textbook concepts into clean classroom slides.",
-    image: "/landing/presentation-3d-v2.png",
-    imageAlt:
-      "3D presentation card showing classroom slides created from textbook content.",
-    accent: "purple",
-  },
-  {
-    title: "Live Quiz Generator",
-    description: "Create interactive quizzes to check student understanding.",
-    image: "/landing/live-quiz-3d-v2.png",
-    imageAlt:
-      "3D live quiz card showing interactive classroom quiz results.",
-    accent: "orange",
-  },
-];
+const tools = READY_TOOLS;
 
 const textbookPoints = [
   "Uses the selected board or curriculum",
@@ -100,10 +68,10 @@ const steps = [
   {
     title: "Choose what you want to create",
     description:
-      "Pick a lesson plan, worksheet, presentation, notes, classroom activity, or quiz.",
+      "Pick a lesson plan, worksheet, presentation, notes, or classroom activity.",
     image: "/ai-tools/tool-icons.png",
     imageAlt:
-      "TeachPad tool icons for lesson plans, worksheets, presentations, notes, activities, and quizzes.",
+      "TeachPad tool icons for lesson plans, worksheets, presentations, notes, and activities.",
     Icon: WandSparkles,
   },
   {
@@ -199,7 +167,7 @@ function HeroSection() {
             className="mt-6 max-w-3xl text-base leading-7 text-slate-600 sm:mt-8 sm:text-lg sm:leading-8"
           >
             TeachPad helps teachers create lesson plans, worksheets,
-            presentations, notes, activities, and quizzes directly from the
+            presentations, notes, and activities directly from the
             textbook chapter they are teaching.
           </motion.p>
 
@@ -274,9 +242,9 @@ function ToolsSection() {
         />
       </RevealOnScroll>
 
-      <StaggerGroup className="mx-auto mt-10 grid w-full max-w-[350px] min-w-0 gap-8 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
+      <StaggerGroup className="mx-auto mt-10 grid w-full max-w-[350px] min-w-0 gap-8 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
         {tools.map((tool) => (
-          <StaggerScaleItem key={tool.title} className="h-full">
+          <StaggerScaleItem key={tool.id} className="h-full">
             <Card3DTilt className="rounded-2xl p-1 text-center h-full flex flex-col" showShadow={false}>
               <article className="group min-w-0 h-full flex flex-col">
                 <div className="grid h-[180px] place-items-center overflow-visible sm:h-[230px] shrink-0">
@@ -294,7 +262,8 @@ function ToolsSection() {
                 </div>
                 <div className="mt-4 sm:mt-5 flex-1 flex flex-col justify-start">
                   <h3 className="text-xl font-black text-slate-950">
-                    {tool.title}
+                    {tool.name}
+                    {tool.status === "beta" ? <span className="ml-2 align-middle text-xs font-black uppercase text-amber-600">Beta</span> : null}
                   </h3>
                   <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-600">
                     {tool.description}

@@ -30,6 +30,7 @@ import {
   ParallaxTilt,
   AnimatedCheckmark,
 } from "@/components/motion-primitives";
+import { READY_TOOLS } from "@/lib/tools";
 
 const plans = [
   {
@@ -42,10 +43,10 @@ const plans = [
     cta: "Start Free",
     tone: "slate",
     features: [
-      "Textbook-grounded setup",
-      "Lesson plan and worksheet access",
+      "5 textbook-grounded generations each month",
+      "Lesson plan and worksheet trial access",
       "Saved resources preview",
-      "Upgrade when you need more",
+      "Upgrade prompts show the blocked feature and benefit",
     ],
   },
   {
@@ -54,16 +55,16 @@ const plans = [
     price: "₹299",
     period: "/month",
     altPrice: "or ₹1,699/year",
-    description: "For teachers who want every classroom resource ready in seconds.",
+    description: "For teachers who want a generous monthly allowance for classroom planning.",
     href: "/signup",
     cta: "Start Creating",
     tone: "blue",
     badge: "Best value",
     features: [
-      "Unlimited lesson plans & worksheets",
-      "Presentation generator",
-      "Export to PDF, DOCX & PPTX",
-      "RAG-grounded textbook AI",
+      "Generous fair-use access for active teacher tools",
+      "Lesson plans, worksheets, presentations, notes, and activities",
+      "PDF, DOCX, and PPTX exports where supported",
+      "Textbook-grounded generation from selected chapters",
       "Priority generation queue",
     ],
   },
@@ -88,13 +89,10 @@ const plans = [
 ] as const;
 
 const comparison = [
-  "Lesson plans",
-  "Worksheets",
-  "Presentations",
-  "Notes",
-  "Activities",
+  ...READY_TOOLS.map((tool) => tool.name),
   "Textbook-grounded generation",
   "Saved resource library",
+  "Usage counters and reset visibility",
 ];
 
 const faqs = [
@@ -316,7 +314,7 @@ function ComparisonSection() {
               Every core classroom resource from one chapter.
             </h2>
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">
-              Pro is for teachers who repeatedly create teaching material and want the full TeachPad workflow available whenever planning starts.
+              Pro is for teachers who repeatedly create teaching material and need a clear, sustainable monthly allowance instead of vague unlimited promises.
             </p>
           </div>
         </RevealOnScroll>

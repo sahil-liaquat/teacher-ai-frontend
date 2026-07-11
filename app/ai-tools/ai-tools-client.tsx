@@ -64,7 +64,7 @@ function HeroSection() {
             variants={staggerItem}
             className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8 lg:mx-0"
           >
-            TeachPad turns your selected textbook chapter into lesson plans, worksheets, presentations, notes, activities, and quizzes &mdash; all aligned with what you actually teach.
+            TeachPad turns your selected textbook chapter into lesson plans, worksheets, presentations, notes, and activities &mdash; all aligned with what you actually teach.
           </motion.p>
 
           <motion.div

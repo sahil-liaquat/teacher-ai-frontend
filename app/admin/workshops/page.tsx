@@ -28,7 +28,7 @@ import {
   XCircle,
   CheckCircle2
 } from "lucide-react";
-import { backendApi, type Workshop, type Host, BACKEND_ROOT } from "@/lib/api";
+import { backendApi, type Workshop, type Host, type WorkshopRegistration, BACKEND_ROOT } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,7 @@ export default function AdminWorkshopsAndHostsPage() {
   const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null);
   const [isWorkshopFormOpen, setIsWorkshopFormOpen] = useState(false);
   const [isDeletingWorkshop, setIsDeletingWorkshop] = useState<Workshop | null>(null);
+  const [registrationsWorkshop, setRegistrationsWorkshop] = useState<Workshop | null>(null);
 
   // Host-specific UI State
   const [editingHost, setEditingHost] = useState<Host | null>(null);
@@ -111,6 +112,12 @@ export default function AdminWorkshopsAndHostsPage() {
     placeholderData: (previous) => previous
   });
 
+  const registrationsQuery = useQuery({
+    queryKey: ["admin-workshop-registrations", registrationsWorkshop?.id],
+    queryFn: () => backendApi.workshopRegistrations(registrationsWorkshop!.id),
+    enabled: Boolean(registrationsWorkshop?.id)
+  });
+
   // Host metrics
   const totalHosts = hostsQuery.data?.total || 0;
   const activeHosts = hostsQuery.data?.items?.filter((h) => h.is_active).length || 0;
@@ -143,6 +150,10 @@ export default function AdminWorkshopsAndHostsPage() {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, hostsQuery.data?.items]);
+
+  const registrations = registrationsQuery.data || [];
+  const attendedCount = registrations.filter((registration) => registration.attended).length;
+  const certificatesIssuedCount = registrations.filter((registration) => registration.certificate_issued).length;
 
   // Media Upload handler
   async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "thumbnail" | "host") {
@@ -273,6 +284,17 @@ export default function AdminWorkshopsAndHostsPage() {
     onError: (e) => toast({ title: "Update failed", description: getErrorMessage(e, "Could not toggle featured status."), variant: "error" })
   });
 
+  const updateRegistrationMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { attended?: boolean; certificate_issued?: boolean } }) =>
+      backendApi.updateWorkshopRegistration(id, payload),
+    onSuccess: () => {
+      toast({ title: "Registration updated", variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["admin-workshop-registrations", registrationsWorkshop?.id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-workshops"] });
+    },
+    onError: (e) => toast({ title: "Update failed", description: getErrorMessage(e, "Could not update this registration."), variant: "error" })
+  });
+
   // Helpers
   function formatForInput(dateStr?: string | null) {
     if (!dateStr) return "";
@@ -280,6 +302,39 @@ export default function AdminWorkshopsAndHostsPage() {
     const tzoffset = date.getTimezoneOffset() * 60000;
     const localISOTime = new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
     return localISOTime;
+  }
+
+  function exportRegistrationsCsv() {
+    if (!registrationsWorkshop || !registrations.length) return;
+
+    const columns = [
+      "Name",
+      "Email",
+      "Registered At",
+      "Attended",
+      "Certificate Issued",
+      "Feedback Rating",
+      "Feedback Text"
+    ];
+    const rows = registrations.map((registration) => [
+      registration.user.full_name || registration.user.name || "",
+      registration.user.email || "",
+      registration.created_at ? formatDateTime(registration.created_at) : "",
+      registration.attended ? "Yes" : "No",
+      registration.certificate_issued ? "Yes" : "No",
+      registration.feedback_rating ?? "",
+      registration.feedback_text || ""
+    ]);
+    const csv = [columns, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${registrationsWorkshop.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-registrations.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   // Resets
@@ -620,6 +675,14 @@ export default function AdminWorkshopsAndHostsPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex gap-1.5 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRegistrationsWorkshop(w)}
+                              title="Manage registrations"
+                            >
+                              <Users className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -1077,6 +1140,129 @@ export default function AdminWorkshopsAndHostsPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRATION MANAGEMENT DIALOG */}
+      {registrationsWorkshop && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm overflow-y-auto py-10">
+          <div className="my-auto flex max-h-[90vh] w-full max-w-5xl flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+            <div className="flex shrink-0 flex-col gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Workshop registrations</p>
+                <h2 className="mt-1 text-lg font-bold text-gray-900">{registrationsWorkshop.title}</h2>
+                <p className="mt-1 text-xs text-gray-500">
+                  {formatDateTime(registrationsWorkshop.scheduled_at)} · {registrationsWorkshop.mode}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={exportRegistrationsCsv} disabled={!registrations.length}>
+                  Export CSV
+                </Button>
+                <Button variant="outline" onClick={() => setRegistrationsWorkshop(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid shrink-0 gap-3 py-4 sm:grid-cols-3">
+              <MetricCard label="Registered" value={registrations.length} tone="blue" icon={<Users className="h-5 w-5" />} />
+              <MetricCard label="Attended" value={attendedCount} tone="green" icon={<CheckCircle className="h-5 w-5" />} />
+              <MetricCard label="Certificates" value={certificatesIssuedCount} tone="amber" icon={<Award className="h-5 w-5" />} />
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-gray-100">
+              {registrationsQuery.isLoading ? (
+                <div className="p-6">
+                  <LoadingState label="Loading registrations" />
+                </div>
+              ) : null}
+
+              {!registrationsQuery.isLoading && !registrations.length ? (
+                <div className="p-6">
+                  <EmptyState title="No registrations yet" description="Registrations will appear here as teachers reserve seats." />
+                </div>
+              ) : null}
+
+              {registrations.length ? (
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                    <tr>
+                      <th className="px-5 py-3 font-semibold">Teacher</th>
+                      <th className="px-5 py-3 font-semibold">Registered</th>
+                      <th className="px-5 py-3 font-semibold">Feedback</th>
+                      <th className="px-5 py-3 font-semibold">Status</th>
+                      <th className="px-5 py-3 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {registrations.map((registration: WorkshopRegistration) => {
+                      const displayName = registration.user.full_name || registration.user.name || "Teacher";
+                      return (
+                        <tr key={registration.id} className="align-top hover:bg-gray-50">
+                          <td className="px-5 py-4">
+                            <div className="font-bold text-gray-900">{displayName}</div>
+                            <div className="mt-0.5 text-xs text-gray-500">{registration.user.email || "No email available"}</div>
+                          </td>
+                          <td className="px-5 py-4 text-xs font-semibold text-gray-600">
+                            {registration.created_at ? formatDateTime(registration.created_at) : "Unknown"}
+                          </td>
+                          <td className="px-5 py-4">
+                            {registration.feedback_rating ? (
+                              <div className="max-w-xs">
+                                <div className="text-xs font-bold text-amber-600">{registration.feedback_rating}/5 rating</div>
+                                {registration.feedback_text ? (
+                                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-500">{registration.feedback_text}</p>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">No feedback</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex flex-wrap gap-1.5">
+                              <StatusPill status={registration.attended ? "success" : "neutral"}>
+                                {registration.attended ? "Attended" : "Not attended"}
+                              </StatusPill>
+                              <StatusPill status={registration.certificate_issued ? "success" : "neutral"}>
+                                {registration.certificate_issued ? "Certificate issued" : "No certificate"}
+                              </StatusPill>
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                variant={registration.attended ? "outline" : "default"}
+                                onClick={() => updateRegistrationMutation.mutate({
+                                  id: registration.id,
+                                  payload: { attended: !registration.attended }
+                                })}
+                                disabled={updateRegistrationMutation.isPending}
+                              >
+                                {registration.attended ? "Undo Attend" : "Mark Attended"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={registration.certificate_issued ? "outline" : "default"}
+                                onClick={() => updateRegistrationMutation.mutate({
+                                  id: registration.id,
+                                  payload: { certificate_issued: !registration.certificate_issued }
+                                })}
+                                disabled={updateRegistrationMutation.isPending}
+                              >
+                                {registration.certificate_issued ? "Revoke Cert" : "Issue Cert"}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : null}
+            </div>
           </div>
         </div>
       )}

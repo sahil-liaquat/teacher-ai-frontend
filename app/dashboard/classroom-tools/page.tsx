@@ -2,20 +2,11 @@
 
 import Link from "next/link";
 import type { ComponentType } from "react";
-import {
-  Activity,
-  ClipboardList,
-  ImageIcon,
-  LayoutList,
-  MessageCircle,
-  NotebookPen,
-  Presentation,
-  RadioTower
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { cn } from "@/lib/utils";
+import { ACTIVE_TOOLS } from "@/lib/tools";
 
 const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: string; iconShadow: string; glow: string }> = {
   blue: {
@@ -75,85 +66,24 @@ const tools: Array<{
   href: string;
   icon: ComponentType<{ className?: string }>;
   badge: string;
-  status: "ready" | "soon";
+  status: "ready" | "beta" | "soon";
   tone: "blue" | "green" | "yellow" | "pink" | "red" | "aqua" | "lavender";
   buttonLabel?: string;
-}> = [
-  {
-    title: "Lesson Plan Generator",
-    description: "Generate complete textbook-grounded lesson plans with objectives, timeline, assessment, and notes.",
-    href: "/dashboard/lesson-plans/new",
-    icon: LayoutList,
-    badge: "Ready",
-    status: "ready",
-    tone: "blue"
-  },
-  {
-    title: "Worksheet Generator",
-    description: "Create printable worksheets, answer keys, and marking schemes from your selected chapter.",
-    href: "/dashboard/worksheets/new",
-    icon: ClipboardList,
-    badge: "Ready",
-    status: "ready",
-    tone: "green"
-  },
-  {
-    title: "Presentation Generator",
-    description: "Turn a topic into a clean classroom slide deck with speaker notes and activity prompts.",
-    href: "/dashboard/presentation-generator",
-    icon: Presentation,
-    badge: "Ready",
-    status: "ready",
-    tone: "red"
-  },
-  {
-    title: "Notes Generator",
-    description: "Create textbook-grounded chapter notes with key terms, summaries, and revision questions.",
-    href: "/dashboard/notes-generator",
-    icon: NotebookPen,
-    badge: "Ready",
-    status: "ready",
-    tone: "pink",
-    buttonLabel: "Create Notes"
-  },
-  {
-    title: "Activity Generator",
-    description: "Create hands-on classroom activities, group tasks, and quick engagement prompts.",
-    href: "/dashboard/activity-generator",
-    icon: Activity,
-    badge: "Ready",
-    status: "ready",
-    tone: "aqua",
-    buttonLabel: "Create Activity"
-  },
-  {
-    title: "Live Quiz Generator",
-    description: "Create textbook-based quizzes, share a link with students, and track marks instantly.",
-    href: "#",
-    icon: RadioTower,
-    badge: "Coming soon",
-    status: "soon",
-    tone: "yellow"
-  },
-  {
-    title: "Rubric Assistant",
-    description: "Draft criteria, scoring bands, and feedback language for projects and assignments.",
-    href: "#",
-    icon: MessageCircle,
-    badge: "Coming soon",
-    status: "soon",
-    tone: "aqua"
-  },
-  {
-    title: "Visual Explainer",
-    description: "Turn difficult concepts into image-led explanations for classroom display.",
-    href: "#",
-    icon: ImageIcon,
-    badge: "Coming soon",
-    status: "soon",
-    tone: "lavender"
-  }
-];
+}> = ACTIVE_TOOLS.map((tool) => ({
+  title: tool.name,
+  description: tool.description,
+  href: tool.dashboardHref,
+  icon: tool.Icon,
+  badge: tool.status === "beta" ? "Beta" : "Ready",
+  status: tool.status === "coming_soon" ? "soon" : tool.status,
+  tone:
+    tool.id === "presentation" ? "red" :
+    tool.id === "notes" ? "pink" :
+    tool.tone === "orange" ? "yellow" :
+    tool.tone === "purple" ? "lavender" :
+    tool.tone,
+  buttonLabel: tool.cta,
+}));
 
 export default function ClassroomToolsPage() {
   return (
@@ -167,7 +97,7 @@ export default function ClassroomToolsPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {tools.map((tool) => {
-          const available = tool.status === "ready";
+          const available = tool.status === "ready" || tool.status === "beta";
           const s = cardStyles[tool.tone];
           const card = (
             <div
@@ -186,7 +116,7 @@ export default function ClassroomToolsPage() {
                   )}>
                     <tool.icon className="h-7 w-7 stroke-[2.3]" aria-hidden="true" />
                   </span>
-                  {!available ? (
+                  {tool.status !== "ready" ? (
                     <Badge className="border-[#fff0bf] bg-[#fff0bf] text-[#b97800]">
                       {tool.badge}
                     </Badge>

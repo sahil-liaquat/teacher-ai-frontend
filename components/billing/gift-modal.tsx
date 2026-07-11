@@ -96,8 +96,8 @@ export function GiftModal() {
             <span className="font-extrabold text-teachpad-ink">
               TeachPad Pro
             </span>{" "}
-            with full access to all features — presentations, exports, and
-            unlimited generations.
+            with full access to Pro features, including presentations, exports,
+            and a generous fair-use generation allowance.
           </p>
 
           {expiryLabel && (

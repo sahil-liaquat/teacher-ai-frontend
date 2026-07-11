@@ -80,10 +80,10 @@ const PLANS: PlanOption[] = [
 ];
 
 const PRO_FEATURES = [
-  "Unlimited lesson plans & worksheets",
-  "Presentation generator",
-  "Export to PDF, DOCX & PPTX",
-  "RAG-grounded textbook AI",
+  "Generous fair-use access for lesson plans and worksheets",
+  "Presentation, notes, and activity generators",
+  "PDF, DOCX, and PPTX exports where supported",
+  "Textbook-grounded generation",
   "Priority generation queue",
 ];
 

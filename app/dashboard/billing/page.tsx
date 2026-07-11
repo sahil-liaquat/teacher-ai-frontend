@@ -262,10 +262,10 @@ function PlanCard({
 
   const subtitle = isGift
     ? "Gifted Pro access — enjoy all features"
-    : hasUpgraded
-      ? "You're all set — Pro is scheduled to begin"
+      : hasUpgraded
+        ? "You're all set — Pro is scheduled to begin"
       : trialPending
-        ? "Get unlimited access to every TeachPad AI feature"
+        ? "Get Pro access with a generous fair-use allowance"
         : isActivePaid
           ? "Full access to all TeachPad AI features"
           : "Basic access with monthly generation limits";
@@ -490,7 +490,7 @@ function UsageCard({
 
         {quota === null && (
           <p className="mt-2 text-sm font-semibold text-[#16a34a]">
-            Unlimited generations
+            Fair-use generation allowance included
           </p>
         )}
       </div>

@@ -36,60 +36,73 @@ import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
 const academyStats = [
-  { label: "Live learning", value: "Webinars", icon: Video, tone: "bg-teachpad-sky text-teachpad-blue" },
-  { label: "Classroom-ready", value: "Templates", icon: Sparkles, tone: "bg-teachpad-green text-emerald-700" },
-  { label: "Teacher community", value: "Cohorts", icon: Users, tone: "bg-teachpad-lavender text-violet-700" }
+  { label: "Practical demonstrations and guided sessions", value: "Live Learning", icon: Video, tone: "bg-teachpad-sky text-teachpad-blue" },
+  { label: "Resources you can use with students", value: "Classroom-Ready Templates", icon: Sparkles, tone: "bg-teachpad-green text-emerald-700" },
+  { label: "Focused learning with educators", value: "Guided Cohorts", icon: Users, tone: "bg-teachpad-lavender text-violet-700" },
+  { label: "Exchange ideas and solve challenges", value: "Teacher Community", icon: GraduationCap, tone: "bg-teachpad-yellow text-amber-700" }
 ];
 
 const whyAcademyFeatures = [
   {
-    title: "Curriculum Grounding",
-    description: "Our workshops teach you how to ground AI prompts in actual regional board textbooks, eliminating general hallucinations.",
+    title: "Curriculum-Aware Learning",
+    description: "Learn how to create relevant teaching resources using actual textbooks, chapters, learning outcomes, and board-specific curriculum requirements.",
     icon: BookOpen,
     tone: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
     title: "Pedagogy First",
-    description: "We align AI tool generations with Bloom's Taxonomy, Differentiated Instruction, and standard lesson plan formats.",
+    description: "Use AI more effectively through Bloom's Taxonomy, differentiated instruction, learning objectives, assessment design, and structured lesson planning.",
     icon: GraduationCap,
     tone: "bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100",
   },
   {
-    title: "Live Interactive Cohorts",
-    description: "Ask questions, share screens, and build alongside peers in live interactive webinars with industry and school experts.",
+    title: "Practical, Live Learning",
+    description: "Ask questions, follow demonstrations, share classroom challenges, and build resources alongside educators and experts.",
     icon: Laptop,
     tone: "bg-amber-50 text-amber-600 border-amber-100",
   },
   {
-    title: "Verified Certifications",
-    description: "Earn printable Certificates of Completion for professional development files after attending any live webinar.",
+    title: "Continuous Professional Growth",
+    description: "Move beyond one-time webinars through structured learning tracks, guided practice, templates, and follow-up resources.",
+    icon: ShieldCheck,
+    tone: "bg-cyan-50 text-cyan-600 border-cyan-100",
+  },
+  {
+    title: "Certificates of Completion",
+    description: "Receive a printable certificate after completing eligible live workshops, cohorts, or professional development sessions.",
     icon: Award,
     tone: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  },
+  {
+    title: "Classroom-Ready Outcomes",
+    description: "Finish each session with practical workflows, templates, and resources that can be applied directly in your classroom.",
+    icon: CheckCircle,
+    tone: "bg-violet-50 text-violet-600 border-violet-100",
   },
 ];
 
 const learningTracks = [
   {
-    title: "AI Assessment Crafting",
-    subtitle: "Module 1",
-    description: "Learn to build high-quality worksheets, quizzes, question banks, and Rubrics powered by TeachPad’s intelligent models.",
-    details: ["Worksheet structure and templates", "Bloom's taxonomy levels", "Adaptive quiz creation"],
+    title: "AI-Powered Assessment Design",
+    subtitle: "Growth Track 1",
+    description: "Learn how to create effective worksheets, quizzes, question banks, rubrics, and differentiated assessments using TeachPad.",
+    details: ["Effective worksheet structures", "Bloom's Taxonomy-based questioning", "Balanced question-set creation", "Adaptive and differentiated assessments", "Quiz and question-bank workflows"],
     color: "from-blue-500/10 to-indigo-500/10 hover:border-blue-300",
     badgeColor: "bg-blue-100 text-blue-800",
   },
   {
-    title: "Smarter Curriculum Design",
-    subtitle: "Module 2",
-    description: "Master structured lesson planning, syllabus alignment, and mapping textbooks using advanced RAG retrieval workflows.",
-    details: ["Syllabus structure alignment", "Activity and game planning", "Textbook retrieval tricks"],
+    title: "Smarter Curriculum Planning",
+    subtitle: "Growth Track 2",
+    description: "Learn how to plan lessons, align resources with the syllabus, map textbook content, and design meaningful classroom activities.",
+    details: ["Curriculum and syllabus alignment", "Lesson sequencing and learning objectives", "Classroom activity and game planning", "Textbook-grounded content creation", "Chapter, topic, and learning-outcome mapping"],
     color: "from-fuchsia-500/10 to-purple-500/10 hover:border-fuchsia-300",
     badgeColor: "bg-fuchsia-100 text-fuchsia-800",
   },
   {
-    title: "Creative Visual Media",
-    subtitle: "Module 3",
-    description: "Craft slides, multimedia outlines, notes, and visual aid tools. Transform textual content into high-impact classroom visuals.",
-    details: ["PPTX export & design layouts", "Outline generation structures", "Multimedia asset integration"],
+    title: "Classroom Visuals and Presentations",
+    subtitle: "Growth Track 3",
+    description: "Transform textbook content into engaging presentations, teaching notes, visual explainers, and multimedia learning resources.",
+    details: ["Presentation structure and slide design", "Classroom-friendly visual storytelling", "Teaching-note and outline generation", "Multimedia resource planning", "PPTX creation and export workflows"],
     color: "from-amber-500/10 to-orange-500/10 hover:border-amber-300",
     badgeColor: "bg-amber-100 text-amber-800",
   },
@@ -98,19 +111,19 @@ const learningTracks = [
 const academyFaqs = [
   {
     question: "Are the workshops free for TeachPad users?",
-    answer: "Yes, all live webinars and interactive workshops hosted inside the Teacher Growth Hub are completely free for registered TeachPad teachers.",
+    answer: "Some workshops and learning sessions may be free, while specialised cohorts or school training programmes may require a registration fee. Each session page will clearly show the applicable details.",
   },
   {
-    question: "Do I receive a certificate of completion?",
-    answer: "Absolutely! After completing a live workshop session, you can download a verified Certificate of Professional Development directly from your workshops dashboard.",
+    question: "Will I receive a certificate?",
+    answer: "Certificates of Completion are available for eligible workshops, cohorts, and professional development programmes when attendance or completion requirements are met.",
   },
   {
-    question: "What if I miss a scheduled live session?",
-    answer: "No worries! All live workshops are recorded. The video archives, templates, and reference materials are shared under the 'Saved Resources' tab in your dashboard.",
+    question: "What happens if I miss a live session?",
+    answer: "Recording and replay availability may vary by session. Any recording, resource, or follow-up details will be mentioned on the registration page.",
   },
   {
-    question: "Can I request custom training for my school staff?",
-    answer: "Yes! We run customized, private training cohorts for schools and educational institutions. Reach out to our school partnership team via admin support.",
+    question: "Can schools request customised training?",
+    answer: "Yes. Schools can request tailored training programmes for teachers, academic coordinators, department heads, or leadership teams.",
   },
 ];
 
@@ -207,12 +220,12 @@ export default function AcademyLandingPage() {
                 TeachPad Teacher Growth Hub
               </div>
               <h1 className="text-[34px] font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-[40px] sm:text-6xl lg:text-[64px]">
-                Learn AI workflows.
+                Learn practical AI skills.
                 <br />
-                <span className="text-blue-600">Teach better tomorrow.</span>
+                <span className="text-blue-600">Grow as an educator.</span>
               </h1>
               <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-slate-600 sm:text-lg sm:leading-8 lg:mx-0">
-                Join expert-led workshops on lesson planning, textbook-grounded content creation, classroom activities, assessments, and practical AI workflows for school teams.
+                Join expert-led workshops, guided learning tracks, and teacher cohorts focused on lesson planning, textbook-grounded content creation, assessments, classroom activities, presentations, and practical AI workflows for schools.
               </p>
 
               <div className="mx-auto mt-7 flex max-w-[420px] flex-col justify-center gap-3 sm:mt-8 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center lg:mx-0 lg:justify-start">
@@ -227,16 +240,16 @@ export default function AcademyLandingPage() {
                 </Link>
               </div>
 
-              <div className="mt-8 hidden gap-3 sm:grid sm:grid-cols-3">
+              <div className="mt-8 hidden gap-3 sm:grid sm:grid-cols-2 xl:grid-cols-4">
                 {academyStats.map((stat) => {
                   const Icon = stat.icon;
                   return (
-                    <div key={stat.label} className="rounded-2xl border border-teachpad-cardBorder bg-white/86 p-4 text-left shadow-[0_16px_36px_rgba(30,80,90,0.07)] backdrop-blur-sm">
+                    <div key={stat.value} className="rounded-2xl border border-teachpad-cardBorder bg-white/86 p-4 text-left shadow-[0_16px_36px_rgba(30,80,90,0.07)] backdrop-blur-sm">
                       <span className={cn("grid h-10 w-10 place-items-center rounded-2xl", stat.tone)}>
                         <Icon className="h-5 w-5" />
                       </span>
                       <p className="mt-3 text-sm font-black text-slate-950">{stat.value}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-500">{stat.label}</p>
+                      <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{stat.label}</p>
                     </div>
                   );
                 })}
@@ -261,8 +274,8 @@ export default function AcademyLandingPage() {
                     <ShieldCheck className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-black text-slate-950">Curriculum-aware sessions</p>
-                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">Built for real school workflows.</p>
+                    <p className="text-sm font-black text-slate-950">Professional growth built around real classrooms</p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">Curriculum-aware learning for teachers and school teams.</p>
                   </div>
                 </div>
               </div>
@@ -277,16 +290,16 @@ export default function AcademyLandingPage() {
               Upcoming sessions
             </div>
             <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-              Choose your next <span className="text-blue-600">teacher workshop.</span>
+              Choose your next <span className="text-blue-600">growth opportunity.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600">
-              Registration status, deadlines, hosts, and joining details update from the live academy backend.
+              Explore upcoming workshops, learning cohorts, expert sessions, and teacher development programmes. View registration status, deadlines, hosts, schedules, and joining details in one place.
             </p>
           </div>
 
           <div className="mt-8 flex justify-center">
             <Link href="/dashboard/workshops" className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600">
-              Dashboard Workshops <ArrowRight className="h-4 w-4" />
+              View Sessions in Dashboard <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -308,9 +321,9 @@ export default function AcademyLandingPage() {
                 className="mx-auto h-auto w-full max-w-xs"
               />
               <div className="text-center sm:text-left">
-                <h3 className="text-2xl font-black leading-tight text-slate-950">No workshops are scheduled right now.</h3>
+                <h3 className="text-2xl font-black leading-tight text-slate-950">No sessions are currently scheduled.</h3>
                 <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
-                  The Teacher Growth Hub calendar is being updated. Create an account and check your dashboard for the next cohort announcement.
+                  The next TeachPad Growth Hub sessions are being prepared. Create your free account and check your dashboard for upcoming workshop and cohort announcements.
                 </p>
                 <Link href="/signup" className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-blue-600 px-5 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:bg-blue-700">
                   Join TeachPad Free
@@ -343,7 +356,7 @@ export default function AcademyLandingPage() {
           ) : null}
         </section>
 
-        {/* Why TeachPad Academy Feature Grid */}
+        {/* Growth Hub Difference */}
         <section className="bg-slate-50 border-t border-b border-slate-100 px-5 py-20 sm:px-6 lg:px-8 lg:py-28 relative overflow-hidden">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-100/30 rounded-full blur-3xl pointer-events-none" />
@@ -355,14 +368,14 @@ export default function AcademyLandingPage() {
                   The Growth Hub Difference
                 </div>
                 <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                  Why learn with <span className="text-blue-600">Teacher Growth Hub?</span>
+                  Why grow with <span className="text-blue-600">TeachPad?</span>
                 </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600">
-                School-grounded AI training built specifically for educators, combining pedagogical frameworks with modern classroom tools.
+                TeachPad Growth Hub combines practical AI skills, sound teaching practices, curriculum alignment, and real classroom workflows.
               </p>
             </div>
 
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {whyAcademyFeatures.map((feat, index) => {
                 const Icon = feat.icon;
                 return (
@@ -387,13 +400,13 @@ export default function AcademyLandingPage() {
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-600 shadow-[0_12px_26px_rgba(37,99,235,0.08)]">
               <GraduationCap className="h-4 w-4" />
-              Specialization Tracks
+              Growth Tracks
             </div>
             <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-              Our structured <span className="text-blue-600">learning modules.</span>
+              Build skills that improve <span className="text-blue-600">everyday teaching.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600">
-              Deep-dive tracks covering everything from daily planning to advanced assessment strategies.
+              Choose structured learning tracks covering classroom planning, assessment creation, curriculum alignment, and visual content design.
             </p>
           </div>
 
@@ -458,10 +471,10 @@ export default function AcademyLandingPage() {
             <div className="text-center max-w-3xl mx-auto mb-16">
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-600 shadow-[0_12px_26px_rgba(37,99,235,0.08)]">
                 <Star className="h-4 w-4 fill-current text-amber-500" />
-                Teacher Reviews
+                Teacher Experiences
               </div>
               <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                Loved by educators <span className="text-blue-600">everywhere.</span>
+                See how educators are <span className="text-blue-600">growing with TeachPad.</span>
               </h2>
             </div>
 
@@ -471,19 +484,19 @@ export default function AcademyLandingPage() {
                   name: "Mrs. Shreya Sen",
                   role: "Class 8 Science Teacher",
                   org: "St. Xavier's Academy",
-                  quote: "TeachPad's Teacher Growth Hub completely transformed my planning. I save 10 hours a week on worksheets and presentation aids!",
+                  quote: "TeachPad Growth Hub changed the way I approach lesson preparation. I now create more structured worksheets and classroom presentations in much less time.",
                 },
                 {
                   name: "Dr. Amit Sharma",
                   role: "School Principal",
                   org: "Silver Oak Global School",
-                  quote: "The curriculum design workshops helped our entire department align AI generated resources with standard school boards.",
+                  quote: "The curriculum-planning sessions helped our department create more consistent, structured, and board-aligned teaching resources.",
                 },
                 {
                   name: "Mr. Rajesh Kumar",
                   role: "Mathematics Teacher",
                   org: "Delhi Public School",
-                  quote: "Learning how to leverage grounded RAG textbooks gave me confidence that the AI won't generate incorrect definitions.",
+                  quote: "Learning how to use textbook-grounded AI gave me more confidence in the relevance and accuracy of the resources I create.",
                 },
               ].map((test, index) => (
                 <div
@@ -523,7 +536,7 @@ export default function AcademyLandingPage() {
                 Frequently Asked Questions
               </div>
               <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl">
-                Everything you need <span className="text-blue-600">to know.</span>
+                Everything you need to know about <span className="text-blue-600">TeachPad Growth Hub.</span>
               </h2>
             </div>
 
@@ -565,7 +578,7 @@ export default function AcademyLandingPage() {
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:px-8 lg:py-28">
             <div className="text-center lg:text-left">
               <h2 className="mx-auto max-w-2xl text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl lg:mx-0">
-                Turn Hub learning into classroom resources.
+                Turn professional growth into classroom impact.
               </h2>
               <p className="mx-auto mt-5 max-w-xl text-base leading-8 text-slate-600 lg:mx-0">
                 Use the same account for workshops, lesson plans, worksheets, notes, presentations, and saved resources.

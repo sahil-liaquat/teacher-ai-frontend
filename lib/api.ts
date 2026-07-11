@@ -1225,6 +1225,8 @@ export const backendApi = {
     apiFetch<WorkshopRegistration[]>("/workshops/my-registrations"),
   workshopRegistrations: (id: string) =>
     apiFetch<WorkshopRegistration[]>(`/workshops/${id}/registrations`),
+  updateWorkshopRegistration: (id: string, payload: { attended?: boolean; certificate_issued?: boolean }) =>
+    apiFetch<WorkshopRegistration>(`/workshops/registrations/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   cancelWorkshopRegistration: (id: string) =>
     apiFetch<void>(`/workshops/${id}/register`, { method: "DELETE" }),
   submitWorkshopFeedback: (id: string, payload: { feedback_rating: number; feedback_text?: string | null }) =>

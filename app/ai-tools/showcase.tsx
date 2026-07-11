@@ -3,65 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, ClipboardList, FileText, NotebookPen, Presentation, Puzzle } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { READY_TOOLS } from "@/lib/tools";
 
-const tools = [
-  {
-    title: "Lesson Plan",
-    description: "Create structured lesson plans with objectives, outline, assessments, homework, and classroom flow from the chapter you select.",
-    image: "/ai-tools/showcase-lesson-plan.png",
-    imageAlt: "TeachPad lesson plan output preview with objectives, classroom flow, and assessment details.",
-    href: "/lesson-plan-generator",
-    cta: "Create Lesson Plan",
-    Icon: FileText,
-    tone: "blue",
-    bullets: ["Chapter-based objectives", "Teacher-friendly lesson flow", "Assessment and homework included"]
-  },
-  {
-    title: "Worksheet",
-    description: "Generate practice sheets that match the grade, topic, difficulty, marks, and question types your class needs.",
-    image: "/ai-tools/showcase-worksheet.png",
-    imageAlt: "TeachPad worksheet output preview with textbook-based practice questions.",
-    href: "/worksheet-generator",
-    cta: "Create Worksheet",
-    Icon: ClipboardList,
-    tone: "green",
-    bullets: ["Mixed question formats", "Answer key support", "Ready for revision or homework"]
-  },
-  {
-    title: "Presentation",
-    description: "Turn textbook concepts into clean classroom slides with visual flow, examples, diagrams, and teachable structure.",
-    image: "/ai-tools/showcase-presentation.png",
-    imageAlt: "TeachPad presentation output preview with classroom slide content.",
-    href: "/presentation-generator",
-    cta: "Create Presentation",
-    Icon: Presentation,
-    tone: "orange",
-    bullets: ["Slide-by-slide outline", "Visual concept explanation", "Download-ready classroom deck"]
-  },
-  {
-    title: "Notes",
-    description: "Create concise chapter notes with summaries, definitions, key terms, formulas, and revision-friendly structure.",
-    image: "/ai-tools/showcase-notes.png",
-    imageAlt: "TeachPad notes output preview with chapter summaries and key terms.",
-    href: "/notes-generator",
-    cta: "Create Notes",
-    Icon: NotebookPen,
-    tone: "purple",
-    bullets: ["Clear headings and key concepts", "Definitions and summaries", "Useful for blackboard and revision"]
-  },
-  {
-    title: "Activity",
-    description: "Build classroom activities with materials, steps, timing, grouping ideas, and reflection prompts.",
-    image: "/ai-tools/showcase-activity.png",
-    imageAlt: "TeachPad classroom activity output preview with steps, timings, and reflection prompts.",
-    href: "/classroom-activity-generator",
-    cta: "Create Activity",
-    Icon: Puzzle,
-    tone: "orange",
-    bullets: ["Objective-led activity plans", "Materials and timings included", "Built for active classrooms"]
-  }
-] as const;
+const tools = READY_TOOLS;
 
 const toneClasses = {
   blue: {
@@ -83,6 +28,16 @@ const toneClasses = {
     icon: "bg-violet-500 text-white",
     badge: "bg-violet-50 text-violet-700",
     link: "bg-violet-600 text-white shadow-[0_18px_36px_rgba(124,58,237,0.22)] hover:bg-violet-700"
+  },
+  aqua: {
+    icon: "bg-cyan-500 text-white",
+    badge: "bg-cyan-50 text-cyan-700",
+    link: "bg-cyan-600 text-white shadow-[0_18px_36px_rgba(22,169,182,0.22)] hover:bg-cyan-700"
+  },
+  yellow: {
+    icon: "bg-amber-500 text-white",
+    badge: "bg-amber-50 text-amber-700",
+    link: "bg-amber-500 text-white shadow-[0_18px_36px_rgba(245,158,11,0.22)] hover:bg-amber-600"
   },
 } as const;
 
@@ -151,7 +106,7 @@ export function AiToolsShowcase() {
               const isPast = index < safeActiveIndex;
               return (
                 <Image
-                  key={tool.title}
+                  key={tool.id}
                   src={tool.image}
                   alt={tool.imageAlt}
                   width={1448}
@@ -173,21 +128,21 @@ export function AiToolsShowcase() {
             <div className="mb-4 flex items-center justify-center gap-2 lg:mb-7 lg:justify-start">
               {tools.map((tool, index) => (
                 <button
-                  key={tool.title}
+                  key={tool.id}
                   type="button"
-                  aria-label={`Show ${tool.title}`}
+                  aria-label={`Show ${tool.name}`}
                   onClick={() => setActiveIndex(index)}
                   className={`h-2.5 rounded-full transition-all ${index === safeActiveIndex ? "w-10 bg-blue-600" : "w-2.5 bg-slate-200 hover:bg-slate-300"}`}
                 />
               ))}
             </div>
 
-            <div key={activeTool.title} className="animate-[fadeTool_520ms_ease-out]">
+            <div key={activeTool.id} className="animate-[fadeTool_520ms_ease-out]">
               <span className={`inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs font-black sm:text-sm ${activeTone.badge}`}>
                 <activeTool.Icon className="h-4 w-4" />
-                {progressText}
+                {progressText}{activeTool.status === "beta" ? " · Beta" : ""}
               </span>
-              <h3 className="mt-4 text-[38px] font-black leading-none tracking-tight text-slate-950 sm:text-[48px] lg:mt-6 lg:text-[58px]">{activeTool.title}</h3>
+              <h3 className="mt-4 text-[38px] font-black leading-none tracking-tight text-slate-950 sm:text-[48px] lg:mt-6 lg:text-[58px]">{activeTool.shortName}</h3>
               <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7 lg:mx-0 lg:mt-6 lg:text-lg lg:leading-8">{activeTool.description}</p>
               <ul className="mx-auto mt-5 max-w-md space-y-3 text-left lg:mx-0 lg:mt-7 lg:space-y-4">
                 {activeTool.bullets.map((bullet) => (
@@ -200,7 +155,7 @@ export function AiToolsShowcase() {
                 ))}
               </ul>
               <Link
-                href={activeTool.href}
+                href={activeTool.publicHref}
                 className={`mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-black transition hover:-translate-y-0.5 lg:mt-9 lg:h-12 lg:px-6 ${activeTone.link}`}
               >
                 {activeTool.cta}

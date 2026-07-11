@@ -123,7 +123,7 @@ function BookLoadingLoader() {
         renderer: "svg",
         loop: true,
         autoplay: true,
-        path: "/assets/illustrations/loading-animation-bored-hand.json"
+        path: "/assets/illustrations/robot-working-blue.json"
       });
     }
 

@@ -118,7 +118,7 @@ export default function RecentGenerationsPage() {
   const totalPages = recentData?.pages || 1;
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
+    <div className="mx-auto w-full max-w-[1240px] space-y-6 px-3 py-4 sm:space-y-8 sm:px-4">
       <DashboardBannerHeader
         titleTop="Your"
         titleHighlight="Recent Generations"
@@ -128,11 +128,11 @@ export default function RecentGenerationsPage() {
 
       {isLoading ? (
         <div className="rounded-[22px] border border-white/70 bg-white/86 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
-          <div className="mb-5 flex items-center gap-3">
+          <div className="mb-5 flex min-w-0 items-center gap-3">
             <Skeleton className="h-14 w-14 rounded-[20px]" />
-            <div className="grid flex-1 gap-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
+            <div className="grid min-w-0 flex-1 gap-2">
+              <Skeleton className="h-6 w-40 max-w-full sm:w-48" />
+              <Skeleton className="h-4 w-52 max-w-full sm:w-64" />
             </div>
           </div>
           <p className="mb-4 text-sm font-bold text-teachpad-muted">Loading your generations...</p>
@@ -143,7 +143,7 @@ export default function RecentGenerationsPage() {
           </div>
         </div>
       ) : generations.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/70 py-16 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4 rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/70 px-4 py-12 text-center shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm sm:py-16">
           <Clock3 className="h-12 w-12 text-[#9CA0AA]" />
           <h3 className="text-lg font-bold text-[#25262b]">No generations yet</h3>
           <p className="max-w-sm text-center text-sm text-[#55516e]">Create your first lesson plan or worksheet to see it here.</p>
@@ -165,55 +165,59 @@ export default function RecentGenerationsPage() {
                 <Link
                   key={gen.id}
                   href={gen.href}
-                  className={cn("group flex items-center gap-4 rounded-2xl border border-white/70 bg-gradient-to-br px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.1)]", typeCardColors[gen.type])}
+                  className={cn("group flex min-w-0 flex-col gap-3 rounded-2xl border border-white/70 bg-gradient-to-br p-3 shadow-[0_4px_12px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.1)] sm:flex-row sm:items-center sm:gap-4 sm:px-4", typeCardColors[gen.type])}
                 >
-                  <span className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
-                    typeColors[gen.type]
-                  )}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate text-sm font-bold text-slate-900">{gen.title}</span>
-                      <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">{meta.label}</span>
-                    </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                      {gen.className && <span>{gen.className}</span>}
-                      {gen.subject && (
-                        <>
-                          <span className="text-slate-300">•</span>
-                          <span className="truncate">{gen.subject}</span>
-                        </>
-                      )}
-                      {gen.chapterName && (
-                        <>
-                          <span className="text-slate-300">•</span>
-                          <span className="truncate max-w-[120px] sm:max-w-none">{gen.chapterName}</span>
-                        </>
-                      )}
+                  <div className="flex w-full min-w-0 items-start gap-3 sm:items-center">
+                    <span className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
+                      typeColors[gen.type]
+                    )}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                        <span className="line-clamp-2 max-w-full break-words text-sm font-bold leading-5 text-slate-900 sm:truncate">
+                          {gen.title}
+                        </span>
+                        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">{meta.label}</span>
+                      </div>
+                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-slate-500">
+                        {gen.className && <span className="shrink-0">{gen.className}</span>}
+                        {gen.subject && (
+                          <>
+                            <span className="shrink-0 text-slate-300">•</span>
+                            <span className="min-w-0 max-w-full break-words">{gen.subject}</span>
+                          </>
+                        )}
+                        {gen.chapterName && (
+                          <>
+                            <span className="shrink-0 text-slate-300">•</span>
+                            <span className="min-w-0 max-w-full break-words sm:max-w-[280px]">{gen.chapterName}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
+                  <div className="flex w-full items-center justify-between border-t border-white/70 pt-2 sm:w-auto sm:shrink-0 sm:justify-end sm:border-t-0 sm:pt-0 sm:text-right">
                     <span className="text-xs font-medium text-slate-400">{formatDate(gen.createdAt)}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 sm:ml-2" />
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               );
             })}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm">
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-slate-500">
                 Page {page} of {totalPages}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                 <button
                   type="button"
                   disabled={page === 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Previous
                 </button>
@@ -221,7 +225,7 @@ export default function RecentGenerationsPage() {
                   type="button"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>

@@ -5,7 +5,7 @@ import { AiToolsClient } from "./ai-tools-client";
 
 const siteUrl = "https://teachpad.in";
 const pageUrl = `${siteUrl}/ai-tools`;
-const pageDescription = "Explore TeachPad AI tools for teachers to create textbook-based lesson plans, worksheets, presentations, notes, quizzes, and classroom activities in minutes.";
+const pageDescription = "Explore TeachPad AI tools for teachers to create textbook-based lesson plans, worksheets, presentations, notes, and classroom activities in minutes.";
 const previewImage = "/ai-tools/ai-tools-hero.png";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "TeachPad AI Tools for Teachers",
-    description: "Create textbook-based lesson plans, worksheets, presentations, notes, quizzes, and classroom activities with TeachPad AI tools.",
+    description: "Create textbook-based lesson plans, worksheets, presentations, notes, and classroom activities with TeachPad AI tools.",
     url: "/ai-tools",
     siteName: "TeachPad",
     images: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "TeachPad AI Tools for Teachers",
-    description: "Create lesson plans, worksheets, presentations, notes, quizzes, and activities from textbook chapters.",
+    description: "Create lesson plans, worksheets, presentations, notes, and activities from textbook chapters.",
     images: ["/ai-tools/ai-tools-hero.png"]
   }
 };

@@ -1,63 +1,36 @@
 "use client";
 
-import { ArrowRight, ChevronDown, ClipboardList, FileText, NotebookPen, Presentation, Puzzle, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { READY_TOOLS } from "@/lib/tools";
 
-const aiToolPages = [
-  {
-    label: "Lesson Plan Generator",
-    description: "Plan objectives, flow, homework, and assessment.",
-    href: "/lesson-plan-generator",
-    Icon: FileText,
-    tone: "blue"
-  },
-  {
-    label: "Worksheet Generator",
-    description: "Create practice sheets and answer keys.",
-    href: "/worksheet-generator",
-    Icon: ClipboardList,
-    tone: "emerald"
-  },
-  {
-    label: "Presentation Generator",
-    description: "Build classroom PPTs and speaker notes.",
-    href: "/presentation-generator",
-    Icon: Presentation,
-    tone: "orange"
-  },
-  {
-    label: "Notes Generator",
-    description: "Make summaries, definitions, and key points.",
-    href: "/notes-generator",
-    Icon: NotebookPen,
-    tone: "violet"
-  },
-  {
-    label: "Classroom Activity Generator",
-    description: "Generate warm-ups, group tasks, and exit tickets.",
-    href: "/classroom-activity-generator",
-    Icon: Puzzle,
-    tone: "amber"
-  }
-];
+const aiToolPages = READY_TOOLS.map((tool) => ({
+  label: tool.name,
+  description: tool.description,
+  href: tool.publicHref,
+  Icon: tool.Icon,
+  tone: tool.tone,
+  status: tool.status,
+}));
 
 const navItems = [
   { label: "Home", href: "/", key: "home" },
   { label: "AI Tools", href: "/ai-tools", key: "ai-tools", children: aiToolPages },
   { label: "Boards & Curriculums", href: "/boards-curriculums", key: "boards-curriculums" },
-  { label: "AI Academy", href: "/academy", key: "academy" },
+  { label: "Growth Hub", href: "/academy", key: "academy" },
   { label: "Pricing", href: "/pricing", key: "pricing" }
 ];
 
 const toolToneClasses = {
   blue: "bg-blue-50 text-blue-600 group-hover/item:bg-blue-600 group-hover/item:text-white",
-  emerald: "bg-emerald-50 text-emerald-600 group-hover/item:bg-emerald-600 group-hover/item:text-white",
+  green: "bg-emerald-50 text-emerald-600 group-hover/item:bg-emerald-600 group-hover/item:text-white",
   orange: "bg-orange-50 text-orange-600 group-hover/item:bg-orange-500 group-hover/item:text-white",
-  violet: "bg-violet-50 text-violet-600 group-hover/item:bg-violet-600 group-hover/item:text-white",
-  amber: "bg-amber-50 text-amber-600 group-hover/item:bg-amber-500 group-hover/item:text-white"
+  purple: "bg-violet-50 text-violet-600 group-hover/item:bg-violet-600 group-hover/item:text-white",
+  aqua: "bg-cyan-50 text-cyan-600 group-hover/item:bg-cyan-600 group-hover/item:text-white",
+  yellow: "bg-amber-50 text-amber-600 group-hover/item:bg-amber-500 group-hover/item:text-white"
 } as const;
 
 export function MarketingHeader({ active }: { active?: string }) {
@@ -124,7 +97,9 @@ export function MarketingHeader({ active }: { active?: string }) {
                             <Icon className="h-5 w-5" />
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-sm font-black text-slate-900 transition group-hover/item:text-blue-600">{child.label}</span>
+                            <span className="block text-sm font-black text-slate-900 transition group-hover/item:text-blue-600">
+                              {child.label}{child.status === "beta" ? " (Beta)" : ""}
+                            </span>
                             <span className="mt-0.5 block text-xs font-semibold leading-5 text-slate-500">{child.description}</span>
                           </span>
                           <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover/item:translate-x-0.5 group-hover/item:text-blue-600" />

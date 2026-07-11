@@ -166,15 +166,14 @@ function LessonPlanDocumentOutput({
           {onSaveToLibrary && (
             isSaved ? (
               <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
-                <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+                <Check className="h-4 w-4 text-emerald-600" /> Saved
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
-                <Save className="h-4 w-4" /> Save to Library
+                <Save className="h-4 w-4" /> Save
               </Button>
             )
           )}
-          {onSave ? <Button variant="outline" size="sm" onClick={saveDocument}><Save className="h-4 w-4" /> Save Changes</Button> : null}
         </div>
         </div>
       </div>
@@ -1302,15 +1301,14 @@ export function WorksheetOutput({
             {onSaveToLibrary && (
               isSaved ? (
                 <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
-                  <Check className="h-4 w-4 text-emerald-600" /> Saved to Library
+                  <Check className="h-4 w-4 text-emerald-600" /> Saved
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
-                  <Save className="h-4 w-4" /> Save to Library
+                  <Save className="h-4 w-4" /> Save
                 </Button>
               )
             )}
-            <Button variant="outline" size="sm" onClick={() => onSave?.(worksheetOutput)}><Save className="h-4 w-4" /> Save Changes</Button>
           </div>
         </div>
 

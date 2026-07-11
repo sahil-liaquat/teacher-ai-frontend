@@ -37,10 +37,10 @@ import {
 } from "@/components/motion-primitives";
 
 const stats = [
-  { value: "4", label: "Boards Supported", detail: "and growing", Icon: Building2 },
-  { value: "80+", label: "Textbooks Available", detail: "and counting", Icon: BookOpen },
-  { value: "10", label: "Classes Covered", detail: "(6 to 12)", Icon: UsersRound },
-  { value: "12", label: "Subjects Covered", detail: "across boards", Icon: Grid2X2 },
+  { value: "Live", label: "Active boards", detail: "listed below", Icon: Building2 },
+  { value: "Live", label: "Textbook library", detail: "browse after login", Icon: BookOpen },
+  { value: "6-12", label: "Class range", detail: "where available", Icon: UsersRound },
+  { value: "Open", label: "Request missing books", detail: "reviewed by admins", Icon: Grid2X2 },
 ];
 
 const boards = [
@@ -64,11 +64,11 @@ const boards = [
   },
   {
     title: "Custom School Curriculum",
-    description: "Upload and manage your school's own curriculum and textbooks",
+    description: "School-requested books are validated, structured, and approved before shared use",
     status: "Custom",
     tone: "purple",
     logo: <CustomMark />,
-    textbooks: "Based on uploads",
+    textbooks: "Admin approved",
     actions: ["View Textbooks", "Manage"],
   },
   {
@@ -104,7 +104,7 @@ const faqs = [
   {
     question: "Can I upload my own school curriculum?",
     answer:
-      "Yes! You can upload and manage your own books and curriculum under Custom School Curriculum.",
+      "Teachers can request books. School or platform admins validate, structure, approve, and publish curriculum before it is used in shared generation.",
     Icon: UsersRound,
   },
   {
@@ -362,7 +362,7 @@ function CtaBand() {
           <div>
             <h2 className="text-2xl font-black text-slate-950">All your teaching. Aligned with the right curriculum.</h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-slate-700">
-              Join thousands of teachers who trust TeachPad for curriculum-aligned, textbook-grounded teaching.
+              Start with a supported textbook, or request the curriculum your school needs.
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <Link href="/signup" className="inline-flex h-12 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.28)] hover:-translate-y-0.5 hover:bg-blue-700"

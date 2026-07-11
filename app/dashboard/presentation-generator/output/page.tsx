@@ -366,12 +366,12 @@ function Toolbar({
           isSaved ? (
             <Button type="button" variant="outline" disabled className="h-10 bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed rounded-xl px-4 text-xs font-bold flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600" />
-              Saved to Library
+              Saved
             </Button>
           ) : (
             <Button type="button" variant="outline" onClick={onSaveToLibrary} className="h-10 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl px-4 text-xs font-bold text-slate-700 shadow-sm active:scale-95 transition-all duration-200 flex items-center gap-2">
               <Save className="h-4 w-4" />
-              Save to Library
+              Save
             </Button>
           )
         )}
