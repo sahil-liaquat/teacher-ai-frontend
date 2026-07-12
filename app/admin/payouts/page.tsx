@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { backendApi } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, formatDateTime, formatInr } from "@/components/admin/admin-ui";
 import { SettlePayout } from "@/components/admin/settle-payout";
 
 export default function AdminPayoutsPage() {
+  const client = useQueryClient();
   const [selectedInfluencerId, setSelectedInfluencerId] = useState("");
 
   const influencers = useQuery({ queryKey: ["admin-influencers"], queryFn: () => backendApi.adminInfluencers() });
@@ -40,7 +41,10 @@ export default function AdminPayoutsPage() {
 
       {selectedInfluencerId ? (
         <div className="space-y-6">
-          <SettlePayout influencerId={selectedInfluencerId} />
+          <SettlePayout
+            influencerId={selectedInfluencerId}
+            onSettled={() => client.invalidateQueries({ queryKey: ["admin-payouts"] })}
+          />
 
           <AdminPanel title="Payout history" contentClassName="p-0">
             {payouts.isLoading ? <div className="p-6"><LoadingState label="Loading payouts" /></div> : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, HandCoins } from "lucide-react";
 import { backendApi, type AdminCommissionRow } from "@/lib/api";
@@ -16,6 +16,17 @@ export function SettlePayout({ influencerId, onSettled }: { influencerId: string
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [payoutReference, setPayoutReference] = useState("");
   const [note, setNote] = useState("");
+
+  // Guard against cross-influencer state leak: if the caller switches
+  // influencerId without unmounting (e.g. a dropdown, or Task 9's tab
+  // switching), reset any in-flight selection/reference/note so a stale
+  // commission id from the previous influencer can never ride along into
+  // this influencer's payout-settlement call.
+  useEffect(() => {
+    setSelectedIds([]);
+    setPayoutReference("");
+    setNote("");
+  }, [influencerId]);
 
   const pending = useQuery({
     queryKey: ["influencer-pending", influencerId],
