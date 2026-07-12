@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 import {
@@ -40,16 +41,23 @@ const KIND_LABEL: Record<ActivityKind, string> = {
 };
 
 export default function AdminActivityPage() {
+  const searchParams = useSearchParams();
+  // Deep-links (e.g. Task 9's "activity ↗" links from the influencer detail
+  // page) pass ?user_id=<uuid> to pre-scope this feed to one teacher. Read it
+  // once on mount and thread it through the same state/query-key pattern that
+  // already drives `kind`, rather than adding a parallel filtering mechanism.
+  const [userId, setUserId] = useState(() => searchParams.get("user_id") || "");
   const [kind, setKind] = useState<ActivityKind | "">("");
   const [userEmail, setUserEmail] = useState("");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ActivityRow | null>(null);
 
   const activity = useQuery({
-    queryKey: ["admin-activity", kind, page],
+    queryKey: ["admin-activity", kind, userId, page],
     queryFn: () =>
       backendApi.adminActivity({
         kind: kind || undefined,
+        user_id: userId || undefined,
         skip: page * PAGE_SIZE,
         limit: PAGE_SIZE,
       }),
@@ -72,6 +80,14 @@ export default function AdminActivityPage() {
         eyebrow="Behavioral audit"
         title="Generation Activity"
         description="Every generation across all teachers — tool, input, output, and ₹ cost. Rows from before input-capture show the output with an 'input not recorded' badge."
+        meta={
+          userId ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              Filtered to one user
+              <button onClick={() => { setUserId(""); setPage(0); }} className="underline hover:text-blue-900">Clear</button>
+            </span>
+          ) : undefined
+        }
         actions={
           <div className="flex flex-wrap items-end gap-2">
             <label className="grid gap-1">
