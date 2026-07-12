@@ -182,3 +182,7 @@ export function formatDateTime(value?: string) {
 export function compactNumber(value: number | undefined) {
   return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(value ?? 0);
 }
+
+export function formatInr(value: number) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value || 0);
+}
