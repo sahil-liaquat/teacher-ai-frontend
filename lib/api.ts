@@ -761,6 +761,76 @@ export type PayoutCreateResponse = PayoutOut & {
   settled_commission_ids?: string[];
 };
 
+export type FunnelStage = "paying" | "churned" | "on_free_access";
+
+export type InfluencerOverviewRow = {
+  id: string;
+  name: string;
+  email: string;
+  created_at?: string | null;
+  signups: number;
+  on_free_access: number;
+  paying: number;
+  churned: number;
+  lifetime_earned_inr: number;
+  pending_owed_inr: number;
+  paid_out_inr: number;
+};
+
+export type InfluencerOverviewResponse = {
+  total: number;
+  skip: number;
+  limit: number;
+  totals: { influencers: number; referred: number; paying: number; pending_owed_inr: number };
+  items: InfluencerOverviewRow[];
+};
+
+export type InfluencerDetail = {
+  id: string;
+  name: string;
+  email: string;
+  created_at?: string | null;
+  phone?: string | null;
+  funnel: { signups: number; on_free_access: number; paying: number; churned: number };
+  money: { lifetime_earned_inr: number; pending_owed_inr: number; paid_out_inr: number };
+};
+
+export type ReferredUserRow = {
+  user_id: string;
+  name?: string | null;
+  email: string;
+  stage: FunnelStage;
+  code_used?: string | null;
+  signed_up_at?: string | null;
+  plan_code?: string | null;
+  status?: string | null;
+  earned_from_inr: number;
+};
+
+export type AdminCommissionRow = {
+  id: string;
+  referred_user_name?: string | null;
+  referred_user_email?: string | null;
+  plan_code?: string | null;
+  amount_inr: number;
+  payment_status: "pending" | "paid";
+  payout_reference?: string | null;
+  created_at: string;
+  notes?: string | null;
+};
+
+export type AdminPayoutRow = {
+  id: string;
+  amount_inr: number;
+  payout_reference: string;
+  created_at: string;
+};
+
+type Envelope<T> = { total: number; skip: number; limit: number; items: T[] };
+export type ReferredUsersResponse = Envelope<ReferredUserRow>;
+export type AdminCommissionsResponse = Envelope<AdminCommissionRow>;
+export type AdminPayoutsResponse = Envelope<AdminPayoutRow>;
+
 export type PromoRedemptionOut = {
   user_id: string;
   resulting_access_until: string | null;
@@ -1320,8 +1390,13 @@ export const backendApi = {
     apiFetch<BillingMe>("/billing/phone", { method: "PATCH", body: JSON.stringify({ contact }) }),
   billingGiftAcknowledge: () =>
     apiFetch<{ ok: boolean }>("/billing/gift/acknowledge", { method: "POST" }),
-  adminPromoCodes: (skip = 0, limit = 100) =>
-    apiFetch<PromoCodeOut[]>(`/admin/promo-codes?skip=${skip}&limit=${limit}`),
+  adminPromoCodes: (params: { skip?: number; limit?: number; influencer_id?: string } = {}) => {
+    const qs = new URLSearchParams();
+    qs.set("skip", String(params.skip ?? 0));
+    qs.set("limit", String(params.limit ?? 100));
+    if (params.influencer_id) qs.set("influencer_id", params.influencer_id);
+    return apiFetch<PromoCodeOut[]>(`/admin/promo-codes?${qs.toString()}`);
+  },
   adminCreatePromoCode: (payload: PromoCodeCreatePayload) =>
     apiFetch<PromoCodeOut>("/admin/promo-codes", { method: "POST", body: JSON.stringify(payload) }),
   adminSetPromoActive: (id: string, isActive: boolean) =>
@@ -1343,6 +1418,43 @@ export const backendApi = {
     apiFetch<PayoutOut[]>(`/admin/payouts${influencerId ? `?influencer_id=${encodeURIComponent(influencerId)}` : ""}`),
   adminCreateInfluencerPayout: (influencerId: string, payload: { commission_ids: string[] | null; payout_reference: string; note?: string | null }) =>
     apiFetch<PayoutCreateResponse>(`/admin/influencers/${influencerId}/payout`, { method: "POST", body: JSON.stringify(payload) }),
+  adminInfluencerOverview: (params: { skip?: number; limit?: number; sort?: string; order?: "asc" | "desc"; q?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    if (params.sort) qs.set("sort", params.sort);
+    if (params.order) qs.set("order", params.order);
+    if (params.q) qs.set("q", params.q);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<InfluencerOverviewResponse>(`/admin/influencers/overview${suffix}`);
+  },
+  adminInfluencerDetail: (id: string) => apiFetch<InfluencerDetail>(`/admin/influencers/${id}`),
+  adminInfluencerReferredUsers: (id: string, params: { stage?: string; q?: string; skip?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.stage) qs.set("stage", params.stage);
+    if (params.q) qs.set("q", params.q);
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<ReferredUsersResponse>(`/admin/influencers/${id}/referred-users${suffix}`);
+  },
+  adminInfluencerCommissions: (id: string, params: { status?: "pending" | "paid"; skip?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set("status", params.status);
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminCommissionsResponse>(`/admin/influencers/${id}/commissions${suffix}`);
+  },
+  adminInfluencerPayouts: (id: string, params: { skip?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminPayoutsResponse>(`/admin/influencers/${id}/payouts${suffix}`);
+  },
+  adminPayoutCommissions: (payoutId: string) =>
+    apiFetch<AdminCommissionRow[]>(`/admin/influencers/payouts/${payoutId}/commissions`),
   influencerDashboard: () =>
     apiFetch<InfluencerDashboard>("/influencer/dashboard"),
   influencerCommissions: () =>
