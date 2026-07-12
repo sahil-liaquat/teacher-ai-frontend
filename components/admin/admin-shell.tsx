@@ -12,6 +12,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   ScrollText,
   Shield,
@@ -36,6 +37,7 @@ type AdminNavItem = {
 const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/influencers", label: "Influencers", icon: Megaphone },
   { href: "/admin/billing", label: "Billing", icon: Ticket },
   { href: "/admin/payouts", label: "Payouts", icon: HandCoins },
   { href: "/admin/usage", label: "Usage", icon: Coins },
