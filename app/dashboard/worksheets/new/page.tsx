@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardList, FileText, FlaskConical, Globe, GraduationCap, Hash, Image, Lightbulb, LoaderCircle, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, Check, ChevronDown, FileText, FlaskConical, Globe, GraduationCap, Hash, Lightbulb, LoaderCircle, MessageCircle, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,86 @@ const defaultQuestionTypes = [
   "Short Answer"
 ];
 
+const competencyFocusOptions = [
+  {
+    value: "conceptual_understanding",
+    label: "Conceptual understanding",
+    desc: "Core ideas and textbook concepts",
+    icon: BookOpen,
+    color: "green"
+  },
+  {
+    value: "application_problem_solving",
+    label: "Application and problem-solving",
+    desc: "Apply learning to solve problems",
+    icon: FlaskConical,
+    color: "sky"
+  },
+  {
+    value: "critical_thinking",
+    label: "Critical thinking",
+    desc: "Reason, compare, and justify",
+    icon: Brain,
+    color: "purple"
+  },
+  {
+    value: "communication",
+    label: "Communication",
+    desc: "Explain ideas clearly",
+    icon: MessageCircle,
+    color: "amber"
+  },
+  {
+    value: "creativity",
+    label: "Creativity",
+    desc: "Create, imagine, and connect",
+    icon: Sparkles,
+    color: "rose"
+  }
+] as const;
+
+type CompetencyFocus = typeof competencyFocusOptions[number]["value"];
+
+const questionMixOptions = [
+  {
+    value: "recall_based",
+    label: "Recall-Based Questions",
+    desc: "Definitions, facts, formulas, and direct textbook questions.",
+    icon: BookOpen,
+    color: "green"
+  },
+  {
+    value: "competency_based",
+    label: "Competency-Based Questions",
+    desc: "Application, reasoning, analysis, interpretation, and problem-solving.",
+    icon: Brain,
+    color: "purple"
+  },
+  {
+    value: "real_life_application",
+    label: "Real-Life Application Questions",
+    desc: "Connect textbook concepts with everyday situations.",
+    icon: FlaskConical,
+    color: "sky"
+  },
+  {
+    value: "value_based",
+    label: "Value-Based Questions",
+    desc: "Explore responsibility, empathy, ethics, teamwork, or environmental awareness.",
+    icon: Users,
+    color: "amber"
+  },
+  {
+    value: "computational_thinking",
+    label: "Computational Thinking Questions",
+    desc: "Use patterns, sequencing, decomposition, logic, and data interpretation.",
+    icon: Hash,
+    color: "rose"
+  }
+] as const;
+
+type QuestionMix = typeof questionMixOptions[number]["value"];
+
 const defaultMarks: Record<string, number> = {
   "MCQ": 1,
   "True/False": 1,
@@ -80,6 +160,8 @@ type WorksheetFormDraft = {
   questionTypes: string[];
   questionTypeCounts?: Record<string, number>;
   questionTypeMarks?: Record<string, number>;
+  questionMix?: QuestionMix[];
+  competencyFocus?: CompetencyFocus[];
   includeAnswerKey: boolean;
   includeMarkingScheme: boolean;
   includeHints: boolean;
@@ -113,6 +195,8 @@ export default function NewWorksheetPage() {
   const [questionTypeMarks, setQuestionTypeMarks] = useState<Record<string, number>>(
     Object.fromEntries(questionTypeOptions.map(t => [t, defaultMarks[t]]))
   );
+  const [questionMix, setQuestionMix] = useState<QuestionMix[]>([]);
+  const [competencyFocus, setCompetencyFocus] = useState<CompetencyFocus[]>([]);
   const [includeAnswerKey, setIncludeAnswerKey] = useState(true);
   const [includeMarkingScheme, setIncludeMarkingScheme] = useState(true);
   const [includeHints, setIncludeHints] = useState(false);
@@ -146,6 +230,8 @@ export default function NewWorksheetPage() {
       setQuestionTypes(draft.questionTypes?.length ? draft.questionTypes : defaultQuestionTypes);
       if (draft.questionTypeCounts) setQuestionTypeCounts(draft.questionTypeCounts);
       if (draft.questionTypeMarks) setQuestionTypeMarks(draft.questionTypeMarks);
+      setQuestionMix(draft.questionMix || []);
+      setCompetencyFocus(draft.competencyFocus || []);
       setIncludeAnswerKey(draft.includeAnswerKey ?? true);
       setIncludeMarkingScheme(draft.includeMarkingScheme ?? true);
       setIncludeHints(draft.includeHints ?? false);
@@ -168,12 +254,14 @@ export default function NewWorksheetPage() {
       questionTypes,
       questionTypeCounts,
       questionTypeMarks,
+      questionMix,
+      competencyFocus,
       includeAnswerKey,
       includeMarkingScheme,
       includeHints,
       includeDiagramsImages
     });
-  }, [draftReady, boardId, classId, subject, bookId, chapterNames, topic, language, difficulty, questionTypes, questionTypeCounts, questionTypeMarks, includeAnswerKey, includeMarkingScheme, includeHints, includeDiagramsImages]);
+  }, [draftReady, boardId, classId, subject, bookId, chapterNames, topic, language, difficulty, questionTypes, questionTypeCounts, questionTypeMarks, questionMix, competencyFocus, includeAnswerKey, includeMarkingScheme, includeHints, includeDiagramsImages]);
 
   useEffect(() => {
     setFetching(true);
@@ -416,6 +504,21 @@ export default function NewWorksheetPage() {
     setQuestionTypes((items) => items.includes(type) ? items.filter((item) => item !== type) : [...items, type]);
   }
 
+  function toggleQuestionMix(value: QuestionMix) {
+    setQuestionMix((items) => items.includes(value) ? items.filter((item) => item !== value) : [...items, value]);
+  }
+
+  function toggleCompetencyFocus(value: CompetencyFocus) {
+    setCompetencyFocus((items) => {
+      if (items.includes(value)) return items.filter((item) => item !== value);
+      if (items.length >= 3) {
+        toast({ title: "Choose up to three", description: "Remove one competency before selecting another." });
+        return items;
+      }
+      return [...items, value];
+    });
+  }
+
   async function generate() {
     if (!canGenerate) {
       toast({ title: "Complete required details", description: "Select textbook, at least one chapter, and at least one question type." });
@@ -442,6 +545,8 @@ export default function NewWorksheetPage() {
         ),
         language,
         difficulty_distribution: difficulty,
+        question_mix: questionMix,
+        competency_focus: competencyFocus,
         include_answer_key: includeAnswerKey,
         include_marking_scheme: includeMarkingScheme,
         include_hints: includeHints,
@@ -768,94 +873,40 @@ export default function NewWorksheetPage() {
                 )}
               </div>
 
-              {/* Difficulty Distribution */}
+              {/* Question Mix */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Difficulty Distribution</h3>
+                  <h3 className="text-base font-bold text-[#25262b]">Question Mix</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Choose the balance for easy, medium, and hard questions.</p>
-                <div className="grid gap-4">
-                  <div className="flex rounded-xl border border-[#dffafa] bg-[#f8ffff] p-1">
-                    {difficultyPresets.map((preset) => {
-                      const active = difficulty.easy === preset.values.easy && difficulty.medium === preset.values.medium && difficulty.hard === preset.values.hard;
-                      return (
-                        <button
-                          key={preset.key}
-                          type="button"
-                          onClick={() => setDifficulty(preset.values)}
-                          className={cn(
-                            "h-10 flex-1 rounded-lg text-sm font-black transition-all duration-200",
-                            active ? "bg-white text-[#25262b] shadow-sm" : "text-[#6d6f78] hover:text-emerald-700"
-                          )}
-                        >
-                          {preset.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="overflow-hidden rounded-xl border border-[#dffafa] bg-white">
-                    <div className="flex h-4">
-                      <div className="bg-emerald-400 transition-all duration-500" style={{ width: `${difficulty.easy}%` }} />
-                      <div className="bg-blue-500 transition-all duration-500" style={{ width: `${difficulty.medium}%` }} />
-                      <div className="bg-red-500 transition-all duration-500" style={{ width: `${difficulty.hard}%` }} />
-                    </div>
-                    <div className="grid gap-3 p-3 text-sm font-black text-[#25262b] md:grid-cols-3">
-                      <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" /> Easy {difficulty.easy}%</span>
-                      <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-blue-500" /> Medium {difficulty.medium}%</span>
-                      <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500" /> Hard {difficulty.hard}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* What to Include */}
-              <div>
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">3</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
-                </div>
-                <p className="mb-4 text-sm text-[#55516e]">Select the additional sections for your worksheet.</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {[
-                    { key: "answerKey" as const, label: "Answer Key", desc: "Correct answers for all questions", icon: ClipboardCheck, color: "green" },
-                    { key: "markingScheme" as const, label: "Marking Scheme", desc: "Mark allocation per question", icon: ClipboardList, color: "purple" },
-                    { key: "hints" as const, label: "Hints", desc: "Helpful hints for difficult questions", icon: Lightbulb, color: "amber" },
-                    { key: "diagrams" as const, label: "Diagrams / Images", desc: "Include visual elements in the worksheet", icon: Image, color: "sky" },
-                  ].map((item) => {
-                    const CompIcon = item.icon;
-                    const active = item.key === "answerKey" ? includeAnswerKey
-                      : item.key === "markingScheme" ? includeMarkingScheme
-                      : item.key === "hints" ? includeHints
-                      : includeDiagramsImages;
+                <p className="mb-4 text-sm text-[#55516e]">Choose the types of questions you want in the worksheet.</p>
+                <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {questionMixOptions.map((item) => {
+                    const MixIcon = item.icon;
+                    const active = questionMix.includes(item.value);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
                       green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-[#6ee7b7]" },
                       purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
                       amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
                       sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
+                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
                     };
                     const ct = toneMap[item.color] || toneMap.green;
                     return (
-                      <div key={item.key}
-                        onClick={() => {
-                          const setter = item.key === "answerKey" ? setIncludeAnswerKey
-                            : item.key === "markingScheme" ? setIncludeMarkingScheme
-                            : item.key === "hints" ? setIncludeHints
-                            : setIncludeDiagramsImages;
-                          setter(!active);
-                        }}
-                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
+                      <div key={item.value}
+                        onClick={() => toggleQuestionMix(item.value)}
+                        className={`flex h-full cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
                           active
                             ? `${ct.border} ${ct.bg}`
-                            : "border-[#d8f1e5] bg-white hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
                         <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
-                          <CompIcon className="h-6 w-6" />
+                          <MixIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm font-semibold ${active ? ct.text : "text-[#25262b]"}`}>
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-teachpad-ink"}`}>
                               {item.label}
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
@@ -863,6 +914,82 @@ export default function NewWorksheetPage() {
                           <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Competency Focus */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">3</span>
+                  <h3 className="text-base font-bold text-[#25262b]">Competency Focus</h3>
+                </div>
+                <p className="mb-4 text-sm text-[#55516e]">
+                  Select up to three competencies. Leave blank and TeachPad will choose suitable competencies from the chapter.
+                </p>
+                <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {competencyFocusOptions.map((item) => {
+                    const CompIcon = item.icon;
+                    const active = competencyFocus.includes(item.value);
+                    const toneMap: Record<string, { bg: string; text: string; border: string }> = {
+                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-[#6ee7b7]" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
+                      amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
+                      sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
+                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
+                    };
+                    const ct = toneMap[item.color] || toneMap.green;
+                    return (
+                      <div key={item.value}
+                        onClick={() => toggleCompetencyFocus(item.value)}
+                        className={`flex h-full cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
+                          active
+                            ? `${ct.border} ${ct.bg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                          <CompIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-teachpad-ink"}`}>
+                              {item.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Difficulty Distribution */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">4</span>
+                  <h3 className="text-base font-bold text-[#25262b]">Difficulty Distribution</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3 sm:gap-2">
+                  {difficultyPresets.map((preset) => {
+                    const active = difficulty.easy === preset.values.easy && difficulty.medium === preset.values.medium && difficulty.hard === preset.values.hard;
+                    return (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        onClick={() => setDifficulty(preset.values)}
+                        className={cn(
+                          "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                          active
+                            ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
+                            : "border border-[#d8f1e5] bg-white text-[#25262b] hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                        )}
+                      >
+                        {preset.label}
+                      </button>
                     );
                   })}
                 </div>

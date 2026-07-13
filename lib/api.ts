@@ -158,6 +158,7 @@ export type LessonPlan = {
   topic: string;
   duration_minutes: number;
   plan: any;
+  input_json?: Record<string, any> | null;
   is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -176,6 +177,8 @@ export type LessonPlanGeneratePayload = {
   duration_minutes: number;
   lesson_components?: string[];
   learning_objectives_hint?: string;
+  student_ability_profile: "needs_more_support" | "mixed_ability" | "at_expected_level" | "advanced";
+  class_size: "small" | "medium" | "large";
   language?: string;
   teaching_style?: string;
   use_school_format?: boolean;
@@ -193,6 +196,20 @@ export type WorksheetGeneratePayload = {
   question_type_marks?: Record<string, number>;
   language?: string;
   difficulty_distribution?: { easy: number; medium: number; hard: number };
+  question_mix?: Array<
+    "recall_based" |
+    "competency_based" |
+    "real_life_application" |
+    "value_based" |
+    "computational_thinking"
+  >;
+  competency_focus?: Array<
+    "conceptual_understanding" |
+    "application_problem_solving" |
+    "critical_thinking" |
+    "communication" |
+    "creativity"
+  >;
   include_answer_key?: boolean;
   include_marking_scheme?: boolean;
   include_hints?: boolean;
@@ -1267,6 +1284,8 @@ export const backendApi = {
   updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
     apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteLessonPlan: (id: string) => apiFetch<void>(`/lesson-plans/${id}`, { method: "DELETE" }),
+  tweakLessonPlan: (id: string, instruction: string) =>
+    apiFetch<any>(`/lesson-plans/${id}/tweak`, { method: "POST", body: JSON.stringify({ instruction }) }),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) }),
   streamLessonPlan: (

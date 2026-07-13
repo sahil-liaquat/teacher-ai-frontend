@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
-import { CompanionResourcesPanel } from "@/components/companion-resources-panel";
+import { LessonPlanChatbotPanel } from "@/components/lesson-plan-chatbot-panel";
 import { LessonPlanOutput } from "@/components/generation-output";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { Card, CardContent } from "@/components/ui/card";
@@ -100,7 +100,7 @@ export default function LessonPlanDetailPage() {
 
   return (
     <div className="print-shell mx-auto w-full max-w-[1480px] xl:h-[calc(100vh-40px)] xl:overflow-hidden">
-      <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:pr-[384px] 2xl:pr-[408px]">
+      <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:pr-[444px] 2xl:pr-[488px]">
         {autoSaveFailed ? (
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
             <span>Changes not saved — we'll keep retrying as you edit.</span>
@@ -130,14 +130,11 @@ export default function LessonPlanDetailPage() {
           onSaveToLibrary={handleSaveToLibrary}
         />
       </div>
-      <CompanionResourcesPanel
-        className="mt-6 xl:fixed xl:right-[max(1.5rem,calc((100vw-1480px)/2+1.5rem))] xl:top-5 xl:mt-0 xl:w-[360px] 2xl:w-[380px]"
-        topic={output?.metadata?.topic || lesson.data?.topic}
-        classLabel={output?.metadata?.class || lesson.data?.class_name}
-        subject={output?.metadata?.subject || lesson.data?.subject}
-        board={output?.metadata?.board}
-        chapter={output?.metadata?.chapter || lesson.data?.chapter_name}
+      <LessonPlanChatbotPanel
+        className="mt-6 xl:fixed xl:right-[max(1.5rem,calc((100vw-1480px)/2+1.5rem))] xl:top-5 xl:bottom-5 xl:mt-0 xl:w-[420px] 2xl:w-[460px]"
         lessonPlanId={params.id}
+        currentPlan={output}
+        onTweakSuccess={() => setEditedOutput(null)}
       />
     </div>
   );

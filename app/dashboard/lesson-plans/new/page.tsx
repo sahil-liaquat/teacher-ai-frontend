@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, Boxes, Brain, Check, ChevronDown, ClipboardCheck, Clock, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Boxes, Brain, Check, ClipboardCheck, Clock, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Rocket, Sparkles, UserCheck, UserRound, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,86 @@ const defaultLessonComponents = [
   "Assessment",
   "Homework"
 ];
+
+const abilityProfileOptions = [
+  {
+    value: "needs_more_support",
+    label: "Needs more support",
+    body: "Smaller steps, scaffolds, and frequent checks",
+    icon: Lightbulb,
+    bg: "bg-[#fffbeb]",
+    text: "text-[#d97706]",
+    border: "border-[#fcd34d]",
+    selectedBg: "bg-[#fffbeb]"
+  },
+  {
+    value: "mixed_ability",
+    label: "Mixed ability",
+    body: "Balance support and challenge",
+    icon: Users,
+    bg: "bg-[#eef6ff]",
+    text: "text-[#3b82f6]",
+    border: "border-[#93c5fd]",
+    selectedBg: "bg-[#eef6ff]"
+  },
+  {
+    value: "at_expected_level",
+    label: "At expected level",
+    body: "Grade-appropriate and focused",
+    icon: UserCheck,
+    bg: "bg-[#ecfff6]",
+    text: "text-[#24b77a]",
+    border: "border-[#6ee7b7]",
+    selectedBg: "bg-[#ecfff6]"
+  },
+  {
+    value: "advanced",
+    label: "Advanced",
+    body: "Deeper reasoning and transfer tasks",
+    icon: Rocket,
+    bg: "bg-[#f6f1ff]",
+    text: "text-[#8b5cf6]",
+    border: "border-[#c4b5fd]",
+    selectedBg: "bg-[#f6f1ff]"
+  }
+] as const;
+
+const classSizeOptions = [
+  {
+    value: "small",
+    label: "Small",
+    body: "Fewer than 20 students",
+    icon: UserRound,
+    bg: "bg-[#f0fdfa]",
+    text: "text-[#0d9488]",
+    border: "border-[#5eead4]",
+    selectedBg: "bg-[#f0fdfa]"
+  },
+  {
+    value: "medium",
+    label: "Medium",
+    body: "20-40 students",
+    icon: Users,
+    bg: "bg-[#eef6ff]",
+    text: "text-[#3b82f6]",
+    border: "border-[#93c5fd]",
+    selectedBg: "bg-[#eef6ff]"
+  },
+  {
+    value: "large",
+    label: "Large",
+    body: "More than 40 students",
+    icon: Boxes,
+    bg: "bg-[#fff1f2]",
+    text: "text-[#e11d48]",
+    border: "border-[#fda4af]",
+    selectedBg: "bg-[#fff1f2]"
+  }
+] as const;
+
+type AbilityProfile = typeof abilityProfileOptions[number]["value"];
+type ClassSize = typeof classSizeOptions[number]["value"];
+
 const LESSON_PLAN_DRAFT_KEY = "lesson-plan";
 
 type LessonPlanFormDraft = {
@@ -48,9 +128,9 @@ type LessonPlanFormDraft = {
   teachingStyle: string;
   learningObjective: string;
   selected: string[];
+  abilityProfile?: AbilityProfile;
+  classSize?: ClassSize;
   openSections: Record<string, boolean>;
-  bloomsLevel?: string;
-  includeRealLifeExamples?: boolean;
 };
 
 export default function NewLessonPlanPage() {
@@ -71,10 +151,9 @@ export default function NewLessonPlanPage() {
   const [teachingStyle, setTeachingStyle] = useState("Interactive");
   const [learningObjective, setLearningObjective] = useState("");
   const [selected, setSelected] = useState(defaultLessonComponents);
+  const [abilityProfile, setAbilityProfile] = useState<AbilityProfile>("mixed_ability");
+  const [classSize, setClassSize] = useState<ClassSize>("medium");
   const [step, setStep] = useState(1);
-  const [bloomsLevel, setBloomsLevel] = useState("Remember");
-  const [includeRealLifeExamples, setIncludeRealLifeExamples] = useState(false);
-  const [prefsOpen, setPrefsOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
@@ -100,8 +179,8 @@ export default function NewLessonPlanPage() {
       setTeachingStyle(draft.teachingStyle || "Interactive");
       setLearningObjective(draft.learningObjective || "");
       setSelected(draft.selected?.length ? draft.selected : defaultLessonComponents);
-      if (draft.bloomsLevel) setBloomsLevel(draft.bloomsLevel);
-      if (draft.includeRealLifeExamples !== undefined) setIncludeRealLifeExamples(draft.includeRealLifeExamples);
+      setAbilityProfile(draft.abilityProfile || "mixed_ability");
+      setClassSize(draft.classSize || "medium");
     }
     setDraftReady(true);
   }, []);
@@ -120,11 +199,11 @@ export default function NewLessonPlanPage() {
       teachingStyle,
       learningObjective,
       selected,
-      openSections: {},
-      bloomsLevel,
-      includeRealLifeExamples
+      abilityProfile: abilityProfile || undefined,
+      classSize: classSize || undefined,
+      openSections: {}
     });
-  }, [draftReady, boardId, chapterName, classId, bookId, duration, language, learningObjective, selected, subject, teachingStyle, topic, bloomsLevel, includeRealLifeExamples]);
+  }, [draftReady, abilityProfile, boardId, chapterName, classId, bookId, classSize, duration, language, learningObjective, selected, subject, teachingStyle, topic]);
 
   useEffect(() => {
     setFetching(true);
@@ -225,7 +304,8 @@ export default function NewLessonPlanPage() {
 
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
   const filteredBooks = useMemo(() => books.filter((book) => !subject || book.subject === subject), [books, subject]);
-  const canGenerate = Boolean(bookId && chapterName && topic.trim() && duration >= 10 && selected.length);
+  const canGoNext = Boolean(boardId && classId && subject && bookId && chapterName && topic.trim());
+  const canGenerate = Boolean(canGoNext && duration >= 10 && selected.length && abilityProfile && classSize);
 
   function chooseBoard(value: string) {
     setBoardId(value);
@@ -296,8 +376,8 @@ export default function NewLessonPlanPage() {
   }
 
   function generate() {
-    if (!canGenerate) {
-      toast({ title: "Complete required details", description: "Select board, class, book, chapter and enter topic." });
+    if (!canGoNext || duration < 10 || !selected.length || !abilityProfile || !classSize) {
+      toast({ title: "Complete required details", description: "Select board, class, book, chapter, topic, student ability profile and class size." });
       return;
     }
     const payload: LessonPlanGeneratePayload = {
@@ -307,6 +387,8 @@ export default function NewLessonPlanPage() {
       duration_minutes: Number(duration),
       lesson_components: selected,
       learning_objectives_hint: learningObjective.trim() || undefined,
+      student_ability_profile: abilityProfile,
+      class_size: classSize,
       language,
       teaching_style: teachingStyle,
       use_school_format: false,
@@ -315,10 +397,6 @@ export default function NewLessonPlanPage() {
     savePendingLessonPlan(payload);
     router.push("/dashboard/lesson-plans/generating");
   }
-
-  const bloomsOptions = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
-
-  const canGoNext = Boolean(boardId && classId && subject && bookId && chapterName && topic.trim());
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
@@ -345,7 +423,7 @@ export default function NewLessonPlanPage() {
                 Step 2 of 2
               </div>
               <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">Customize Your Lesson</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Fine-tune your lesson plan by defining learning outcomes, selecting instructional components, and choosing additional preferences.</p>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Fine-tune your lesson plan by defining learning outcomes and selecting instructional components.</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
@@ -633,41 +711,79 @@ export default function NewLessonPlanPage() {
                 </div>
               </div>
 
-              {/* Additional Preferences */}
+              {/* Student Ability Profile */}
               <div>
-                <button type="button" onClick={() => setPrefsOpen(!prefsOpen)}
-                  className="flex w-full items-center justify-between rounded-xl border border-teachpad-cardBorder bg-white p-4 shadow-sm transition-all hover:border-blue-200"
-                >
-                  <span className="text-base font-semibold text-teachpad-ink">Additional Preferences</span>
-                  <ChevronDown className={cn("h-5 w-5 text-teachpad-muted transition-transform duration-200", prefsOpen && "rotate-180")} />
-                </button>
-                <div className={cn("grid transition-all duration-300 ease-out", prefsOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
-                  <div className="min-h-0 overflow-hidden">
-                    <div className="mt-3 space-y-4 rounded-xl border border-teachpad-cardBorder bg-teachpad-input p-5">
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-sm font-semibold text-teachpad-ink">Bloom&apos;s Taxonomy Level</label>
-                          <Select value={bloomsLevel} onChange={(e) => setBloomsLevel(e.target.value)}>
-                            {bloomsOptions.map((level) => <option key={level} value={level}>{level}</option>)}
-                          </Select>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Student Ability Profile <span className="text-red-500">*</span></h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Choose the student profile the entire lesson should adapt to.</p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {abilityProfileOptions.map((option) => {
+                    const active = abilityProfile === option.value;
+                    const OptionIcon = option.icon;
+                    return (
+                      <button key={option.value} type="button"
+                        onClick={() => setAbilityProfile(option.value)}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
+                          active
+                            ? `${option.border} ${option.selectedBg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                          <OptionIcon className="h-6 w-6" />
                         </div>
-                        <div className="flex items-end">
-                          <label className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-teachpad-cardBorder bg-white px-4 py-3 transition-all hover:border-blue-200">
-                            <span className="text-sm font-semibold text-teachpad-ink">Include Real-life Examples</span>
-                            <button type="button" role="switch" aria-checked={includeRealLifeExamples}
-                              onClick={() => setIncludeRealLifeExamples(!includeRealLifeExamples)}
-                              className={cn(
-                                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
-                                includeRealLifeExamples ? "bg-gradient-to-r from-teachpad-blue to-blue-600" : "bg-[#eceef3]"
-                              )}
-                            >
-                              <span className={cn("inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out", includeRealLifeExamples ? "translate-x-5" : "translate-x-0")} />
-                            </button>
-                          </label>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
+                              {option.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Class Size */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">4</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Class Size <span className="text-red-500">*</span></h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Choose the classroom size the lesson should be practical for.</p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {classSizeOptions.map((option) => {
+                    const active = classSize === option.value;
+                    const OptionIcon = option.icon;
+                    return (
+                      <button key={option.value} type="button"
+                        onClick={() => setClassSize(option.value)}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
+                          active
+                            ? `${option.border} ${option.selectedBg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                          <OptionIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
+                              {option.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

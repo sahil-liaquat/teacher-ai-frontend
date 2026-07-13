@@ -54,5 +54,11 @@ export function clearPendingLessonPlan() {
 function isLessonPlanPayload(value: unknown): value is LessonPlanGeneratePayload {
   if (!value || typeof value !== "object") return false;
   const payload = value as Partial<LessonPlanGeneratePayload>;
-  return Boolean(payload.book_id && payload.chapter_name && payload.topic);
+  return Boolean(
+    payload.book_id &&
+    payload.chapter_name &&
+    payload.topic &&
+    payload.student_ability_profile &&
+    payload.class_size
+  );
 }
