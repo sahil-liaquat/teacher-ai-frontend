@@ -19,6 +19,8 @@ export default function LessonPlanDetailPage() {
   const [editedOutput, setEditedOutput] = useState<any>(null);
   const [autoSaveFailed, setAutoSaveFailed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [highlightedSections, setHighlightedSections] = useState<string[]>([]);
   const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
 
   useEffect(() => {
@@ -26,6 +28,19 @@ export default function LessonPlanDetailPage() {
       setIsSaved(lesson.data.is_saved ?? false);
     }
   }, [lesson.data]);
+
+  useEffect(() => {
+    if (!highlightedSections.length) return;
+
+    const highlightedSection = document.querySelector<HTMLElement>(
+      `[data-lesson-section="${highlightedSections[0]}"]`
+    );
+    highlightedSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const clearHighlight = () => setHighlightedSections([]);
+    document.addEventListener("pointerdown", clearHighlight, { once: true });
+    return () => document.removeEventListener("pointerdown", clearHighlight);
+  }, [highlightedSections]);
 
   const handleSaveToLibrary = async () => {
     if (params.id) {
@@ -99,8 +114,20 @@ export default function LessonPlanDetailPage() {
   if (lesson.error) return <Card><CardContent className="p-7"><h1 className="text-2xl font-black text-red-700">Could not open lesson plan</h1><p className="mt-2 text-sm text-[#6d6f78]">{getErrorMessage(lesson.error, "Couldn't open this lesson plan.")}</p></CardContent></Card>;
 
   return (
-    <div className="print-shell mx-auto w-full max-w-[1480px] xl:h-[calc(100vh-40px)] xl:overflow-hidden">
-      <div className="min-w-0 xl:h-full xl:overflow-y-auto xl:pr-[444px] 2xl:pr-[488px]">
+    <div
+      className={
+        isChatbotOpen
+          ? "print-shell mx-auto grid w-full max-w-[1480px] gap-0 transition-[grid-template-columns,gap,max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] print:block xl:h-[calc(100vh-40px)] xl:grid-cols-[minmax(0,1fr)_448px] xl:gap-5 xl:overflow-hidden 2xl:grid-cols-[minmax(0,1fr)_468px]"
+          : "print-shell mx-auto grid w-full max-w-[1180px] gap-0 transition-[grid-template-columns,gap,max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] xl:grid-cols-[minmax(0,1fr)_0px] 2xl:max-w-[1440px]"
+      }
+    >
+      <div
+        className={
+          isChatbotOpen
+            ? "min-w-0 -translate-x-10 opacity-0 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none print:block print:translate-x-0 print:opacity-100 xl:h-full xl:translate-x-0 xl:overflow-y-auto xl:pr-1 xl:opacity-100 xl:pointer-events-auto"
+            : "min-w-0 translate-x-0 opacity-100 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        }
+      >
         {autoSaveFailed ? (
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
             <span>Changes not saved — we'll keep retrying as you edit.</span>
@@ -121,6 +148,8 @@ export default function LessonPlanDetailPage() {
           output={output}
           streamKey={`lesson-plan-${params.id}`}
           streamSpeed="fast"
+          highlightedSections={highlightedSections}
+          onClearHighlights={() => setHighlightedSections([])}
           onCopy={copy}
           onExport={exportPdf}
           onShare={share}
@@ -131,9 +160,16 @@ export default function LessonPlanDetailPage() {
         />
       </div>
       <LessonPlanChatbotPanel
-        className="mt-6 xl:fixed xl:right-[max(1.5rem,calc((100vw-1480px)/2+1.5rem))] xl:top-5 xl:bottom-5 xl:mt-0 xl:w-[420px] 2xl:w-[460px]"
         lessonPlanId={params.id}
         currentPlan={output}
+        onBeforeOpen={async () => {
+          if (editedOutput) {
+            await saveEditedOutput(editedOutput, { silent: true });
+            setEditedOutput(null);
+          }
+        }}
+        onOpenChange={setIsChatbotOpen}
+        onApplyChanges={(_, changedSectionKeys) => setHighlightedSections(changedSectionKeys)}
         onTweakSuccess={() => setEditedOutput(null)}
       />
     </div>

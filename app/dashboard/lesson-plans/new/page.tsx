@@ -660,10 +660,86 @@ export default function NewLessonPlanPage() {
                 </div>
               </div>
 
-              {/* Customize Your Lesson Plan */}
+              {/* Class Size */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">2</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Class Size</h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Choose the classroom size the lesson should be practical for.</p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {classSizeOptions.map((option) => {
+                    const active = classSize === option.value;
+                    const OptionIcon = option.icon;
+                    return (
+                      <button key={option.value} type="button"
+                        onClick={() => setClassSize(option.value)}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
+                          active
+                            ? `${option.border} ${option.selectedBg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                          <OptionIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
+                              {option.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Student Ability Profile */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
+                  <h3 className="text-base font-bold text-teachpad-ink">Student Ability Profile</h3>
+                </div>
+                <p className="mb-4 text-sm text-teachpad-muted">Choose the student profile the entire lesson should adapt to.</p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {abilityProfileOptions.map((option) => {
+                    const active = abilityProfile === option.value;
+                    const OptionIcon = option.icon;
+                    return (
+                      <button key={option.value} type="button"
+                        onClick={() => setAbilityProfile(option.value)}
+                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
+                          active
+                            ? `${option.border} ${option.selectedBg}`
+                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                          <OptionIcon className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
+                              {option.label}
+                            </span>
+                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Customize Your Lesson Plan */}
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">4</span>
                   <h3 className="text-base font-bold text-teachpad-ink">Customize Your Lesson Plan</h3>
                 </div>
                 <p className="mb-4 text-sm text-teachpad-muted">Choose the components you want to include or emphasize.</p>
@@ -706,82 +782,6 @@ export default function NewLessonPlanPage() {
                           <p className="mt-0.5 text-xs text-[#9CA0AA]">{comp.body}</p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Student Ability Profile */}
-              <div>
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">3</span>
-                  <h3 className="text-base font-bold text-teachpad-ink">Student Ability Profile <span className="text-red-500">*</span></h3>
-                </div>
-                <p className="mb-4 text-sm text-teachpad-muted">Choose the student profile the entire lesson should adapt to.</p>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  {abilityProfileOptions.map((option) => {
-                    const active = abilityProfile === option.value;
-                    const OptionIcon = option.icon;
-                    return (
-                      <button key={option.value} type="button"
-                        onClick={() => setAbilityProfile(option.value)}
-                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
-                          active
-                            ? `${option.border} ${option.selectedBg}`
-                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
-                        }`}
-                      >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
-                          <OptionIcon className="h-6 w-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
-                              {option.label}
-                            </span>
-                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
-                          </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Class Size */}
-              <div>
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">4</span>
-                  <h3 className="text-base font-bold text-teachpad-ink">Class Size <span className="text-red-500">*</span></h3>
-                </div>
-                <p className="mb-4 text-sm text-teachpad-muted">Choose the classroom size the lesson should be practical for.</p>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {classSizeOptions.map((option) => {
-                    const active = classSize === option.value;
-                    const OptionIcon = option.icon;
-                    return (
-                      <button key={option.value} type="button"
-                        onClick={() => setClassSize(option.value)}
-                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200 ${
-                          active
-                            ? `${option.border} ${option.selectedBg}`
-                            : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
-                        }`}
-                      >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
-                          <OptionIcon className="h-6 w-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm font-semibold ${active ? option.text : "text-teachpad-ink"}`}>
-                              {option.label}
-                            </span>
-                            {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
-                          </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
-                        </div>
-                      </button>
                     );
                   })}
                 </div>

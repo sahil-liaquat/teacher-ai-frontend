@@ -35,6 +35,7 @@ import {
   type LessonOutlineRow,
 } from "@/lib/lesson-plan-export";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const differentiationLabels: Record<string, string> = {
   below_grade_level: "Below Grade Level",
@@ -83,7 +84,9 @@ function LessonPlanDocumentOutput({
   onCopy,
   onShare,
   isSaved,
-  onSaveToLibrary
+  onSaveToLibrary,
+  highlightedSections = [],
+  onClearHighlights
 }: {
   output: any;
   onSave?: (output?: any) => void;
@@ -93,6 +96,8 @@ function LessonPlanDocumentOutput({
   onShare?: (output?: any) => void;
   isSaved?: boolean;
   onSaveToLibrary?: () => void;
+  highlightedSections?: string[];
+  onClearHighlights?: () => void;
 }) {
   const [documentOutput, setDocumentOutput] = useState(output);
   const router = useRouter();
@@ -179,7 +184,10 @@ function LessonPlanDocumentOutput({
       </div>
 
       <div className="min-w-0">
-        <article className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]">
+        <article
+          onClick={highlightedSections.length ? onClearHighlights : undefined}
+          className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]"
+        >
           <header className="grid min-w-0 gap-4 border-b border-slate-300 pb-5 font-sans sm:gap-6">
             <div className="grid gap-5">
               <div className="min-w-0">
@@ -216,6 +224,7 @@ function LessonPlanDocumentOutput({
                 key={section.key}
                 index={index}
                 section={section}
+                isHighlighted={highlightedSections.includes(section.key)}
                 onSectionChange={(nextSection) => {
                   updateDraft((current) => ({
                     ...current,
@@ -241,10 +250,12 @@ function LessonPlanDocumentOutput({
 function LessonSectionBlock({
   index,
   section,
+  isHighlighted = false,
   onSectionChange,
 }: {
   index: number;
   section: LessonDocumentSection;
+  isHighlighted?: boolean;
   onSectionChange?: (section: LessonDocumentSection) => void;
 }) {
   const id = lessonSectionId(section.title);
@@ -253,8 +264,17 @@ function LessonSectionBlock({
   return (
     <section
       id={id}
-      className="grid gap-4 break-inside-avoid border-b border-slate-200 py-6 transition last:border-b-0"
+      data-lesson-section={section.key}
+      className={cn(
+        "relative grid gap-4 break-inside-avoid border-b border-slate-200 py-6 transition-all duration-500 last:border-b-0",
+        isHighlighted && "rounded-[14px] border border-blue-400 bg-blue-100/90 px-4 ring-2 ring-blue-300 ring-offset-2 shadow-[0_18px_45px_rgba(37,99,235,0.24)]"
+      )}
     >
+      {isHighlighted ? (
+        <span className="absolute -top-3 right-3 rounded-full bg-blue-600 px-3 py-1 font-sans text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-md print:hidden">
+          Updated by Elif
+        </span>
+      ) : null}
       <div className="min-w-0">
         <h3 className="break-words font-sans text-[15px] font-black leading-6 text-black sm:text-[17px]">
           <span>{index + 1}. </span>
@@ -883,6 +903,8 @@ export function LessonPlanOutput({
   output,
   streamKey,
   streamSpeed = "normal",
+  highlightedSections = [],
+  onClearHighlights,
   onSave,
   onChange,
   onExport,
@@ -894,6 +916,8 @@ export function LessonPlanOutput({
   output: any;
   streamKey?: string;
   streamSpeed?: "normal" | "fast" | "instant";
+  highlightedSections?: string[];
+  onClearHighlights?: () => void;
   onSave?: (output?: any) => void;
   onChange?: (output?: any) => void;
   onExport?: (output?: any) => void;
@@ -902,7 +926,7 @@ export function LessonPlanOutput({
   isSaved?: boolean;
   onSaveToLibrary?: () => void;
 }) {
-  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} isSaved={isSaved} onSaveToLibrary={onSaveToLibrary} />;
+  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} isSaved={isSaved} onSaveToLibrary={onSaveToLibrary} highlightedSections={highlightedSections} onClearHighlights={onClearHighlights} />;
 
   const metadata = output?.metadata || {};
   const outline = output?.lesson_outline || [];

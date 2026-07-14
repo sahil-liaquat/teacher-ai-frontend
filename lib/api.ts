@@ -176,6 +176,8 @@ export type LessonPlanGeneratePayload = {
   topic: string;
   duration_minutes: number;
   lesson_components?: string[];
+  available_resources?: string[];
+  selected_competencies?: string[];
   learning_objectives_hint?: string;
   student_ability_profile: "needs_more_support" | "mixed_ability" | "at_expected_level" | "advanced";
   class_size: "small" | "medium" | "large";
@@ -183,6 +185,43 @@ export type LessonPlanGeneratePayload = {
   teaching_style?: string;
   use_school_format?: boolean;
   format_type?: "teachpad_standard" | "school_format";
+};
+
+export type ElifPriority = "high" | "medium" | "low";
+export type ElifStrength = { title: string; evidence: string; affected_sections: string[] };
+export type ElifIssue = {
+  id: string;
+  title: string;
+  problem: string;
+  evidence: string;
+  why_it_matters: string;
+  recommended_change: string;
+  affected_sections: string[];
+  priority: ElifPriority;
+  action_type: string;
+};
+export type ElifQuickAction = { id: string; label: string; instruction: string; affected_sections: string[] };
+export type ElifAnalysis = {
+  overall_summary: string;
+  quality_score: Record<"overall" | "objectives" | "alignment" | "pedagogy" | "assessment" | "feasibility" | "differentiation", number>;
+  strengths: ElifStrength[];
+  issues: ElifIssue[];
+  quick_actions: ElifQuickAction[];
+  cached: boolean;
+};
+export type ElifProposedChange = { id: string; title: string; instruction: string; affected_sections: string[]; action_type: string };
+export type ElifChatResponse = {
+  message: string;
+  intent: "explain" | "suggest" | "update" | "clarify";
+  proposed_changes: ElifProposedChange[];
+  requires_confirmation: boolean;
+};
+export type ElifApplyResponse = {
+  lesson_plan: Record<string, any>;
+  updated_sections: Record<string, any>;
+  change_summary: string;
+  unchanged_sections: string[];
+  revision: { revision_id: string; affected_sections: string[]; change_summary: string; created_at: string };
 };
 
 export type WorksheetGeneratePayload = {
@@ -1286,6 +1325,25 @@ export const backendApi = {
   deleteLessonPlan: (id: string) => apiFetch<void>(`/lesson-plans/${id}`, { method: "DELETE" }),
   tweakLessonPlan: (id: string, instruction: string) =>
     apiFetch<any>(`/lesson-plans/${id}/tweak`, { method: "POST", body: JSON.stringify({ instruction }) }),
+  analyseLessonPlanWithElif: (id: string, force = false) =>
+    apiFetch<ElifAnalysis>(`/lesson-plans/${id}/assistant/analyse?force=${force}`, { method: "POST" }),
+  chatWithElif: (id: string, message: string, conversationHistory: Array<{ role: "user" | "assistant"; content: string }>) =>
+    apiFetch<ElifChatResponse>(`/lesson-plans/${id}/assistant/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message, conversation_history: conversationHistory }),
+    }),
+  explainElifSuggestion: (id: string, suggestion: ElifIssue) =>
+    apiFetch<{ message: string; criticality: "critical" | "recommended" | "optional" }>(`/lesson-plans/${id}/assistant/explain`, {
+      method: "POST",
+      body: JSON.stringify({ suggestion }),
+    }),
+  applyElifSuggestion: (id: string, payload: {
+    suggestion: { id: string; action_type: string; recommended_change: string };
+    affected_sections: string[];
+    teacher_instruction?: string;
+  }) => apiFetch<ElifApplyResponse>(`/lesson-plans/${id}/assistant/apply`, { method: "POST", body: JSON.stringify(payload) }),
+  undoLatestElifChange: (id: string) =>
+    apiFetch<{ lesson_plan: Record<string, any>; change_summary: string; affected_sections: string[]; revision_id: string }>(`/lesson-plans/${id}/assistant/undo`, { method: "POST" }),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) }),
   streamLessonPlan: (
