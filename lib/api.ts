@@ -1,3 +1,5 @@
+import { TOOL_REGISTRY } from "@/lib/tools";
+
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   if (configured) return configured.endsWith("/api/v1") ? configured : `${configured}/api/v1`;
@@ -28,9 +30,14 @@ export type ApiUser = {
   phone?: string | null;
   phone_prompt_state?: "required" | "hidden";
   needs_school?: boolean;
+  needs_onboarding?: boolean;
   confirmed?: boolean;
   logged_in?: boolean;
   has_subscription?: boolean;
+  board_preference?: string | null;
+  role_in_school?: string | null;
+  school_id?: string | null;
+  pending_school_name?: string | null;
 };
 
 export type PaginatedResponse<T> = {
@@ -1199,6 +1206,18 @@ export async function updateProfile(payload: {
   });
 }
 
+export async function submitOnboarding(payload: {
+  role_in_school?: string;
+  board_preference?: string;
+  school_id?: string;
+  pending_school_name?: string;
+}): Promise<ApiUser> {
+  return apiFetch<ApiUser>("/auth/me/onboarding", {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
 export async function ensureSession() {
   if (!getToken() && !getRefreshToken()) return false;
   if (isTokenExpired(getToken(), TOKEN_REFRESH_SKEW_SECONDS)) return refreshSession();
@@ -1639,4 +1658,33 @@ function sanitizeGeneratedValue(value: any): any {
     .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").replace(/^\s*[-*]\s+/, "").replace(/\*\*/g, "").trimEnd())
     .join("\n")
     .trim();
+}
+
+export const ONBOARDING_ROLE_OPTIONS = [
+  { value: "school_teacher", label: "School teacher" },
+  { value: "tuition_teacher", label: "Tuition teacher" },
+  { value: "school_coordinator", label: "School coordinator" },
+  { value: "principal", label: "Principal" },
+  { value: "other", label: "Other" }
+] as const;
+
+export const ONBOARDING_BOARD_OPTIONS = [
+  { value: "cbse", label: "CBSE" },
+  { value: "jkbose", label: "JKBOSE" },
+  { value: "icse", label: "ICSE" },
+  { value: "state_board", label: "State board" },
+  { value: "other", label: "Other" }
+] as const;
+
+export const ONBOARDING_CREATE_FIRST_OPTIONS = [
+  { id: "lesson-plan", label: "Lesson plan" },
+  { id: "worksheet", label: "Worksheet" },
+  { id: "presentation", label: "Presentation" },
+  { id: "quiz", label: "Quiz" },
+  { id: "notes", label: "Notes" }
+] as const;
+
+export function onboardingCreateFirstHref(id: string): string {
+  const tool = TOOL_REGISTRY.find((t) => t.id === id);
+  return tool ? tool.dashboardHref : "/dashboard";
 }

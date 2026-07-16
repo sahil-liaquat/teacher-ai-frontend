@@ -2,13 +2,14 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles } from "lucide-react";
+import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles, School } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTeacherProfile, saveTeacherProfile, TeacherProfile } from "@/lib/profile";
 import { useToast } from "@/components/ui/toast";
-import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, requestPasswordReset, type ApiUser, type Board, type InfluencerReferralCode } from "@/lib/api";
+import { Select } from "@/components/ui/select";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, requestPasswordReset, submitOnboarding, type ApiUser, type Board, type InfluencerReferralCode } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
@@ -43,6 +44,8 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: billing } = useBilling();
   const [profile, setProfile] = useState<TeacherProfile>({ name: "", school: "", subjects: "" });
+  const [roleInSchool, setRoleInSchool] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
@@ -106,7 +109,25 @@ export default function SettingsPage() {
       ...savedProfile,
       name: currentUser.data.full_name || currentUser.data.name || ""
     });
-  }, [currentUser.data]);
+    setRoleInSchool(currentUser.data.role_in_school || "");
+    setSchoolName(currentUser.data.pending_school_name || "");
+
+    if (boardsQuery.data) {
+      const storedBoard = localStorage.getItem("teachpad_default_board_id");
+      if (storedBoard) {
+        setDefaultBoardId(storedBoard);
+      } else if (currentUser.data.board_preference) {
+        const pref = currentUser.data.board_preference.toLowerCase();
+        const matched = (boardsQuery.data || []).find(b => 
+          b.code?.toLowerCase().includes(pref)
+        );
+        if (matched) {
+          setDefaultBoardId(matched.id);
+          localStorage.setItem("teachpad_default_board_id", matched.id);
+        }
+      }
+    }
+  }, [currentUser.data, boardsQuery.data]);
 
   useEffect(() => {
     setPhone((billing?.billing_phone ?? "").replace(/^\+91/, ""));
@@ -145,13 +166,33 @@ export default function SettingsPage() {
     });
   }
 
-  function changeDefaultBoard(value: string) {
+  async function changeDefaultBoard(value: string) {
     setDefaultBoardId(value);
     if (value) {
       localStorage.setItem("teachpad_default_board_id", value);
     } else {
       localStorage.removeItem("teachpad_default_board_id");
     }
+
+    try {
+      const selectedBoard = (boardsQuery.data || []).find(b => b.id === value);
+      let preferenceCode = "other";
+      if (selectedBoard) {
+        const codeLower = selectedBoard.code?.toLowerCase() || "";
+        if (codeLower.includes("cbse")) {
+          preferenceCode = "cbse";
+        } else if (codeLower.includes("jkbose")) {
+          preferenceCode = "jkbose";
+        }
+      }
+      const updated = await submitOnboarding({
+        board_preference: value ? preferenceCode : "other"
+      });
+      queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updated);
+    } catch (e) {
+      console.error("Failed to update board preference on backend", e);
+    }
+
     toast({
       title: "Default Board updated",
       description: "Prefill board curriculum preference has been updated.",
@@ -220,11 +261,19 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await backendApi.updateUser(currentUserId, { full_name: next.name });
+      
+      // Update onboarding role and school name preferences in backend database
+      await submitOnboarding({
+        role_in_school: roleInSchool || undefined,
+        pending_school_name: schoolName.trim() || undefined
+      });
+
       const savedUser = await getCurrentUser({ redirectOnUnauthorized: false });
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, savedUser);
 
       const savedProfile = {
         ...next,
+        school: schoolName.trim(),
         name: savedUser.full_name || next.name
       };
       saveTeacherProfile(savedProfile, savedUser.id || currentUserId);
@@ -412,6 +461,35 @@ export default function SettingsPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="10-digit mobile number"
+                  className="rounded-xl border-slate-200 bg-white focus-visible:ring-[#0B73FF]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <GraduationCap className="h-3.5 w-3.5 text-slate-400" /> Your Role
+                </label>
+                <Select
+                  value={roleInSchool}
+                  onChange={(e) => setRoleInSchool(e.target.value)}
+                >
+                  <option value="">Select your role</option>
+                  <option value="school_teacher">School teacher</option>
+                  <option value="tuition_teacher">Tuition teacher</option>
+                  <option value="school_coordinator">School coordinator</option>
+                  <option value="principal">Principal</option>
+                  <option value="other">Other</option>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <School className="h-3.5 w-3.5 text-slate-400" /> School Name
+                </label>
+                <Input
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                  placeholder="Enter your school name"
                   className="rounded-xl border-slate-200 bg-white focus-visible:ring-[#0B73FF]"
                 />
               </div>
