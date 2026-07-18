@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Check, ChevronDown, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, PenLine, Save, Share2, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -14,6 +14,8 @@ import { GenerationLoadingScreen } from "@/components/generation-loading-screen"
 import { OutputMetadataFooter } from "@/components/output-metadata-footer";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { downloadGeneratedTextPdf } from "@/lib/generated-text-pdf";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
+import { TrialGatePill } from "@/components/billing/trial-gate-pill";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
@@ -42,6 +44,7 @@ type NotesFormDraft = {
 export default function NotesGeneratorPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const generationId = searchParams.get("id");
   const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
   const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
@@ -431,6 +434,15 @@ export default function NotesGeneratorPage() {
       setIsSaved(generation.is_saved ?? false);
       toast({ title: "Notes generated", description: "Your classroom notes are ready below." });
     } catch (error) {
+      if (getErrorCode(error) === "TRIAL_MANDATE_REQUIRED") {
+        setGenerating(false);
+        setGenerationStatus("");
+        openUpgrade(
+          "You've used your free notes generation. Add a payment method to make more — " +
+          "or try your other tools free."
+        );
+        return;
+      }
       const message = getErrorMessage(error, "Could not generate notes.");
       setGenerationError(message);
       toast({ title: "Generation failed", description: message });
@@ -870,11 +882,14 @@ export default function NotesGeneratorPage() {
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d]" />
                 </div>
-                <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
-                >
-                  <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Notes
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <TrialGatePill kind="notes" />
+                  <button type="button" disabled={!canGenerate || generating} onClick={generate}
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  >
+                    <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Notes
+                  </button>
+                </div>
               </div>
             </div>
           )}

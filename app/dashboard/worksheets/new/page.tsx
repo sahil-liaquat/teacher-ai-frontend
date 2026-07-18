@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Brain, Check, ChevronDown, FileText, FlaskConical, Globe, GraduationCap, Hash, Lightbulb, LoaderCircle, MessageCircle, Sparkles, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError } from "@/lib/api";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/toast";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
+import { TrialGatePill } from "@/components/billing/trial-gate-pill";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
@@ -556,6 +557,15 @@ export default function NewWorksheetPage() {
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
       router.push(`/dashboard/worksheets/${generation.id}?new=true`);
     } catch (error) {
+      if (getErrorCode(error) === "TRIAL_MANDATE_REQUIRED") {
+        setGenerating(false);
+        setGenerationStatus("");
+        openUpgrade(
+          "You've used your free worksheet. Add a payment method to make more — " +
+          "or try your other tools free."
+        );
+        return;
+      }
       if (isPaymentRequiredError(error)) {
         setGenerating(false);
         setGenerationStatus("");
@@ -1024,11 +1034,14 @@ export default function NewWorksheetPage() {
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
                 </div>
-                <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#1fbc79] to-[#069462] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
-                >
-                  <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Worksheet
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <TrialGatePill kind="worksheet" />
+                  <button type="button" disabled={!canGenerate || generating} onClick={generate}
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#1fbc79] to-[#069462] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  >
+                    <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Worksheet
+                  </button>
+                </div>
               </div>
             </div>
           )}

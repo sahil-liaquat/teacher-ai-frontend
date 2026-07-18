@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
+import { TrialGatePill } from "@/components/billing/trial-gate-pill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
 
@@ -816,11 +817,14 @@ export default function NewLessonPlanPage() {
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
                 </div>
-                <button type="button" disabled={!canGenerate} onClick={generate}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
-                >
-                  <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Lesson Plan
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <TrialGatePill kind="lesson_plan" />
+                  <button type="button" disabled={!canGenerate} onClick={generate}
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  >
+                    <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Lesson Plan
+                  </button>
+                </div>
               </div>
             </div>
           )}
