@@ -18,6 +18,7 @@ import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
+import { appendWorkspaceContext } from "@/lib/workspace/routes.ts";
 
 const slideCountOptions = [6, 8, 10, 12] as const;
 const languageOptions = ["English", "Hindi", "Urdu"] as const;
@@ -425,7 +426,7 @@ export default function PresentationGeneratorPage() {
         localStorage.setItem(`presentation_theme_${generation.id}`, theme);
       }
       toast({ title: "Presentation generated", description: "Opening the output page." });
-      router.push(`/dashboard/presentation-generator/output?id=${generation.id}&new=true`);
+      router.push(appendWorkspaceContext(`/dashboard/presentation-generator/output?id=${generation.id}&new=true`, searchParams));
     } catch (error) {
       if (isPaymentRequiredError(error)) {
         setGenerating(false);

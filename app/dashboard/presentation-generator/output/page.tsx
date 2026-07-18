@@ -19,6 +19,7 @@ import {
 } from "@/lib/presentation-generator";
 import { downloadPptx, imageUrlToDataUri } from "@/lib/presentation-export";
 import { cn } from "@/lib/utils";
+import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 
 const slideTheme = {
   page: "bg-[#f7f7f8]",
@@ -232,6 +233,7 @@ export default function PresentationOutputPage() {
     <>
       <main className={cn("min-h-[calc(100vh-80px)] overflow-x-hidden rounded-[20px] p-2 sm:min-h-[calc(100vh-96px)] sm:rounded-[32px] sm:p-4 md:p-6 bg-slate-50/50 shadow-inner")}>
         <div className="mx-auto flex min-h-[calc(100vh-104px)] w-full max-w-[1280px] min-w-0 flex-col gap-3 sm:min-h-[calc(100vh-128px)] sm:gap-5">
+          <WorkspaceReturnBanner />
           <Toolbar
             deck={deck}
             onPresent={enterPresentMode}

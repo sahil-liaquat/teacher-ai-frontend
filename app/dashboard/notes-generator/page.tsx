@@ -18,6 +18,7 @@ import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMa
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
+import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 
 const styleOptions = ["Exam revision", "Classroom blackboard", "Student notebook", "Quick recap"];
 const detailOptions = ["Brief", "Balanced", "Detailed"];
@@ -541,6 +542,7 @@ export default function NotesGeneratorPage() {
   if (notes) {
     return (
       <div className="mx-auto w-full max-w-[1240px]">
+        <WorkspaceReturnBanner />
         <NotesOutput notes={notes} onCopy={copyNotes} onPdf={downloadNotesPdf} onShare={shareNotes} onSave={downloadNotes} isSaved={isSaved} onSaveToLibrary={handleSaveToLibrary} onBack={() => setNotes(null)} />
       </div>
     );

@@ -8,6 +8,7 @@ import { backendApi } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getErrorMessage } from "@/lib/errors";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
+import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 
 export default function WorksheetDetailPage() {
   const params = useParams<{ id: string }>();
@@ -168,6 +169,7 @@ export default function WorksheetDetailPage() {
 
   return (
     <div className="print-shell">
+      <WorkspaceReturnBanner />
       {autoSaveFailed ? (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
           <span>Changes not saved — we'll keep retrying as you edit.</span>

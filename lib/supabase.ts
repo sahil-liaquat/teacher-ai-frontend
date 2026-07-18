@@ -5,6 +5,10 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 let client: SupabaseClient | null = null;
 
+export function isSupabaseConfigured() {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+}
+
 /**
  * Browser Supabase client used ONLY for the Google OAuth (PKCE) dance.
  *

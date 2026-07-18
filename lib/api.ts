@@ -52,6 +52,166 @@ export type Board = { id: string; code: string; name: string; description?: stri
 export type ClassItem = { id: string; board_id: string; grade_number?: number; name: string; description?: string; is_active?: boolean };
 export type Book = { id: string; class_id: string; title: string; subject: string; is_ingested?: boolean; is_active?: boolean; pinecone_index?: string };
 export type Chapter = { id: string; book_id: string; chapter_number?: number; chapter_title: string; title?: string };
+export type WorkspaceResourceType = "lesson_plan" | "presentation" | "worksheet" | "activity" | "notes";
+export type WorkspaceResourceStatus = "missing" | "ready" | "skipped" | "generating" | "failed" | "stale";
+export type WorkspaceTopicStatus = "pending" | "in_progress" | "completed";
+export type WorkspaceResource = {
+  type: WorkspaceResourceType;
+  status: WorkspaceResourceStatus;
+  generation_id: string | null;
+  href: string;
+  generate_href: string;
+  generated_at: string | null;
+  version_count: number;
+};
+export type WorkspaceTopic = {
+  id: string;
+  title: string;
+  description: string | null;
+  position: number;
+  status: WorkspaceTopicStatus;
+  is_current: boolean;
+  is_ready_to_teach: boolean;
+  scheduled_at: string | null;
+  completed_at: string | null;
+  teacher_notes: WorkspaceTeacherNotes;
+  resources: WorkspaceResource[];
+  updated_at: string;
+};
+export type WorkspaceTeacherNotes = {
+  preparation: string;
+  teaching: string;
+  reflection: string;
+};
+export type TeachingWorkspace = {
+  id: string;
+  user_id: string;
+  board_id: string;
+  board_code: string;
+  board_name: string;
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  book_id: string;
+  book_title: string;
+  subject: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  section: string;
+  lesson_duration_minutes: number;
+  is_archived: boolean;
+  is_bookmarked: boolean;
+  last_opened_at: string;
+  resource_preferences: WorkspaceResourceType[];
+  completed_topic_count: number;
+  covered_topic_count: number;
+  total_topic_count: number;
+  ready_resource_count: number;
+  expected_resource_count: number;
+  current_topic_id: string | null;
+  topics: WorkspaceTopic[];
+  created_at: string;
+  updated_at: string;
+};
+export type TeachingWorkspaceCreatePayload = {
+  board_id: string;
+  class_id: string;
+  book_id: string;
+  chapter_id: string;
+  section?: string;
+  lesson_duration_minutes?: number;
+  resource_preferences?: WorkspaceResourceType[];
+  topics: Array<{ title: string; description?: string | null }>;
+};
+
+export type WorkspaceClassSummary = {
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  board_id: string;
+  board_code: string;
+  board_name: string;
+  subjects: string[];
+  chapters_worked_on: number;
+  resources_generated: number;
+  completed_topics: number;
+  total_topics: number;
+  progress_percent: number;
+  last_opened_at: string;
+};
+
+export type WorkspaceChapterSummary = {
+  class_id: string;
+  class_name: string;
+  board_id: string;
+  board_code: string;
+  book_id: string;
+  book_title: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  subject: string;
+  workspace_id: string | null;
+  is_archived: boolean;
+  completed_topics: number;
+  total_topics: number;
+  progress_percent: number;
+  resources_generated: number;
+  last_opened_at: string;
+};
+export type WorkspaceHomeTopic = {
+  workspace_id: string;
+  workspace_is_archived: boolean;
+  topic: WorkspaceTopic;
+  board_code: string;
+  class_id: string;
+  class_name: string;
+  subject: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  section: string;
+  lesson_duration_minutes: number;
+  resource_preferences: WorkspaceResourceType[];
+  last_opened_at: string;
+};
+export type WorkspaceHomeClass = {
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  board_code: string;
+  subjects: string[];
+  current_topic: WorkspaceHomeTopic | null;
+  ready_topics: number;
+  attention_topics: number;
+  last_activity_at: string;
+};
+export type WorkspaceAttentionKind =
+  | "failed_resource"
+  | "generating_resource"
+  | "upcoming_not_ready"
+  | "missing_assessment"
+  | "long_incomplete"
+  | "stale_resource"
+  | "skipped_resource";
+export type WorkspaceAttentionItem = {
+  kind: WorkspaceAttentionKind;
+  priority: number;
+  message: string;
+  topic: WorkspaceHomeTopic;
+};
+export type WorkspaceHome = {
+  continue_preparing: WorkspaceHomeTopic | null;
+  upcoming: WorkspaceHomeTopic[];
+  needs_attention: WorkspaceAttentionItem[];
+  classes: WorkspaceHomeClass[];
+};
+export type WorkspaceClassOverview = {
+  class_summary: WorkspaceHomeClass | null;
+  workspaces: TeachingWorkspace[];
+  available_chapters: WorkspaceChapterSummary[];
+};
 export type School = {
   id: string;
   name: string;
@@ -629,6 +789,17 @@ type ApiRequestInit = RequestInit & {
 export function getToken() {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem(LEGACY_ACCESS_TOKEN_KEY);
+}
+
+export function hasStoredAuthTokens() {
+  if (typeof window === "undefined") return false;
+  return [
+    ACCESS_TOKEN_KEY,
+    REFRESH_TOKEN_KEY,
+    LEGACY_ACCESS_TOKEN_KEY,
+    LEGACY_REFRESH_TOKEN_KEY,
+    LEGACY_CUSTOM_TOKEN_KEY
+  ].some((key) => Boolean(window.localStorage.getItem(key)));
 }
 
 export function setToken(token: string) {
@@ -1299,6 +1470,32 @@ export const backendApi = {
   booksByClass: (classId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<Book>>(`/books/class/${classId}?skip=${skip}&limit=${limit}`),
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
+  teachingWorkspaces: (includeArchived = false) =>
+    apiFetch<TeachingWorkspace[]>(`/teaching-workspaces?include_archived=${includeArchived}`),
+  workspaceHome: () => apiFetch<WorkspaceHome>("/teaching-workspaces/home"),
+  workspaceClassOverview: (classId: string) =>
+    apiFetch<WorkspaceClassOverview>(`/teaching-workspaces/classes/${classId}/overview`),
+  workspaceClasses: () =>
+    apiFetch<WorkspaceClassSummary[]>("/teaching-workspaces/navigation/classes"),
+  workspaceChapters: (classId: string) =>
+    apiFetch<WorkspaceChapterSummary[]>(`/teaching-workspaces/navigation/classes/${classId}/chapters`),
+  openWorkspaceChapter: (chapterId: string) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/navigation/chapters/${chapterId}/open`, { method: "POST" }),
+  currentTeachingWorkspace: () => apiFetch<TeachingWorkspace | null>("/teaching-workspaces/current"),
+  teachingWorkspace: (id: string) => apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}`),
+  createTeachingWorkspace: (payload: TeachingWorkspaceCreatePayload) =>
+    apiFetch<TeachingWorkspace>("/teaching-workspaces", { method: "POST", body: JSON.stringify(payload) }),
+  updateTeachingWorkspace: (id: string, payload: Partial<Pick<TeachingWorkspace, "section" | "lesson_duration_minutes" | "is_archived" | "is_bookmarked" | "resource_preferences">>) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  addTeachingWorkspaceTopic: (id: string, payload: { title: string; description?: string | null }) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}/topics`, { method: "POST", body: JSON.stringify(payload) }),
+  updateTeachingWorkspaceTopic: (workspaceId: string, topicId: string, payload: Partial<Pick<WorkspaceTopic, "title" | "description" | "status" | "is_current" | "is_ready_to_teach" | "scheduled_at" | "teacher_notes">>) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${workspaceId}/topics/${topicId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  updateTeachingWorkspaceResource: (workspaceId: string, topicId: string, resourceType: WorkspaceResourceType, status: "skipped" | "missing") =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${workspaceId}/topics/${topicId}/resources/${resourceType}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
   schools: (q = "", skip = 0, limit = 100) => apiFetch<PaginatedResponse<School>>(`/schools?q=${encodeURIComponent(q)}&skip=${skip}&limit=${limit}`),
   // Public, unauthenticated school list for the signup picker. redirectOnUnauthorized:false
   // so a logged-out visitor is never bounced to /login if this 401s.
@@ -1319,7 +1516,6 @@ export const backendApi = {
   updateSchoolTemplate: (id: string, payload: Partial<Omit<SchoolFormatTemplate, "id" | "school_id" | "created_at" | "updated_at">>) =>
     apiFetch<SchoolFormatTemplate>(`/schools/admin/templates/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
-  lessonPlanSummary: () => apiFetch<LessonPlanDashboardSummary>("/lesson-plans/summary"),
   dashboardSummary: () => apiFetch<DashboardSummaryResponse>("/dashboard/summary"),
   updateResourceSavedState: (type: string, id: string, isSaved: boolean) =>
     apiFetch<{ ok: boolean }>(`/library/${type}/${id}`, {

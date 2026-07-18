@@ -16,6 +16,7 @@ import {
   Home,
   LogOut,
   Menu,
+  PanelsTopLeft,
   Settings,
   Shield,
   Sparkles,
@@ -23,7 +24,7 @@ import {
   X,
   Calendar
 } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BoyAvatar } from "@/components/profile-avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -38,6 +39,7 @@ type NavItem = {
 
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
   { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
   { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
@@ -49,6 +51,7 @@ const teacherNav: NavItem[] = [
 
 const influencerWorkspaceNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft },
   { href: "/influencer", label: "Influencer", icon: HandCoins },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
   { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
@@ -74,6 +77,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   const router = useRouter();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sessionState, setSessionState] = useState<"checking" | "present" | "missing">("checking");
   const requiredRole = role ?? null;
   const { data: currentUser, isError, isLoading } = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
@@ -83,6 +87,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       return getCurrentUser({ redirectOnUnauthorized: false });
     },
     gcTime: Infinity,
+    enabled: sessionState === "present",
     refetchOnWindowFocus: false,
     retry: false,
     staleTime: Infinity
@@ -92,6 +97,17 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   const homeHref = admin ? "/admin" : "/dashboard";
   const settingsHref = "/dashboard/settings";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
+
+  useEffect(() => {
+    if (hasStoredAuthTokens()) {
+      setSessionState("present");
+      return;
+    }
+
+    setSessionState("missing");
+    const next = `${window.location.pathname}${window.location.search}`;
+    router.replace(`/login?next=${encodeURIComponent(next)}`);
+  }, [router]);
 
   useEffect(() => {
     const updateLayout = () => {
@@ -151,7 +167,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     router.replace("/login");
   }
 
-  if (isLoading || isError || !currentUser || (admin && currentUser.role !== "admin") || (!admin && !requiredRole && currentUser.role === "admin") || (role && currentUser.role !== role)) {
+  if (sessionState !== "present" || isLoading || isError || !currentUser || (admin && currentUser.role !== "admin") || (!admin && !requiredRole && currentUser.role === "admin") || (role && currentUser.role !== role)) {
     return <AuthCheckingScreen />;
   }
 
@@ -239,6 +255,8 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
 
 const navIconColors: Record<string, string> = {
   Home: "text-blue-500",
+  "My Workspace": "text-violet-500",
+  Workspace: "text-violet-500",
   "AI Tools": "animate-ai-glow",
   "Growth Hub": "text-lime-500",
   Recent: "text-yellow-500",

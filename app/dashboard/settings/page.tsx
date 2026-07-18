@@ -139,8 +139,8 @@ export default function SettingsPage() {
   const jkboseBoard = (boardsQuery.data || []).find(b => b.code?.toLowerCase().includes("jkbose"));
   const cbseBoard = (boardsQuery.data || []).find(b => b.code?.toLowerCase().includes("cbse"));
 
-  const primaryCode = referralCodesQuery.data?.[0] || { code: "TEACH14", kind: "trial", duration_days: 14 };
-  const shareLink = buildShareLink(primaryCode.code);
+  const primaryCode = referralCodesQuery.data?.[0];
+  const shareLink = primaryCode ? buildShareLink(primaryCode.code) : "";
 
   function changeSidebarLayout(layout: "floating" | "expanded") {
     if (localStorage.getItem("teachpad_sidebar_layout") === layout) return;
@@ -649,50 +649,67 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
-            <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-[10px] font-bold text-red-500 shadow-xs">
-                  <Ticket className="h-3.5 w-3.5" />
-                  Referral Code
+            {referralCodesQuery.isLoading ? (
+              <div className="h-32 animate-pulse rounded-xl border border-slate-100 bg-slate-50" aria-label="Loading referral code" />
+            ) : primaryCode ? (
+              <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-[10px] font-bold text-red-500 shadow-xs">
+                    <Ticket className="h-3.5 w-3.5" />
+                    Referral Code
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800 shadow-xs">
+                      {primaryCode.code}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
+                      onClick={() => copyValue(primaryCode.code, "code")}
+                    >
+                      {copied === "code" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                      {copied === "code" ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <p className="text-xs font-semibold leading-relaxed text-slate-500 pt-1">
+                    {benefitLine(primaryCode)}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-xl border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800 shadow-xs">
-                    {primaryCode.code}
-                  </span>
+
+                <div className="flex flex-wrap gap-2 md:self-end">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
-                    onClick={() => copyValue(primaryCode.code, "code")}
+                    onClick={() => copyValue(shareLink, "link")}
                   >
-                    {copied === "code" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                    {copied === "code" ? "Copied" : "Copy"}
+                    {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
+                    Copy Link
                   </Button>
+                  <a href={buildWhatsappHref(primaryCode.code)} target="_blank" rel="noopener noreferrer">
+                    <Button type="button" size="sm" className="h-9 px-3 rounded-lg bg-[#25d366] hover:bg-[#20ba59] text-white font-bold gap-1">
+                      <MessageCircle className="h-4 w-4" /> Share on WhatsApp
+                    </Button>
+                  </a>
                 </div>
-                <p className="text-xs font-semibold leading-relaxed text-slate-500 pt-1">
-                  {benefitLine(primaryCode)}
-                </p>
               </div>
-
-              <div className="flex flex-wrap gap-2 md:self-end">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
-                  onClick={() => copyValue(shareLink, "link")}
-                >
-                  {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
-                  Copy Link
-                </Button>
-                <a href={buildWhatsappHref(primaryCode.code)} target="_blank" rel="noopener noreferrer">
-                  <Button type="button" size="sm" className="h-9 px-3 rounded-lg bg-[#25d366] hover:bg-[#20ba59] text-white font-bold gap-1">
-                    <MessageCircle className="h-4 w-4" /> Share on WhatsApp
-                  </Button>
-                </a>
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                <div className="flex items-start gap-3">
+                  <Ticket className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                  <div>
+                    <h4 className="text-sm font-black text-amber-950">Your referral code is being set up</h4>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-amber-800">
+                      Copy and sharing options will appear here after TeachPad assigns a code to your account.
+                    </p>
+                    {referralCodesQuery.isError ? <p className="mt-2 text-[11px] font-bold text-red-600">We could not check your code right now. Please try again later.</p> : null}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Performance summary cards */}
             <div className="space-y-3">

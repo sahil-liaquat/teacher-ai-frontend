@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +20,20 @@ export function GoogleButton({
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const supabase = getSupabaseClient();
-
-  if (!supabase) return null;
+  // Public environment variables have the same value during SSR and hydration,
+  // so the server and browser now render identical markup.
+  if (!isSupabaseConfigured()) return null;
 
   async function handleGoogle() {
-    if (!supabase) return; // narrows the type inside this async closure
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      toast({
+        title: "Google sign-in is unavailable",
+        description: "Please refresh the page or use your email and password.",
+        variant: "error",
+      });
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({

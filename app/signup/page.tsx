@@ -81,7 +81,7 @@ export default function SignupPage() {
               {confirmation ? "Confirm your email" : "Create account"}
             </h1>
             <p className="mt-3 text-base font-semibold leading-7 text-slate-600">
-              {confirmation ? "We sent a confirmation link to your inbox." : "Start a workspace for lesson plans, worksheets, quizzes, and saved teaching resources."}
+              {confirmation ? "We sent a confirmation link to your inbox." : "Start a workspace for lesson plans, worksheets, presentations, and saved teaching resources."}
             </p>
           </div>
 

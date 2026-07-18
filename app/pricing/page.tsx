@@ -61,7 +61,7 @@ const structuredData = [
     operatingSystem: "Web",
     url: siteUrl,
     image: `${siteUrl}${previewImage}`,
-    description: "TeachPad creates textbook-grounded lesson plans, worksheets, presentations, notes, quizzes, and classroom activities for teachers.",
+    description: "TeachPad creates textbook-grounded lesson plans, worksheets, presentations, notes, assessment questions, and classroom activities for teachers.",
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "INR",

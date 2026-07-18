@@ -16,6 +16,7 @@ import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
+import { appendWorkspaceContext } from "@/lib/workspace/routes.ts";
 
 const difficultyPresets = [
   { key: "easy", label: "Easy", values: { easy: 60, medium: 30, hard: 10 } },
@@ -554,7 +555,7 @@ export default function NewWorksheetPage() {
       });
       setGenerationStatus("Formatting output...");
       toast({ title: "Worksheet generated", description: "Opening printable worksheet." });
-      router.push(`/dashboard/worksheets/${generation.id}?new=true`);
+      router.push(appendWorkspaceContext(`/dashboard/worksheets/${generation.id}?new=true`, searchParams));
     } catch (error) {
       if (isPaymentRequiredError(error)) {
         setGenerating(false);

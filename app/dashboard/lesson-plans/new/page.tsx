@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Boxes, Brain, Check, ClipboardCheck, Clock, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Rocket, Sparkles, UserCheck, UserRound, Users } from "lucide-react";
 import { backendApi, Board, Book, Chapter, ClassItem, LessonPlanGeneratePayload } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
@@ -14,6 +14,16 @@ import { readToolDraft, saveToolDraft } from "@/lib/form-draft-storage";
 import { savePendingLessonPlan } from "@/lib/pending-lesson-plan";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
+import { appendWorkspaceContext } from "@/lib/workspace/routes.ts";
+import {
+  filteredBooksForSubject,
+  findMatchingBoard,
+  findMatchingChapter,
+  findMatchingClass,
+  findMatchingSubject,
+  getCompanionPrefillContext,
+  hasCompanionPrefill,
+} from "@/lib/companion-prefill";
 
 const lessonComponents = [
   { title: "Warm-up / Introduction", body: "Engaging start to capture attention", icon: Lightbulb, color: "amber" },
@@ -135,7 +145,10 @@ type LessonPlanFormDraft = {
 
 export default function NewLessonPlanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
+  const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
   const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -307,6 +320,72 @@ export default function NewLessonPlanPage() {
   const canGoNext = Boolean(boardId && classId && subject && bookId && chapterName && topic.trim());
   const canGenerate = Boolean(canGoNext && duration >= 10 && selected.length && abilityProfile && classSize);
 
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.topic || !companionContext.topic) return;
+    companionApplied.current.topic = true;
+    setTopic(companionContext.topic);
+  }, [companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.board || !boards.length || !companionContext.board) return;
+    const match = findMatchingBoard(boards, companionContext.board);
+    if (!match) return;
+    companionApplied.current.board = true;
+    chooseBoard(match.id);
+  }, [boards, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.class || !classes.length || !companionContext.classLabel) return;
+    const match = findMatchingClass(classes, companionContext.classLabel);
+    if (!match) return;
+    companionApplied.current.class = true;
+    chooseClass(match.id);
+  }, [classes, companionContext]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.subject || !subjectOptions.length || !companionContext.subject) return;
+    const match = findMatchingSubject(subjectOptions, companionContext.subject);
+    if (!match) return;
+    companionApplied.current.subject = true;
+    chooseSubject(match);
+  }, [companionContext, subjectOptions]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.book || !books.length) return;
+    const candidates = filteredBooksForSubject(books, companionContext.subject || subject);
+    if (!companionContext.chapter && candidates.length === 1) {
+      companionApplied.current.book = true;
+      chooseBook(candidates[0].id);
+      return;
+    }
+    if (!companionContext.chapter || !candidates.length) return;
+    let cancelled = false;
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+      .then((results) => {
+        if (cancelled || companionApplied.current.book) return;
+        const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
+        if (!found) return;
+        const chapter = findMatchingChapter(found.chapters, companionContext.chapter);
+        companionApplied.current.book = true;
+        companionApplied.current.chapter = true;
+        setBookId(found.book.id);
+        setChapters(found.chapters);
+        setChapterName(chapter?.chapter_title || chapter?.title || companionContext.chapter);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [books, companionContext, subject]);
+
+  useEffect(() => {
+    if (!hasCompanionPrefill(companionContext) || companionApplied.current.chapter || !chapters.length || !companionContext.chapter) return;
+    const match = findMatchingChapter(chapters, companionContext.chapter);
+    if (!match) return;
+    companionApplied.current.chapter = true;
+    setChapterName(match.chapter_title || match.title || companionContext.chapter);
+  }, [chapters, companionContext]);
+
   function chooseBoard(value: string) {
     setBoardId(value);
     setClasses([]);
@@ -395,7 +474,7 @@ export default function NewLessonPlanPage() {
       format_type: "teachpad_standard"
     };
     savePendingLessonPlan(payload);
-    router.push("/dashboard/lesson-plans/generating");
+    router.push(appendWorkspaceContext("/dashboard/lesson-plans/generating", searchParams));
   }
 
   return (

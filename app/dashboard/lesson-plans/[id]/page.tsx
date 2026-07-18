@@ -11,6 +11,7 @@ import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } from "@/lib/lesson-plan-export";
+import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 
 export default function LessonPlanDetailPage() {
   const params = useParams<{ id: string }>();
@@ -128,6 +129,7 @@ export default function LessonPlanDetailPage() {
             : "min-w-0 translate-x-0 opacity-100 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
         }
       >
+        <WorkspaceReturnBanner />
         {autoSaveFailed ? (
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
             <span>Changes not saved — we'll keep retrying as you edit.</span>

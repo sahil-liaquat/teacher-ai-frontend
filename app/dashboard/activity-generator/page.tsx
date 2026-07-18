@@ -17,6 +17,7 @@ import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMa
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
+import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 
 const activityTypes = ["Group activity", "Hands-on activity", "Discussion activity", "Quick recap", "Project task"];
 const groupSizes = ["Whole class", "Pairs", "Small groups", "Individual"];
@@ -543,6 +544,7 @@ export default function ActivityGeneratorPage() {
   if (activity) {
     return (
       <div className="mx-auto w-full max-w-[1240px]">
+        <WorkspaceReturnBanner />
         <ActivityOutput activity={activity} onCopy={copyActivity} onPdf={downloadActivityPdf} onShare={shareActivity} onSave={downloadActivity} isSaved={isSaved} onSaveToLibrary={handleSaveToLibrary} onBack={() => setActivity(null)} />
       </div>
     );
