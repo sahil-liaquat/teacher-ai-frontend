@@ -726,6 +726,11 @@ async function parseError(res: Response) {
 
 // ─── Billing types ────────────────────────────────────────────────────────────
 
+export type TrialGateInfo = {
+  free_per_tool: number;
+  remaining: Record<string, number>;
+};
+
 export type BillingMe = {
   status: string;
   plan_code: string;
@@ -751,6 +756,9 @@ export type BillingMe = {
     until: string | null;
     acknowledged: boolean;
   };
+  // Per-tool free-generation state during a gated trial; null when the gate
+  // does not apply (comped/paid/gate-off).
+  trial_gate?: TrialGateInfo | null;
 };
 
 export type PromoKind = "trial" | "comp" | "discount";
