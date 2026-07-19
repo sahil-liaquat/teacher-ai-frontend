@@ -438,7 +438,7 @@ export default function NotesGeneratorPage() {
         setGenerating(false);
         setGenerationStatus("");
         openUpgrade(
-          "You've used your free notes generation. Add a payment method to make more — " +
+          "You've used your free notes. Add a payment method to make more — " +
           "or try your other tools free."
         );
         return;
