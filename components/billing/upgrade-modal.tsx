@@ -385,9 +385,17 @@ function UpgradeModalUI({
             <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teachpad-blue" />
               <p className="text-sm font-medium leading-5 text-teachpad-ink">
-                <span className="font-bold">You won&apos;t be charged today.</span> A small,
-                fully refundable amount (~₹5) may be placed to verify your card — your{" "}
-                <span className="font-bold">{priceLabel}</span> plan starts {trialEnds}.
+                <span className="font-bold">You won&apos;t be charged today.</span> A
+                small, fully refundable amount (~₹5) verifies your card. Your{" "}
+                <span className="font-bold">{priceLabel}</span> plan begins only when
+                your free trial ends, {trialEnds} — and you can{" "}
+                <a
+                  href="/dashboard/billing"
+                  className="font-semibold text-teachpad-blue underline underline-offset-2"
+                >
+                  cancel anytime from Billing
+                </a>{" "}
+                before then, no charge.
               </p>
             </div>
           )}
@@ -403,8 +411,11 @@ function UpgradeModalUI({
           </Button>
 
           <p className="mt-3 text-center text-xs font-medium leading-5 text-teachpad-muted">
-            Secure payment via Razorpay. Cancel anytime from billing settings. By
-            continuing you agree to our{" "}
+            Secure payment via Razorpay.{" "}
+            <a href="/dashboard/billing" className="font-semibold text-teachpad-blue underline underline-offset-2">
+              Cancel anytime from Billing
+            </a>
+            . By continuing you agree to our{" "}
             <a
               href="/terms"
               target="_blank"

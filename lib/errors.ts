@@ -36,3 +36,9 @@ export function getErrorMessage(
   }
   return fallback;
 }
+
+/** The backend error code, if the error came from our {detail, code} layer. */
+export function getErrorCode(error: unknown): string | undefined {
+  const code = (error as { code?: unknown })?.code;
+  return typeof code === "string" ? code : undefined;
+}

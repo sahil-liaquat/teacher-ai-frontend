@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { backendApi, getRateLimitNotice, isPaymentRequiredError, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
 import { clearPendingLessonPlan, readPendingLessonPlan } from "@/lib/pending-lesson-plan";
@@ -72,6 +72,14 @@ export default function GeneratingLessonPlanPage() {
       queryClient.invalidateQueries({ queryKey: ["resources-lesson-plans"] });
       router.replace(`/dashboard/lesson-plans/${completed.id}?new=true`);
     } catch (err) {
+      if (getErrorCode(err) === "TRIAL_MANDATE_REQUIRED") {
+        openUpgrade(
+          "You've used your free lesson plan. Add a payment method to make more — " +
+          "or try your other tools free."
+        );
+        router.replace("/dashboard/lesson-plans");
+        return;
+      }
       if (isPaymentRequiredError(err)) {
         openUpgrade("Lesson plan generation requires a Pro plan.");
         setError("A Pro plan is required to generate lesson plans.");

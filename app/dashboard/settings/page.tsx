@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles, School } from "lucide-react";
+import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles, School, CreditCard } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -398,6 +399,22 @@ export default function SettingsPage() {
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
+
+          {/* Billing Card */}
+          <Link
+            href="/dashboard/billing"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#fef3f2] via-red-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
+          >
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-red-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff5f3] text-[#dc2626] ring-red-100 shadow-[0_14px_30px_rgba(220,38,38,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+              <CreditCard className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Billing</p>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Manage subscription &amp; cancel anytime</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
       )}
 
