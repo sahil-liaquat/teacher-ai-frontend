@@ -927,6 +927,7 @@ export type CheckoutResponse = {
  */
 export type PaymentRequiredBody = {
   detail: string;
+  code?: string;
   upgrade_url?: string;
   plan_prices?: unknown;
 };
@@ -935,16 +936,21 @@ export type PaymentRequiredBody = {
  * An Error subclass that carries the structured 402 body so UI code can
  * display a contextual upgrade prompt instead of a generic error message.
  * It is consistent with how `parseError` attaches `.status` to plain errors —
- * callers can use `isPaymentRequiredError` to narrow the type.
+ * callers can use `isPaymentRequiredError` to narrow the type. It also carries
+ * `.code` (e.g. "TRIAL_MANDATE_REQUIRED") so `getErrorCode` (lib/errors.ts)
+ * can distinguish specific 402 reasons instead of treating all of them as the
+ * generic "Pro plan required" gate.
  */
 export class PaymentRequiredError extends Error {
   readonly status = 402;
+  readonly code: string | undefined;
   readonly upgrade_url: string | undefined;
   readonly plan_prices: unknown;
 
   constructor(body: PaymentRequiredBody) {
     super(body.detail || "This feature requires a Pro subscription.");
     this.name = "PaymentRequiredError";
+    this.code = body.code;
     this.upgrade_url = body.upgrade_url;
     this.plan_prices = body.plan_prices;
   }
