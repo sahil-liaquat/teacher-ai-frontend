@@ -17,22 +17,30 @@ function latestGenerationTimestamp(item: WorkspaceHomeTopic) {
 }
 
 export function flattenWorkspaceTopics(workspaces: TeachingWorkspace[]): WorkspaceHomeTopic[] {
-  return workspaces.flatMap((workspace) => workspace.topics.map((topic) => ({
-    workspace_id: workspace.id,
-    workspace_is_archived: workspace.is_archived,
-    topic,
-    board_code: workspace.board_code,
-    class_id: workspace.class_id,
-    class_name: workspace.class_name,
-    subject: workspace.subject,
-    chapter_id: workspace.chapter_id,
-    chapter_number: workspace.chapter_number,
-    chapter_title: workspace.chapter_title,
-    section: workspace.section,
-    lesson_duration_minutes: workspace.lesson_duration_minutes,
-    resource_preferences: workspace.resource_preferences,
-    last_opened_at: workspace.last_opened_at,
-  })));
+  return workspaces.flatMap((workspace) => workspace.topics.map((topic) => {
+    const lastGeneratedAt = topic.resources.reduce<string | null>((latest, resource) => {
+      if (!resource.generated_at) return latest;
+      if (!latest) return resource.generated_at;
+      return new Date(resource.generated_at).getTime() > new Date(latest).getTime() ? resource.generated_at : latest;
+    }, null);
+    return {
+      workspace_id: workspace.id,
+      workspace_is_archived: workspace.is_archived,
+      topic,
+      board_code: workspace.board_code,
+      class_id: workspace.class_id,
+      class_name: workspace.class_name,
+      subject: workspace.subject,
+      chapter_id: workspace.chapter_id,
+      chapter_number: workspace.chapter_number,
+      chapter_title: workspace.chapter_title,
+      section: workspace.section,
+      lesson_duration_minutes: workspace.lesson_duration_minutes,
+      resource_preferences: workspace.resource_preferences,
+      last_opened_at: workspace.last_opened_at,
+      last_generated_at: lastGeneratedAt,
+    };
+  }));
 }
 
 export function selectContinuePreparing(topics: WorkspaceHomeTopic[]) {

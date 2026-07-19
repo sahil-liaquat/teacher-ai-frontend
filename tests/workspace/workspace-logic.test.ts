@@ -13,7 +13,7 @@ import { aggregateClasses, flattenWorkspaceTopics, groupAttention, selectContinu
 import { getTopicRecommendation } from "../../lib/workspace/recommendations.ts";
 import { getPreparationSummary } from "../../lib/workspace/readiness.ts";
 import { getMissionProgress, getMissionRecommendation } from "../../lib/workspace/mission-control.ts";
-import { ensureWorkspaceGeneratorContext, returnTopicRoute, topicWorkspaceRoute } from "../../lib/workspace/routes.ts";
+import { ensureWorkspaceGeneratorContext, returnTopicRoute, topicWorkspaceRoute, workspaceClassRoute } from "../../lib/workspace/routes.ts";
 import { getSubjectThumbnail, normalizeSubjectName } from "../../lib/workspace/subject-images.ts";
 
 const resourceTypes: WorkspaceResourceType[] = ["lesson_plan", "presentation", "worksheet", "activity", "notes"];
@@ -68,6 +68,7 @@ function homeTopic(overrides: Partial<WorkspaceHomeTopic> = {}): WorkspaceHomeTo
     lesson_duration_minutes: 45,
     resource_preferences: resourceTypes,
     last_opened_at: "2026-07-16T10:00:00.000Z",
+    last_generated_at: null,
     ...overrides,
   };
 }
@@ -193,6 +194,10 @@ test("generator links preserve a direct return to the same topic workspace", () 
   assert.equal(params.get("workspace_topic"), "topic-1");
   assert.equal(params.get("return_to"), topicWorkspaceRoute("workspace-1", "topic-1"));
   assert.equal(returnTopicRoute(params), topicWorkspaceRoute("workspace-1", "topic-1"));
+});
+
+test("class cards preserve which class should be opened", () => {
+  assert.equal(workspaceClassRoute("class 7/english"), "/dashboard/my-workspace?class=class+7%2Fenglish");
 });
 
 test("flattening retains archived state for backward-compatible routing decisions", () => {

@@ -238,6 +238,7 @@ function TeachPadWordmark() {
       alt="TeachPad.in"
       width={1385}
       height={279}
+      quality={100}
       className="h-auto w-36 lg:w-44"
       priority
     />

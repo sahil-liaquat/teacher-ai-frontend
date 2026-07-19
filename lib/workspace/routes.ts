@@ -2,6 +2,11 @@ export function workspaceHomeRoute() {
   return "/dashboard/my-workspace";
 }
 
+export function workspaceClassRoute(classId: string) {
+  const query = new URLSearchParams({ class: classId });
+  return `${workspaceHomeRoute()}?${query.toString()}`;
+}
+
 export function topicWorkspaceRoute(workspaceId: string, topicId: string) {
   return `/dashboard/my-workspace/topic/${encodeURIComponent(workspaceId)}/${encodeURIComponent(topicId)}`;
 }

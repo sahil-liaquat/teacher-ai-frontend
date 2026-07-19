@@ -9,7 +9,7 @@ export function useWorkspaceHome() {
   return useQuery({
     queryKey: workspaceHomeQueryKey,
     queryFn: backendApi.workspaceHome,
-    staleTime: 15_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
-

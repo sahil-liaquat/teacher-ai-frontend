@@ -32,15 +32,9 @@ function topicState(item: WorkspaceHomeTopic): Exclude<ChapterFilter, "all"> {
 export function WorkspaceHomeView() {
   const home = useWorkspaceHome();
   const [filter, setFilter] = useState<ChapterFilter>("all");
-  const [showAllChapters, setShowAllChapters] = useState(false);
 
   const recentTopics = useMemo(() => {
-    if (!home.data) return [];
-    const unique = new Map<string, WorkspaceHomeTopic>();
-    [home.data.continue_preparing, ...home.data.upcoming, ...home.data.classes.map((entry) => entry.current_topic)]
-      .filter((entry): entry is WorkspaceHomeTopic => Boolean(entry))
-      .forEach((entry) => unique.set(`${entry.workspace_id}:${entry.topic.id}`, entry));
-    return Array.from(unique.values()).sort((left, right) => new Date(right.last_opened_at).getTime() - new Date(left.last_opened_at).getTime());
+    return home.data?.recent_chapters?.slice(0, 5) || [];
   }, [home.data]);
 
   const visibleTopics = useMemo(() => {
@@ -59,7 +53,7 @@ export function WorkspaceHomeView() {
   if (home.isLoading) return <WorkspaceMissionSkeleton />;
   if (home.isError || !home.data) return <WorkspaceError onRetry={() => void home.refetch()} backHref="/dashboard" backLabel="Dashboard" />;
 
-  if (!home.data.continue_preparing && !home.data.classes.length) {
+  if (!home.data.continue_preparing && !(home.data.recent_chapters?.length || 0)) {
     return <main className="workspace-reference-page mx-auto w-full max-w-[1240px] space-y-8 px-3 py-4 sm:px-6"><DashboardBannerHeader titleTop="My" titleHighlight="Workspace" imageSrc="/ai-tools/classroom-tools-header-illustration.png" /><WorkspaceEmpty title="Start planning your teaching" description="Choose a textbook chapter and TeachPad will organize every classroom resource in one place." /></main>;
   }
 
@@ -70,9 +64,9 @@ export function WorkspaceHomeView() {
       {home.data.continue_preparing ? <ContinuePreparingCard item={home.data.continue_preparing} /> : <WorkspaceEmpty title="Choose what to prepare next" description="Open a recent class or start a chapter to choose your next teaching topic." />}
 
       <section id="recent-chapters" aria-labelledby="recent-chapters-title">
-        <div className="flex items-center justify-between"><h2 id="recent-chapters-title" className="text-lg font-black text-[#111936]">Recent Chapters</h2>{visibleTopics.length > 3 ? <button type="button" onClick={() => setShowAllChapters((current) => !current)} className="text-xs font-bold text-blue-600">{showAllChapters ? "Show less" : "View all"}</button> : null}</div>
+        <div className="flex items-center justify-between"><h2 id="recent-chapters-title" className="text-lg font-black text-[#111936]">Recent Chapters</h2><span className="text-xs font-semibold text-slate-400">Latest 5 generations</span></div>
         <div className="mt-4 flex gap-3 overflow-x-auto border-b border-slate-200 pb-0">{(["all", "in_progress", "not_started", "completed"] as ChapterFilter[]).map((value) => <button key={value} type="button" onClick={() => setFilter(value)} className={cn("border-b-2 px-4 pb-3 text-[11px] font-bold transition", filter === value ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800")}>{value === "all" ? "All" : value === "in_progress" ? "In Progress" : value === "not_started" ? "Not Started" : "Completed"}</button>)}</div>
-        {visibleTopics.length ? <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{visibleTopics.slice(0, showAllChapters ? visibleTopics.length : 3).map((item) => <RecentChapterCard key={`${item.workspace_id}:${item.topic.id}`} item={item} />)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-slate-200 px-5 py-10 text-center text-sm font-semibold text-slate-400">No chapters match this view.</div>}
+        {visibleTopics.length ? <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{visibleTopics.map((item) => <RecentChapterCard key={`${item.workspace_id}:${item.topic.id}`} item={item} />)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-slate-200 px-5 py-10 text-center text-sm font-semibold text-slate-400">No chapters match this view.</div>}
       </section>
 
       <section aria-labelledby="recent-resources-title" className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-[0_8px_28px_rgba(30,50,80,0.04)]">
@@ -88,7 +82,7 @@ function RecentChapterCard({ item }: { item: WorkspaceHomeTopic }) {
   const state = topicState(item);
   const href = topicWorkspaceRoute(item.workspace_id, item.topic.id);
   const thumbnail = getSubjectThumbnail(item.subject);
-  return <Link href={href} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(30,50,80,0.04)] transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_15px_34px_rgba(37,99,235,0.09)]"><div className="h-[140px] w-full overflow-hidden rounded-[15px] border border-slate-200/70 bg-slate-50"><img src={thumbnail.src640} srcSet={`${thumbnail.src320} 320w, ${thumbnail.src640} 640w`} sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, calc(100vw - 48px)" width={640} height={360} loading="lazy" decoding="async" alt={thumbnail.alt} className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]" /></div><span className={cn("mt-4 inline-flex rounded-full px-2.5 py-1 text-[9px] font-black", state === "completed" ? "bg-emerald-50 text-emerald-700" : state === "not_started" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700")}>{state === "completed" ? "Completed" : state === "not_started" ? "Not Started" : "In Progress"}</span><h3 className="mt-3 truncate text-base font-black text-[#151d3a]">{item.chapter_title}</h3><p className="mt-1 text-[11px] font-semibold text-slate-500">{item.class_name} <span className="px-1.5 text-slate-300">•</span> {item.subject}</p><p className="mt-5 text-[10px] font-semibold text-slate-500">{progress.createdCount} of 5 resources ready</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${progress.percentage}%` }} /></div><div className="mt-5 flex items-center justify-between text-[10px] font-semibold text-slate-500"><span className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" />Last opened {relativeTime(item.last_opened_at)}</span><span className="grid h-8 w-8 place-items-center rounded-xl border border-indigo-50 bg-white text-blue-600 transition group-hover:border-blue-200 group-hover:bg-blue-600 group-hover:text-white"><ArrowRight className="h-3.5 w-3.5" /></span></div></Link>;
+  return <Link href={href} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(30,50,80,0.04)] transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_15px_34px_rgba(37,99,235,0.09)]"><div className="h-[140px] w-full overflow-hidden rounded-[15px] border border-slate-200/70 bg-slate-50"><img src={thumbnail.src640} srcSet={`${thumbnail.src320} 320w, ${thumbnail.src640} 640w`} sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, calc(100vw - 48px)" width={640} height={360} loading="lazy" decoding="async" alt={thumbnail.alt} className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]" /></div><span className={cn("mt-4 inline-flex rounded-full px-2.5 py-1 text-[9px] font-black", state === "completed" ? "bg-emerald-50 text-emerald-700" : state === "not_started" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700")}>{state === "completed" ? "Completed" : state === "not_started" ? "Not Started" : "In Progress"}</span><h3 className="mt-3 truncate text-base font-black text-[#151d3a]">{item.chapter_title}</h3><p className="mt-1 text-[11px] font-semibold text-slate-500">{item.class_name} <span className="px-1.5 text-slate-300">•</span> {item.subject}</p><p className="mt-5 text-[10px] font-semibold text-slate-500">{progress.createdCount} of 5 resources ready</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${progress.percentage}%` }} /></div><div className="mt-5 flex items-center justify-between text-[10px] font-semibold text-slate-500"><span className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" />Last generated {relativeTime(item.last_generated_at || item.last_opened_at)}</span><span className="grid h-8 w-8 place-items-center rounded-xl border border-indigo-50 bg-white text-blue-600 transition group-hover:border-blue-200 group-hover:bg-blue-600 group-hover:text-white"><ArrowRight className="h-3.5 w-3.5" /></span></div></Link>;
 }
 
 function RecentResourceCard({ item, resource }: { item: WorkspaceHomeTopic; resource: WorkspaceResource }) {

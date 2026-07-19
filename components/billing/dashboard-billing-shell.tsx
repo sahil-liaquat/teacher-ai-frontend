@@ -9,7 +9,8 @@
  * This lives here so the dashboard layout (a server component) stays clean.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { UpgradeModalProvider } from "@/components/billing/upgrade-modal";
 import { GiftModal } from "@/components/billing/gift-modal";
 import { PlanBanner } from "@/components/billing/plan-banner";
@@ -24,10 +25,20 @@ export function DashboardBillingShell({ children }: { children: ReactNode }) {
       <ProfileCompletionModal />
       <OnboardingWizard />
       <FeedbackPromptModal />
+      <PlanBannerAtTop />
       <div className="flex min-h-full flex-col">
-        <PlanBanner />
         {children}
       </div>
     </UpgradeModalProvider>
   );
+}
+
+function PlanBannerAtTop() {
+  const [target, setTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setTarget(document.getElementById("dashboard-plan-banner-slot"));
+  }, []);
+
+  return target ? createPortal(<PlanBanner />, target) : null;
 }

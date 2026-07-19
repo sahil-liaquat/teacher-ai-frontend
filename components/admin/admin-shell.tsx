@@ -21,11 +21,12 @@ import {
   X,
   ChevronRight,
   Calendar,
-  Contact
+  Bell
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 
 type AdminNavItem = {
   href: string;
@@ -43,6 +44,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/workshops", label: "Workshops", icon: Calendar },
   { href: "/admin/activity", label: "Activity", icon: ScrollText },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/system", label: "System", icon: Activity }
 ];
 
@@ -193,6 +195,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <h1 className="text-base font-semibold text-teachpad-ink">{activeItem.label}</h1>
               </div>
             </div>
+            <NotificationCenter />
           </div>
         </header>
         <main className="p-6">

@@ -34,6 +34,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
   const workspaceHref = topicWorkspaceRoute(item.workspace_id, item.topic.id);
   const statusLabel = progress.status === "ready" ? "Ready" : progress.status === "not_started" ? "Not Started" : "In Progress";
   const resourceNoun = progress.createdCount === 1 ? "resource" : "resources";
+  const progressColor = ["#ef4444", "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#10b981"][progress.createdCount] ?? "#ef4444";
 
   return (
     <section
@@ -94,7 +95,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
             <p className="mt-5 flex items-center gap-2 text-[11px] font-medium text-slate-500">
               <Clock3 className="h-[18px] w-[18px] shrink-0" />
-              <span>Last opened <strong className="font-black text-slate-600">{relativeTime(item.last_opened_at)}</strong></span>
+              <span>Last generated <strong className="font-black text-slate-600">{relativeTime(item.last_generated_at || item.last_opened_at)}</strong></span>
             </p>
 
             <Link
@@ -110,20 +111,37 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
           <div className="grid min-h-[330px] place-items-center border-t border-slate-200/80 px-4 py-6 md:border-l md:border-t-0 xl:min-h-0">
             <div className="flex h-full w-full flex-col items-center justify-center">
-              <p className="mb-6 text-center text-xs font-black text-[#101936]">Preparation Progress</p>
+              <p className="mb-5 text-center text-xs font-black text-[#101936]">Preparation Progress</p>
               <div
                 role="progressbar"
                 aria-label="Preparation progress"
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={progress.percentage}
-                className="mx-auto grid aspect-square w-full max-w-[168px] place-items-center rounded-full p-[clamp(15px,1.4vw,20px)]"
-                style={{ background: `conic-gradient(#27b66d 0 ${progress.percentage * 0.72}%, #2c78e8 ${progress.percentage * 0.72}% ${progress.percentage}%, #edf0f6 ${progress.percentage}% 100%)` }}
+                className="relative mx-auto grid aspect-square w-full max-w-[176px] place-items-center rounded-full bg-white p-2 shadow-[0_14px_32px_rgba(15,23,42,0.10),inset_0_0_0_1px_rgba(226,232,240,0.7)]"
               >
-                <div className="grid h-full w-full place-items-center rounded-full bg-white text-center shadow-[inset_0_0_0_1px_rgba(230,234,242,0.8)]">
+                <svg aria-hidden="true" viewBox="0 0 140 140" className="absolute inset-2 h-[calc(100%_-_16px)] w-[calc(100%_-_16px)] -rotate-90 overflow-visible">
+                  <circle cx="70" cy="70" r="53" pathLength="100" fill="none" stroke="#e9eef6" strokeWidth="18" />
+                  {progress.percentage > 0 && (
+                    <circle
+                      cx="70"
+                      cy="70"
+                      r="53"
+                      pathLength="100"
+                      fill="none"
+                      stroke={progressColor}
+                      strokeWidth="18"
+                      strokeLinecap="round"
+                      strokeDasharray={`${progress.percentage} ${100 - progress.percentage}`}
+                      className="drop-shadow-[0_4px_5px_rgba(15,23,42,0.16)] transition-[stroke,stroke-dasharray] duration-700 ease-out"
+                    />
+                  )}
+                </svg>
+
+                <div className="relative z-10 grid h-[112px] w-[112px] place-items-center rounded-full border border-white bg-gradient-to-br from-white via-white to-emerald-50/70 text-center shadow-[0_8px_22px_rgba(30,64,175,0.08),inset_0_0_0_1px_rgba(226,232,240,0.65)]">
                   <div>
-                    <p className="text-[28px] font-black tracking-[-0.04em] text-[#0b1430]">{progress.createdCount}/5</p>
-                    <p className="mt-1 text-[10px] font-bold leading-4 text-slate-500">resources<br />ready</p>
+                    <p className="tracking-[-0.055em] text-[#0b1430]"><span className="text-[34px] font-black">{progress.createdCount}</span><span className="ml-0.5 text-base font-extrabold text-slate-400">/5</span></p>
+                    <p className="mt-0.5 text-[10px] font-extrabold leading-[14px] text-slate-500">resources ready</p>
                   </div>
                 </div>
               </div>

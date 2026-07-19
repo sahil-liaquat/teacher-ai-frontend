@@ -15,6 +15,8 @@ import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
 import { normalizeIndianMobile } from "@/lib/phone";
+import { BoyAvatar } from "@/components/profile-avatar";
+import { PROFILE_AVATARS, normalizeProfileAvatarKey, type ProfileAvatarKey } from "@/lib/profile-avatars";
 
 const usageLimit = 100;
 
@@ -48,6 +50,7 @@ export default function SettingsPage() {
   const [roleInSchool, setRoleInSchool] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarKey, setAvatarKey] = useState<ProfileAvatarKey>("giraffe");
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -112,6 +115,7 @@ export default function SettingsPage() {
     });
     setRoleInSchool(currentUser.data.role_in_school || "");
     setSchoolName(currentUser.data.pending_school_name || "");
+    setAvatarKey(normalizeProfileAvatarKey(currentUser.data.avatar_key));
 
     if (boardsQuery.data) {
       const storedBoard = localStorage.getItem("teachpad_default_board_id");
@@ -261,7 +265,10 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      await backendApi.updateUser(currentUserId, { full_name: next.name });
+      await backendApi.updateUser(currentUserId, {
+        full_name: next.name,
+        avatar_key: avatarKey,
+      });
       
       // Update onboarding role and school name preferences in backend database
       await submitOnboarding({
@@ -431,15 +438,48 @@ export default function SettingsPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-6 pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-5">
-              <div className="relative group shrink-0">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-[#0B73FF]/10 text-[#0B73FF] shadow-sm font-black text-xl border-2 border-white ring-4 ring-slate-100">
-                  {displayName.charAt(0).toUpperCase()}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100">
+                  <BoyAvatar avatarKey={avatarKey} alt={`${displayName}'s ${avatarKey} profile picture`} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-800">Choose your profile animal</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">Your selected avatar appears beside notifications and across TeachPad.</p>
                 </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-800">Profile Picture</h4>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                {PROFILE_AVATARS.map((avatar) => {
+                  const selected = avatar.key === avatarKey;
+                  return (
+                    <button
+                      key={avatar.key}
+                      type="button"
+                      aria-label={`Choose ${avatar.label} profile picture`}
+                      aria-pressed={selected}
+                      onClick={() => setAvatarKey(avatar.key)}
+                      className={cn(
+                        "group relative rounded-2xl border bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B73FF] focus-visible:ring-offset-2",
+                        selected ? "border-[#0B73FF] ring-2 ring-blue-100" : "border-slate-200"
+                      )}
+                    >
+                      <span className="block aspect-square overflow-hidden rounded-full bg-slate-100">
+                        <BoyAvatar avatarKey={avatar.key} alt="" />
+                      </span>
+                      <span className={cn("mt-2 block text-[11px] font-bold", selected ? "text-[#0B73FF]" : "text-slate-600")}>
+                        {avatar.label}
+                      </span>
+                      {selected && (
+                        <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white shadow-sm">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="mt-3 text-[11px] font-medium text-slate-400">Click Save Profile below to keep your selection.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

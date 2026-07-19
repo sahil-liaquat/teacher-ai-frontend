@@ -1,4 +1,5 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
+import type { ProfileAvatarKey } from "@/lib/profile-avatars";
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -39,6 +40,36 @@ export type ApiUser = {
   school_id?: string | null;
   pending_school_name?: string | null;
   feedback_tools?: string[];
+  avatar_key?: ProfileAvatarKey;
+};
+
+export type NotificationSeverity = "info" | "success" | "warning" | "urgent";
+export type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  action_label: string | null;
+  action_url: string | null;
+  expires_at: string | null;
+  is_active: boolean;
+  published_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+  is_read?: boolean;
+  read_at?: string | null;
+};
+export type NotificationInbox = {
+  items: AppNotification[];
+  unread_count: number;
+};
+export type NotificationCreatePayload = {
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  action_label?: string | null;
+  action_url?: string | null;
+  expires_at?: string | null;
 };
 
 /** Tools that fire the first-use feedback popup, one per tool per user. */
@@ -191,6 +222,7 @@ export type WorkspaceHomeTopic = {
   lesson_duration_minutes: number;
   resource_preferences: WorkspaceResourceType[];
   last_opened_at: string;
+  last_generated_at: string | null;
 };
 export type WorkspaceHomeClass = {
   class_id: string;
@@ -219,6 +251,7 @@ export type WorkspaceAttentionItem = {
 };
 export type WorkspaceHome = {
   continue_preparing: WorkspaceHomeTopic | null;
+  recent_chapters: WorkspaceHomeTopic[];
   upcoming: WorkspaceHomeTopic[];
   needs_attention: WorkspaceAttentionItem[];
   classes: WorkspaceHomeClass[];
@@ -1487,6 +1520,22 @@ export const backendApi = {
   },
   adminActivityDetail: (generationId: string, kind: ActivityKind) =>
     apiFetch<ActivityDetail>(`/admin/activity/${generationId}?kind=${kind}`),
+  notifications: () => apiFetch<NotificationInbox>("/notifications"),
+  markNotificationRead: (id: string) =>
+    apiFetch<{ ok: boolean; marked_read: number }>(`/notifications/${id}/read`, { method: "POST" }),
+  markAllNotificationsRead: () =>
+    apiFetch<{ ok: boolean; marked_read: number }>("/notifications/read-all", { method: "POST" }),
+  clearNotification: (id: string) =>
+    apiFetch<{ ok: boolean; cleared: number }>(`/notifications/${id}/clear`, { method: "POST" }),
+  clearAllNotifications: () =>
+    apiFetch<{ ok: boolean; cleared: number }>("/notifications/clear-all", { method: "POST" }),
+  adminNotifications: () => apiFetch<AppNotification[]>("/admin/notifications"),
+  adminPublishNotification: (payload: NotificationCreatePayload) =>
+    apiFetch<AppNotification>("/admin/notifications", { method: "POST", body: JSON.stringify(payload) }),
+  adminSetNotificationActive: (id: string, isActive: boolean) =>
+    apiFetch<AppNotification>(`/admin/notifications/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }),
+  adminDeleteNotification: (id: string) =>
+    apiFetch<void>(`/admin/notifications/${id}`, { method: "DELETE" }),
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
   createBoard: (payload: Pick<Board, "code" | "name"> & { description?: string }) =>
     apiFetch<Board>("/boards", { method: "POST", body: JSON.stringify(payload) }),
@@ -1635,7 +1684,7 @@ export const backendApi = {
   submitFeedback: (payload: { tool: string; rating?: number | null; comment?: string | null; dismissed?: boolean }) =>
     apiFetch<{ id: string; tool: string }>("/feedback", { method: "POST", body: JSON.stringify(payload) }),
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
-  updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
+  updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active" | "avatar_key">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   updateCurrentUser: (payload: Pick<ApiUser, "full_name">) =>
     apiFetch<ApiUser>("/users/me", { method: "PATCH", body: JSON.stringify(payload) }),

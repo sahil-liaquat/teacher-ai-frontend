@@ -30,6 +30,7 @@ import { BoyAvatar } from "@/components/profile-avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrialStatusPill } from "@/components/billing/trial-status-pill";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 
 type NavItem = {
   href: string;
@@ -94,7 +95,8 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   });
   const usesInfluencerWorkspace = role === "influencer" || currentUser?.role === "influencer";
   const nav = admin ? adminNav : usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav;
-  const homeHref = admin ? "/admin" : "/dashboard";
+  const homeHref = admin ? "/admin" : role === "influencer" ? "/influencer" : "/dashboard";
+  const isHomeDashboard = pathname === homeHref;
   const settingsHref = "/dashboard/settings";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
 
@@ -177,10 +179,19 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-2xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-teachpad-blue">
           <Menu className="h-5 w-5" />
         </button>
-        <Brand compact href={homeHref} />
-        <Link href={settingsHref} aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-md backdrop-blur-sm transition-all hover:bg-white">
-          <BoyAvatar />
-        </Link>
+        {isHomeDashboard ? (
+          <>
+            <Brand compact href={homeHref} />
+            <div className="flex items-center gap-2">
+              <NotificationCenter mobile />
+              <Link href={settingsHref} aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100 transition-all hover:-translate-y-0.5 hover:ring-blue-200">
+                <BoyAvatar avatarKey={currentUser.avatar_key} />
+              </Link>
+            </div>
+          </>
+        ) : (
+          <span aria-hidden="true" className="h-10 w-10" />
+        )}
       </header>
 
       {mobileOpen && (
@@ -212,12 +223,45 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
       )}
 
+      <div className="hidden lg:block">
+        <div className={cn(
+          "mx-auto w-full max-w-[1480px] px-6 pt-3",
+          sidebarLayout === "expanded" ? "pl-[260px]" : "pl-24"
+        )}>
+          <div className="mx-auto w-full max-w-[1240px] px-4">
+            <div id="dashboard-plan-banner-slot" />
+            {!admin && role !== "influencer" && (
+              <div className="flex justify-center pb-2">
+                <TrialStatusPill placement="header" />
+              </div>
+            )}
+            {isHomeDashboard && (
+              <div className="flex h-12 items-center justify-between">
+                <div>
+                  {sidebarLayout !== "expanded" && <Brand compact href={homeHref} />}
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <NotificationCenter />
+                  <Link
+                    href={settingsHref}
+                    aria-label="Open profile settings"
+                    className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100 transition hover:-translate-y-0.5 hover:ring-blue-200"
+                  >
+                    <BoyAvatar avatarKey={currentUser.avatar_key} />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <main className="min-h-screen pb-20 pt-16 lg:pb-0 lg:pt-0">
         <div className={cn(
           "mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 xl:py-5",
           sidebarLayout === "expanded" ? "lg:pl-[260px]" : "lg:pl-24"
         )}>
-          {!admin && role !== "influencer" && <TrialStatusPill />}
+          {!admin && role !== "influencer" && <div className="lg:hidden"><TrialStatusPill /></div>}
           {children}
         </div>
       </main>
@@ -255,12 +299,12 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
 
 const navIconColors: Record<string, string> = {
   Home: "text-blue-500",
-  "My Workspace": "text-violet-500",
-  Workspace: "text-violet-500",
+  "My Workspace": "text-green-500",
+  Workspace: "text-green-500",
   "AI Tools": "animate-ai-glow",
   "Growth Hub": "text-lime-500",
   Recent: "text-yellow-500",
-  Saved: "text-green-500",
+  Saved: "text-red-500",
   Books: "text-sky-400",
   Billing: "text-pink-500",
   Settings: "text-gray-400",

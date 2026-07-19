@@ -339,6 +339,7 @@ function TeachPadWordmark({ compact = false }: { compact?: boolean }) {
       alt="TeachPad.in"
       width={1385}
       height={279}
+      quality={100}
       className={cn("h-auto", compact ? "w-36" : "w-44")}
       priority
     />

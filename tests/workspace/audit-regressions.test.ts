@@ -84,3 +84,47 @@ test("Saved Resources uses explicit proper plural labels", () => {
   assert.match(resources, /pluralLabel: "Activities"/);
   assert.doesNotMatch(resources, /\{m\.label\}s/);
 });
+
+test("workspace surfaces use the shared generation-ranked chapter feed", () => {
+  const dashboardClasses = source("components/dashboard/my-classes-section.tsx");
+  const workspaceHome = source("components/workspace/workspace-home.tsx");
+  assert.match(dashboardClasses, /recentChapters\.slice\(0, 3\)/);
+  assert.match(workspaceHome, /recent_chapters\?\.slice\(0, 5\)/);
+});
+
+test("header notifications keep a visible unread badge until an item is opened", () => {
+  const notifications = source("components/notifications/notification-center.tsx");
+  const appShell = source("components/app-shell.tsx");
+
+  assert.match(notifications, /text-\[#0B73FF\]/);
+  assert.match(notifications, /unreadCount > 0/);
+  assert.match(notifications, /bg-red-600/);
+  assert.match(notifications, /onClick=\{\(\) => read\(item\)\}/);
+  assert.match(appShell, /border-2 border-white bg-white shadow-sm ring-4 ring-blue-100/);
+});
+
+test("dashboard identity controls render only on the role home page", () => {
+  const appShell = source("components/app-shell.tsx");
+
+  assert.match(appShell, /const isHomeDashboard = pathname === homeHref/);
+  assert.match(appShell, /\{isHomeDashboard \? \(/);
+  assert.match(appShell, /\{isHomeDashboard && \(/);
+});
+
+test("preparation progress uses a rounded SVG ring", () => {
+  const continueCard = source("components/workspace/continue-preparing-card.tsx");
+
+  assert.match(continueCard, /strokeLinecap="round"/);
+  assert.match(continueCard, /strokeWidth="18"/);
+  assert.match(continueCard, /const progressColor = \["#ef4444".+"#10b981"\]/);
+  assert.doesNotMatch(continueCard, /\{progress\.percentage\}% complete/);
+  assert.doesNotMatch(continueCard, /preparation-progress-gradient/);
+  assert.doesNotMatch(continueCard, /conic-gradient/);
+});
+
+test("sidebar uses the requested Workspace and Saved icon colors", () => {
+  const appShell = source("components/app-shell.tsx");
+
+  assert.match(appShell, /Workspace: "text-green-500"/);
+  assert.match(appShell, /Saved: "text-red-500"/);
+});
