@@ -38,7 +38,23 @@ export type ApiUser = {
   role_in_school?: string | null;
   school_id?: string | null;
   pending_school_name?: string | null;
+  feedback_tools?: string[];
 };
+
+/** Tools that fire the first-use feedback popup, one per tool per user. */
+export type GenerationTool = "lesson_plan" | "worksheet" | "presentation" | "notes" | "activity";
+
+/** Dispatched on `window` after a generation succeeds; the feedback modal listens. */
+export const GENERATION_COMPLETED_EVENT = "teachpad:generation-completed";
+
+function withGenerationEvent<T>(tool: GenerationTool, promise: Promise<T>): Promise<T> {
+  return promise.then((result) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(GENERATION_COMPLETED_EVENT, { detail: { tool } }));
+    }
+    return result;
+  });
+}
 
 export type PaginatedResponse<T> = {
   items: T[];
@@ -897,6 +913,11 @@ async function parseError(res: Response) {
 
 // ─── Billing types ────────────────────────────────────────────────────────────
 
+export type TrialGateInfo = {
+  free_per_tool: number;
+  remaining: Record<string, number>;
+};
+
 export type BillingMe = {
   status: string;
   plan_code: string;
@@ -922,6 +943,9 @@ export type BillingMe = {
     until: string | null;
     acknowledged: boolean;
   };
+  // Per-tool free-generation state during a gated trial; null when the gate
+  // does not apply (comped/paid/gate-off).
+  trial_gate?: TrialGateInfo | null;
 };
 
 export type PromoKind = "trial" | "comp" | "discount";
@@ -1090,6 +1114,7 @@ export type CheckoutResponse = {
  */
 export type PaymentRequiredBody = {
   detail: string;
+  code?: string;
   upgrade_url?: string;
   plan_prices?: unknown;
 };
@@ -1098,16 +1123,21 @@ export type PaymentRequiredBody = {
  * An Error subclass that carries the structured 402 body so UI code can
  * display a contextual upgrade prompt instead of a generic error message.
  * It is consistent with how `parseError` attaches `.status` to plain errors —
- * callers can use `isPaymentRequiredError` to narrow the type.
+ * callers can use `isPaymentRequiredError` to narrow the type. It also carries
+ * `.code` (e.g. "TRIAL_MANDATE_REQUIRED") so `getErrorCode` (lib/errors.ts)
+ * can distinguish specific 402 reasons instead of treating all of them as the
+ * generic "Pro plan required" gate.
  */
 export class PaymentRequiredError extends Error {
   readonly status = 402;
+  readonly code: string | undefined;
   readonly upgrade_url: string | undefined;
   readonly plan_prices: unknown;
 
   constructor(body: PaymentRequiredBody) {
     super(body.detail || "This feature requires a Pro subscription.");
     this.name = "PaymentRequiredError";
+    this.code = body.code;
     this.upgrade_url = body.upgrade_url;
     this.plan_prices = body.plan_prices;
   }
@@ -1560,26 +1590,26 @@ export const backendApi = {
   undoLatestElifChange: (id: string) =>
     apiFetch<{ lesson_plan: Record<string, any>; change_summary: string; affected_sections: string[]; revision_id: string }>(`/lesson-plans/${id}/assistant/undo`, { method: "POST" }),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
-    apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) }),
+    withGenerationEvent("lesson_plan", apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) })),
   streamLessonPlan: (
     payload: LessonPlanGeneratePayload,
     onEvent: (event: LessonPlanStreamEvent) => void
   ) => streamApiFetch("/lesson-plans/stream", { method: "POST", body: JSON.stringify(payload) }, onEvent),
   createWorksheet: (payload: WorksheetGeneratePayload) =>
-    apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) }),
+    withGenerationEvent("worksheet", apiFetch<WorksheetGeneration>("/generate/worksheet", { method: "POST", body: JSON.stringify(payload) })),
   worksheets: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<WorksheetGeneration>>(`/generate/worksheet?skip=${skip}&limit=${limit}`),
   worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
   updateWorksheet: (id: string, payload: Partial<Pick<WorksheetGeneration, "output_json">>) =>
     apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   createNotes: (payload: NotesGeneratePayload) =>
-    apiFetch<NotesGeneration>("/notes", { method: "POST", body: JSON.stringify(payload) }),
+    withGenerationEvent("notes", apiFetch<NotesGeneration>("/notes", { method: "POST", body: JSON.stringify(payload) })),
   notesGenerations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<NotesGeneration>>(`/notes?skip=${skip}&limit=${limit}`),
   notesGeneration: (id: string) => apiFetch<NotesGeneration>(`/notes/${id}`),
   updateNotesGeneration: (id: string, payload: Partial<Pick<NotesGeneration, "output_json">>) =>
     apiFetch<NotesGeneration>(`/notes/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteNotes: (id: string) => apiFetch<void>(`/notes/${id}`, { method: "DELETE" }),
   createActivity: (payload: ActivityGeneratePayload) =>
-    apiFetch<ActivityGeneration>("/activities", { method: "POST", body: JSON.stringify(payload) }),
+    withGenerationEvent("activity", apiFetch<ActivityGeneration>("/activities", { method: "POST", body: JSON.stringify(payload) })),
   activities: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<ActivityGeneration>>(`/activities?skip=${skip}&limit=${limit}`),
   activity: (id: string) => apiFetch<ActivityGeneration>(`/activities/${id}`),
   updateActivity: (id: string, payload: Partial<Pick<ActivityGeneration, "output_json">>) =>
@@ -1598,10 +1628,12 @@ export const backendApi = {
   deleteWritingDocument: (id: string) =>
     apiFetch<void>(`/writing-assistant/${id}`, { method: "DELETE" }),
   createPresentation: (payload: PresentationGeneratePayload) =>
-    apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) }),
+    withGenerationEvent("presentation", apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) })),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),
   presentation: (id: string) => apiFetch<PresentationGeneration>(`/presentations/${id}`),
   deletePresentation: (id: string) => apiFetch<void>(`/presentations/${id}`, { method: "DELETE" }),
+  submitFeedback: (payload: { tool: string; rating?: number | null; comment?: string | null; dismissed?: boolean }) =>
+    apiFetch<{ id: string; tool: string }>("/feedback", { method: "POST", body: JSON.stringify(payload) }),
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
   updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),

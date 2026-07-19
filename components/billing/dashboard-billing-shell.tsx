@@ -15,6 +15,7 @@ import { GiftModal } from "@/components/billing/gift-modal";
 import { PlanBanner } from "@/components/billing/plan-banner";
 import { ProfileCompletionModal } from "@/components/profile/profile-completion-modal";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import { FeedbackPromptModal } from "@/components/feedback/feedback-prompt-modal";
 
 export function DashboardBillingShell({ children }: { children: ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export function DashboardBillingShell({ children }: { children: ReactNode }) {
       <GiftModal />
       <ProfileCompletionModal />
       <OnboardingWizard />
+      <FeedbackPromptModal />
       <div className="flex min-h-full flex-col">
         <PlanBanner />
         {children}

@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
     const items = users.data?.items || [];
     if (!search) return items;
     return items.filter((user) =>
-      [user.full_name, user.name, user.email, user.role, user.created_at]
+      [user.full_name, user.name, user.email, user.phone, user.role, user.created_at]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(search))
     );
@@ -138,7 +138,7 @@ export default function AdminUsersPage() {
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                   <tr>
-                    {["User", "Role", "Joined", "Funnel", "Status", "Actions"].map((heading) => (
+                    {["User", "Phone", "Joined", "Funnel", "Actions"].map((heading) => (
                       <th key={heading} className="px-6 py-4 font-semibold">{heading}</th>
                     ))}
                   </tr>
@@ -276,14 +276,20 @@ function UserTableRow({ user, onStatusChange, onGrant, onRoleChange, rolePending
     <tr className={cn("hover:bg-gray-50 transition-colors", !user.confirmed ? "bg-amber-50/40" : undefined)}>
       <td className="px-6 py-4">
         <div className="min-w-0">
-          <p className="font-semibold text-gray-900">{displayName(user)}</p>
+          <p className="flex items-center gap-2 font-semibold text-gray-900">
+            <span
+              className={cn("h-2 w-2 shrink-0 rounded-full", user.is_active ? "bg-emerald-500" : "bg-gray-300")}
+              title={user.is_active ? "Active" : "Disabled"}
+              aria-label={user.is_active ? "Active" : "Disabled"}
+            />
+            {displayName(user)}
+          </p>
           <p className="mt-0.5 text-xs text-gray-500">{user.email || "-"}</p>
         </div>
       </td>
-      <td className="px-6 py-4"><StatusPill status={user.role === "admin" ? "info" : "neutral"}>{user.role || "teacher"}</StatusPill></td>
+      <td className="px-6 py-4 text-gray-700">{user.phone || "—"}</td>
       <td className="px-6 py-4 text-gray-600">{formatDate(user.created_at)}</td>
       <td className="px-6 py-4"><FunnelCell user={user} /></td>
-      <td className="px-6 py-4"><StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill></td>
       <td className="px-6 py-4">
         <StatusButtons user={user} onStatusChange={onStatusChange} onGrant={onGrant} onRoleChange={onRoleChange} rolePending={rolePending} onResend={onResend} onDelete={onDelete} resendSeconds={resendSeconds} resendPending={resendPending} />
       </td>
@@ -303,7 +309,7 @@ function UserCard({ user, onStatusChange, onGrant, onRoleChange, rolePending, on
       </div>
       <div className="mt-3"><FunnelCell user={user} /></div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <Info label="Role" value={user.role || "teacher"} />
+        <Info label="Phone" value={user.phone || "—"} />
         <Info label="Joined" value={formatDate(user.created_at)} />
       </div>
       <div className="mt-4">
