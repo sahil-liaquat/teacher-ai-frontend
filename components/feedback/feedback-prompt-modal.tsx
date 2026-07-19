@@ -24,6 +24,9 @@ const TOOL_LABELS: Record<string, string> = {
   activity: "activity"
 };
 
+/** Wait this long after a generation completes so the user can review it before we ask. */
+const FEEDBACK_PROMPT_DELAY_MS = 30_000;
+
 /**
  * Fires a one-time star + comment popup the first time a user completes a
  * generation with each tool. Listens for the GENERATION_COMPLETED_EVENT
@@ -50,21 +53,34 @@ export function FeedbackPromptModal() {
   // Read inside the (once-registered) event listener to avoid stale closures.
   const activeToolRef = useRef<string | null>(null);
   activeToolRef.current = activeTool;
+  const pendingTimeoutsRef = useRef<number[]>([]);
 
   useEffect(() => {
     function onGenerationCompleted(event: Event) {
       const tool = (event as CustomEvent<{ tool?: string }>).detail?.tool;
-      if (!tool || activeToolRef.current) return;
-      const current = queryClient.getQueryData<ApiUser>(CURRENT_USER_QUERY_KEY);
-      if (!current || current.role === "admin") return;
-      if (current.feedback_tools?.includes(tool)) return;
-      setActiveTool(tool);
-      setRating(0);
-      setHover(0);
-      setComment("");
+      if (!tool) return;
+      // Re-check everything when the timer fires, not now — by then the user
+      // may have generated a second thing, opened another modal, or already
+      // been prompted for this tool.
+      const timeoutId = window.setTimeout(() => {
+        pendingTimeoutsRef.current = pendingTimeoutsRef.current.filter((id) => id !== timeoutId);
+        if (activeToolRef.current) return;
+        const current = queryClient.getQueryData<ApiUser>(CURRENT_USER_QUERY_KEY);
+        if (!current || current.role === "admin") return;
+        if (current.feedback_tools?.includes(tool)) return;
+        setActiveTool(tool);
+        setRating(0);
+        setHover(0);
+        setComment("");
+      }, FEEDBACK_PROMPT_DELAY_MS);
+      pendingTimeoutsRef.current.push(timeoutId);
     }
     window.addEventListener(GENERATION_COMPLETED_EVENT, onGenerationCompleted);
-    return () => window.removeEventListener(GENERATION_COMPLETED_EVENT, onGenerationCompleted);
+    return () => {
+      window.removeEventListener(GENERATION_COMPLETED_EVENT, onGenerationCompleted);
+      pendingTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+      pendingTimeoutsRef.current = [];
+    };
   }, [queryClient]);
 
   if (!activeTool) return null;
