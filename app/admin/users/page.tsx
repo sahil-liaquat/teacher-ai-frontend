@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PauseCircle, PlayCircle, Search, ShieldCheck, UserCog, UserRoundCheck, UserRoundX, Users, ChevronLeft, ChevronRight, Send, Trash2 } from "lucide-react";
@@ -276,14 +277,14 @@ function UserTableRow({ user, onStatusChange, onGrant, onRoleChange, rolePending
     <tr className={cn("hover:bg-gray-50 transition-colors", !user.confirmed ? "bg-amber-50/40" : undefined)}>
       <td className="px-6 py-4">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 font-semibold text-gray-900">
+          <Link href={`/admin/users/${user.id}`} className="flex items-center gap-2 font-semibold text-blue-600 hover:underline">
             <span
               className={cn("h-2 w-2 shrink-0 rounded-full", user.is_active ? "bg-emerald-500" : "bg-gray-300")}
               title={user.is_active ? "Active" : "Disabled"}
               aria-label={user.is_active ? "Active" : "Disabled"}
             />
             {displayName(user)}
-          </p>
+          </Link>
           <p className="mt-0.5 text-xs text-gray-500">{user.email || "-"}</p>
         </div>
       </td>
@@ -302,8 +303,10 @@ function UserCard({ user, onStatusChange, onGrant, onRoleChange, rolePending, on
     <div className={cn("rounded-xl border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-gray-900">{displayName(user)}</p>
-          <p className="mt-0.5 truncate text-sm text-gray-500">{user.email}</p>
+          <Link href={`/admin/users/${user.id}`} className="block">
+            <p className="truncate font-semibold text-blue-600 hover:underline">{displayName(user)}</p>
+            <p className="mt-0.5 truncate text-sm text-gray-500">{user.email}</p>
+          </Link>
         </div>
         <StatusPill status={user.is_active ? "success" : "danger"}>{user.is_active ? "active" : "disabled"}</StatusPill>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -151,7 +152,11 @@ export default function AdminActivityPage() {
                   {items.map((row) => (
                     <tr key={`${row.kind}:${row.generation_id}`} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-2 pr-4 whitespace-nowrap text-gray-600">{formatDateTime(row.created_at)}</td>
-                      <td className="py-2 pr-4">{row.user_name || row.user_email || row.user_id}</td>
+                      <td className="py-2 pr-4">
+                        <Link href={`/admin/users/${row.user_id}`} className="font-semibold text-blue-600 hover:underline">
+                          {row.user_name || row.user_email || row.user_id}
+                        </Link>
+                      </td>
                       <td className="py-2 pr-4">{KIND_LABEL[row.kind]}</td>
                       <td className="py-2 pr-4 max-w-[220px] truncate">{row.topic || "—"}</td>
                       <td className="py-2 pr-4 max-w-[180px] truncate">{row.book_title || "—"}</td>

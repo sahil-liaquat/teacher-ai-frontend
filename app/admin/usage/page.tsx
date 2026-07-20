@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -225,8 +226,10 @@ function UsageContent({
                 {data.by_user.map((row) => (
                   <tr key={row.user_id} className="hover:bg-gray-50">
                     <td className="px-6 py-3">
-                      <p className="font-semibold text-gray-900">{row.name || row.email || "Unnamed"}</p>
-                      <p className="mt-0.5 text-xs text-gray-500">{row.email || "-"}</p>
+                      <Link href={`/admin/users/${row.user_id}`} className="group block">
+                        <p className="font-semibold text-blue-600 group-hover:underline">{row.name || row.email || "Unnamed"}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">{row.email || "-"}</p>
+                      </Link>
                     </td>
                     <td className="px-6 py-3"><StatusPill status={TIER_TONE[row.tier] ?? "neutral"}>{row.tier}</StatusPill></td>
                     <td className="px-6 py-3"><FunnelFlags row={row} /></td>

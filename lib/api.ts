@@ -693,6 +693,157 @@ export type AdminSummary = {
   };
   top_books: Array<{ id: string; title: string; subject?: string; created_at?: string }>;
   top_users: Array<{ id: string; name: string; created_at?: string }>;
+  user_funnel: {
+    total: number;
+    active: number;
+    confirmed: number;
+    logged_in: number;
+    onboarded: number;
+    subscribed: number;
+    new_last_24_hours: number;
+    confirmed_never_logged_in: number;
+    logged_in_without_subscription: number;
+    subscribed_inactive_30d: number;
+  };
+};
+
+export type AdminFeedbackItem = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tool: string;
+  rating: number | null;
+  comment: string | null;
+  dismissed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminFeedbackResponse = {
+  items: AdminFeedbackItem[];
+  total: number;
+  skip: number;
+  limit: number;
+  tools: string[];
+  summary: {
+    total: number;
+    submitted: number;
+    dismissed: number;
+    with_comments: number;
+    average_rating: number | null;
+  };
+};
+
+export type AdminFeedbackParams = {
+  q?: string;
+  tool?: string;
+  status?: "submitted" | "dismissed";
+  rating?: number;
+  skip?: number;
+  limit?: number;
+};
+
+export type AdminUserDetail = {
+  account: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string | null;
+    avatar_key: string;
+    role: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  auth: {
+    confirmed: boolean;
+    logged_in: boolean;
+    email_confirmed_at: string | null;
+    last_sign_in_at: string | null;
+  };
+  onboarding: {
+    completed_at: string | null;
+    board_preference: string | null;
+    role_in_school: string | null;
+    phone_prompt_exempt: boolean;
+    pending_school_name: string | null;
+  };
+  school: {
+    id: string;
+    name: string;
+    city: string | null;
+    district: string | null;
+    state: string | null;
+    board_name: string | null;
+  } | null;
+  subscription: {
+    id: string;
+    plan_code: string;
+    status: string;
+    source: string;
+    price_inr: number | null;
+    access_until: string | null;
+    trial_started_at: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    paid_starts_at: string | null;
+    cancel_at_period_end: boolean;
+    is_launch_gift: boolean;
+    comp_from_influencer: boolean;
+    gift_acknowledged_at: string | null;
+    billing_phone: string | null;
+    razorpay_subscription_id: string | null;
+    razorpay_customer_id: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  referrer: { id: string; name: string; email: string } | null;
+  generation_counts: {
+    lesson_plans: number;
+    worksheets: number;
+    notes: number;
+    activities: number;
+    presentations: number;
+    writing_documents: number;
+    workspaces: number;
+  };
+  usage: {
+    calls: number;
+    failures: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+    cost_inr: number;
+    last_generation_at: string | null;
+  };
+  feedback: Array<{
+    id: string;
+    tool: string;
+    rating: number | null;
+    comment: string | null;
+    dismissed: boolean;
+    created_at: string;
+  }>;
+  workshops: Array<{
+    id: string;
+    workshop_id: string;
+    title: string;
+    scheduled_at: string;
+    attended: boolean;
+    certificate_issued: boolean;
+    feedback_rating: number | null;
+    feedback_text: string | null;
+    registered_at: string;
+  }>;
+  promo_redemptions: Array<{
+    id: string;
+    code: string;
+    kind: string;
+    duration_days: number | null;
+    resulting_access_until: string | null;
+    redeemed_at: string;
+  }>;
 };
 
 export type AdminUsageParams = {
@@ -1497,6 +1648,18 @@ export async function resetPassword(accessToken: string, password: string) {
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
+  adminUserDetail: (userId: string) => apiFetch<AdminUserDetail>(`/admin/users/${userId}`),
+  adminFeedback: (params: AdminFeedbackParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.tool) qs.set("tool", params.tool);
+    if (params.status) qs.set("status", params.status);
+    if (params.rating != null) qs.set("rating", String(params.rating));
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminFeedbackResponse>(`/admin/feedback${suffix}`);
+  },
   adminUsage: (params: AdminUsageParams = {}) => {
     const qs = new URLSearchParams();
     if (params.start) qs.set("start", params.start);

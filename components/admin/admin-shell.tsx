@@ -13,6 +13,7 @@ import {
   LogOut,
   Megaphone,
   Menu,
+  MessageSquareText,
   ScrollText,
   Shield,
   Ticket,
@@ -44,6 +45,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/workshops", label: "Workshops", icon: Calendar },
   { href: "/admin/activity", label: "Activity", icon: ScrollText },
+  { href: "/admin/feedback", label: "Feedback", icon: MessageSquareText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/system", label: "System", icon: Activity }
 ];
