@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -18,7 +18,8 @@ import {
   CheckCircle,
   FileCheck,
   PlaySquare,
-  Star
+  Star,
+  Eye
 } from "lucide-react";
 import Link from "next/link";
 import { backendApi, BACKEND_ROOT } from "@/lib/api";
@@ -33,6 +34,8 @@ import { cn } from "@/lib/utils";
 
 export default function WorkshopDetailPage() {
   const { id } = useParams() as { id: string };
+  const searchParams = useSearchParams();
+  const isAdminPreview = searchParams.get("preview") === "user";
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -46,7 +49,8 @@ export default function WorkshopDetailPage() {
 
   const registrationsQuery = useQuery({
     queryKey: ["my-registrations"],
-    queryFn: () => backendApi.myRegistrations()
+    queryFn: () => backendApi.myRegistrations(),
+    enabled: !isAdminPreview
   });
 
   const registerMutation = useMutation({
@@ -116,6 +120,8 @@ export default function WorkshopDetailPage() {
   const workshop = workshopQuery.data;
   const registration = registrationsQuery.data?.find((reg) => reg.workshop_id === id);
   const isLoading = workshopQuery.isLoading;
+  const backHref = isAdminPreview ? "/admin/workshops" : "/dashboard/workshops";
+  const backLabel = isAdminPreview ? "Back to Admin Workshops" : "Back to Growth Hub";
 
   if (isLoading) {
     return (
@@ -128,8 +134,8 @@ export default function WorkshopDetailPage() {
   if (!workshop) {
     return (
       <div className="space-y-6">
-        <Link href="/dashboard/workshops" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900">
-          <ChevronLeft className="h-4 w-4 mr-1" /> Back to Growth Hub
+        <Link href={backHref} className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900">
+          <ChevronLeft className="h-4 w-4 mr-1" /> {backLabel}
         </Link>
         <Card>
           <CardContent className="p-8 text-center">
@@ -157,12 +163,23 @@ export default function WorkshopDetailPage() {
     ? new Date() > new Date(workshop.registration_deadline)
     : false;
   const hasStarted = new Date() >= new Date(workshop.scheduled_at);
-  const canCancel = workshop.is_registered && !hasStarted;
+  const isRegistered = isAdminPreview ? false : workshop.is_registered;
+  const canCancel = isRegistered && !hasStarted;
 
   return (
     <div className="space-y-6">
-      <Link href="/dashboard/workshops" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
-        <ChevronLeft className="h-4 w-4 mr-1" /> Back to Growth Hub
+      {isAdminPreview ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-900">
+          <Eye className="h-5 w-5 shrink-0 text-blue-600" />
+          <div>
+            <p className="text-sm font-extrabold">User preview</p>
+            <p className="text-xs text-blue-700">This is the user-facing workshop view. Registration actions are disabled in preview mode.</p>
+          </div>
+        </div>
+      ) : null}
+
+      <Link href={backHref} className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+        <ChevronLeft className="h-4 w-4 mr-1" /> {backLabel}
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -328,7 +345,7 @@ export default function WorkshopDetailPage() {
             <CardContent className="p-6 space-y-4">
               <h3 className="text-base font-extrabold text-slate-900">Registration Status</h3>
               
-              {workshop.is_registered ? (
+              {isRegistered ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 rounded-xl p-3 border border-emerald-100">
                     <CheckCircle className="h-5 w-5 shrink-0" />
@@ -356,6 +373,23 @@ export default function WorkshopDetailPage() {
                         <MapPin className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                         <span className="font-semibold">{workshop.venue_details}</span>
                       </div>
+                    </div>
+                  )}
+
+                  {workshop.whatsapp_group_link && (
+                    <div className="space-y-2 border-t pt-4">
+                      <label className="text-[10px] uppercase font-bold text-slate-400">WhatsApp Group</label>
+                      <a
+                        href={workshop.whatsapp_group_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-xl font-bold bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md transition"
+                      >
+                        <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.863-9.864.001-2.641-1.024-5.123-2.887-6.989A9.776 9.776 0 0 0 12.008 1.91c-5.444 0-9.871 4.415-9.875 9.869-.001 1.772.477 3.5 1.385 5.011L2.508 21.66l5.139-1.348zm10.741-6.969c-.297-.148-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        </svg>
+                        Join WhatsApp Group
+                      </a>
                     </div>
                   )}
 
@@ -398,9 +432,12 @@ export default function WorkshopDetailPage() {
                   </div>
 
                   <Button
-                    onClick={() => registerMutation.mutate()}
-                    disabled={registerMutation.isPending || isDeadlinePassed}
+                    onClick={() => {
+                      if (!isAdminPreview) registerMutation.mutate();
+                    }}
+                    disabled={isAdminPreview || registerMutation.isPending || isDeadlinePassed}
                     className="w-full h-11"
+                    title={isAdminPreview ? "Registration is disabled in preview mode" : undefined}
                   >
                     {registerMutation.isPending
                       ? "Registering..."
@@ -413,7 +450,7 @@ export default function WorkshopDetailPage() {
             </CardContent>
           </Card>
 
-          {workshop.is_registered ? (
+          {isRegistered ? (
             <Card className="border-slate-200 shadow-sm bg-white">
               <CardContent className="p-6 space-y-4">
                 <div>

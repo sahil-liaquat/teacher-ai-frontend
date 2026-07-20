@@ -80,6 +80,8 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sessionState, setSessionState] = useState<"checking" | "present" | "missing">("checking");
   const requiredRole = role ?? null;
+  const allowsAdminWorkshopPreview =
+    !admin && pathname.startsWith("/dashboard/workshops/");
   const { data: currentUser, isError, isLoading } = useQuery<ApiUser>({
     queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: async () => {
@@ -147,13 +149,13 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     if (admin && currentUser && currentUser.role !== "admin") {
       router.replace("/dashboard");
     }
-    if (!admin && !requiredRole && currentUser?.role === "admin") {
+    if (!admin && !requiredRole && currentUser?.role === "admin" && !allowsAdminWorkshopPreview) {
       router.replace("/admin");
     }
     if (requiredRole && currentUser && currentUser.role !== requiredRole) {
       router.replace(currentUser.role === "admin" ? "/admin" : "/dashboard");
     }
-  }, [admin, currentUser?.role, requiredRole, router]);
+  }, [admin, allowsAdminWorkshopPreview, currentUser?.role, requiredRole, router]);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -169,7 +171,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     router.replace("/login");
   }
 
-  if (sessionState !== "present" || isLoading || isError || !currentUser || (admin && currentUser.role !== "admin") || (!admin && !requiredRole && currentUser.role === "admin") || (role && currentUser.role !== role)) {
+  if (sessionState !== "present" || isLoading || isError || !currentUser || (admin && currentUser.role !== "admin") || (!admin && !requiredRole && currentUser.role === "admin" && !allowsAdminWorkshopPreview) || (role && currentUser.role !== role)) {
     return <AuthCheckingScreen />;
   }
 

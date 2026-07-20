@@ -26,7 +26,8 @@ import {
   Globe,
   Contact,
   XCircle,
-  CheckCircle2
+  CheckCircle2,
+  Eye
 } from "lucide-react";
 import { backendApi, type Workshop, type Host, type WorkshopRegistration, BACKEND_ROOT } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
@@ -67,6 +68,7 @@ export default function AdminWorkshopsAndHostsPage() {
   const [registrationDeadline, setRegistrationDeadline] = useState("");
   const [mode, setMode] = useState<"online" | "offline" | "hybrid">("online");
   const [meetingLink, setMeetingLink] = useState("");
+  const [whatsappGroupLink, setWhatsappGroupLink] = useState("");
   const [venueDetails, setVenueDetails] = useState("");
   const [maxCapacity, setMaxCapacity] = useState<number | "">("");
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
@@ -363,6 +365,7 @@ export default function AdminWorkshopsAndHostsPage() {
     setRegistrationDeadline("");
     setMode("online");
     setMeetingLink("");
+    setWhatsappGroupLink("");
     setVenueDetails("");
     setMaxCapacity("");
     setBannerUrl(null);
@@ -387,6 +390,7 @@ export default function AdminWorkshopsAndHostsPage() {
     setRegistrationDeadline(formatForInput(w.registration_deadline));
     setMode(w.mode);
     setMeetingLink(w.meeting_link || "");
+    setWhatsappGroupLink(w.whatsapp_group_link || "");
     setVenueDetails(w.venue_details || "");
     setMaxCapacity(w.max_capacity ?? "");
     setBannerUrl(w.banner_url || null);
@@ -454,7 +458,8 @@ export default function AdminWorkshopsAndHostsPage() {
       is_featured: isFeatured,
       registration_deadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
       mode,
-      meeting_link: meetingLink || null,
+      meeting_link: meetingLink.trim() || null,
+      whatsapp_group_link: whatsappGroupLink || null,
       venue_details: venueDetails || null,
       max_capacity: maxCapacity !== "" ? Number(maxCapacity) : null,
       banner_url: bannerUrl,
@@ -675,6 +680,15 @@ export default function AdminWorkshopsAndHostsPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex gap-1.5 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`/dashboard/workshops/${w.id}?preview=user`, "_blank", "noopener,noreferrer")}
+                              title="Preview as user"
+                              aria-label={`Preview ${w.title} as a user`}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -900,7 +914,7 @@ export default function AdminWorkshopsAndHostsPage() {
 
               {mode === "online" || mode === "hybrid" ? (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Online Meeting Link (Zoom, Meet, etc.)</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Online Meeting Link (Zoom, Meet, etc.) (Optional)</label>
                   <Input value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} placeholder="https://meet.google.com/abc-defg-hij" className="mt-1" />
                 </div>
               ) : null}
@@ -912,10 +926,18 @@ export default function AdminWorkshopsAndHostsPage() {
                 </div>
               ) : null}
 
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">WhatsApp Group Link (Optional)</label>
+                <Input value={whatsappGroupLink} onChange={(e) => setWhatsappGroupLink(e.target.value)} placeholder="https://chat.whatsapp.com/..." className="mt-1" />
+              </div>
+
               {/* Media Uploads */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Banner Image</label>
+                  <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
+                    Recommended: 1600 × 900 px (16:9). Keep important content centered for responsive cropping.
+                  </p>
                   <div className="flex items-center gap-3 mt-1.5">
                     {bannerUrl ? (
                       <img src={`${BACKEND_ROOT}/uploads/${bannerUrl}`} alt="Banner" className="h-10 w-16 rounded object-cover border" />
@@ -932,6 +954,9 @@ export default function AdminWorkshopsAndHostsPage() {
 
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Thumbnail Image</label>
+                  <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
+                    Recommended: 800 × 800 px (1:1 square).
+                  </p>
                   <div className="flex items-center gap-3 mt-1.5">
                     {thumbnailUrl ? (
                       <img src={`${BACKEND_ROOT}/uploads/${thumbnailUrl}`} alt="Thumbnail" className="h-10 w-10 rounded object-cover border" />

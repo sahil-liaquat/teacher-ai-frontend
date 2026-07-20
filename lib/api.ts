@@ -337,6 +337,7 @@ export type Workshop = {
   registration_deadline?: string | null;
   mode: "online" | "offline" | "hybrid";
   meeting_link?: string | null;
+  whatsapp_group_link?: string | null;
   venue_details?: string | null;
   max_capacity?: number | null;
   banner_url?: string | null;

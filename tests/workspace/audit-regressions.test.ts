@@ -111,6 +111,16 @@ test("dashboard identity controls render only on the role home page", () => {
   assert.match(appShell, /\{isHomeDashboard && \(/);
 });
 
+test("admin workshop previews can render the user-facing detail route", () => {
+  const workshopsAdmin = source("app/admin/workshops/page.tsx");
+  const appShell = source("components/app-shell.tsx");
+
+  assert.match(workshopsAdmin, /dashboard\/workshops\/\$\{w\.id\}\?preview=user/);
+  assert.match(appShell, /const allowsAdminWorkshopPreview/);
+  assert.match(appShell, /pathname\.startsWith\("\/dashboard\/workshops\/"\)/);
+  assert.match(appShell, /currentUser\.role === "admin" && !allowsAdminWorkshopPreview/);
+});
+
 test("preparation progress uses a rounded SVG ring", () => {
   const continueCard = source("components/workspace/continue-preparing-card.tsx");
 
