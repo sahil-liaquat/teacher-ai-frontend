@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { backendApi, BACKEND_ROOT, CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, type Host, type Workshop } from "@/lib/api";
+import { backendApi, CURRENT_USER_QUERY_KEY, ensureSession, getCurrentUser, resolveUploadUrl, type Host, type Workshop } from "@/lib/api";
 import { MarketingHeader } from "@/components/marketing-header";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
-import { cn, resolveMediaUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { WorkshopImage } from "@/components/workshop-image";
 
 const academyStats = [
   { label: "Practical demonstrations and guided sessions", value: "Live Learning", icon: Video, tone: "bg-teachpad-sky text-teachpad-blue" },
@@ -616,22 +617,25 @@ function FeaturedWorkshop({
 
   return (
     <div className="grid overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-[0_22px_60px_rgba(30,80,90,0.10)] backdrop-blur-sm lg:grid-cols-[0.92fr_1.08fr] group hover:-translate-y-0.5 hover:border-blue-100/50 transition-all duration-300">
-      <div className="relative min-h-[300px] bg-[linear-gradient(135deg,#dffafa_0%,#f2dcff_100%)] overflow-hidden">
-        {workshop.banner_url ? (
-          <img src={resolveMediaUrl(workshop.banner_url)} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        ) : (
+      <div className="relative aspect-video self-center overflow-hidden bg-[linear-gradient(135deg,#dffafa_0%,#f2dcff_100%)]">
+        <WorkshopImage
+          bannerUrl={workshop.banner_url}
+          alt={workshop.title}
+          className="h-full w-full object-cover object-center"
+          fallback={
           <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
             <Image src="/ai-tools/classroom-tools-header-illustration.png" alt="" fill className="object-cover" sizes="(min-width: 1024px) 40vw, 100vw" />
           </div>
-        )}
-        <div className="absolute left-4 top-4 flex gap-2 z-10">
-          <Badge className="border-white/70 bg-white/92 text-slate-950">Featured</Badge>
-          <ModeBadge mode={workshop.mode} />
-        </div>
+          }
+        />
       </div>
 
       <div className="flex flex-col justify-between p-6 sm:p-8">
         <div>
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Badge className="border-blue-100 bg-blue-50 text-blue-700">Featured</Badge>
+            <ModeBadge mode={workshop.mode} />
+          </div>
           <div className="flex flex-wrap gap-3 text-xs font-bold text-slate-500">
             <span className="inline-flex items-center gap-1.5"><Calendar className="h-4 w-4 text-blue-600" /> {details.date}</span>
             <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4 text-blue-600" /> {details.time}</span>
@@ -670,19 +674,22 @@ function WorkshopCard({
 
   return (
     <Card className="h-full overflow-hidden rounded-2xl border-teachpad-cardBorder bg-white/90 shadow-[0_18px_50px_rgba(30,80,90,0.08)] backdrop-blur-sm group hover:-translate-y-1 hover:border-blue-100 hover:shadow-[0_24px_50px_rgba(37,99,235,0.06)] transition-all duration-300">
-      <div className="relative h-44 bg-[linear-gradient(135deg,#dffafa_0%,#e9e1ff_100%)] overflow-hidden">
-        {workshop.banner_url ? (
-          <img src={resolveMediaUrl(workshop.banner_url)} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        ) : (
+      <div className="relative aspect-video overflow-hidden bg-[linear-gradient(135deg,#dffafa_0%,#e9e1ff_100%)]">
+        <WorkshopImage
+          bannerUrl={workshop.banner_url}
+          alt={workshop.title}
+          className="h-full w-full object-cover object-center"
+          fallback={
           <div className="grid h-full place-items-center text-blue-600 transition-transform duration-700 group-hover:scale-105">
             <Image src="/landing/lesson-planner-3d-v2.png" alt="" width={220} height={180} className="h-36 w-36 object-contain drop-shadow-[0_18px_32px_rgba(47,79,129,0.12)]" />
           </div>
-        )}
-        <div className="absolute right-3 top-3 z-10">
-          <ModeBadge mode={workshop.mode} />
-        </div>
+          }
+        />
       </div>
       <CardContent className="p-5">
+        <div className="mb-3 flex flex-wrap gap-2">
+          <ModeBadge mode={workshop.mode} />
+        </div>
         <div className="flex flex-wrap gap-3 text-xs font-bold text-slate-500">
           <span className="inline-flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-blue-600" /> {details.date}</span>
           <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-blue-600" /> {details.time}</span>
@@ -711,7 +718,7 @@ function InstructorCard({ host }: { host: Host }) {
     <div className="rounded-2xl border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_18px_50px_rgba(30,80,90,0.08)] backdrop-blur-sm">
       <div className="flex items-start gap-4">
         {host.profile_photo ? (
-          <img src={resolveMediaUrl(host.profile_photo)} alt={host.full_name} className="h-16 w-16 rounded-2xl border border-white object-cover shadow-sm" />
+          <img src={resolveUploadUrl(host.profile_photo)} alt={host.full_name} className="h-16 w-16 rounded-2xl border border-white object-cover shadow-sm" />
         ) : (
           <div className="grid h-16 w-16 place-items-center rounded-2xl border border-blue-100 bg-teachpad-sky text-blue-600">
             <User className="h-8 w-8" />
@@ -761,11 +768,11 @@ function WorkshopAction({
 
   return (
     <div className={cn("flex gap-2", fullWidth && "w-full")}>
-      <Link href={`/dashboard/workshops/${workshop.id}`} className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-900 transition hover:border-blue-200 hover:text-blue-600">
+      <Link href={`/dashboard/workshops/${workshop.id}`} className="inline-flex h-12 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-900 transition hover:border-blue-200 hover:text-blue-600">
         Details
       </Link>
-      <Button onClick={onRegister} disabled={isRegistering} className="h-11 flex-1 rounded-full">
-        {isRegistering ? "Registering..." : "Register"}
+      <Button onClick={onRegister} disabled={isRegistering} className="h-12 flex-1 rounded-full text-sm font-extrabold sm:text-base">
+        {isRegistering ? "Registering..." : "Register Now"}
       </Button>
     </div>
   );
@@ -781,7 +788,7 @@ function HostLine({ hosts, compact = false }: { hosts: Host[]; compact?: boolean
       <div className="flex -space-x-2">
         {hosts.slice(0, compact ? 2 : 3).map((host) => (
           host.profile_photo ? (
-            <img key={host.id} src={resolveMediaUrl(host.profile_photo)} alt={host.full_name} className="h-8 w-8 rounded-full border-2 border-white object-cover" />
+            <img key={host.id} src={resolveUploadUrl(host.profile_photo)} alt={host.full_name} className="h-8 w-8 rounded-full border-2 border-white object-cover" />
           ) : (
             <span key={host.id} className="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-blue-50 text-blue-600">
               <User className="h-4 w-4" />
@@ -828,8 +835,9 @@ function getWorkshopDetails(workshop: Workshop) {
     year: "numeric"
   });
   const time = scheduledAt.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit"
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
   const seats = workshop.max_capacity
     ? `${Math.max(0, workshop.max_capacity - workshop.registered_users_count)} left`

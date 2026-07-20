@@ -10,6 +10,16 @@ function resolveApiBase() {
 export const API_BASE = resolveApiBase();
 export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 
+export function resolveUploadUrl(value?: string | null) {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const relativePath = value
+    .replace(/^\/+/, "")
+    .replace(/^uploads\//, "");
+  return `${BACKEND_ROOT}/uploads/${relativePath}`;
+}
+
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const LEGACY_ACCESS_TOKEN_KEY = "teacher_ai_access_token";
@@ -341,7 +351,6 @@ export type Workshop = {
   venue_details?: string | null;
   max_capacity?: number | null;
   banner_url?: string | null;
-  thumbnail_url?: string | null;
   enable_certificates: boolean;
   enable_recordings: boolean;
   publishing_destination: "landing_page" | "teachpad_app" | "both";

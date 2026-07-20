@@ -121,6 +121,104 @@ test("admin workshop previews can render the user-facing detail route", () => {
   assert.match(appShell, /currentUser\.role === "admin" && !allowsAdminWorkshopPreview/);
 });
 
+test("workshop editing loads hosts within the API limit and preserves assigned hosts", () => {
+  const workshopsAdmin = source("app/admin/workshops/page.tsx");
+
+  assert.match(workshopsAdmin, /backendApi\.hosts\(false, 0, 100\)/);
+  assert.match(workshopsAdmin, /const workshopHostOptions = useMemo/);
+  assert.match(workshopsAdmin, /editingWorkshop\?\.hosts \|\| \[\]/);
+  assert.match(workshopsAdmin, /workshopHostOptions\.map/);
+  assert.doesNotMatch(workshopsAdmin, /backendApi\.hosts\(false, 0, 150\)/);
+});
+
+test("teacher workshop views render uploaded banners with image fallback", () => {
+  const workshopImage = source("components/workshop-image.tsx");
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+  const workshopDetail = source("app/dashboard/workshops/[id]/page.tsx");
+  const academy = source("app/academy/page.tsx");
+
+  assert.match(workshopImage, /resolveUploadUrl\(bannerUrl\)/);
+  assert.match(workshopImage, /onError=\{\(\) => setFailedUrl\(src\)\}/);
+  assert.match(workshopImage, /object-cover object-center/);
+  assert.match(workshopImage, /h-full w-full/);
+  for (const page of [workshopList, workshopDetail, academy]) {
+    assert.match(page, /bannerUrl=\{workshop\.banner_url\}/);
+    assert.doesNotMatch(page, /thumbnailUrl|prefer=/);
+  }
+});
+
+test("workshops use one centered 16 by 9 banner everywhere", () => {
+  const api = source("lib/api.ts");
+  const workshopImage = source("components/workshop-image.tsx");
+  const workshopsAdmin = source("app/admin/workshops/page.tsx");
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+  const workshopDetail = source("app/dashboard/workshops/[id]/page.tsx");
+  const academy = source("app/academy/page.tsx");
+
+  for (const file of [api, workshopImage, workshopsAdmin, workshopList, workshopDetail, academy]) {
+    assert.doesNotMatch(file, /thumbnail_url|thumbnailUrl|Thumbnail Image|Upload Thumb/);
+  }
+  assert.match(workshopsAdmin, /Recommended: 1600 × 900 px \(16:9\)/);
+  assert.match(workshopList, /aspect-video/);
+  assert.match(workshopDetail, /aspect-video/);
+  assert.ok((academy.match(/aspect-video/g) || []).length >= 2);
+});
+
+test("workshop cards use 12-hour times and a prominent registration action", () => {
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+  const workshopDetail = source("app/dashboard/workshops/[id]/page.tsx");
+  const academy = source("app/academy/page.tsx");
+
+  for (const page of [workshopList, workshopDetail, academy]) {
+    assert.match(page, /hour12: true/);
+  }
+  assert.match(workshopList, /grid grid-cols-2 gap-2\.5[\s\S]*View Details[\s\S]*Register Now/);
+  assert.match(workshopList, /h-12 w-full[\s\S]*View Details/);
+  assert.match(workshopList, /h-12 w-full rounded-\[16px\][\s\S]*Register Now/);
+  assert.match(academy, /h-12 flex-1 rounded-full[\s\S]*Register Now/);
+});
+
+test("workshop status labels stay outside banner image areas", () => {
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+  const academy = source("app/academy/page.tsx");
+
+  assert.doesNotMatch(workshopList, /absolute right-3 top-3[\s\S]*modeLabel/);
+  assert.doesNotMatch(academy, /absolute left-4 top-4[\s\S]*Featured/);
+  assert.doesNotMatch(academy, /absolute right-3 top-3[\s\S]*ModeBadge/);
+});
+
+test("registered workshop cards only show a meeting action for an admin-provided link", () => {
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+
+  assert.match(workshopList, /const meetingLink = workshop\.meeting_link\?\.trim\(\) \|\| null/);
+  assert.match(workshopList, /meetingLink \? \([\s\S]*href=\{meetingLink\}[\s\S]*Join Meeting/);
+  assert.match(workshopList, /variant="danger"[\s\S]*Cancel/);
+  assert.doesNotMatch(workshopList, /> Join Link/);
+});
+
+test("workshop media accepts permanent absolute cloud URLs", () => {
+  const api = source("lib/api.ts");
+  const workshopsAdmin = source("app/admin/workshops/page.tsx");
+  const workshopList = source("app/dashboard/workshops/page.tsx");
+  const workshopDetail = source("app/dashboard/workshops/[id]/page.tsx");
+  const academy = source("app/academy/page.tsx");
+
+  assert.match(api, /if \(\/\^https\?:\\\/\\\/\/i\.test\(value\)\) return value/);
+  for (const page of [workshopsAdmin, workshopList, workshopDetail, academy]) {
+    assert.match(page, /resolveUploadUrl/);
+    assert.doesNotMatch(page, /BACKEND_ROOT\}\/uploads\/\$\{/);
+  }
+});
+
+test("admin workshop ledger uses readable icon controls", () => {
+  const workshopsAdmin = source("app/admin/workshops/page.tsx");
+
+  assert.match(workshopsAdmin, /title="Preview as user"[\s\S]*h-\[18px\] w-\[18px\]/);
+  assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Duplicate"/);
+  assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Edit"/);
+  assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Delete"/);
+});
+
 test("preparation progress uses a rounded SVG ring", () => {
   const continueCard = source("components/workspace/continue-preparing-card.tsx");
 

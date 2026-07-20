@@ -369,7 +369,7 @@ function AuthInput({
         <span className="shrink-0">{icon}</span>
         <input
           {...inputProps}
-          className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
+          className="auth-form-input min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
         />
         {action}
       </span>

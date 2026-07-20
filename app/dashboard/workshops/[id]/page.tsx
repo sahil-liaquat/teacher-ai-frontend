@@ -22,7 +22,7 @@ import {
   Eye
 } from "lucide-react";
 import Link from "next/link";
-import { backendApi, BACKEND_ROOT } from "@/lib/api";
+import { backendApi, resolveUploadUrl } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, resolveMediaUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { WorkshopImage } from "@/components/workshop-image";
 
 export default function WorkshopDetailPage() {
   const { id } = useParams() as { id: string };
@@ -156,8 +157,9 @@ export default function WorkshopDetailPage() {
     year: "numeric"
   });
   const formattedTime = new Date(workshop.scheduled_at).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit"
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
   const isDeadlinePassed = workshop.registration_deadline
     ? new Date() > new Date(workshop.registration_deadline)
@@ -186,18 +188,17 @@ export default function WorkshopDetailPage() {
         <div className="space-y-6">
           {/* Main Info */}
           <Card className="overflow-hidden border-slate-200 shadow-sm bg-white">
-            <div className="h-64 bg-slate-100 relative">
-              {workshop.banner_url ? (
-                <img
-                  src={resolveMediaUrl(workshop.banner_url)}
-                  alt={workshop.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
+            <div className="relative aspect-video overflow-hidden bg-slate-100">
+              <WorkshopImage
+                bannerUrl={workshop.banner_url}
+                alt={workshop.title}
+                className="h-full w-full object-cover object-center"
+                fallback={
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white/20">
                   <Calendar className="h-24 w-24" />
                 </div>
-              )}
+                }
+              />
             </div>
             <CardContent className="p-6">
               <div className="flex flex-wrap gap-2 items-center">
@@ -284,7 +285,7 @@ export default function WorkshopDetailPage() {
                     <div key={host.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-4 items-start">
                       {host.profile_photo ? (
                         <img
-                          src={resolveMediaUrl(host.profile_photo)}
+                          src={resolveUploadUrl(host.profile_photo)}
                           alt={host.full_name}
                           className="h-16 w-16 rounded-2xl object-cover border"
                         />

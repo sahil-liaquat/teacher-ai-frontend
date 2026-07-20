@@ -82,6 +82,12 @@
   outline-offset: 2px !important;
 }
 
+/* Auth fields use the rounded focus treatment on their containing element. */
+.auth-form-input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
 html {
   width: 100%;
   max-width: 100%;

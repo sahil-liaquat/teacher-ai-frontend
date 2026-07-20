@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Calendar, CheckCircle2, ChevronRight, Clock, Laptop, MapPin, Sparkles, User, Video } from "lucide-react";
 import Link from "next/link";
-import { backendApi, type Workshop, BACKEND_ROOT } from "@/lib/api";
+import { backendApi, resolveUploadUrl, type Workshop } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
-import { cn, resolveMediaUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { WorkshopImage } from "@/components/workshop-image";
 
 export default function DashboardWorkshopsPage() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "registered">("upcoming");
@@ -107,7 +108,7 @@ export default function DashboardWorkshopsPage() {
           active={activeTab === "registered"}
           icon={<CheckCircle2 className="h-5 w-5" />}
           title="My Registrations"
-          description="Your saved seats and join links"
+          description="Your saved workshop seats"
           count={registeredWorkshops.length}
           tone="green"
           onClick={() => setActiveTab("registered")}
@@ -165,7 +166,7 @@ export default function DashboardWorkshopsPage() {
             icon={<AlertCircle className="h-7 w-7" />}
             tone="amber"
             title="No registrations yet."
-            description="Explore upcoming sessions and register to keep your join links here."
+            description="Explore upcoming sessions and manage your registrations here."
             action={<Button className="mt-5" onClick={() => setActiveTab("upcoming")}>Browse Sessions</Button>}
           />
         )
@@ -289,48 +290,49 @@ function WorkshopCard({
     year: "numeric"
   });
   const formattedTime = new Date(workshop.scheduled_at).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit"
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
   const seatsRemaining = workshop.max_capacity
     ? Math.max(0, workshop.max_capacity - workshop.registered_users_count)
     : null;
   const modeLabel = workshop.mode === "online" ? "Online" : workshop.mode === "offline" ? "Offline" : "Hybrid";
   const modeIcon = workshop.mode === "offline" ? <MapPin className="h-3.5 w-3.5" /> : workshop.mode === "hybrid" ? <Video className="h-3.5 w-3.5" /> : <Laptop className="h-3.5 w-3.5" />;
+  const meetingLink = workshop.meeting_link?.trim() || null;
 
   return (
     <Card className="group/card relative flex h-full overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]">
       <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-blue-200/25 blur-2xl" />
       <div className="relative flex min-h-full w-full flex-col">
-        <div className="relative m-3 mb-0 h-48 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white sm:h-56 lg:h-60">
-          {workshop.banner_url ? (
-            <img
-              src={resolveMediaUrl(workshop.banner_url)}
-              alt={workshop.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
+        <div className="relative m-3 mb-0 aspect-video overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white">
+          <WorkshopImage
+            bannerUrl={workshop.banner_url}
+            alt={workshop.title}
+            className="h-full w-full object-cover object-center"
+            fallback={
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="grid h-20 w-20 place-items-center rounded-[28px] bg-white/75 text-teachpad-blue shadow-[0_14px_30px_rgba(59,130,246,0.18)] ring-1 ring-blue-100">
                 <Calendar className="h-10 w-10" />
               </div>
             </div>
-          )}
-          <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
-            <Badge className={cn("border-white/80 bg-white/92 font-bold shadow-sm", isOnline ? "text-blue-600" : "text-emerald-600")}>
-              {modeIcon} {modeLabel}
-            </Badge>
-            {registered && (
-              <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 font-bold">
-                Registered
-              </Badge>
-            )}
-          </div>
+            }
+          />
         </div>
 
         <CardContent className="flex flex-1 flex-col justify-between p-5">
           <div className="space-y-3">
             <div>
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                <Badge className={cn("border-blue-100 bg-blue-50 font-bold", isOnline ? "text-blue-600" : "border-emerald-100 bg-emerald-50 text-emerald-600")}>
+                  {modeIcon} {modeLabel}
+                </Badge>
+                {registered && (
+                  <Badge className="border-emerald-200 bg-emerald-50 font-bold text-emerald-700">
+                    Registered
+                  </Badge>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 shadow-sm ring-1 ring-slate-100">
                   <Clock className="h-3.5 w-3.5 text-blue-500" />
@@ -357,7 +359,7 @@ function WorkshopCard({
                     <div key={host.id} className="flex items-center gap-2">
                       {host.profile_photo ? (
                         <img
-                          src={resolveMediaUrl(host.profile_photo)}
+                          src={resolveUploadUrl(host.profile_photo)}
                           alt={host.full_name}
                           className="h-7 w-7 rounded-full object-cover border border-white shadow-sm"
                         />
@@ -378,34 +380,41 @@ function WorkshopCard({
           </div>
 
           <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-xs font-bold text-slate-500">
-                {seatsRemaining === null ? "Open seats" : `${seatsRemaining} seats left`}
-              </div>
-              <Link href={`/dashboard/workshops/${workshop.id}`} className="flex items-center text-xs font-bold text-teachpad-blue hover:underline">
-                View Details <ChevronRight className="h-3 w-3 ml-0.5" />
-              </Link>
+            <div className="text-xs font-bold text-slate-500">
+              {seatsRemaining === null ? "Open seats" : `${seatsRemaining} seats left`}
             </div>
 
             {!registered ? (
-              <Button
-                size="sm"
-                onClick={onRegister}
-                disabled={isRegistering}
-                className="w-full rounded-full"
-              >
-                {isRegistering ? "Registering..." : "Register Now"}
-              </Button>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Link
+                  href={`/dashboard/workshops/${workshop.id}`}
+                  className="inline-flex h-12 w-full items-center justify-center gap-1 rounded-[16px] border border-teachpad-cardBorder bg-white/85 px-3 text-sm font-extrabold text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-teachpad-blue sm:text-base"
+                >
+                  View Details <ChevronRight className="h-4 w-4" />
+                </Link>
+                <Button
+                  onClick={onRegister}
+                  disabled={isRegistering}
+                  className="h-12 w-full rounded-[16px] px-3 text-sm font-extrabold sm:text-base"
+                >
+                  {isRegistering ? "Registering..." : "Register Now"}
+                </Button>
+              </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Button size="sm" variant="ghost" onClick={onCancel} disabled={isCancelling} className="rounded-full">
+              <div className={cn("grid gap-2", meetingLink && "grid-cols-2")}>
+                <Button size="sm" variant="danger" onClick={onCancel} disabled={isCancelling} className="w-full rounded-full">
                   {isCancelling ? "Cancelling..." : "Cancel"}
                 </Button>
-                <Link href={`/dashboard/workshops/${workshop.id}`}>
-                  <Button size="sm" variant="outline" className="w-full rounded-full">
-                    <Video className="h-3.5 w-3.5 mr-1" /> Join Link
-                  </Button>
-                </Link>
+                {meetingLink ? (
+                  <a
+                    href={meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-full border border-teachpad-cardBorder bg-white/85 px-3 text-xs font-bold text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-teachpad-blue"
+                  >
+                    <Video className="h-3.5 w-3.5" /> Join Meeting
+                  </a>
+                ) : null}
               </div>
             )}
           </div>

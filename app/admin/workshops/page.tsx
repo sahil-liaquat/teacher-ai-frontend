@@ -29,7 +29,7 @@ import {
   CheckCircle2,
   Eye
 } from "lucide-react";
-import { backendApi, type Workshop, type Host, type WorkshopRegistration, BACKEND_ROOT } from "@/lib/api";
+import { backendApi, resolveUploadUrl, type Workshop, type Host, type WorkshopRegistration } from "@/lib/api";
 import { AdminPageHeader, AdminPanel, EmptyState, LoadingState, MetricCard, StatusPill, formatDateTime } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +72,6 @@ export default function AdminWorkshopsAndHostsPage() {
   const [venueDetails, setVenueDetails] = useState("");
   const [maxCapacity, setMaxCapacity] = useState<number | "">("");
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [enableCertificates, setEnableCertificates] = useState(false);
   const [enableRecordings, setEnableRecordings] = useState(false);
   const [publishingDestination, setPublishingDestination] = useState<"landing_page" | "teachpad_app" | "both">("both");
@@ -91,7 +90,6 @@ export default function AdminWorkshopsAndHostsPage() {
 
   // Media upload progress states
   const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingHostPhoto, setUploadingHostPhoto] = useState(false);
 
   const queryClient = useQueryClient();
@@ -100,7 +98,7 @@ export default function AdminWorkshopsAndHostsPage() {
   // Queries
   const hostsQuery = useQuery({
     queryKey: ["admin-hosts-list", page],
-    queryFn: () => backendApi.hosts(false, 0, 150),
+    queryFn: () => backendApi.hosts(false, 0, 100),
     placeholderData: (previous) => previous
   });
 
@@ -153,23 +151,32 @@ export default function AdminWorkshopsAndHostsPage() {
     );
   }, [searchTerm, hostsQuery.data?.items]);
 
+  const workshopHostOptions = useMemo(() => {
+    const hostsById = new Map<string, Host>();
+
+    // Assigned hosts must remain visible even when they fall outside the first
+    // page of the host directory.
+    for (const host of editingWorkshop?.hosts || []) hostsById.set(host.id, host);
+    for (const host of hostsQuery.data?.items || []) hostsById.set(host.id, host);
+
+    return Array.from(hostsById.values());
+  }, [editingWorkshop?.hosts, hostsQuery.data?.items]);
+
   const registrations = registrationsQuery.data || [];
   const attendedCount = registrations.filter((registration) => registration.attended).length;
   const certificatesIssuedCount = registrations.filter((registration) => registration.certificate_issued).length;
 
   // Media Upload handler
-  async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "thumbnail" | "host") {
+  async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>, type: "banner" | "host") {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (type === "banner") setUploadingBanner(true);
-    if (type === "thumbnail") setUploadingThumbnail(true);
     if (type === "host") setUploadingHostPhoto(true);
 
     try {
       const res = await backendApi.uploadWorkshopMedia(file, type === "host" ? "hosts" : "workshops");
       if (type === "banner") setBannerUrl(res.path);
-      if (type === "thumbnail") thumbnailUrlUpdate(res.path);
       if (type === "host") setHostPhoto(res.path);
       toast({ title: "Media uploaded successfully" });
     } catch (err) {
@@ -180,14 +187,8 @@ export default function AdminWorkshopsAndHostsPage() {
       });
     } finally {
       if (type === "banner") setUploadingBanner(false);
-      if (type === "thumbnail") setUploadingThumbnail(false);
       if (type === "host") setUploadingHostPhoto(false);
     }
-  }
-
-  // Workaround for closure variable naming
-  function thumbnailUrlUpdate(path: string) {
-    setThumbnailUrl(path);
   }
 
   // Host CRUD Mutations
@@ -212,16 +213,19 @@ export default function AdminWorkshopsAndHostsPage() {
       toast({ title: "Host updated", description: "Host profile updated successfully.", variant: "success" });
       resetHostForm();
       queryClient.invalidateQueries({ queryKey: ["admin-hosts-list"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-workshops"] });
     },
     onError: (e) => toast({ title: "Failed to update host", description: getErrorMessage(e, "Could not update host speaker profile."), variant: "error" })
   });
 
   const deleteHostMutation = useMutation({
     mutationFn: (id: string) => backendApi.deleteHost(id),
-    onSuccess: () => {
+    onSuccess: (_, deletedHostId) => {
       toast({ title: "Host deleted", description: "Host profile removed successfully.", variant: "success" });
+      setSelectedHostIds((current) => current.filter((id) => id !== deletedHostId));
       setIsDeletingHost(null);
       queryClient.invalidateQueries({ queryKey: ["admin-hosts-list"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-workshops"] });
     },
     onError: (e) => toast({ title: "Failed to delete host", description: getErrorMessage(e, "Could not delete host profile."), variant: "error" })
   });
@@ -369,7 +373,6 @@ export default function AdminWorkshopsAndHostsPage() {
     setVenueDetails("");
     setMaxCapacity("");
     setBannerUrl(null);
-    setThumbnailUrl(null);
     setEnableCertificates(false);
     setEnableRecordings(false);
     setPublishingDestination("both");
@@ -394,7 +397,6 @@ export default function AdminWorkshopsAndHostsPage() {
     setVenueDetails(w.venue_details || "");
     setMaxCapacity(w.max_capacity ?? "");
     setBannerUrl(w.banner_url || null);
-    setThumbnailUrl(w.thumbnail_url || null);
     setEnableCertificates(w.enable_certificates);
     setEnableRecordings(w.enable_recordings);
     setPublishingDestination(w.publishing_destination);
@@ -463,7 +465,6 @@ export default function AdminWorkshopsAndHostsPage() {
       venue_details: venueDetails || null,
       max_capacity: maxCapacity !== "" ? Number(maxCapacity) : null,
       banner_url: bannerUrl,
-      thumbnail_url: thumbnailUrl,
       enable_certificates: enableCertificates,
       enable_recordings: enableRecordings,
       publishing_destination: publishingDestination,
@@ -561,7 +562,7 @@ export default function AdminWorkshopsAndHostsPage() {
             description={`Displaying all ${activeSubTab} workshops.`}
             actions={
               <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-[18px] w-[18px] text-gray-400" />
                 <Input
                   className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
                   placeholder="Search workshops..."
@@ -598,15 +599,15 @@ export default function AdminWorkshopsAndHostsPage() {
                       <tr key={w.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 max-w-xs">
                           <div className="flex items-start gap-3">
-                            {w.thumbnail_url ? (
+                            {w.banner_url ? (
                               <img
-                                src={resolveMediaUrl(w.thumbnail_url)}
-                                alt="thumbnail"
-                                className="h-10 w-10 shrink-0 rounded-lg object-cover border border-gray-100 mt-0.5"
+                                src={resolveUploadUrl(w.banner_url)}
+                                alt=""
+                                className="mt-0.5 aspect-video h-10 shrink-0 rounded-lg border border-gray-100 bg-gray-50 object-contain object-center"
                               />
                             ) : (
                               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gray-100 text-gray-400 mt-0.5">
-                                <FileText className="h-5 w-5" />
+                                <FileText className="h-6 w-6" />
                               </div>
                             )}
                             <div className="min-w-0">
@@ -614,7 +615,7 @@ export default function AdminWorkshopsAndHostsPage() {
                                 <span className="font-bold text-gray-900 truncate leading-snug">{w.title}</span>
                                 {w.is_featured && (
                                   <span className="grid h-4 w-4 shrink-0 place-items-center text-amber-400" title="Featured">
-                                    <Star className="h-3.5 w-3.5 fill-current" />
+                                    <Star className="h-4 w-4 fill-current" />
                                   </span>
                                 )}
                               </div>
@@ -625,18 +626,18 @@ export default function AdminWorkshopsAndHostsPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-0.5 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                              <Calendar className="h-4 w-4 text-gray-400" />
                               <span className="font-medium text-gray-950">{formatDateTime(w.scheduled_at)}</span>
                             </div>
                             <div className="flex items-center gap-1 mt-0.5">
                               {w.mode === "online" ? (
                                 <>
-                                  <Laptop className="h-3.5 w-3.5 text-blue-500" />
+                                  <Laptop className="h-4 w-4 text-blue-500" />
                                   <span className="capitalize">{w.mode} webinar</span>
                                 </>
                               ) : (
                                 <>
-                                  <MapPin className="h-3.5 w-3.5 text-emerald-500" />
+                                  <MapPin className="h-4 w-4 text-emerald-500" />
                                   <span className="capitalize">{w.mode} event</span>
                                 </>
                               )}
@@ -658,7 +659,7 @@ export default function AdminWorkshopsAndHostsPage() {
                         </td>
                         <td className="px-6 py-4 text-xs font-semibold text-gray-600">
                           <div className="flex items-center gap-1.5">
-                            <Users className="h-4 w-4 text-gray-400" />
+                            <Users className="h-5 w-5 text-gray-400" />
                             <span>
                               {w.registered_users_count} / {w.max_capacity ?? "∞"}
                             </span>
@@ -681,38 +682,38 @@ export default function AdminWorkshopsAndHostsPage() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex gap-1.5 justify-end">
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => window.open(`/dashboard/workshops/${w.id}?preview=user`, "_blank", "noopener,noreferrer")}
                               title="Preview as user"
                               aria-label={`Preview ${w.title} as a user`}
                             >
-                              <Eye className="h-3.5 w-3.5" />
+                              <Eye className="h-[18px] w-[18px]" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => setRegistrationsWorkshop(w)}
                               title="Manage registrations"
                             >
-                              <Users className="h-3.5 w-3.5" />
+                              <Users className="h-[18px] w-[18px]" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => toggleFeaturedMutation.mutate({ id: w.id, isFeatured: !w.is_featured })}
                               title={w.is_featured ? "Remove featured" : "Feature workshop"}
                             >
-                              <Star className={cn("h-3.5 w-3.5", w.is_featured ? "text-amber-400 fill-current" : "text-gray-400")} />
+                              <Star className={cn("h-[18px] w-[18px]", w.is_featured ? "text-amber-400 fill-current" : "text-gray-400")} />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => duplicateWorkshopMutation.mutate(w.id)} title="Duplicate">
-                              <Copy className="h-3.5 w-3.5" />
+                            <Button size="icon" variant="outline" onClick={() => duplicateWorkshopMutation.mutate(w.id)} title="Duplicate">
+                              <Copy className="h-[18px] w-[18px]" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => openEditWorkshop(w)} title="Edit">
-                              <Edit2 className="h-3.5 w-3.5" />
+                            <Button size="icon" variant="outline" onClick={() => openEditWorkshop(w)} title="Edit">
+                              <Edit2 className="h-[18px] w-[18px]" />
                             </Button>
-                            <Button size="sm" variant="danger" onClick={() => setIsDeletingWorkshop(w)} title="Delete">
-                              <Trash2 className="h-3.5 w-3.5" />
+                            <Button size="icon" variant="danger" onClick={() => setIsDeletingWorkshop(w)} title="Delete">
+                              <Trash2 className="h-[18px] w-[18px]" />
                             </Button>
                           </div>
                         </td>
@@ -764,7 +765,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <div className="flex items-start gap-4">
                     {host.profile_photo ? (
                       <img
-                        src={resolveMediaUrl(host.profile_photo)}
+                        src={resolveUploadUrl(host.profile_photo)}
                         alt={host.full_name}
                         className="h-16 w-16 shrink-0 rounded-2xl object-cover border border-gray-100"
                       />
@@ -932,15 +933,15 @@ export default function AdminWorkshopsAndHostsPage() {
               </div>
 
               {/* Media Uploads */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Banner Image</label>
                   <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
-                    Recommended: 1600 × 900 px (16:9). Keep important content centered for responsive cropping.
+                    Recommended: 1600 × 900 px (16:9). This single banner is used on the landing page and throughout the Growth Hub.
                   </p>
                   <div className="flex items-center gap-3 mt-1.5">
                     {bannerUrl ? (
-                      <img src={resolveMediaUrl(bannerUrl)} alt="Banner" className="h-10 w-16 rounded object-cover border" />
+                      <img src={resolveUploadUrl(bannerUrl)} alt="Banner" className="h-10 w-16 rounded border bg-gray-50 object-contain object-center" />
                     ) : (
                       <div className="grid h-10 w-16 place-items-center rounded bg-gray-100 text-gray-400 border border-dashed"><Upload className="h-4 w-4" /></div>
                     )}
@@ -948,25 +949,6 @@ export default function AdminWorkshopsAndHostsPage() {
                       {uploadingBanner ? <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> : null}
                       Upload Banner
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, "banner")} disabled={uploadingBanner} />
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Thumbnail Image</label>
-                  <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
-                    Recommended: 800 × 800 px (1:1 square).
-                  </p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    {thumbnailUrl ? (
-                      <img src={resolveMediaUrl(thumbnailUrl)} alt="Thumbnail" className="h-10 w-10 rounded object-cover border" />
-                    ) : (
-                      <div className="grid h-10 w-10 place-items-center rounded bg-gray-100 text-gray-400 border border-dashed"><Upload className="h-4 w-4" /></div>
-                    )}
-                    <label className="cursor-pointer inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 text-xs font-bold bg-gray-50 hover:bg-gray-100 text-gray-700 transition">
-                      {uploadingThumbnail ? <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> : null}
-                      Upload Thumb
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, "thumbnail")} disabled={uploadingThumbnail} />
                     </label>
                   </div>
                 </div>
@@ -984,35 +966,69 @@ export default function AdminWorkshopsAndHostsPage() {
                     + Create Host Inline
                   </button>
                 </div>
-                {hostsQuery.isLoading ? <p className="text-xs text-gray-500 mt-2">Loading hosts...</p> : null}
-                {hostsQuery.data?.items?.length ? (
+                {editingWorkshop ? (
+                  <p className="mt-1 text-[11px] text-gray-400">Selected hosts show Edit and Delete actions below.</p>
+                ) : null}
+                {hostsQuery.isLoading && !workshopHostOptions.length ? <p className="text-xs text-gray-500 mt-2">Loading hosts...</p> : null}
+                {workshopHostOptions.length ? (
                   <div className="grid gap-2 sm:grid-cols-2 mt-2 max-h-32 overflow-y-auto border border-gray-100 rounded-lg p-2.5 bg-gray-50/50">
-                    {hostsQuery.data.items.map((host) => {
+                    {workshopHostOptions.map((host) => {
                       const isSelected = selectedHostIds.includes(host.id);
                       return (
-                        <label
+                        <div
                           key={host.id}
                           className={cn(
-                            "flex items-center gap-2 border rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer select-none transition-colors",
+                            "flex items-center rounded-lg border text-xs font-semibold transition-colors",
                             isSelected
                               ? "bg-blue-50 border-blue-200 text-teachpad-blue"
                               : "bg-white border-gray-150 hover:bg-gray-50 text-gray-700"
                           )}
                         >
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300 text-teachpad-blue focus:ring-teachpad-blue"
-                            checked={isSelected}
-                            onChange={() => {
-                              setSelectedHostIds((current) =>
-                                isSelected
-                                  ? current.filter((id) => id !== host.id)
-                                  : [...current, host.id]
-                              );
-                            }}
-                          />
-                          <span className="truncate">{host.full_name}</span>
-                        </label>
+                          <label className="flex min-w-0 flex-1 cursor-pointer select-none items-center gap-2 px-2.5 py-1.5">
+                            <input
+                              type="checkbox"
+                              className="rounded border-gray-300 text-teachpad-blue focus:ring-teachpad-blue"
+                              checked={isSelected}
+                              onChange={() => {
+                                setSelectedHostIds((current) =>
+                                  isSelected
+                                    ? current.filter((id) => id !== host.id)
+                                    : [...current, host.id]
+                                );
+                              }}
+                            />
+                            <span className="min-w-0 truncate">
+                              {host.full_name}
+                              {(host.designation || host.organization) ? (
+                                <span className="ml-1 font-normal text-gray-400">· {host.designation || host.organization}</span>
+                              ) : null}
+                            </span>
+                          </label>
+                          {editingWorkshop && isSelected ? (
+                            <div className="flex shrink-0 items-center gap-1 pr-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openEditHost(host)}
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-blue-200 bg-white px-2 text-[10px] font-bold text-teachpad-blue transition-colors hover:bg-blue-50"
+                                title={`Edit ${host.full_name}`}
+                                aria-label={`Edit host ${host.full_name}`}
+                              >
+                                <Edit2 className="h-3 w-3" />
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsDeletingHost(host)}
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-red-200 bg-white px-2 text-[10px] font-bold text-red-600 transition-colors hover:bg-red-50"
+                                title={`Delete ${host.full_name}`}
+                                aria-label={`Delete host ${host.full_name}`}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Delete
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
                       );
                     })}
                   </div>
@@ -1070,7 +1086,7 @@ export default function AdminWorkshopsAndHostsPage() {
                 <Button type="button" variant="outline" onClick={resetWorkshopForm} disabled={createWorkshopMutation.isPending || updateWorkshopMutation.isPending}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createWorkshopMutation.isPending || updateWorkshopMutation.isPending || uploadingBanner || uploadingThumbnail}>
+                <Button type="submit" disabled={createWorkshopMutation.isPending || updateWorkshopMutation.isPending || uploadingBanner}>
                   {createWorkshopMutation.isPending || updateWorkshopMutation.isPending ? "Saving..." : "Save Workshop"}
                 </Button>
               </div>
@@ -1121,7 +1137,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Profile Photo</label>
                   <div className="flex items-center gap-3 mt-1.5">
                     {hostPhoto ? (
-                      <img src={resolveMediaUrl(hostPhoto)} alt="Preview" className="h-10 w-10 rounded-lg object-cover border" />
+                      <img src={resolveUploadUrl(hostPhoto)} alt="Preview" className="h-10 w-10 rounded-lg object-cover border" />
                     ) : (
                       <div className="grid h-10 w-10 place-items-center rounded bg-gray-105 text-gray-400 border border-dashed"><User className="h-5 w-5" /></div>
                     )}
@@ -1321,7 +1337,7 @@ export default function AdminWorkshopsAndHostsPage() {
 
       {/* DELETE HOST CONFIRM DIALOG */}
       {isDeletingHost && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">

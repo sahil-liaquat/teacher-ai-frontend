@@ -199,20 +199,37 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       {mobileOpen && (
         <>
           <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-teachpad-ink/20 backdrop-blur-sm lg:hidden" />
-          <aside className="fixed inset-y-0 left-0 z-50 w-[280px] rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
             <div className="flex items-center justify-between">
               <Brand href={homeHref} />
               <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <nav className="mt-6 flex-1 space-y-1.5">
+            <nav className="mt-6 min-h-0 flex-1 space-y-1.5 [@media(max-height:680px)]:mt-4 [@media(max-height:680px)]:space-y-0">
               {nav.map((item) => (
                 <MobileNavItem key={item.href} item={item} active={isActive(item.href, pathname)} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
-            <button onClick={logout} className="mt-6 flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50"><LogOut className="h-5 w-5" /></span>
+
+            {!admin && (
+              <a
+                href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join the TeachPad WhatsApp community"
+                onClick={() => setMobileOpen(false)}
+                className="mt-4 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-bold text-teachpad-muted transition-all hover:bg-emerald-50 hover:text-emerald-700 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+                  <WhatsAppIcon className="h-5 w-5" />
+                </span>
+                Join Now
+              </a>
+            )}
+
+            <button onClick={logout} className="mt-2 flex h-12 w-full shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8"><LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" /></span>
               Logout
             </button>
           </aside>
@@ -220,7 +237,14 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       )}
 
       {sidebarLayout === "expanded" ? (
-        <ExpandedSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} homeHref={homeHref} />
+        <ExpandedSidebar
+          nav={nav}
+          activePath={pathname}
+          onNavigate={() => {}}
+          onLogout={logout}
+          homeHref={homeHref}
+          showCommunity={!admin}
+        />
       ) : (
         <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
       )}
@@ -417,18 +441,18 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200",
+        "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]",
         active
           ? "bg-gradient-to-r from-blue-50 to-white text-teachpad-blue"
           : "text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink"
       )}
     >
       <span className={cn(
-        "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200",
+        "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8",
         active ? "bg-blue-100" : "bg-teachpad-tag",
         colorClass
       )}>
-        <Icon className="h-5 w-5" />
+        <Icon className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
       </span>
       {item.label}
     </Link>
@@ -546,7 +570,7 @@ function AuthCheckingScreen() {
   );
 }
 
-function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void; homeHref: string }) {
+function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, showCommunity }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void; homeHref: string; showCommunity: boolean }) {
   const logout = (e: React.MouseEvent) => {
     e.preventDefault();
     onLogout();
@@ -555,10 +579,10 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { 
   return (
     <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between overflow-hidden">
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between [@media(max-height:760px)]:mb-4 [@media(max-height:680px)]:mb-3">
           <Brand href={homeHref} compact={true} />
         </div>
-        <nav className="flex-1 space-y-1.5 overflow-y-auto min-h-0 pr-1 select-none">
+        <nav className="flex-1 space-y-1.5 min-h-0 pr-1 select-none [@media(max-height:760px)]:space-y-0.5 [@media(max-height:680px)]:space-y-0">
           {nav.map((item) => (
             <ExpandedSidebarNavItem
               key={item.href}
@@ -568,15 +592,35 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { 
             />
           ))}
         </nav>
+
+        {showCommunity && (
+          <>
+            <div className="hidden [@media(min-height:940px)]:block">
+              <WhatsAppCommunityCard />
+            </div>
+            <a
+              href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Join the TeachPad WhatsApp community"
+              className="mt-2 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-3 text-sm font-bold text-teachpad-muted transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 [@media(min-height:940px)]:hidden [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-[13px]"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+                <WhatsAppIcon className="h-5 w-5" />
+              </span>
+              <span>Join Now</span>
+            </a>
+          </>
+        )}
       </div>
 
-      <div className="relative z-10 pt-4 border-t border-teachpad-cardBorder">
+      <div className="relative z-10 border-t border-teachpad-cardBorder pt-4 [@media(max-height:680px)]:pt-2">
         <button
           onClick={logout}
-          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red"
+          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]"
         >
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50">
-            <LogOut className="h-5 w-5" />
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+            <LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
           </span>
           Logout
         </button>
@@ -589,6 +633,64 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref }: { 
   );
 }
 
+function WhatsAppCommunityCard() {
+  return (
+    <section
+      className="relative mt-3 shrink-0 overflow-hidden rounded-[18px] border border-blue-100/90 bg-white antialiased shadow-[0_10px_26px_rgba(22,119,255,0.10)] ring-1 ring-white/80"
+      style={{ fontFamily: 'ui-rounded, "SF Pro Rounded", "Avenir Next", "Nunito Sans", sans-serif' }}
+    >
+      <div className="relative h-[132px] overflow-hidden bg-gradient-to-br from-blue-50 via-[#eefaff] to-violet-50">
+        <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-blue-200/35 blur-2xl" aria-hidden="true" />
+        <div className="absolute -bottom-10 -left-8 h-24 w-24 rounded-full bg-violet-200/40 blur-2xl" aria-hidden="true" />
+        <Sparkles className="absolute left-4 top-5 h-4 w-4 fill-violet-300 text-violet-400" aria-hidden="true" />
+        <Sparkles className="absolute bottom-4 left-6 h-3.5 w-3.5 fill-sky-300 text-sky-400" aria-hidden="true" />
+        <span className="absolute left-[72px] top-[76px] h-2.5 w-2.5 rotate-45 rounded-[2px] bg-amber-200" aria-hidden="true" />
+        <span className="absolute right-3 top-6 h-2 w-2 rotate-45 rounded-[2px] bg-fuchsia-200" aria-hidden="true" />
+
+        <div className="absolute left-3 top-4 z-10 max-w-[90px] rounded-[14px] border border-white bg-white/95 px-2.5 py-2 text-[10.5px] font-extrabold leading-[1.2] tracking-[-0.01em] text-[#12346b] shadow-[0_6px_16px_rgba(22,119,255,0.10)]">
+          Let&apos;s grow together
+          <span className="absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 border-b border-r border-white bg-white" aria-hidden="true" />
+        </div>
+
+        <img
+          src="/avatars/elif-wave.png"
+          alt="Elif waving"
+          className="absolute -bottom-[68px] right-[-4px] h-[194px] w-auto object-contain drop-shadow-[0_10px_12px_rgba(0,91,191,0.16)]"
+        />
+      </div>
+
+      <div className="relative z-10 border-t border-blue-100/70 bg-white px-3 pb-3 pt-3 text-center">
+        <h2 className="text-[15px] font-extrabold leading-tight tracking-[-0.025em] text-[#12346b]">Join WhatsApp</h2>
+        <a
+          href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Join the TeachPad WhatsApp community"
+          className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#22c767] to-[#19b958] text-[13px] font-extrabold text-white shadow-[0_7px_16px_rgba(37,211,102,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_10px_20px_rgba(37,211,102,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
+        >
+          <WhatsAppIcon className="h-[18px] w-[18px]" />
+          Join Now
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M16.05 3.2A12.72 12.72 0 0 0 5.1 22.4L3.3 29l6.75-1.77A12.74 12.74 0 1 0 16.05 3.2Zm0 2.14a10.58 10.58 0 1 1-5.39 19.69l-.38-.23-4 .99 1.06-3.87-.25-.4a10.58 10.58 0 0 1 8.96-16.18Z"
+      />
+      <path
+        fill="currentColor"
+        d="M12.44 10.27c-.24-.54-.5-.55-.74-.56h-.63c-.22 0-.57.08-.87.4-.3.33-1.14 1.12-1.14 2.72s1.17 3.15 1.33 3.37c.16.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.93-.79 2.2-1.55.28-.76.28-1.41.2-1.55-.08-.13-.3-.21-.63-.38-.33-.16-1.93-.95-2.23-1.06-.3-.11-.52-.16-.74.17-.22.32-.85 1.06-1.04 1.27-.2.22-.39.25-.72.09-.33-.17-1.39-.52-2.65-1.63a9.9 9.9 0 0 1-1.83-2.28c-.19-.33-.02-.51.15-.67.15-.15.32-.38.49-.57.16-.2.22-.33.32-.55.11-.22.06-.41-.02-.57-.08-.17-.72-1.79-.99-2.43Z"
+      />
+    </svg>
+  );
+}
+
 function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
   const colorClass = navIconColors[item.label] || "text-blue-500";
@@ -598,20 +700,20 @@ function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; acti
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02]",
+        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02] [@media(max-height:760px)]:h-10 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-[13px]",
         active
           ? "bg-gradient-to-r from-blue-50/50 to-white text-teachpad-blue border border-teachpad-cardBorder/30 shadow-sm"
           : "text-teachpad-muted hover:bg-slate-50 hover:text-teachpad-ink"
       )}
     >
       <span className={cn(
-        "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300",
+        "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
         active
           ? "bg-white shadow-[0_4px_12px_rgba(59,130,246,0.12)]"
           : "",
         colorClass
       )}>
-        <Icon className="h-5 w-5" />
+        <Icon className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
       </span>
       <span className="truncate">{item.label}</span>
     </Link>
