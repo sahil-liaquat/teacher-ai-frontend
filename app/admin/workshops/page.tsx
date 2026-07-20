@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
-import { cn } from "@/lib/utils";
+import { cn, resolveMediaUrl } from "@/lib/utils";
 
 const WORKSHOPS_PAGE_SIZE = 50;
 
@@ -600,7 +600,7 @@ export default function AdminWorkshopsAndHostsPage() {
                           <div className="flex items-start gap-3">
                             {w.thumbnail_url ? (
                               <img
-                                src={`${BACKEND_ROOT}/uploads/${w.thumbnail_url}`}
+                                src={resolveMediaUrl(w.thumbnail_url)}
                                 alt="thumbnail"
                                 className="h-10 w-10 shrink-0 rounded-lg object-cover border border-gray-100 mt-0.5"
                               />
@@ -764,7 +764,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <div className="flex items-start gap-4">
                     {host.profile_photo ? (
                       <img
-                        src={`${BACKEND_ROOT}/uploads/${host.profile_photo}`}
+                        src={resolveMediaUrl(host.profile_photo)}
                         alt={host.full_name}
                         className="h-16 w-16 shrink-0 rounded-2xl object-cover border border-gray-100"
                       />
@@ -940,7 +940,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   </p>
                   <div className="flex items-center gap-3 mt-1.5">
                     {bannerUrl ? (
-                      <img src={`${BACKEND_ROOT}/uploads/${bannerUrl}`} alt="Banner" className="h-10 w-16 rounded object-cover border" />
+                      <img src={resolveMediaUrl(bannerUrl)} alt="Banner" className="h-10 w-16 rounded object-cover border" />
                     ) : (
                       <div className="grid h-10 w-16 place-items-center rounded bg-gray-100 text-gray-400 border border-dashed"><Upload className="h-4 w-4" /></div>
                     )}
@@ -959,7 +959,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   </p>
                   <div className="flex items-center gap-3 mt-1.5">
                     {thumbnailUrl ? (
-                      <img src={`${BACKEND_ROOT}/uploads/${thumbnailUrl}`} alt="Thumbnail" className="h-10 w-10 rounded object-cover border" />
+                      <img src={resolveMediaUrl(thumbnailUrl)} alt="Thumbnail" className="h-10 w-10 rounded object-cover border" />
                     ) : (
                       <div className="grid h-10 w-10 place-items-center rounded bg-gray-100 text-gray-400 border border-dashed"><Upload className="h-4 w-4" /></div>
                     )}
@@ -1121,7 +1121,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Profile Photo</label>
                   <div className="flex items-center gap-3 mt-1.5">
                     {hostPhoto ? (
-                      <img src={`${BACKEND_ROOT}/uploads/${hostPhoto}`} alt="Preview" className="h-10 w-10 rounded-lg object-cover border" />
+                      <img src={resolveMediaUrl(hostPhoto)} alt="Preview" className="h-10 w-10 rounded-lg object-cover border" />
                     ) : (
                       <div className="grid h-10 w-10 place-items-center rounded bg-gray-105 text-gray-400 border border-dashed"><User className="h-5 w-5" /></div>
                     )}

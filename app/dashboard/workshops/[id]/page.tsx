@@ -30,7 +30,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, resolveMediaUrl } from "@/lib/utils";
 
 export default function WorkshopDetailPage() {
   const { id } = useParams() as { id: string };
@@ -189,7 +189,7 @@ export default function WorkshopDetailPage() {
             <div className="h-64 bg-slate-100 relative">
               {workshop.banner_url ? (
                 <img
-                  src={`${BACKEND_ROOT}/uploads/${workshop.banner_url}`}
+                  src={resolveMediaUrl(workshop.banner_url)}
                   alt={workshop.title}
                   className="w-full h-full object-cover"
                 />
@@ -284,7 +284,7 @@ export default function WorkshopDetailPage() {
                     <div key={host.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-4 items-start">
                       {host.profile_photo ? (
                         <img
-                          src={`${BACKEND_ROOT}/uploads/${host.profile_photo}`}
+                          src={resolveMediaUrl(host.profile_photo)}
                           alt={host.full_name}
                           className="h-16 w-16 rounded-2xl object-cover border"
                         />

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
+import { cn, resolveMediaUrl } from "@/lib/utils";
 
 export default function DashboardWorkshopsPage() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "registered">("upcoming");
@@ -305,7 +305,7 @@ function WorkshopCard({
         <div className="relative m-3 mb-0 h-48 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white sm:h-56 lg:h-60">
           {workshop.banner_url ? (
             <img
-              src={`${BACKEND_ROOT}/uploads/${workshop.banner_url}`}
+              src={resolveMediaUrl(workshop.banner_url)}
               alt={workshop.title}
               className="h-full w-full object-cover"
             />
@@ -357,7 +357,7 @@ function WorkshopCard({
                     <div key={host.id} className="flex items-center gap-2">
                       {host.profile_photo ? (
                         <img
-                          src={`${BACKEND_ROOT}/uploads/${host.profile_photo}`}
+                          src={resolveMediaUrl(host.profile_photo)}
                           alt={host.full_name}
                           className="h-7 w-7 rounded-full object-cover border border-white shadow-sm"
                         />

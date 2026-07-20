@@ -33,7 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
-import { cn } from "@/lib/utils";
+import { cn, resolveMediaUrl } from "@/lib/utils";
 
 const academyStats = [
   { label: "Practical demonstrations and guided sessions", value: "Live Learning", icon: Video, tone: "bg-teachpad-sky text-teachpad-blue" },
@@ -618,7 +618,7 @@ function FeaturedWorkshop({
     <div className="grid overflow-hidden rounded-2xl border border-teachpad-cardBorder bg-white/90 shadow-[0_22px_60px_rgba(30,80,90,0.10)] backdrop-blur-sm lg:grid-cols-[0.92fr_1.08fr] group hover:-translate-y-0.5 hover:border-blue-100/50 transition-all duration-300">
       <div className="relative min-h-[300px] bg-[linear-gradient(135deg,#dffafa_0%,#f2dcff_100%)] overflow-hidden">
         {workshop.banner_url ? (
-          <img src={`${BACKEND_ROOT}/uploads/${workshop.banner_url}`} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <img src={resolveMediaUrl(workshop.banner_url)} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         ) : (
           <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
             <Image src="/ai-tools/classroom-tools-header-illustration.png" alt="" fill className="object-cover" sizes="(min-width: 1024px) 40vw, 100vw" />
@@ -672,7 +672,7 @@ function WorkshopCard({
     <Card className="h-full overflow-hidden rounded-2xl border-teachpad-cardBorder bg-white/90 shadow-[0_18px_50px_rgba(30,80,90,0.08)] backdrop-blur-sm group hover:-translate-y-1 hover:border-blue-100 hover:shadow-[0_24px_50px_rgba(37,99,235,0.06)] transition-all duration-300">
       <div className="relative h-44 bg-[linear-gradient(135deg,#dffafa_0%,#e9e1ff_100%)] overflow-hidden">
         {workshop.banner_url ? (
-          <img src={`${BACKEND_ROOT}/uploads/${workshop.banner_url}`} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <img src={resolveMediaUrl(workshop.banner_url)} alt={workshop.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         ) : (
           <div className="grid h-full place-items-center text-blue-600 transition-transform duration-700 group-hover:scale-105">
             <Image src="/landing/lesson-planner-3d-v2.png" alt="" width={220} height={180} className="h-36 w-36 object-contain drop-shadow-[0_18px_32px_rgba(47,79,129,0.12)]" />
@@ -711,7 +711,7 @@ function InstructorCard({ host }: { host: Host }) {
     <div className="rounded-2xl border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_18px_50px_rgba(30,80,90,0.08)] backdrop-blur-sm">
       <div className="flex items-start gap-4">
         {host.profile_photo ? (
-          <img src={`${BACKEND_ROOT}/uploads/${host.profile_photo}`} alt={host.full_name} className="h-16 w-16 rounded-2xl border border-white object-cover shadow-sm" />
+          <img src={resolveMediaUrl(host.profile_photo)} alt={host.full_name} className="h-16 w-16 rounded-2xl border border-white object-cover shadow-sm" />
         ) : (
           <div className="grid h-16 w-16 place-items-center rounded-2xl border border-blue-100 bg-teachpad-sky text-blue-600">
             <User className="h-8 w-8" />
@@ -781,7 +781,7 @@ function HostLine({ hosts, compact = false }: { hosts: Host[]; compact?: boolean
       <div className="flex -space-x-2">
         {hosts.slice(0, compact ? 2 : 3).map((host) => (
           host.profile_photo ? (
-            <img key={host.id} src={`${BACKEND_ROOT}/uploads/${host.profile_photo}`} alt={host.full_name} className="h-8 w-8 rounded-full border-2 border-white object-cover" />
+            <img key={host.id} src={resolveMediaUrl(host.profile_photo)} alt={host.full_name} className="h-8 w-8 rounded-full border-2 border-white object-cover" />
           ) : (
             <span key={host.id} className="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-blue-50 text-blue-600">
               <User className="h-4 w-4" />
