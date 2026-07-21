@@ -17,6 +17,7 @@ import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
 import { normalizeIndianMobile } from "@/lib/phone";
 import { BoyAvatar } from "@/components/profile-avatar";
 import { PROFILE_AVATARS, normalizeProfileAvatarKey, type ProfileAvatarKey } from "@/lib/profile-avatars";
+import { ProfileTeachingBadges } from "@/components/streak/profile-badges";
 
 const usageLimit = 100;
 
@@ -438,6 +439,7 @@ export default function SettingsPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-6 pt-2 border-t border-slate-100">
+            {!isInfluencer && <ProfileTeachingBadges />}
             <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5">
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100">

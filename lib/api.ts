@@ -664,6 +664,95 @@ export type DashboardSummaryResponse = {
   last_7_days_timestamps: string[];
 };
 
+export type StreakRewardStatus = "locked" | "in_progress" | "unlocked" | "claimed" | "expired";
+export type StreakReward = {
+  id: string;
+  milestone_days: number;
+  reward_type: "badge" | "certificate" | "recognition";
+  reward_value: { badge_tier: StreakBadgeTier; has_certificate: boolean; recognition_eligible: boolean };
+  reward_label: string;
+  reward_description: string;
+  includes: string[];
+  badge_tier: StreakBadgeTier;
+  has_certificate: boolean;
+  recognition_eligible: boolean;
+  recognition_consent: boolean | null;
+  status: StreakRewardStatus;
+  days_remaining: number;
+  unlocked_at: string | null;
+  claimed_at: string | null;
+  expires_at: string | null;
+};
+export type StreakBadgeTier = "bronze" | "silver" | "gold" | "champion";
+export type RecognitionProfile = {
+  display_name: string;
+  avatar_key: ProfileAvatarKey;
+  school: string | null;
+  district: string | null;
+  current_streak: number;
+};
+export type RecognitionConsent = { reward: StreakReward; profile: RecognitionProfile | null; message: string };
+export type FeaturedTeacher = {
+  milestone_days: 14 | 30;
+  badge_tier: "gold" | "champion";
+  achievement_date: string;
+  profile: RecognitionProfile;
+};
+export type StreakSummary = {
+  current_streak: number;
+  best_streak: number;
+  total_teaching_days: number;
+  current_month_teaching_days: number;
+  last_qualifying_date: string | null;
+  completed_today: boolean;
+  has_started: boolean;
+  next_reward: StreakReward | null;
+  timezone: string;
+};
+export type StreakWeek = {
+  start: string;
+  end: string;
+  completed_count: number;
+  days: Array<{
+    date: string;
+    label: string;
+    status: "completed" | "pending" | "future" | "missed";
+    resource_count: number;
+  }>;
+};
+export type StreakMonth = {
+  year: number;
+  month: number;
+  today: string;
+  days: Array<{
+    date: string;
+    resource_count: number;
+    resource_types: GenerationTool[];
+    streak_day: number | null;
+    reward_milestone: 3 | 7 | 14 | 30 | null;
+    is_reward_milestone: boolean;
+  }>;
+  projected_rewards: Array<{
+    date: string;
+    milestone_days: 3 | 7 | 14 | 30;
+  }>;
+};
+export type StreakRewards = { items: StreakReward[] };
+export type StreakAdminAnalytics = {
+  activated_users: number;
+  streak_starters: number;
+  activated_users_starting_streak_pct: number;
+  reached_3_pct: number;
+  reached_7_pct: number;
+  reached_14_pct: number;
+  reached_30_pct: number;
+  d7_retention_started_pct: number;
+  d7_retention_not_started_pct: number;
+  paid_conversion_by_milestone: Record<string, number>;
+  average_teaching_days_per_active_teacher: number;
+  reward_claim_rate_pct: number;
+};
+
 export type LibraryItem = {
   id: string;
   type: "lesson_plan" | "worksheet" | "presentation" | "notes" | "activity";
@@ -715,6 +804,19 @@ export type AdminSummary = {
     logged_in_without_subscription: number;
     subscribed_inactive_30d: number;
   };
+};
+
+export type AdminSignupActivity = {
+  start: string;
+  end: string;
+  total: number;
+  buckets: Array<{
+    day: string;
+    signups: number;
+    generations: number;
+    activated: number;
+    activation_rate: number;
+  }>;
 };
 
 export type AdminFeedbackItem = {
@@ -1445,6 +1547,9 @@ async function requestWithSession(path: string, init: ApiRequestInit = {}, retry
   if (!publicAuthPath && token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
+  if (typeof window !== "undefined" && !headers.has("X-TeachPad-Timezone")) {
+    headers.set("X-TeachPad-Timezone", Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  }
   const res = await fetch(`${API_BASE}${path}`, { ...fetchInit, headers });
   if (shouldTryRefresh(path, res.status) && retry && await refreshSession()) {
     return requestWithSession(path, init, false);
@@ -1658,6 +1763,36 @@ export async function resetPassword(accessToken: string, password: string) {
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
+  adminSignupActivity: () => apiFetch<AdminSignupActivity>("/admin/signup-activity"),
+  adminStreakAnalytics: () => apiFetch<StreakAdminAnalytics>("/admin/streaks/analytics"),
+  streakSummary: () => apiFetch<StreakSummary>("/streak/summary"),
+  streakWeek: () => apiFetch<StreakWeek>("/streak/week"),
+  streakMonth: (year?: number, month?: number) => {
+    const qs = new URLSearchParams();
+    if (year != null) qs.set("year", String(year));
+    if (month != null) qs.set("month", String(month));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<StreakMonth>(`/streak/month${suffix}`);
+  },
+  streakRewards: () => apiFetch<StreakRewards>("/streak/rewards"),
+  claimStreakReward: (milestone: number) =>
+    apiFetch<{ reward: StreakReward; message: string }>(`/streak/rewards/${milestone}/claim`, { method: "POST" }),
+  streakRecognitionProfile: (milestone: number) =>
+    apiFetch<RecognitionConsent>(`/streak/rewards/${milestone}/recognition`),
+  updateStreakRecognition: (milestone: number, approved: boolean) =>
+    apiFetch<RecognitionConsent>(`/streak/rewards/${milestone}/recognition`, {
+      method: "PUT",
+      body: JSON.stringify({ approved }),
+    }),
+  featuredTeachers: () => apiFetch<{ items: FeaturedTeacher[] }>("/streak/featured-teachers", { redirectOnUnauthorized: false }),
+  trackStreakEvent: (payload: {
+    event_name: "streak_pill_viewed" | "streak_pill_clicked" | "streak_drawer_opened" | "streak_cta_clicked" | "full_journey_viewed";
+    current_streak?: number;
+    milestone?: number;
+    resource_type?: GenerationTool;
+    activity_date?: string;
+    metadata?: Record<string, unknown>;
+  }) => apiFetch<void>("/streak/events", { method: "POST", body: JSON.stringify(payload) }),
   adminUserDetail: (userId: string) => apiFetch<AdminUserDetail>(`/admin/users/${userId}`),
   adminFeedback: (params: AdminFeedbackParams = {}) => {
     const qs = new URLSearchParams();

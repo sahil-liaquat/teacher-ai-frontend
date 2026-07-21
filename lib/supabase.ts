@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_OAUTH_STORAGE_KEY = "teachpad-supabase-oauth";
 
 let client: SupabaseClient | null = null;
 
@@ -14,7 +15,7 @@ export function isSupabaseConfigured() {
  *
  * `persistSession: true` is required so the PKCE code-verifier survives the
  * full-page redirect to Google and back; we namespace it under `storageKey` and
- * clear it right after `exchangeCodeForSession`. `autoRefreshToken: false` and
+ * clear it after handing the tokens to the app. `autoRefreshToken: false` and
  * `detectSessionInUrl: false` keep this client from competing with the app's own
  * localStorage token system (lib/api.ts) — after the callback we hand the tokens
  * to `completeTokenLogin()` and the existing Bearer/`/auth/refresh` plumbing owns
@@ -35,9 +36,21 @@ export function getSupabaseClient(): SupabaseClient | null {
         autoRefreshToken: false,
         detectSessionInUrl: false,
         flowType: "pkce",
-        storageKey: "teachpad-supabase-oauth",
+        storageKey: SUPABASE_OAUTH_STORAGE_KEY,
       },
     });
   }
   return client;
+}
+
+/**
+ * Remove the Supabase client's temporary OAuth state without calling
+ * `auth.signOut()`. Signing out would revoke the same refresh token that has
+ * just been handed to lib/api.ts, causing the app session to expire when the
+ * short-lived access token needs refreshing.
+ */
+export function clearSupabaseOAuthStorage() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(SUPABASE_OAUTH_STORAGE_KEY);
+  window.localStorage.removeItem(`${SUPABASE_OAUTH_STORAGE_KEY}-code-verifier`);
 }

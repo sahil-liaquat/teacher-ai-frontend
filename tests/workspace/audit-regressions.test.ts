@@ -39,6 +39,23 @@ test("Google OAuth renders consistently during server and client rendering", () 
   assert.match(button, /const supabase = getSupabaseClient\(\);/);
 });
 
+test("Google OAuth cleanup preserves the refresh token used by the app session", () => {
+  const callback = source("app/auth/callback/page.tsx");
+  const supabase = source("lib/supabase.ts");
+
+  assert.match(callback, /clearSupabaseOAuthStorage\(\)/);
+  assert.doesNotMatch(callback, /auth\.signOut/);
+  assert.match(supabase, /localStorage\.removeItem\(SUPABASE_OAUTH_STORAGE_KEY\)/);
+  assert.match(supabase, /localStorage\.removeItem\(`\$\{SUPABASE_OAUTH_STORAGE_KEY\}-code-verifier`\)/);
+});
+
+test("desktop login logo stays clickable above the testimonial panel", () => {
+  const login = source("app/login/page.tsx");
+
+  assert.match(login, /relative z-20 flex items-center justify-between[\s\S]*aria-label="TeachPad home"/);
+  assert.match(login, /relative z-10 mx-auto flex max-w-2xl/);
+});
+
 test("Webpack ignores pptxgenjs Node-only browser-incompatible imports", () => {
   const config = source("next.config.mjs");
 

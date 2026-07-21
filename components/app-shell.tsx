@@ -31,6 +31,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { TrialStatusPill } from "@/components/billing/trial-status-pill";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
+import { StreakPill } from "@/components/streak/streak-pill";
 
 type NavItem = {
   href: string;
@@ -185,6 +186,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
           <>
             <Brand compact href={homeHref} />
             <div className="flex items-center gap-2">
+              {!admin && role !== "influencer" && <StreakPill mobile />}
               <NotificationCenter mobile />
               <Link href={settingsHref} aria-label="Open profile settings" className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100 transition-all hover:-translate-y-0.5 hover:ring-blue-200">
                 <BoyAvatar avatarKey={currentUser.avatar_key} />
@@ -267,6 +269,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
                   {sidebarLayout !== "expanded" && <Brand compact href={homeHref} />}
                 </div>
                 <div className="flex items-center gap-2.5">
+                  {!admin && role !== "influencer" && <StreakPill />}
                   <NotificationCenter />
                   <Link
                     href={settingsHref}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Eye } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import {
   backendApi,
   type ActivityKind,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
 import { ActivityDetailDrawer } from "@/components/admin/activity-detail-drawer";
+import { ActivityExportDialog } from "@/components/admin/activity-export-dialog";
 
 const PAGE_SIZE = 50;
 const KINDS: { value: ActivityKind | ""; label: string }[] = [
@@ -52,6 +53,7 @@ export default function AdminActivityPage() {
   const [userEmail, setUserEmail] = useState("");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<ActivityRow | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const activity = useQuery({
     queryKey: ["admin-activity", kind, userId, page],
@@ -91,6 +93,9 @@ export default function AdminActivityPage() {
         }
         actions={
           <div className="flex flex-wrap items-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setExportOpen(true)}>
+              <Download className="h-4 w-4" /> Export activities
+            </Button>
             <label className="grid gap-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tool</span>
               <select
@@ -190,6 +195,13 @@ export default function AdminActivityPage() {
           onClose={() => setSelected(null)}
         />
       )}
+
+      <ActivityExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        kind={kind || undefined}
+        userId={userId || undefined}
+      />
     </>
   );
 }

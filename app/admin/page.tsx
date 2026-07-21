@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -9,11 +8,8 @@ import {
   ArrowRight,
   BookOpen,
   Coins,
-  Download,
   FileText,
   MessageSquareText,
-  Sparkles,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import {
@@ -21,14 +17,13 @@ import {
   type AdminActivityResponse,
   type AdminFeedbackResponse,
   type AdminSummary,
+  type StreakAdminAnalytics,
   type AdminUsageResponse,
   type ApiUser,
 } from "@/lib/api";
 import {
-  AdminPageHeader,
   AdminPanel,
   EmptyState,
-  HealthIndicator,
   LoadingState,
   MetricCard,
   StatusPill,
@@ -37,8 +32,7 @@ import {
   formatInr,
 } from "@/components/admin/admin-ui";
 import { UsageDailyChart } from "@/components/admin/usage-daily-chart";
-import { ToolUsageChart, UserFunnelChart } from "@/components/admin/overview-charts";
-import { Button } from "@/components/ui/button";
+import { SignupActivityChart } from "@/components/admin/signup-activity-chart";
 import { getErrorMessage } from "@/lib/errors";
 
 type DashboardInsights = {
@@ -47,43 +41,16 @@ type DashboardInsights = {
   activity: AdminActivityResponse;
   feedback: AdminFeedbackResponse;
   recentSignups: ApiUser[];
+  streak: StreakAdminAnalytics;
 };
 
 const number = new Intl.NumberFormat("en-IN");
 
 export default function AdminDashboard() {
-  const [exporting, setExporting] = useState(false);
   const dashboard = useQuery({
     queryKey: ["admin-dashboard-insights"],
     queryFn: loadDashboardInsights,
   });
-
-  async function exportUsersCsv() {
-    setExporting(true);
-    try {
-      const firstPage = await backendApi.users(0, 100);
-      const users = firstPage.total > firstPage.items.length
-        ? (await backendApi.users(0, firstPage.total)).items
-        : firstPage.items;
-      const csv = toCsv(
-        ["Name", "Email", "Phone", "Role", "Active", "Confirmed", "Logged in", "Subscription", "Joined"],
-        users.map((user) => [
-          user.full_name || user.name || "",
-          user.email || "",
-          user.phone || "",
-          user.role || "",
-          user.is_active ? "Yes" : "No",
-          user.confirmed ? "Yes" : "No",
-          user.logged_in ? "Yes" : "No",
-          user.has_subscription ? "Yes" : "No",
-          user.created_at || "",
-        ])
-      );
-      downloadCsv(csv, `teachpad-users-${new Date().toISOString().slice(0, 10)}.csv`);
-    } finally {
-      setExporting(false);
-    }
-  }
 
   if (dashboard.isLoading) return <LoadingState label="Building dashboard insights" />;
   if (dashboard.isError || !dashboard.data) {
@@ -95,28 +62,9 @@ export default function AdminDashboard() {
   const feedback = data.feedback.summary;
   const successRate = usage.generations ? Math.round(((usage.generations - usage.failures) / usage.generations) * 100) : 0;
   const responseRate = feedback.total ? Math.round((feedback.submitted / feedback.total) * 100) : 0;
-  const subscriptionRate = data.summary.user_funnel.total
-    ? Math.round((data.summary.user_funnel.subscribed / data.summary.user_funnel.total) * 100)
-    : 0;
-  const generationsPerTeacher = usage.active_users ? usage.generations / usage.active_users : 0;
 
   return (
     <>
-      <AdminPageHeader
-        eyebrow="Decision dashboard"
-        title="TeachPad at a glance"
-        description="The signals that matter: acquisition, activation, product adoption, AI spend, and teacher sentiment. Usage metrics cover the last 30 days."
-        meta={<HealthIndicator status={data.summary.system_status.backend_api} />}
-        actions={
-          <>
-            <Button variant="outline" onClick={exportUsersCsv} disabled={exporting}>
-              <Download className="h-4 w-4" /> {exporting ? "Exporting…" : "Export users"}
-            </Button>
-            <Link href="/admin/usage"><Button>Explore usage <ArrowRight className="h-4 w-4" /></Button></Link>
-          </>
-        }
-      />
-
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Total users" value={compactNumber(data.summary.total_users)} detail={`+${data.summary.user_funnel.new_last_24_hours} in 24 hours`} tone="blue" icon={<Users className="h-5 w-5" />} />
         <MetricCard label="Active teachers" value={compactNumber(usage.active_users)} detail="Generated in 30 days" tone="green" icon={<Activity className="h-5 w-5" />} />
@@ -125,67 +73,43 @@ export default function AdminDashboard() {
         <MetricCard label="Feedback score" value={feedback.average_rating != null ? `${feedback.average_rating}/5` : "—"} detail={`${responseRate}% response rate`} tone="amber" icon={<MessageSquareText className="h-5 w-5" />} />
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3" aria-label="Key insights">
-        <InsightCard
-          label="Activation"
-          value={`${subscriptionRate}%`}
-          description={`${number.format(data.summary.user_funnel.subscribed)} of ${number.format(data.summary.user_funnel.total)} accounts have a subscription record.`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          tone="blue"
-        />
-        <InsightCard
-          label="Product depth"
-          value={generationsPerTeacher.toFixed(1)}
-          description="Average generations per active teacher in the last 30 days."
-          icon={<Sparkles className="h-5 w-5" />}
-          tone="violet"
-        />
-        <InsightCard
-          label="Teacher voice"
-          value={`${feedback.with_comments}`}
-          description={`Written comments collected; ${feedback.dismissed} prompts were skipped.`}
-          icon={<MessageSquareText className="h-5 w-5" />}
-          tone="amber"
-        />
-      </section>
+      <AdminPanel
+        title="30-day product activity"
+        description="Switch between generation volume, token consumption, and AI cost."
+        actions={<Link href="/admin/usage" className="text-sm font-semibold text-blue-600 hover:underline">Detailed usage ↗</Link>}
+      >
+        <UsageDailyChart data={data.usage.daily} start={data.usage.start} end={data.usage.end} />
+      </AdminPanel>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.85fr)]">
-        <AdminPanel
-          title="30-day product activity"
-          description="Switch between generation volume, token consumption, and AI cost."
-          actions={<Link href="/admin/usage" className="text-sm font-semibold text-blue-600 hover:underline">Detailed usage ↗</Link>}
-        >
-          <UsageDailyChart data={data.usage.daily} />
-        </AdminPanel>
-        <AdminPanel title="Account activation" description="Independent lifecycle milestones across all users.">
-          <UserFunnelChart data={data.summary.user_funnel} />
-        </AdminPanel>
-      </div>
+      <AdminPanel
+        title="30-day signup activity"
+        description="Daily signup cohorts and the share that reached their first successful generation."
+        actions={<Link href="/admin/users" className="text-sm font-semibold text-blue-600 hover:underline">All users ↗</Link>}
+      >
+        <SignupActivityChart />
+      </AdminPanel>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <AdminPanel title="Tool adoption" description="Which generators teachers used in the last 30 days.">
-          <ToolUsageChart data={data.usage.by_kind} />
-        </AdminPanel>
-        <AdminPanel
-          title="Most active teachers"
-          description="Top users by tracked AI cost in the last 30 days."
-          contentClassName="p-0"
-          actions={<Link href="/admin/usage" className="text-sm font-semibold text-blue-600 hover:underline">View all ↗</Link>}
-        >
-          {data.usage.by_user.length ? (
-            <div className="divide-y divide-gray-100">
-              {data.usage.by_user.slice(0, 7).map((user, index) => (
-                <Link key={user.user_id} href={`/admin/users/${user.user_id}`} className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-black text-blue-600">{index + 1}</span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-gray-900">{user.name || user.email || "Unnamed teacher"}</span><span className="block truncate text-xs text-gray-500">{user.email || "No email"} · {user.tier}</span></span>
-                  <span className="text-right"><span className="block text-sm font-bold text-gray-900">{number.format(user.generations)}</span><span className="block text-xs text-gray-500">generations</span></span>
-                  <span className="w-20 text-right text-sm font-semibold text-rose-600">{formatInr(user.cost_inr)}</span>
-                </Link>
-              ))}
-            </div>
-          ) : <div className="p-6"><EmptyState title="No active teachers in this period" /></div>}
-        </AdminPanel>
-      </div>
+      <AdminPanel
+        title="Teaching streak impact"
+        description="Meaningful multi-day use, milestone progress, retention, conversion and reward adoption."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <StreakMetric label="Activated users starting" value={`${data.streak.activated_users_starting_streak_pct}%`} detail={`${number.format(data.streak.streak_starters)} streak starters`} />
+          <StreakMetric label="Reached 3 days" value={`${data.streak.reached_3_pct}%`} detail="of streak starters" />
+          <StreakMetric label="Reached 7 days" value={`${data.streak.reached_7_pct}%`} detail="of streak starters" />
+          <StreakMetric label="Reached 14 days" value={`${data.streak.reached_14_pct}%`} detail="of streak starters" />
+          <StreakMetric label="Reached 30 days" value={`${data.streak.reached_30_pct}%`} detail="of streak starters" />
+          <StreakMetric label="D7 · started streak" value={`${data.streak.d7_retention_started_pct}%`} detail="day-seven retention" />
+          <StreakMetric label="D7 · no streak" value={`${data.streak.d7_retention_not_started_pct}%`} detail="comparison cohort" />
+          <StreakMetric label="Avg teaching days" value={String(data.streak.average_teaching_days_per_active_teacher)} detail="per active teacher · 30d" />
+          <StreakMetric label="Certificate claim rate" value={`${data.streak.reward_claim_rate_pct}%`} detail="unlocked certificates opened" />
+          <StreakMetric
+            label="Paid conversion · 3/7/14/30d"
+            value={[3, 7, 14, 30].map((day) => `${data.streak.paid_conversion_by_milestone[String(day)] ?? 0}%`).join(" · ")}
+            detail="by streak milestone"
+          />
+        </div>
+      </AdminPanel>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
         <AdminPanel
@@ -279,13 +203,6 @@ export default function AdminDashboard() {
               href="/admin/users"
               tone="blue"
             />
-            <OpportunityCard
-              value={data.summary.user_funnel.subscribed_inactive_30d}
-              title="Subscribed, inactive 30d"
-              description="Prioritize these teachers for retention outreach."
-              href="/admin/usage"
-              tone="rose"
-            />
           </div>
         </AdminPanel>
       </div>
@@ -310,23 +227,19 @@ async function loadDashboardInsights(): Promise<DashboardInsights> {
   start.setUTCDate(start.getUTCDate() - 29);
   const date = (value: Date) => value.toISOString().slice(0, 10);
 
-  const [summary, usage, activity, feedback, recentUsers] = await Promise.all([
+  const [summary, usage, activity, feedback, recentUsers, streak] = await Promise.all([
     backendApi.adminSummary(),
     backendApi.adminUsage({ start: date(start), end: date(end), sort: "cost_inr", limit: 20 }),
     backendApi.adminActivity({ skip: 0, limit: 8 }),
     backendApi.adminFeedback({ skip: 0, limit: 1 }),
     backendApi.users(0, 10),
+    backendApi.adminStreakAnalytics(),
   ]);
-  return { summary, usage, activity, feedback, recentSignups: recentUsers.items };
+  return { summary, usage, activity, feedback, recentSignups: recentUsers.items, streak };
 }
 
-function InsightCard({ label, value, description, icon, tone }: { label: string; value: string; description: string; icon: React.ReactNode; tone: "blue" | "violet" | "amber" }) {
-  const colors = {
-    blue: "border-blue-100 bg-gradient-to-br from-blue-50 to-white text-blue-600",
-    violet: "border-violet-100 bg-gradient-to-br from-violet-50 to-white text-violet-600",
-    amber: "border-amber-100 bg-gradient-to-br from-amber-50 to-white text-amber-600",
-  };
-  return <div className={`rounded-2xl border p-5 ${colors[tone]}`}><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider opacity-75">{label}</p><p className="mt-1 text-3xl font-black text-slate-900">{value}</p></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/80 shadow-sm">{icon}</span></div><p className="mt-3 text-sm font-medium leading-relaxed text-slate-600">{description}</p></div>;
+function StreakMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-950">{value}</p><p className="mt-1 text-xs font-medium text-slate-500">{detail}</p></div>;
 }
 
 function ProgressRow({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
@@ -372,21 +285,4 @@ function formatDateTimeAmPm(value?: string) {
     minute: "2-digit",
     hour12: true,
   });
-}
-
-function toCsv(headers: string[], rows: Array<Array<string | number | boolean>>) {
-  return [headers, ...rows].map((row) => row.map((value) => {
-    const text = String(value ?? "");
-    return /[",\n]/.test(text) ? `"${text.replaceAll("\"", "\"\"")}"` : text;
-  }).join(",")).join("\n");
-}
-
-function downloadCsv(csv: string, filename: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 }

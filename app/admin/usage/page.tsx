@@ -140,7 +140,7 @@ function UsageContent({
       </div>
 
       <AdminPanel title="Daily usage" description="Generations, tokens, or ₹ cost per day in the selected range.">
-        <UsageDailyChart data={data.daily} />
+        <UsageDailyChart data={data.daily} start={data.start} end={data.end} />
       </AdminPanel>
 
       <div className="grid gap-6 xl:grid-cols-2">

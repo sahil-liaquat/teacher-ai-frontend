@@ -157,7 +157,7 @@ export default function LoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute bottom-0 right-[-6%] w-[540px] max-w-[92%] select-none object-contain opacity-95"
         />
-        <div className="flex items-center justify-between">
+        <div className="relative z-20 flex items-center justify-between">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
             <TeachPadWordmark />
           </Link>
