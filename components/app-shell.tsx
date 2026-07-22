@@ -216,7 +216,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
 
             {!admin && (
               <a
-                href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+                href="https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Join the TeachPad WhatsApp community"
@@ -602,7 +602,7 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
               <WhatsAppCommunityCard />
             </div>
             <a
-              href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+              href="https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Join the TeachPad WhatsApp community"
@@ -665,7 +665,7 @@ function WhatsAppCommunityCard() {
       <div className="relative z-10 border-t border-blue-100/70 bg-white px-3 pb-3 pt-3 text-center">
         <h2 className="text-[15px] font-extrabold leading-tight tracking-[-0.025em] text-[#12346b]">Join WhatsApp</h2>
         <a
-          href="https://chat.whatsapp.com/CkOZwyZrr2i22xYTiHdJ9D"
+          href="https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Join the TeachPad WhatsApp community"

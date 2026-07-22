@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Calendar, CheckCircle2, ChevronRight, Clock, Laptop, MapPin, Sparkles, User, Video } from "lucide-react";
+import { Calendar, ChevronRight, Clock, Laptop, MapPin, MessageCircle, User, Video } from "lucide-react";
 import Link from "next/link";
 import { backendApi, resolveUploadUrl, type Workshop } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
@@ -15,7 +14,6 @@ import { cn } from "@/lib/utils";
 import { WorkshopImage } from "@/components/workshop-image";
 
 export default function DashboardWorkshopsPage() {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "registered">("upcoming");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -76,12 +74,14 @@ export default function DashboardWorkshopsPage() {
   const allWorkshops = workshopsQuery.data?.items || [];
   const registeredList = registrationsQuery.data || [];
 
-  // Categorize
-  const upcomingWorkshops = allWorkshops.filter(
-    (w) => !registeredList.some((reg) => reg.workshop_id === w.id)
-  );
-
-  const registeredWorkshops = registeredList.map((reg) => reg.workshop).filter(Boolean);
+  const registeredWorkshopIds = new Set(registeredList.map((registration) => registration.workshop_id));
+  const listedWorkshopIds = new Set(allWorkshops.map((workshop) => workshop.id));
+  const workshops = [
+    ...allWorkshops,
+    ...registeredList
+      .map((registration) => registration.workshop)
+      .filter((workshop): workshop is Workshop => Boolean(workshop) && !listedWorkshopIds.has(workshop.id))
+  ];
 
   const isLoading = workshopsQuery.isLoading || registrationsQuery.isLoading;
 
@@ -94,27 +94,6 @@ export default function DashboardWorkshopsPage() {
         imageClassName="scale-110"
       />
 
-      <div className="grid gap-3 rounded-[22px] border border-white/70 bg-white/80 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm sm:grid-cols-2">
-        <WorkshopTabButton
-          active={activeTab === "upcoming"}
-          icon={<Sparkles className="h-5 w-5" />}
-          title="Upcoming Sessions"
-          description="Live sessions you can still join"
-          count={upcomingWorkshops.length}
-          tone="blue"
-          onClick={() => setActiveTab("upcoming")}
-        />
-        <WorkshopTabButton
-          active={activeTab === "registered"}
-          icon={<CheckCircle2 className="h-5 w-5" />}
-          title="My Registrations"
-          description="Your saved workshop seats"
-          count={registeredWorkshops.length}
-          tone="green"
-          onClick={() => setActiveTab("registered")}
-        />
-      </div>
-
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
@@ -126,17 +105,24 @@ export default function DashboardWorkshopsPage() {
         </div>
       ) : null}
 
-      {!isLoading && activeTab === "upcoming" ? (
-        upcomingWorkshops.length ? (
+      {!isLoading ? (
+        workshops.length ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            {upcomingWorkshops.map((workshop) => (
-              <WorkshopCard
-                key={workshop.id}
-                workshop={workshop}
-                onRegister={() => registerMutation.mutate(workshop.id)}
-                isRegistering={registerMutation.isPending && registerMutation.variables === workshop.id}
-              />
-            ))}
+            {workshops.map((workshop) => {
+              const registered = registeredWorkshopIds.has(workshop.id) || workshop.is_registered;
+
+              return (
+                <WorkshopCard
+                  key={workshop.id}
+                  workshop={workshop}
+                  registered={registered}
+                  onRegister={() => registerMutation.mutate(workshop.id)}
+                  onCancel={() => cancelRegistrationMutation.mutate(workshop.id)}
+                  isRegistering={registerMutation.isPending && registerMutation.variables === workshop.id}
+                  isCancelling={cancelRegistrationMutation.isPending && cancelRegistrationMutation.variables === workshop.id}
+                />
+              );
+            })}
           </div>
         ) : (
           <EmptyWorkshopState
@@ -147,89 +133,7 @@ export default function DashboardWorkshopsPage() {
           />
         )
       ) : null}
-
-      {!isLoading && activeTab === "registered" ? (
-        registeredWorkshops.length ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {registeredWorkshops.map((workshop) => (
-              <WorkshopCard
-                key={workshop.id}
-                workshop={workshop}
-                registered
-                onCancel={() => cancelRegistrationMutation.mutate(workshop.id)}
-                isCancelling={cancelRegistrationMutation.isPending && cancelRegistrationMutation.variables === workshop.id}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyWorkshopState
-            icon={<AlertCircle className="h-7 w-7" />}
-            tone="amber"
-            title="No registrations yet."
-            description="Explore upcoming sessions and manage your registrations here."
-            action={<Button className="mt-5" onClick={() => setActiveTab("upcoming")}>Browse Sessions</Button>}
-          />
-        )
-      ) : null}
     </div>
-  );
-}
-
-function WorkshopTabButton({
-  active,
-  icon,
-  title,
-  description,
-  count,
-  tone,
-  onClick
-}: {
-  active: boolean;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  count: number;
-  tone: "blue" | "green";
-  onClick: () => void;
-}) {
-  const toneClasses = tone === "blue"
-    ? "from-[#eff6ff] via-[#eff6ff] to-white text-[#3b82f6] ring-blue-100"
-    : "from-[#f0fff4] via-[#f0fff4] to-white text-emerald-600 ring-emerald-100";
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "group/card relative overflow-hidden rounded-[18px] p-4 text-left transition-all duration-300 focus:outline-none",
-        active
-          ? `bg-gradient-to-br ${toneClasses} shadow-[0_14px_34px_rgba(15,23,42,0.08)]`
-          : "bg-transparent text-slate-500 hover:bg-white/70"
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <span className={cn(
-          "grid h-12 w-12 shrink-0 place-items-center rounded-[18px] ring-1 transition-transform duration-300 group-hover/card:scale-105",
-          active ? "bg-white/88 shadow-[0_12px_26px_rgba(15,23,42,0.08)]" : "bg-slate-50 text-slate-400 ring-slate-100"
-        )}>
-          {icon}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className={cn("block text-[14.5px] font-extrabold leading-snug sm:text-[16.5px]", active ? "text-slate-900" : "text-slate-600")}>
-            {title}
-          </span>
-          <span className="mt-1 block text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">
-            {description}
-          </span>
-        </span>
-        <span className={cn(
-          "grid h-8 min-w-8 place-items-center rounded-full px-2 text-xs font-black",
-          active ? "bg-white text-slate-900" : "bg-slate-100 text-slate-500"
-        )}>
-          {count}
-        </span>
-      </div>
-    </button>
   );
 }
 
@@ -300,12 +204,14 @@ function WorkshopCard({
   const modeLabel = workshop.mode === "online" ? "Online" : workshop.mode === "offline" ? "Offline" : "Hybrid";
   const modeIcon = workshop.mode === "offline" ? <MapPin className="h-3.5 w-3.5" /> : workshop.mode === "hybrid" ? <Video className="h-3.5 w-3.5" /> : <Laptop className="h-3.5 w-3.5" />;
   const meetingLink = workshop.meeting_link?.trim() || null;
+  const whatsappGroupLink = "https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0";
+  const primaryHost = workshop.hosts[0];
 
   return (
     <Card className="group/card relative flex h-full overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]">
       <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-blue-200/25 blur-2xl" />
       <div className="relative flex min-h-full w-full flex-col">
-        <div className="relative m-3 mb-0 aspect-video overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white">
+        <div className="relative m-3 mb-0 h-36 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white sm:h-44">
           <WorkshopImage
             bannerUrl={workshop.banner_url}
             alt={workshop.title}
@@ -320,10 +226,10 @@ function WorkshopCard({
           />
         </div>
 
-        <CardContent className="flex flex-1 flex-col justify-between p-5">
-          <div className="space-y-3">
+        <CardContent className="flex flex-1 flex-col justify-between p-4">
+          <div className="space-y-2.5">
             <div>
-              <div className="mb-3 flex flex-wrap gap-1.5">
+              <div className="mb-2 flex flex-wrap gap-1.5">
                 <Badge className={cn("border-blue-100 bg-blue-50 font-bold", isOnline ? "text-blue-600" : "border-emerald-100 bg-emerald-50 text-emerald-600")}>
                   {modeIcon} {modeLabel}
                 </Badge>
@@ -342,44 +248,47 @@ function WorkshopCard({
                   {workshop.duration_minutes ? `${workshop.duration_minutes} mins` : "Live session"}
                 </span>
               </div>
-              <h3 className="mt-3 text-[16px] font-extrabold leading-snug text-slate-950 transition-colors group-hover/card:text-blue-600 sm:text-[18px]">
+              <h3 className="mt-2 text-[16px] font-extrabold leading-snug text-slate-950 transition-colors group-hover/card:text-blue-600 sm:text-[18px]">
                 {workshop.title}
               </h3>
             </div>
 
-            <p className="text-xs text-slate-600 sm:text-sm line-clamp-2 leading-relaxed">
+            <p className="line-clamp-2 text-xs leading-5 text-slate-600 sm:text-sm">
               {workshop.description || "Learn pedagogical strategies and classroom activity orchestration in this syllabus-grounded workshop."}
             </p>
 
-            {workshop.hosts.length ? (
-              <div className="rounded-[16px] border border-slate-100 bg-white/72 p-3">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Speaker / Host</p>
-                <div className="flex flex-col gap-2 mt-1.5">
-                  {workshop.hosts.slice(0, 2).map((host) => (
-                    <div key={host.id} className="flex items-center gap-2">
-                      {host.profile_photo ? (
-                        <img
-                          src={resolveUploadUrl(host.profile_photo)}
-                          alt={host.full_name}
-                          className="h-7 w-7 rounded-full object-cover border border-white shadow-sm"
-                        />
-                      ) : (
-                        <div className="grid h-7 w-7 place-items-center rounded-full bg-[#eef6ff] text-blue-600"><User className="h-3.5 w-3.5" /></div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate leading-none">{host.full_name}</p>
-                        {host.designation && (
-                          <p className="text-[9px] text-slate-500 mt-0.5 truncate leading-none">{host.designation} {host.organization ? `at ${host.organization}` : ""}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+            {primaryHost ? (
+              <div className="flex items-center gap-2 rounded-[13px] border border-slate-100 bg-white/80 px-2.5 py-2 shadow-sm">
+                {primaryHost.profile_photo ? (
+                  <img
+                    src={resolveUploadUrl(primaryHost.profile_photo)}
+                    alt={primaryHost.full_name}
+                    className="h-8 w-8 shrink-0 rounded-full border-2 border-white object-cover shadow-sm"
+                  />
+                ) : (
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef6ff] text-blue-600 ring-2 ring-white">
+                    <User className="h-4 w-4" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-blue-500">Speaker / Host</p>
+                  <p className="truncate text-xs font-extrabold leading-tight text-slate-900">{primaryHost.full_name}</p>
+                  {primaryHost.designation ? (
+                    <p className="truncate text-[9px] font-medium leading-tight text-slate-500">
+                      {primaryHost.designation}{primaryHost.organization ? ` at ${primaryHost.organization}` : ""}
+                    </p>
+                  ) : null}
                 </div>
+                {workshop.hosts.length > 1 ? (
+                  <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[9px] font-black text-blue-600">
+                    +{workshop.hosts.length - 1}
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </div>
 
-          <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
+          <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-3">
             <div className="text-xs font-bold text-slate-500">
               {seatsRemaining === null ? "Open seats" : `${seatsRemaining} seats left`}
             </div>
@@ -401,16 +310,28 @@ function WorkshopCard({
                 </Button>
               </div>
             ) : (
-              <div className={cn("grid gap-2", meetingLink && "grid-cols-2")}>
-                <Button size="sm" variant="danger" onClick={onCancel} disabled={isCancelling} className="w-full rounded-full">
-                  {isCancelling ? "Cancelling..." : "Cancel"}
-                </Button>
+              <div className="space-y-2.5">
+                <div className={cn("grid gap-2.5", whatsappGroupLink && "grid-cols-[3fr_7fr]")}>
+                  <Button variant="danger" onClick={onCancel} disabled={isCancelling} className="h-12 w-full rounded-[16px] px-2 text-sm font-extrabold sm:text-base">
+                    {isCancelling ? "Cancelling..." : "Cancel"}
+                  </Button>
+                  {whatsappGroupLink ? (
+                    <a
+                      href={whatsappGroupLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-[16px] bg-[#25D366] px-3 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(37,211,102,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#20bd5a] sm:text-base"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> Join WhatsApp Group
+                    </a>
+                  ) : null}
+                </div>
                 {meetingLink ? (
                   <a
                     href={meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-8 w-full items-center justify-center gap-1 rounded-full border border-teachpad-cardBorder bg-white/85 px-3 text-xs font-bold text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-teachpad-blue"
+                    className="inline-flex h-12 w-full items-center justify-center gap-1 rounded-[16px] border border-teachpad-cardBorder bg-white/85 px-3 text-sm font-extrabold text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-teachpad-blue sm:text-base"
                   >
                     <Video className="h-3.5 w-3.5" /> Join Meeting
                   </a>
