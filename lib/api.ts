@@ -593,7 +593,7 @@ export type WritingDocument = {
 
 export type PresentationGeneratePayload = {
   topic: string;
-  audience: "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
+  audience: "Class 1" | "Class 2" | "Class 3" | "Class 4" | "Class 5" | "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
   slide_count: 6 | 8 | 10 | 12;
   language: "English" | "Hindi" | "Urdu";
   style: "Clean classroom" | "Visual story" | "Activity based" | "Exam revision";
@@ -1946,6 +1946,14 @@ export const backendApi = {
   }) => apiFetch<ElifApplyResponse>(`/lesson-plans/${id}/assistant/apply`, { method: "POST", body: JSON.stringify(payload) }),
   undoLatestElifChange: (id: string) =>
     apiFetch<{ lesson_plan: Record<string, any>; change_summary: string; affected_sections: string[]; revision_id: string }>(`/lesson-plans/${id}/assistant/undo`, { method: "POST" }),
+  generateLessonWorksheet: (id: string) =>
+    withGenerationEvent("worksheet", apiFetch<WorksheetGeneration>(`/lesson-plans/${id}/resources/worksheet`, { method: "POST" })),
+  generateLessonPresentation: (id: string) =>
+    withGenerationEvent("presentation", apiFetch<PresentationGeneration>(`/lesson-plans/${id}/resources/presentation`, { method: "POST" })),
+  generateLessonNotes: (id: string) =>
+    withGenerationEvent("notes", apiFetch<NotesGeneration>(`/lesson-plans/${id}/resources/notes`, { method: "POST" })),
+  generateLessonActivity: (id: string) =>
+    withGenerationEvent("activity", apiFetch<ActivityGeneration>(`/lesson-plans/${id}/resources/activity`, { method: "POST" })),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     withGenerationEvent("lesson_plan", apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) })),
   streamLessonPlan: (
@@ -1988,6 +1996,8 @@ export const backendApi = {
     withGenerationEvent("presentation", apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) })),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),
   presentation: (id: string) => apiFetch<PresentationGeneration>(`/presentations/${id}`),
+  repairPresentationImages: (id: string) =>
+    apiFetch<PresentationGeneration>(`/presentations/${id}/images/repair`, { method: "POST" }),
   deletePresentation: (id: string) => apiFetch<void>(`/presentations/${id}`, { method: "DELETE" }),
   submitFeedback: (payload: { tool: string; rating?: number | null; comment?: string | null; dismissed?: boolean }) =>
     apiFetch<{ id: string; tool: string }>("/feedback", { method: "POST", body: JSON.stringify(payload) }),

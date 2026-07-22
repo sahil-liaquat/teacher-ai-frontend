@@ -785,7 +785,7 @@ export default function PresentationGeneratorPage() {
                 <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your presentation.</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { key: "includeSpeakerNotes" as const, label: "Speaker Notes", desc: "Teacher talking points for each slide", icon: FileText, color: "teal" },
+                    { key: "includeSpeakerNotes" as const, label: "Teacher Notes", desc: "Teacher talking points for each slide", icon: FileText, color: "teal" },
                     { key: "includeActivities" as const, label: "Activities", desc: "Classroom activities embedded in slides", icon: Users, color: "amber" },
                     { key: "includeQuiz" as const, label: "Quiz Questions", desc: "Quick check-ins throughout the deck", icon: ClipboardCheck, color: "purple" },
                     { key: "includeImages" as const, label: "Images", desc: "Visuals to support each slide", icon: Monitor, color: "sky" },

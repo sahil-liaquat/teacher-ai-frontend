@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles, School, CreditCard } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
@@ -20,6 +21,13 @@ import { PROFILE_AVATARS, normalizeProfileAvatarKey, type ProfileAvatarKey } fro
 import { ProfileTeachingBadges } from "@/components/streak/profile-badges";
 
 const usageLimit = 100;
+type SettingsScreen = "menu" | "account" | "security" | "preferences" | "referral" | "appearance";
+
+function settingsScreenFromQuery(value: string | null): SettingsScreen {
+  return value === "account" || value === "security" || value === "preferences" || value === "referral" || value === "appearance"
+    ? value
+    : "menu";
+}
 
 function benefitLine(code: { kind: string; duration_days?: number | null }) {
   const duration = code.duration_days === 30 ? 14 : (code.duration_days || 14);
@@ -44,6 +52,8 @@ function buildWhatsappHref(code: string): string {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: billing } = useBilling();
@@ -58,7 +68,7 @@ export default function SettingsPage() {
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
   const [dashboardLayout, setDashboardLayout] = useState<"search-first" | "original">("search-first");
   const [defaultBoardId, setDefaultBoardId] = useState("");
-  const [currentScreen, setCurrentScreen] = useState<"menu" | "account" | "security" | "preferences" | "referral" | "appearance">("menu");
+  const [currentScreen, setCurrentScreen] = useState<SettingsScreen>(() => settingsScreenFromQuery(searchParams.get("section")));
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
 
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
@@ -91,6 +101,10 @@ export default function SettingsPage() {
     enabled: isInfluencer,
     retry: false
   });
+
+  useEffect(() => {
+    setCurrentScreen(settingsScreenFromQuery(searchParams.get("section")));
+  }, [searchParams]);
 
   useEffect(() => {
     const stored = localStorage.getItem("teachpad_sidebar_layout");
@@ -313,7 +327,10 @@ export default function SettingsPage() {
       {currentScreen !== "menu" && (
         <button
           type="button"
-          onClick={() => setCurrentScreen("menu")}
+          onClick={() => {
+            setCurrentScreen("menu");
+            router.replace("/dashboard/settings", { scroll: false });
+          }}
           className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg focus:outline-none"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

@@ -163,6 +163,7 @@ export default function LessonPlanDetailPage() {
       </div>
       <LessonPlanChatbotPanel
         lessonPlanId={params.id}
+        lessonPlan={lesson.data}
         currentPlan={output}
         onBeforeOpen={async () => {
           if (editedOutput) {

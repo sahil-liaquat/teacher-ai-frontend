@@ -74,19 +74,19 @@ export default function AdminDashboard() {
       </div>
 
       <AdminPanel
-        title="30-day product activity"
-        description="Switch between generation volume, token consumption, and AI cost."
-        actions={<Link href="/admin/usage" className="text-sm font-semibold text-blue-600 hover:underline">Detailed usage ↗</Link>}
-      >
-        <UsageDailyChart data={data.usage.daily} start={data.usage.start} end={data.usage.end} />
-      </AdminPanel>
-
-      <AdminPanel
         title="30-day signup activity"
         description="Daily signup cohorts and the share that reached their first successful generation."
         actions={<Link href="/admin/users" className="text-sm font-semibold text-blue-600 hover:underline">All users ↗</Link>}
       >
         <SignupActivityChart />
+      </AdminPanel>
+
+      <AdminPanel
+        title="30-day product activity"
+        description="Switch between generation volume, token consumption, and AI cost."
+        actions={<Link href="/admin/usage" className="text-sm font-semibold text-blue-600 hover:underline">Detailed usage ↗</Link>}
+      >
+        <UsageDailyChart data={data.usage.daily} start={data.usage.start} end={data.usage.end} />
       </AdminPanel>
 
       <AdminPanel

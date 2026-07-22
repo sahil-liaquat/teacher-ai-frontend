@@ -79,7 +79,7 @@ export default function NotesGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
-  const [savedGenerationLoading, setSavedGenerationLoading] = useState(false);
+  const [savedGenerationLoading, setSavedGenerationLoading] = useState(Boolean(generationId));
   const [savedGenerationError, setSavedGenerationError] = useState("");
   const [notes, setNotes] = useState<any>(null);
   const [draftReady, setDraftReady] = useState(false);
@@ -525,7 +525,7 @@ export default function NotesGeneratorPage() {
     }
   }
 
-  if (generating || generationError || savedGenerationLoading || savedGenerationError) {
+  if (generating || generationError || savedGenerationLoading || savedGenerationError || (generationId && !notes)) {
     return (
       <GenerationLoadingScreen
         type="notes"

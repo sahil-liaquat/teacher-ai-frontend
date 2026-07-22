@@ -1,17 +1,24 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Activity,
+  ArrowLeft,
+  ArrowRight,
   Check,
   ChevronDown,
   ChevronRight,
+  ClipboardCheck,
   Edit3,
   HelpCircle,
   Loader2,
   MessageCircle,
   Minus,
+  NotebookPen,
+  Presentation,
   RefreshCw,
   RotateCcw,
   Send,
@@ -23,13 +30,26 @@ import {
 
 import {
   backendApi,
+  getRateLimitNotice,
+  isPaymentRequiredError,
   type ElifAnalysis,
   type ElifIssue,
   type ElifProposedChange,
   type LessonPlan,
 } from "@/lib/api";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
+import {
+  emptyElifResourceStates,
+  lessonResourceCustomizeHref,
+  lessonResourceOpenHref,
+  readElifResourceStates,
+  updateStoredElifResourceState,
+  type ElifResourceGenerationState,
+  type ElifResourceGenerationStates,
+  type ElifResourceKind,
+} from "@/lib/elif-resource-hub";
 import { cn } from "@/lib/utils";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import { useToast } from "@/components/ui/toast";
 
 const ELIF_AVATAR_SRC = "/assets/avatars/elif-chatbot-avatar.png";
@@ -43,6 +63,7 @@ type ConversationMessage = {
 
 type Props = {
   lessonPlanId: string;
+  lessonPlan?: LessonPlan;
   className?: string;
   currentPlan?: Record<string, any>;
   onTweakSuccess?: (updatedPlan: any) => void;
@@ -102,6 +123,7 @@ function issueAsSuggestion(issue: ElifIssue) {
 
 export function LessonPlanChatbotPanel({
   lessonPlanId,
+  lessonPlan,
   className,
   currentPlan,
   onTweakSuccess,
@@ -109,9 +131,13 @@ export function LessonPlanChatbotPanel({
   onOpenChange,
   onBeforeOpen,
 }: Props) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { openUpgrade } = useUpgradeModal();
   const [isOpen, setIsOpen] = useState(false);
+  const [panelView, setPanelView] = useState<"home" | "review">("home");
+  const [resourceStates, setResourceStates] = useState<ElifResourceGenerationStates>(() => emptyElifResourceStates());
   const [analysis, setAnalysis] = useState<ElifAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
@@ -138,9 +164,14 @@ export function LessonPlanChatbotPanel({
   }, [messages, sending, busyId]);
 
   useEffect(() => {
-    if (!isOpen || analysis || analysisLoading || analysisError) return;
+    if (!isOpen || panelView !== "review" || analysis || analysisLoading || analysisError) return;
     void loadAnalysis(false);
-  }, [isOpen, analysis, analysisLoading, analysisError]);
+  }, [isOpen, panelView, analysis, analysisLoading, analysisError]);
+
+  useEffect(() => {
+    const restored = readElifResourceStates(lessonPlanId, window.sessionStorage);
+    setResourceStates(restored);
+  }, [lessonPlanId]);
 
   async function loadAnalysis(force: boolean) {
     setAnalysisLoading(true);
@@ -167,6 +198,68 @@ export function LessonPlanChatbotPanel({
     } catch (error) {
       toast({ title: "Save your latest edits", description: getErrorMessage(error, "Elif needs the latest saved lesson plan before reviewing it."), variant: "error" });
     }
+  }
+
+  function closePanel() {
+    setIsOpen(false);
+    setPanelView("home");
+    onOpenChange?.(false);
+  }
+
+  function beginReview() {
+    setPanelView("review");
+    trackElif("elif_review_requested");
+  }
+
+  function returnToResourceHub() {
+    setPanelView("home");
+    window.requestAnimationFrame(() => scrollAreaRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
+    trackElif("elif_review_back_to_resources");
+  }
+
+  function updateResourceState(resource: ElifResourceKind, state: ElifResourceGenerationState, persist: boolean) {
+    setResourceStates((current) => ({ ...current, [resource]: state }));
+    if (persist) updateStoredElifResourceState(lessonPlanId, resource, state, window.sessionStorage);
+  }
+
+  async function generateResource(resource: ElifResourceKind) {
+    if (resourceStates[resource].status === "generating") return;
+    updateResourceState(resource, { status: "generating" }, false);
+    trackElif("elif_resource_generation_started", { resource });
+    try {
+      const generation = resource === "worksheet"
+        ? await backendApi.generateLessonWorksheet(lessonPlanId)
+        : resource === "presentation"
+          ? await backendApi.generateLessonPresentation(lessonPlanId)
+          : resource === "notes"
+            ? await backendApi.generateLessonNotes(lessonPlanId)
+            : await backendApi.generateLessonActivity(lessonPlanId);
+      updateResourceState(resource, { status: "success", generationId: generation.id }, true);
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      trackElif("elif_resource_generation_completed", { resource });
+      toast({ title: `${resourceLabel(resource)} generated`, description: "It is ready to open.", variant: "success" });
+    } catch (error) {
+      updateResourceState(resource, { status: "idle" }, true);
+      trackElif("elif_ai_error", { operation: `generate_${resource}` });
+      if (getErrorCode(error) === "TRIAL_MANDATE_REQUIRED") {
+        openUpgrade(`You've used your free ${resourceLabel(resource).toLowerCase()}. Add a payment method to make more — or try another tool free.`);
+        return;
+      }
+      if (isPaymentRequiredError(error)) {
+        openUpgrade(`${resourceLabel(resource)} generation requires a Pro plan.`);
+        return;
+      }
+      const rateLimit = getRateLimitNotice(error);
+      toast(rateLimit ?? {
+        title: `${resourceLabel(resource)} generation failed`,
+        description: getErrorMessage(error, `Could not generate the ${resourceLabel(resource).toLowerCase()}.`),
+        variant: "error",
+      });
+    }
+  }
+
+  function openGeneratedResource(resource: ElifResourceKind, generationId: string) {
+    trackElif("elif_resource_opened", { resource });
   }
 
   function updateCachedLesson(plan: Record<string, any>) {
@@ -318,13 +411,30 @@ export function LessonPlanChatbotPanel({
             <p className="mt-0.5 text-[10.5px] font-semibold text-slate-500">Your AI teaching assistant</p>
           </div>
           <div className="flex items-center gap-1 rounded-xl border border-white/80 bg-white/45 p-1 shadow-sm">
-            <button type="button" onClick={() => { setIsOpen(false); onOpenChange?.(false); }} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-blue-600 hover:shadow-sm" aria-label="Minimise Elif"><Minus className="h-4 w-4" /></button>
+            {panelView === "review" ? (
+              <button type="button" onClick={returnToResourceHub} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[9px] font-extrabold text-slate-500 transition hover:bg-white hover:text-violet-600 hover:shadow-sm" aria-label="Back to lesson resources">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden min-[390px]:inline">Back</span>
+              </button>
+            ) : null}
+            <button type="button" onClick={closePanel} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-blue-600 hover:shadow-sm" aria-label="Minimise Elif"><Minus className="h-4 w-4" /></button>
             <span className="h-4 w-px bg-slate-200/70" />
-            <button type="button" onClick={() => { setIsOpen(false); onOpenChange?.(false); }} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-500 hover:shadow-sm" aria-label="Close Elif"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={closePanel} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-500 hover:shadow-sm" aria-label="Close Elif"><X className="h-4 w-4" /></button>
           </div>
         </header>
 
         <div ref={scrollAreaRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-white/15 px-4 py-5 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin]">
+          {panelView === "home" ? (
+            <ResourceHubHome
+              lessonPlan={lessonPlan}
+              states={resourceStates}
+              onGenerate={(resource) => void generateResource(resource)}
+              onCustomize={(resource) => router.push(lessonResourceCustomizeHref(resource, lessonPlan))}
+              onOpen={openGeneratedResource}
+              onReview={beginReview}
+            />
+          ) : (
+          <>
           {analysisLoading ? <ReviewLoading /> : null}
           {analysisError ? (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-[20px] border border-red-100 bg-white/80 p-4 text-[11px] text-red-700 shadow-[0_10px_28px_rgba(239,68,68,0.08)] backdrop-blur-md">
@@ -382,21 +492,160 @@ export function LessonPlanChatbotPanel({
 
           {messages.length ? <div className="mt-6 space-y-3.5 border-t border-white/70 pt-5">{messages.map((message) => <ChatBubble key={message.id} message={message} busyId={busyId} onApply={(change) => void applyChange({ uiId: change.id, suggestion: { id: change.id, action_type: change.action_type, recommended_change: change.instruction }, affectedSections: change.affected_sections })} />)}</div> : null}
           {sending ? <ThinkingState /> : null}
+          </>
+          )}
         </div>
 
-        {lastRevision ? <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-t border-emerald-100/60 bg-emerald-50/70 px-4 py-2.5 text-[9.5px] text-emerald-800 backdrop-blur-xl"><span className="min-w-0 truncate font-semibold"><Check className="mr-1 inline h-3.5 w-3.5" />{lastRevision.summary}</span><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={busyId === "undo"} onClick={() => void undo()} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/90 bg-white/75 px-2.5 py-1.5 font-extrabold shadow-sm transition hover:bg-white"><RotateCcw className="h-3.5 w-3.5" /> Undo</motion.button></motion.div> : null}
+        {panelView === "review" && lastRevision ? <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-t border-emerald-100/60 bg-emerald-50/70 px-4 py-2.5 text-[9.5px] text-emerald-800 backdrop-blur-xl"><span className="min-w-0 truncate font-semibold"><Check className="mr-1 inline h-3.5 w-3.5" />{lastRevision.summary}</span><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={busyId === "undo"} onClick={() => void undo()} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/90 bg-white/75 px-2.5 py-1.5 font-extrabold shadow-sm transition hover:bg-white"><RotateCcw className="h-3.5 w-3.5" /> Undo</motion.button></motion.div> : null}
 
-        <form onSubmit={submit} className="relative z-10 shrink-0 border-t border-white/70 bg-white/50 p-3.5 backdrop-blur-2xl">
+        {panelView === "review" ? <form onSubmit={submit} className="relative z-10 shrink-0 border-t border-white/70 bg-white/50 p-3.5 backdrop-blur-2xl">
           <div className="flex items-end gap-2 rounded-[18px] border border-white bg-white/80 p-2 shadow-[0_9px_28px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 focus-within:border-blue-200 focus-within:bg-white/95 focus-within:shadow-[0_12px_34px_rgba(37,99,235,0.13)]">
             <textarea value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(input); } }} rows={1} maxLength={2000} placeholder="Ask Elif to improve this lesson plan…" className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-2.5 py-2 text-[10.5px] font-medium leading-5 text-slate-700 outline-none placeholder:text-slate-400" disabled={sending} />
             <motion.button whileHover={{ y: -2, scale: 1.04 }} whileTap={{ y: 0, scale: 0.92 }} type="submit" disabled={!input.trim() || sending} className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 text-white shadow-[0_7px_18px_rgba(79,70,229,0.3)] transition-opacity disabled:opacity-40" aria-label="Send to Elif">{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</motion.button>
           </div>
           <p className="mt-2 text-center text-[8px] font-medium tracking-wide text-slate-400">Elif uses this lesson plan and its original teaching inputs.</p>
-        </form>
+        </form> : null}
       </motion.aside>
       )}
       </AnimatePresence>
     </>
+  );
+}
+
+function resourceLabel(resource: ElifResourceKind) {
+  return resource === "worksheet"
+    ? "Worksheet"
+    : resource === "presentation"
+      ? "Presentation"
+      : resource === "notes"
+        ? "Teaching Notes"
+        : "Classroom Activity";
+}
+
+function ResourceHubHome({ lessonPlan, states, onGenerate, onCustomize, onOpen, onReview }: {
+  lessonPlan?: LessonPlan;
+  states: ElifResourceGenerationStates;
+  onGenerate: (resource: ElifResourceKind) => void;
+  onCustomize: (resource: ElifResourceKind) => void;
+  onOpen: (resource: ElifResourceKind, generationId: string) => void;
+  onReview: () => void;
+}) {
+  const resources = [
+    { kind: "worksheet" as const, Icon: ClipboardCheck, tone: "emerald" },
+    { kind: "presentation" as const, Icon: Presentation, tone: "violet" },
+    { kind: "notes" as const, Icon: NotebookPen, tone: "pink" },
+    { kind: "activity" as const, Icon: Activity, tone: "cyan" },
+  ];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 280, damping: 25 }} className="flex min-h-full flex-col">
+      <div className="shrink-0 px-1">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-violet-100 bg-gradient-to-br from-blue-50 to-violet-100 text-violet-600 shadow-sm">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-[15px] font-extrabold tracking-tight text-slate-900">What would you like to do next?</h3>
+            <p className="mt-0.5 text-[9.5px] font-semibold leading-4 text-slate-500">Create more teaching resources from the same lesson plan, or customize each one to suit your class.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-1 flex-col gap-3">
+        {resources.map(({ kind, Icon, tone }, index) => (
+          <ResourceCard
+            key={kind}
+            resource={kind}
+            Icon={Icon}
+            tone={tone}
+            state={states[kind]}
+            index={index}
+            onGenerate={() => onGenerate(kind)}
+            onCustomize={() => onCustomize(kind)}
+            onOpen={(generationId) => onOpen(kind, generationId)}
+          />
+        ))}
+      </div>
+
+      <section className="mt-4 shrink-0 border-t border-white/80 pt-4">
+        <p className="px-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400">Need AI feedback?</p>
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          type="button"
+          onClick={onReview}
+          className="mt-2.5 flex w-full items-center gap-3 rounded-[19px] border border-white/90 bg-white/75 p-3.5 text-left shadow-[0_9px_28px_rgba(99,102,241,0.08)] backdrop-blur-md transition hover:border-violet-100 hover:bg-white"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-[0_6px_16px_rgba(79,70,229,0.25)]"><Sparkles className="h-4.5 w-4.5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-extrabold text-slate-800">Review this Lesson Plan</span>
+            <span className="mt-0.5 block truncate text-[9px] font-semibold text-slate-500">{lessonPlan?.topic || "Get strengths and focused improvements"}</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-violet-500" />
+        </motion.button>
+      </section>
+    </motion.div>
+  );
+}
+
+function ResourceCard({ resource, Icon, tone, state, index, onGenerate, onCustomize, onOpen }: {
+  resource: ElifResourceKind;
+  Icon: typeof ClipboardCheck;
+  tone: string;
+  state: ElifResourceGenerationState;
+  index: number;
+  onGenerate: () => void;
+  onCustomize: () => void;
+  onOpen: (generationId: string) => void;
+}) {
+  const label = resourceLabel(resource);
+  const toneClasses = tone === "emerald"
+    ? "border-emerald-100 bg-emerald-50 text-emerald-600"
+    : tone === "violet"
+      ? "border-violet-100 bg-violet-50 text-violet-600"
+      : tone === "pink"
+        ? "border-pink-100 bg-pink-50 text-pink-600"
+        : "border-cyan-100 bg-cyan-50 text-cyan-600";
+  const glowClasses = tone === "emerald"
+    ? "bg-emerald-200/30"
+    : tone === "violet"
+      ? "bg-violet-200/30"
+      : tone === "pink"
+        ? "bg-pink-200/30"
+        : "bg-cyan-200/30";
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.045 }}
+      className="group/resource relative flex min-h-[78px] flex-1 items-center overflow-hidden rounded-[20px] border border-white/90 bg-gradient-to-r from-white/80 via-white/70 to-white/55 p-4 shadow-[0_9px_26px_rgba(15,23,42,0.055)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white/85 hover:shadow-[0_14px_34px_rgba(59,130,246,0.1)]"
+    >
+      <div className={cn("pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full blur-2xl transition duration-500 group-hover/resource:scale-125", glowClasses)} />
+      <div className="relative flex w-full flex-col gap-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:gap-3.5">
+        <div className="flex min-w-0 w-full items-center gap-3.5 min-[480px]:flex-1">
+          <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border shadow-sm", toneClasses)}><Icon className="h-[19px] w-[19px]" /></span>
+          <h4 className="min-w-0 flex-1 text-[11.5px] font-extrabold text-slate-800">{label}</h4>
+        </div>
+        {state.status === "idle" ? (
+          <div className="grid w-full shrink-0 grid-cols-2 items-center gap-1.5 min-[480px]:flex min-[480px]:w-auto">
+            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onGenerate} className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-2 text-[8.5px] font-extrabold text-white shadow-[0_5px_14px_rgba(59,130,246,0.22)] min-[480px]:w-auto">Generate</motion.button>
+            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onCustomize} className="w-full rounded-xl border border-slate-100 bg-white px-3 py-2 text-[8.5px] font-extrabold text-slate-600 shadow-sm transition hover:border-blue-100 hover:text-blue-600 min-[480px]:w-auto">Customize</motion.button>
+          </div>
+        ) : null}
+        {state.status === "generating" ? (
+          <div role="status" aria-live="polite" className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2 text-center text-[8.5px] font-extrabold text-blue-700 min-[480px]:w-auto">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating {label}...
+          </div>
+        ) : null}
+        {state.status === "success" && state.generationId ? (
+          <div role="status" aria-live="polite" className="flex w-full shrink-0 items-center justify-between gap-2 min-[480px]:w-auto min-[480px]:justify-start">
+            <span className="inline-flex items-center gap-1 text-[8.5px] font-extrabold text-emerald-600"><Check className="h-3.5 w-3.5" /> Generated</span>
+            <motion.a whileTap={{ scale: 0.94 }} href={lessonResourceOpenHref(resource, state.generationId)} target="_blank" rel="noopener noreferrer" onClick={() => onOpen(state.generationId!)} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-[8.5px] font-extrabold text-white shadow-[0_5px_14px_rgba(16,185,129,0.2)]">Open <ArrowRight className="h-3 w-3" /></motion.a>
+          </div>
+        ) : null}
+      </div>
+    </motion.article>
   );
 }
 

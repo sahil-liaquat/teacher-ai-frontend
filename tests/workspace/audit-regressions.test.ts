@@ -77,6 +77,16 @@ test("settings never invents or shares an unassigned referral code", () => {
   assert.match(settings, /Your referral code is being set up/);
 });
 
+test("dashboard profile icons open the account screen directly", () => {
+  const shell = source("components/app-shell.tsx");
+  const settings = source("app/dashboard/settings/page.tsx");
+
+  assert.match(shell, /const profileHref = "\/dashboard\/settings\?section=account"/);
+  assert.equal((shell.match(/href=\{profileHref\}/g) || []).length, 2);
+  assert.match(settings, /settingsScreenFromQuery\(searchParams\.get\("section"\)\)/);
+  assert.match(settings, /router\.replace\("\/dashboard\/settings", \{ scroll: false \}\)/);
+});
+
 test("chapter page no longer exposes Elif, sharing or three-dot controls", () => {
   const chapter = source("app/dashboard/my-workspace/topic/[workspaceId]/[topicId]/page.tsx");
   const resourceCard = source("components/workspace/resource-card.tsx");
@@ -234,6 +244,16 @@ test("admin workshop ledger uses readable icon controls", () => {
   assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Duplicate"/);
   assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Edit"/);
   assert.match(workshopsAdmin, /size="icon"[\s\S]*title="Delete"/);
+});
+
+test("admin signup activity appears immediately before product activity", () => {
+  const dashboard = source("app/admin/page.tsx");
+  const signup = dashboard.indexOf('title="30-day signup activity"');
+  const product = dashboard.indexOf('title="30-day product activity"');
+
+  assert.ok(signup >= 0);
+  assert.ok(product > signup);
+  assert.doesNotMatch(dashboard.slice(signup, product), /title="Teaching streak impact"/);
 });
 
 test("preparation progress uses a rounded SVG ring", () => {

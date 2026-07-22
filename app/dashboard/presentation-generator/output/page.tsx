@@ -14,6 +14,7 @@ import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import {
   loadLatestPresentationId,
   presentationGenerationToDeck,
+  presentationNeedsImageRepair,
   type PresentationDeck,
   type PresentationSlide
 } from "@/lib/presentation-generator";
@@ -70,6 +71,14 @@ export default function PresentationOutputPage() {
     setLoading(true);
     setErrorMessage("");
     backendApi.presentation(id)
+      .then(async (generation) => {
+        if (!presentationNeedsImageRepair(generation)) return generation;
+        try {
+          return await backendApi.repairPresentationImages(id);
+        } catch {
+          return generation;
+        }
+      })
       .then((generation) => {
         if (cancelled) return;
         const nextDeck = presentationGenerationToDeck(generation);
@@ -251,6 +260,13 @@ export default function PresentationOutputPage() {
                 slide={active}
                 onSelect={(index) => updateActiveSlide({ selectedImageIndex: index })}
               />
+              {deck.includeSpeakerNotes ? (
+                <TeacherNotesPanel
+                  slide={active}
+                  presentationNotes={deck.teacherNotes}
+                  onChange={(speakerNote) => updateActiveSlide({ speakerNote })}
+                />
+              ) : null}
             </div>
             <SlidePreviewStrip
               slides={deck.slides}
@@ -273,6 +289,46 @@ export default function PresentationOutputPage() {
         </div>
       ) : null}
     </>
+  );
+}
+
+function TeacherNotesPanel({
+  slide,
+  presentationNotes,
+  onChange,
+}: {
+  slide: PresentationSlide;
+  presentationNotes: string[];
+  onChange: (speakerNote: string) => void;
+}) {
+  return (
+    <section className="rounded-[20px] border border-amber-100/90 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 p-4 shadow-[0_10px_28px_rgba(146,64,14,0.06)]">
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700">
+          <FileText className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="text-sm font-extrabold text-slate-900">Teacher Notes</h2>
+          <p className="text-[11px] font-semibold text-slate-500">Private talking points for this slide. They are included in the PowerPoint speaker notes.</p>
+        </div>
+      </div>
+      <textarea
+        value={slide.speakerNote}
+        onChange={(event) => onChange(event.target.value)}
+        rows={3}
+        placeholder="Add a teaching prompt, explanation, or reminder for this slide."
+        className="mt-3 w-full resize-y rounded-2xl border border-amber-100 bg-white/90 px-3.5 py-3 text-sm font-medium leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-amber-300 focus:ring-4 focus:ring-amber-100/60"
+        aria-label="Teacher notes for this slide"
+      />
+      {presentationNotes.length ? (
+        <details className="mt-3 rounded-2xl border border-white/90 bg-white/65 px-3.5 py-3 text-xs text-slate-600">
+          <summary className="cursor-pointer font-extrabold text-amber-800">Presentation-wide teaching guidance</summary>
+          <ul className="mt-2 space-y-1.5 pl-4 font-medium leading-5">
+            {presentationNotes.map((note, index) => <li key={`${note}-${index}`} className="list-disc">{note}</li>)}
+          </ul>
+        </details>
+      ) : null}
+    </section>
   );
 }
 
@@ -991,7 +1047,10 @@ function EditableSlide({
               src={currentImage}
               alt={slide.title}
               className="max-h-[92%] max-w-[92%] object-contain rounded-[1.8cqw] transition-all duration-500 hover:scale-[1.01]"
-              onError={() => onChange({ selectedImageIndex: Math.min(imageIndex + 1, slide.imageUrls.length - 1) })}
+              onError={() => onChange({
+                imageUrls: slide.imageUrls.filter((_, index) => index !== imageIndex),
+                selectedImageIndex: 0,
+              })}
             />
           ) : (
             <div className={cn("grid place-items-center gap-[1.2cqw] text-center bg-white/30 border border-white/40 backdrop-blur-[6px] w-[92%] h-[92%] justify-center rounded-[1.8cqw]", slideTheme.muted)}>
