@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -36,9 +37,19 @@ export function GoogleButton({
     }
     setLoading(true);
     try {
+      const storedCode = getStoredReferralPromoCode();
+      const redirectUrl = storedCode
+        ? `${window.location.origin}/auth/callback?ref=${encodeURIComponent(storedCode)}`
+        : `${window.location.origin}/auth/callback`;
+      const options: { redirectTo: string; data?: { signup_promo_code: string } } = {
+        redirectTo: redirectUrl,
+      };
+      if (storedCode) {
+        options.data = { signup_promo_code: storedCode };
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options,
       });
       if (error) throw error;
       // Success → browser is redirecting to Google; leave `loading` true.

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,7 +14,7 @@ import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
 import { phoneSchema } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
-import { clearStoredReferralPromoCode, getStoredReferralPromoCode } from "@/components/referral-capture";
+import { REFERRAL_PROMO_CODE_KEY, clearStoredReferralPromoCode, getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,15 @@ const schema = z.object({
 });
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [confirmation, setConfirmation] = useState<{ email: string; message: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,9 +50,19 @@ export default function SignupPage() {
   const resendCooldown = useResendCooldown();
 
   useEffect(() => {
+    const codeFromUrl = searchParams.get("ref") || searchParams.get("promo_code");
     const storedCode = getStoredReferralPromoCode();
-    if (storedCode) form.setValue("promo_code", storedCode);
-  }, [form]);
+    const code = (codeFromUrl || storedCode || "").trim();
+    if (code) {
+      if (codeFromUrl?.trim()) {
+        try {
+          window.localStorage.setItem(REFERRAL_PROMO_CODE_KEY, codeFromUrl.trim());
+          window.localStorage.setItem("referral_promo_code_expires_at", String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+        } catch {}
+      }
+      form.setValue("promo_code", code, { shouldValidate: true, shouldTouch: true, shouldDirty: true });
+    }
+  }, [searchParams, form]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
