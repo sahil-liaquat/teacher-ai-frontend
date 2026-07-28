@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  detectWorksheetLanguage,
   getWorksheetInstructions,
   getWorksheetLocale,
   localizeMarks,
@@ -17,7 +16,7 @@ test("Hindi worksheets localize the complete fixed shell", () => {
   };
   const locale = getWorksheetLocale(output);
 
-  assert.equal(detectWorksheetLanguage(output), "Hindi");
+  assert.equal(locale.language, "Hindi");
   assert.equal(locale.instructions, "निर्देश");
   assert.match(getWorksheetInstructions(output, locale), /प्रत्येक प्रश्न/);
   assert.equal(localizeWorksheetSectionTitle("Part A: Multiple Choice Questions", locale, 0), "भाग A: बहुविकल्पीय प्रश्न");
@@ -32,7 +31,7 @@ test("Urdu worksheets are detected by their script and use RTL shell labels", ()
   };
   const locale = getWorksheetLocale(output);
 
-  assert.equal(detectWorksheetLanguage(output), "Urdu");
+  assert.equal(locale.language, "Urdu");
   assert.equal(locale.dir, "rtl");
   assert.equal(locale.name, "نام");
   assert.equal(localizeWorksheetSectionTitle("Part B: True or False", locale, 1), "حصہ B: صحیح یا غلط");

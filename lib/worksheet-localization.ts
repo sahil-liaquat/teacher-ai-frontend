@@ -1,3 +1,11 @@
+import {
+  isPaired,
+  pairingName,
+  parsePairing,
+  primaryText,
+  type LocalizedText,
+} from "./localized-text.ts";
+
 export type WorksheetLanguage = "English" | "Hindi" | "Urdu";
 
 export type WorksheetLocale = {
@@ -234,6 +242,11 @@ export function canUseBuiltInWorksheetPdf(locale: WorksheetLocale): boolean {
 }
 
 function namedLanguage(value: unknown): WorksheetLanguage | null {
+  // Pairings first: "English + Hindi" contains "hindi", so the single-language
+  // patterns below would otherwise claim it and wrap the page in Hindi chrome.
+  const pairing = parsePairing(value);
+  if (pairing) return pairing.primary as WorksheetLanguage;
+
   const normalized = String(value ?? "").trim().toLowerCase();
   if (/hindi|हिन्दी|हिंदी/.test(normalized)) return "Hindi";
   if (/urdu|اُردو|اردو/.test(normalized)) return "Urdu";
@@ -241,7 +254,7 @@ function namedLanguage(value: unknown): WorksheetLanguage | null {
   return null;
 }
 
-export function detectWorksheetLanguage(output: any): WorksheetLanguage {
+function detectWorksheetLanguage(output: any): WorksheetLanguage {
   const metadata = output?.metadata || {};
   const explicit = [metadata.language, output?.language, metadata.subject]
     .map(namedLanguage)
@@ -264,7 +277,7 @@ export function getWorksheetLocale(output: any): WorksheetLocale {
 }
 
 export function getWorksheetInstructions(output: any, locale = getWorksheetLocale(output)) {
-  const instructions = String(output?.instructions || "").trim();
+  const instructions = primaryText(output?.instructions).trim();
   if (!instructions) return locale.defaultInstructions;
   if (locale.language === "English") return instructions;
   const usesTargetScript = locale.language === "Hindi"
@@ -274,7 +287,7 @@ export function getWorksheetInstructions(output: any, locale = getWorksheetLocal
 }
 
 export function localizeWorksheetSectionTitle(title: unknown, locale: WorksheetLocale, index: number) {
-  const raw = String(title ?? "").trim();
+  const raw = primaryText(title).trim();
   if (!raw) return `${locale.section} ${index + 1}`;
   if (locale.language === "English") return raw;
   if (locale.language === "Hindi" && /[ऀ-ॿ]/.test(raw)) return raw;
@@ -298,5 +311,51 @@ export function localizeWorksheetSectionTitle(title: unknown, locale: WorksheetL
 }
 
 export function localizeMarks(value: unknown, locale: WorksheetLocale) {
-  return String(value ?? "").replace(/\bmarks?\b/gi, locale.marks);
+  return primaryText(value).replace(/\bmarks?\b/gi, locale.marks);
+}
+
+export type WorksheetLine = {
+  text: string;
+  language: WorksheetLanguage;
+  dir: "ltr" | "rtl";
+};
+
+/**
+ * A field as the lines to render — one for single-language, two for a pairing.
+ *
+ * The renderer maps over this instead of asking "is this bilingual?", so a
+ * single-language worksheet takes exactly the path it does today. Each line
+ * carries its own direction because a pairing can mix LTR English with RTL Urdu,
+ * which a single text node cannot represent correctly.
+ */
+export function toLines(
+  value: LocalizedText | unknown,
+  languages: { primary: WorksheetLanguage; secondary?: WorksheetLanguage }
+): WorksheetLine[] {
+  const line = (text: string, language: WorksheetLanguage): WorksheetLine => ({
+    text,
+    language,
+    dir: WORKSHEET_LOCALES[language].dir
+  });
+
+  if (isPaired(value)) {
+    const secondary = languages.secondary ?? "English";
+    return [line(value.primary, languages.primary), line(value.secondary, secondary)];
+  }
+  return [line(primaryText(value), languages.primary)];
+}
+
+/**
+ * The bilingual chips this worksheet can offer, and whether each is unlocked.
+ *
+ * A chip unlocks per worksheet, not per account: `English + हिन्दी` lights up
+ * once *this* worksheet has a Hindi variant. Pairings always start with the
+ * worksheet's own primary language.
+ */
+export function pairingChips(primary: WorksheetLanguage, available: string[]) {
+  return WORKSHEET_LANGUAGES.filter((language) => language !== primary).map((secondary) => ({
+    name: pairingName(primary, secondary),
+    secondary,
+    unlocked: available.includes(secondary)
+  }));
 }
