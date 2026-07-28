@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import { backendApi, type WorksheetTranslation } from "@/lib/api";
 import { downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getErrorMessage } from "@/lib/errors";
+import { parsePairing, plainText } from "@/lib/localized-text";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 import {
@@ -15,6 +16,7 @@ import {
   WORKSHEET_LANGUAGE_LABELS,
   WORKSHEET_LOCALES,
   isWorksheetLanguage,
+  pairingChips,
   worksheetSwitcherStrings,
   type WorksheetLanguage,
 } from "@/lib/worksheet-localization";
@@ -219,23 +221,59 @@ export default function WorksheetDetailPage() {
     }
   }
 
+  async function composePairing(language: string) {
+    await flushPendingEdits();
+    try {
+      const created = await backendApi.composeWorksheetPairing(params.id, language);
+      setTranslation(created);
+      setActiveLanguage(language as WorksheetLanguage);
+      setGeneration((current: any) => current ? {
+        ...current,
+        available_languages: current.available_languages?.includes(language)
+          ? current.available_languages
+          : [...(current.available_languages ?? [primaryLanguage]), language]
+      } : current);
+      toast({ title: `Opened ${language}`, description: "Both languages on one paper.", variant: "success" });
+    } catch (err) {
+      toast({ title: "Could not build that pairing", description: getErrorMessage(err, "Try again"), variant: "error" });
+    }
+  }
+
+  const chips = pairingChips(primaryLanguage, availableLanguages);
+  const blockedLanguages = chips
+    .filter((chip) => !chip.unlocked)
+    .map((chip) => ({
+      name: chip.name,
+      reason: `Generate ${chip.secondary} in order to enable ${chip.name}.`
+    }));
+  const offeredLanguages = [
+    ...WORKSHEET_LANGUAGES,
+    ...chips.filter((chip) => chip.unlocked).map((chip) => chip.name)
+  ];
+  const labels = {
+    ...WORKSHEET_LANGUAGE_LABELS,
+    ...Object.fromEntries(chips.map((chip) => [chip.name, chip.name]))
+  };
+
   const languageSwitcher = useMemo(
     () => (
       <TranslationLanguageSwitcher
-        languages={WORKSHEET_LANGUAGES}
-        labels={WORKSHEET_LANGUAGE_LABELS}
+        languages={offeredLanguages}
+        labels={labels}
         availableLanguages={availableLanguages}
         activeLanguage={currentLanguage}
         translatingLanguage={translatingLanguage}
         isActiveStale={isViewingTranslation && Boolean(translation?.is_stale)}
         strings={worksheetSwitcherStrings(currentLanguage)}
         dir={WORKSHEET_LOCALES[currentLanguage].dir}
-        onSelect={selectLanguage}
-        onTranslate={translateTo}
+        blockedLanguages={blockedLanguages}
+        onSelect={(language: string) => selectLanguage(language as WorksheetLanguage)}
+        onTranslate={(language: string) => translateTo(language as WorksheetLanguage)}
+        onCompose={composePairing}
       />
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [availableLanguages.join("|"), currentLanguage, translatingLanguage, isViewingTranslation, translation?.is_stale]
+    [availableLanguages.join("|"), currentLanguage, translatingLanguage, isViewingTranslation, translation?.is_stale, primaryLanguage]
   );
 
   async function save(output = activeOutput) {
@@ -248,10 +286,12 @@ export default function WorksheetDetailPage() {
 
   function worksheetAsText(output: any) {
     return [
-      output?.title,
+      plainText(output?.title),
       ...(output?.student_worksheet?.sections || []).flatMap((section: any) => [
-        section.section_title,
-        ...(section.questions || []).map((question: any, index: number) => `${index + 1}. ${question.question}`)
+        plainText(section.section_title),
+        ...(section.questions || []).map(
+          (question: any, index: number) => `${index + 1}. ${plainText(question.question)}`
+        )
       ])
     ].filter(Boolean).join("\n");
   }

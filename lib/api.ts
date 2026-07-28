@@ -2000,6 +2000,12 @@ export const backendApi = {
       method: "PATCH",
       body: JSON.stringify({ output_json }),
     }),
+  /** Compose a bilingual variant. Spends no generation — the backend only zips. */
+  composeWorksheetPairing: (worksheetId: string, language: string) =>
+    apiFetch<WorksheetTranslation>(`/generate/worksheet/${worksheetId}/pairings`, {
+      method: "POST",
+      body: JSON.stringify({ language }),
+    }),
   createNotes: (payload: NotesGeneratePayload) =>
     withGenerationEvent("notes", apiFetch<NotesGeneration>("/notes", { method: "POST", body: JSON.stringify(payload) })),
   notesGenerations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<NotesGeneration>>(`/notes?skip=${skip}&limit=${limit}`),
