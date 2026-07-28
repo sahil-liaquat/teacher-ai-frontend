@@ -242,7 +242,9 @@ export function worksheetSwitcherStrings(language?: unknown) {
  * shaping (conjuncts, ligatures) that a glyph-per-codepoint writer cannot do.
  * Non-Latin worksheets go through the browser's print pipeline instead.
  */
-export function canUseBuiltInWorksheetPdf(locale: WorksheetLocale): boolean {
+export function canUseBuiltInWorksheetPdf(locale: WorksheetLocale, language?: unknown): boolean {
+  // A pairing always contains a non-Latin half even when its primary is English.
+  if (parsePairing(language)) return false;
   return locale.language === "English";
 }
 

@@ -1,4 +1,5 @@
 import { sanitizeFilename, textOf } from "@/lib/lesson-plan-export";
+import { canUseBuiltInWorksheetPdf, getWorksheetLocale } from "@/lib/worksheet-localization";
 
 type PdfTextOptions = {
   size?: number;
@@ -17,8 +18,18 @@ const MUTED: RGB = [0.37, 0.4, 0.5];
 const LIGHT_BLUE: RGB = [0.93, 0.97, 1];
 const LINE_BLUE: RGB = [0.72, 0.85, 1];
 
+export class UnsupportedScriptError extends Error {
+  constructor() {
+    super("This worksheet needs the browser's print dialog.");
+    this.name = "UnsupportedScriptError";
+  }
+}
+
 export async function downloadWorksheetPdf(output: any) {
   const metadata = output?.metadata || {};
+  if (!canUseBuiltInWorksheetPdf(getWorksheetLocale(output), metadata.language)) {
+    throw new UnsupportedScriptError();
+  }
   const title = textOf(output?.title || metadata.topic || "worksheet");
   const filename = `${sanitizeFilename(`worksheet-${title}-${metadata.grade || "class"}`)}.pdf`;
   const blob = createWorksheetPdfBlob(output);

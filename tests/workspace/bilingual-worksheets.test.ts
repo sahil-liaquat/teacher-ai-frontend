@@ -97,3 +97,21 @@ test("a Hindi-primary worksheet offers Hindi-first pairings", () => {
   const chips = pairingChips("Hindi", ["Hindi", "English"]);
   assert.equal(chips.find((chip) => chip.name === "Hindi + English")?.unlocked, true);
 });
+
+import { canUseBuiltInWorksheetPdf } from "../../lib/worksheet-localization.ts";
+
+test("only English worksheets may use the built-in PDF writer", () => {
+  // The writer is Helvetica + WinAnsiEncoding and deletes every non-ASCII
+  // character, so anything else downloads blank.
+  assert.equal(canUseBuiltInWorksheetPdf(getWorksheetLocale({ metadata: { language: "English" } })), true);
+  assert.equal(canUseBuiltInWorksheetPdf(getWorksheetLocale({ metadata: { language: "Hindi" } })), false);
+  assert.equal(canUseBuiltInWorksheetPdf(getWorksheetLocale({ metadata: { language: "Urdu" } })), false);
+});
+
+test("every pairing is barred from the built-in writer", () => {
+  // A pairing resolves to its primary, which may be English — but half its text
+  // is not, and the writer would emit the English lines and silently drop the
+  // rest: a PDF that looks correct and is not.
+  const locale = getWorksheetLocale({ metadata: { language: "English + Hindi" } });
+  assert.equal(canUseBuiltInWorksheetPdf(locale, "English + Hindi"), false);
+});

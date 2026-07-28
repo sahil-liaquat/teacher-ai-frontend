@@ -6,7 +6,7 @@ import { WorksheetOutput } from "@/components/generation-output";
 import { TranslationLanguageSwitcher } from "@/components/translation-language-switcher";
 import { useToast } from "@/components/ui/toast";
 import { backendApi, type WorksheetTranslation } from "@/lib/api";
-import { downloadWorksheetPdf } from "@/lib/worksheet-export";
+import { UnsupportedScriptError, downloadWorksheetPdf } from "@/lib/worksheet-export";
 import { getErrorMessage } from "@/lib/errors";
 import { parsePairing, plainText } from "@/lib/localized-text";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
@@ -318,8 +318,19 @@ export default function WorksheetDetailPage() {
   }
 
   async function exportPdf(output = activeOutput) {
-    await downloadWorksheetPdf(output);
-    toast({ title: "PDF downloaded", description: "Exported as a proper text PDF." });
+    try {
+      await downloadWorksheetPdf(output);
+      toast({ title: "PDF downloaded", description: "Exported as a proper text PDF." });
+    } catch (err) {
+      if (err instanceof UnsupportedScriptError) {
+        // Devanagari conjuncts and Nastaliq ligatures need complex-script shaping
+        // the built-in writer cannot do. The browser can, and its dialog offers
+        // "Save as PDF" on every platform we support.
+        window.print();
+        return;
+      }
+      toast({ title: "Export failed", description: getErrorMessage(err, "Try again"), variant: "error" });
+    }
   }
 
   async function share(output = activeOutput) {
