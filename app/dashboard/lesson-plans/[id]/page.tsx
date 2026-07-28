@@ -7,14 +7,17 @@ import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { LessonPlanChatbotPanel } from "@/components/lesson-plan-chatbot-panel";
 import { LessonPlanOutput } from "@/components/generation-output";
-import { LessonPlanLanguageSwitcher } from "@/components/lesson-plan-language-switcher";
+import { TranslationLanguageSwitcher } from "@/components/translation-language-switcher";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } from "@/lib/lesson-plan-export";
 import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
 import {
+  LESSON_PLAN_LANGUAGES,
   LESSON_PLAN_LANGUAGE_LABELS,
+  getLessonPlanLocale,
+  lessonPlanSwitcherStrings,
   isLessonPlanLanguage,
   type LessonPlanLanguage,
 } from "@/lib/lesson-plan-localization";
@@ -194,11 +197,15 @@ export default function LessonPlanDetailPage() {
 
   const languageSwitcher = useMemo(
     () => (
-      <LessonPlanLanguageSwitcher
+      <TranslationLanguageSwitcher
+        languages={LESSON_PLAN_LANGUAGES}
+        labels={LESSON_PLAN_LANGUAGE_LABELS}
         availableLanguages={availableLanguages}
         activeLanguage={currentLanguage}
         translatingLanguage={translatingLanguage}
         isActiveStale={isViewingTranslation && Boolean(translation.data?.is_stale)}
+        strings={lessonPlanSwitcherStrings(currentLanguage)}
+        dir={getLessonPlanLocale(currentLanguage).dir}
         onSelect={selectLanguage}
         onTranslate={translateTo}
       />

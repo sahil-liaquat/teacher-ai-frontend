@@ -9,6 +9,10 @@ export type WorksheetLocale = {
   markingScheme: string;
   worksheetOutput: string;
   generatedWorksheet: string;
+  language_: string;
+  translating: string;
+  sourceEdited: string;
+  retranslate: string;
   backToInputs: string;
   back: string;
   copy: string;
@@ -46,7 +50,7 @@ export type WorksheetLocale = {
   };
 };
 
-const locales: Record<WorksheetLanguage, WorksheetLocale> = {
+export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
   English: {
     language: "English",
     localeCode: "en-IN",
@@ -56,6 +60,10 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     markingScheme: "Marking Scheme",
     worksheetOutput: "Worksheet Output",
     generatedWorksheet: "Generated Worksheet",
+    language_: "Language",
+    translating: "Translating…",
+    sourceEdited: "The original was edited after this translation.",
+    retranslate: "Re-translate",
     backToInputs: "Back to Inputs",
     back: "Back",
     copy: "Copy",
@@ -101,6 +109,10 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     markingScheme: "अंकन योजना",
     worksheetOutput: "कार्यपत्रक परिणाम",
     generatedWorksheet: "तैयार कार्यपत्रक",
+    language_: "भाषा",
+    translating: "अनुवाद हो रहा है…",
+    sourceEdited: "इस अनुवाद के बाद मूल कार्यपत्रक बदला गया है।",
+    retranslate: "फिर से अनुवाद करें",
     backToInputs: "इनपुट पर वापस",
     back: "वापस",
     copy: "कॉपी करें",
@@ -146,6 +158,10 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     markingScheme: "نمبر دینے کا خاکہ",
     worksheetOutput: "ورک شیٹ کا نتیجہ",
     generatedWorksheet: "تیار شدہ ورک شیٹ",
+    language_: "زبان",
+    translating: "ترجمہ ہو رہا ہے…",
+    sourceEdited: "اس ترجمے کے بعد اصل ورک شیٹ تبدیل ہو چکی ہے۔",
+    retranslate: "دوبارہ ترجمہ کریں",
     backToInputs: "معلومات پر واپس",
     back: "واپس",
     copy: "نقل کریں",
@@ -184,6 +200,43 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
   }
 };
 
+export const WORKSHEET_LANGUAGES: WorksheetLanguage[] = ["English", "Hindi", "Urdu"];
+
+/** Each language labelled in its own script — a teacher scans for اردو, not "Urdu". */
+export const WORKSHEET_LANGUAGE_LABELS: Record<WorksheetLanguage, string> = {
+  English: "English",
+  Hindi: "हिन्दी",
+  Urdu: "اردو"
+};
+
+export function isWorksheetLanguage(value: unknown): value is WorksheetLanguage {
+  return WORKSHEET_LANGUAGES.includes(value as WorksheetLanguage);
+}
+
+/** The shared TranslationLanguageSwitcher's strings, in the language being read. */
+export function worksheetSwitcherStrings(language?: unknown) {
+  const locale = isWorksheetLanguage(language) ? WORKSHEET_LOCALES[language] : WORKSHEET_LOCALES.English;
+  return {
+    language: locale.language_,
+    translating: locale.translating,
+    sourceEdited: locale.sourceEdited,
+    retranslate: locale.retranslate
+  };
+}
+
+/**
+ * Whether the built-in PDF writer can render this worksheet.
+ *
+ * `lib/worksheet-export.ts` builds PDFs with Helvetica + WinAnsiEncoding and
+ * strips every non-ASCII character, so Devanagari and Nastaliq come out blank.
+ * Embedding a font would not be enough either — both scripts need complex-script
+ * shaping (conjuncts, ligatures) that a glyph-per-codepoint writer cannot do.
+ * Non-Latin worksheets go through the browser's print pipeline instead.
+ */
+export function canUseBuiltInWorksheetPdf(locale: WorksheetLocale): boolean {
+  return locale.language === "English";
+}
+
 function namedLanguage(value: unknown): WorksheetLanguage | null {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (/hindi|हिन्दी|हिंदी/.test(normalized)) return "Hindi";
@@ -211,7 +264,7 @@ export function detectWorksheetLanguage(output: any): WorksheetLanguage {
 }
 
 export function getWorksheetLocale(output: any): WorksheetLocale {
-  return locales[detectWorksheetLanguage(output)];
+  return WORKSHEET_LOCALES[detectWorksheetLanguage(output)];
 }
 
 export function getWorksheetInstructions(output: any, locale = getWorksheetLocale(output)) {
