@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -157,7 +157,7 @@ export default function LoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute bottom-0 right-[-6%] w-[540px] max-w-[92%] select-none object-contain opacity-95"
         />
-        <div className="flex items-center justify-between">
+        <div className="relative z-20 flex items-center justify-between">
           <Link href="/" aria-label="TeachPad home" className="inline-flex">
             <TeachPadWordmark />
           </Link>
@@ -318,17 +318,6 @@ export default function LoginPage() {
   );
 }
 
-function hasStoredAuthTokens() {
-  if (typeof window === "undefined") return false;
-  return [
-    "access_token",
-    "refresh_token",
-    "teacher_ai_access_token",
-    "teacher_ai_refresh_token",
-    "teacher_ai_token"
-  ].some((key) => Boolean(window.localStorage.getItem(key)));
-}
-
 function LoginAuthCheckingScreen() {
   return (
     <main className="grid min-h-screen place-items-center bg-[#f6f9ff] px-5 text-[#07111f]">
@@ -336,7 +325,7 @@ function LoginAuthCheckingScreen() {
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-blue-50 text-blue-600">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
         </div>
-        <h1 className="mt-5 text-2xl font-black tracking-tight text-slate-950">Checking your session</h1>
+        <h1 className="mt-5 text-2xl font-black tracking-tight text-slate-950">Loading your workspace</h1>
         <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Verifying your login before opening TeachPad.</p>
       </section>
     </main>
@@ -350,6 +339,7 @@ function TeachPadWordmark({ compact = false }: { compact?: boolean }) {
       alt="TeachPad.in"
       width={1385}
       height={279}
+      quality={100}
       className={cn("h-auto", compact ? "w-36" : "w-44")}
       priority
     />
@@ -379,7 +369,7 @@ function AuthInput({
         <span className="shrink-0">{icon}</span>
         <input
           {...inputProps}
-          className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
+          className="auth-form-input min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
         />
         {action}
       </span>

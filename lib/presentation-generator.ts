@@ -105,6 +105,12 @@ export function presentationGenerationToDeck(generation: PresentationGeneration)
   };
 }
 
+export function presentationNeedsImageRepair(generation: PresentationGeneration) {
+  if (!generation.include_images) return false;
+  const slides = Array.isArray(generation.output_json?.slides) ? generation.output_json.slides : [];
+  return slides.some((slide: any) => imageUrlsFromVisualPrompt(slide?.visual_prompt).length < 3);
+}
+
 function imageUrlsFromVisualPrompt(value: unknown) {
   const items = Array.isArray(value) ? value : [value];
   return items.filter((item): item is string => typeof item === "string" && /^https?:\/\//i.test(item));

@@ -6,7 +6,7 @@ import { Providers } from "@/components/providers";
 import { ReferralCapture } from "@/components/referral-capture";
 
 const siteTitle = "TeachPad | AI Lesson Plans & Worksheets for Teachers";
-const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, quizzes, and classroom activities in seconds with TeachPad AI.";
+const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, assessment questions, and classroom activities in seconds with TeachPad AI.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://teachpad.in"),

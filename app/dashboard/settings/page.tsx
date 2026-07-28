@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { User, Lock, BookOpen, Gift, Palette, Check, Copy, Share2, MessageCircle, Save, Phone, Mail, GraduationCap, KeyRound, Settings, Ticket, Link2, ArrowLeft, ChevronRight, ShieldCheck, Heart, Sparkles, School, CreditCard } from "lucide-react";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
@@ -15,8 +16,18 @@ import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { useBilling, BILLING_QUERY_KEY } from "@/lib/use-billing";
 import { normalizeIndianMobile } from "@/lib/phone";
+import { BoyAvatar } from "@/components/profile-avatar";
+import { PROFILE_AVATARS, normalizeProfileAvatarKey, type ProfileAvatarKey } from "@/lib/profile-avatars";
+import { ProfileTeachingBadges } from "@/components/streak/profile-badges";
 
 const usageLimit = 100;
+type SettingsScreen = "menu" | "account" | "security" | "preferences" | "referral" | "appearance";
+
+function settingsScreenFromQuery(value: string | null): SettingsScreen {
+  return value === "account" || value === "security" || value === "preferences" || value === "referral" || value === "appearance"
+    ? value
+    : "menu";
+}
 
 function benefitLine(code: { kind: string; duration_days?: number | null }) {
   const duration = code.duration_days === 30 ? 14 : (code.duration_days || 14);
@@ -41,6 +52,8 @@ function buildWhatsappHref(code: string): string {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: billing } = useBilling();
@@ -48,13 +61,14 @@ export default function SettingsPage() {
   const [roleInSchool, setRoleInSchool] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarKey, setAvatarKey] = useState<ProfileAvatarKey>("giraffe");
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
   const [dashboardLayout, setDashboardLayout] = useState<"search-first" | "original">("search-first");
   const [defaultBoardId, setDefaultBoardId] = useState("");
-  const [currentScreen, setCurrentScreen] = useState<"menu" | "account" | "security" | "preferences" | "referral" | "appearance">("menu");
+  const [currentScreen, setCurrentScreen] = useState<SettingsScreen>(() => settingsScreenFromQuery(searchParams.get("section")));
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
 
   const token = typeof window !== "undefined" ? localStorage.getItem("teacher_ai_access_token") : null;
@@ -89,6 +103,10 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    setCurrentScreen(settingsScreenFromQuery(searchParams.get("section")));
+  }, [searchParams]);
+
+  useEffect(() => {
     const stored = localStorage.getItem("teachpad_sidebar_layout");
     if (stored === "floating") {
       setSidebarLayout("floating");
@@ -112,6 +130,7 @@ export default function SettingsPage() {
     });
     setRoleInSchool(currentUser.data.role_in_school || "");
     setSchoolName(currentUser.data.pending_school_name || "");
+    setAvatarKey(normalizeProfileAvatarKey(currentUser.data.avatar_key));
 
     if (boardsQuery.data) {
       const storedBoard = localStorage.getItem("teachpad_default_board_id");
@@ -140,8 +159,8 @@ export default function SettingsPage() {
   const jkboseBoard = (boardsQuery.data || []).find(b => b.code?.toLowerCase().includes("jkbose"));
   const cbseBoard = (boardsQuery.data || []).find(b => b.code?.toLowerCase().includes("cbse"));
 
-  const primaryCode = referralCodesQuery.data?.[0] || { code: "TEACH14", kind: "trial", duration_days: 14 };
-  const shareLink = buildShareLink(primaryCode.code);
+  const primaryCode = referralCodesQuery.data?.[0];
+  const shareLink = primaryCode ? buildShareLink(primaryCode.code) : "";
 
   function changeSidebarLayout(layout: "floating" | "expanded") {
     if (localStorage.getItem("teachpad_sidebar_layout") === layout) return;
@@ -261,7 +280,10 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      await backendApi.updateUser(currentUserId, { full_name: next.name });
+      await backendApi.updateUser(currentUserId, {
+        full_name: next.name,
+        avatar_key: avatarKey,
+      });
       
       // Update onboarding role and school name preferences in backend database
       await submitOnboarding({
@@ -305,7 +327,10 @@ export default function SettingsPage() {
       {currentScreen !== "menu" && (
         <button
           type="button"
-          onClick={() => setCurrentScreen("menu")}
+          onClick={() => {
+            setCurrentScreen("menu");
+            router.replace("/dashboard/settings", { scroll: false });
+          }}
           className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg focus:outline-none"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -431,15 +456,49 @@ export default function SettingsPage() {
           </div>
 
           <form onSubmit={submit} className="space-y-6 pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-5">
-              <div className="relative group shrink-0">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-[#0B73FF]/10 text-[#0B73FF] shadow-sm font-black text-xl border-2 border-white ring-4 ring-slate-100">
-                  {displayName.charAt(0).toUpperCase()}
+            {!isInfluencer && <ProfileTeachingBadges />}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5">
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm ring-4 ring-blue-100">
+                  <BoyAvatar avatarKey={avatarKey} alt={`${displayName}'s ${avatarKey} profile picture`} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-800">Choose your profile animal</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">Your selected avatar appears beside notifications and across TeachPad.</p>
                 </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-800">Profile Picture</h4>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                {PROFILE_AVATARS.map((avatar) => {
+                  const selected = avatar.key === avatarKey;
+                  return (
+                    <button
+                      key={avatar.key}
+                      type="button"
+                      aria-label={`Choose ${avatar.label} profile picture`}
+                      aria-pressed={selected}
+                      onClick={() => setAvatarKey(avatar.key)}
+                      className={cn(
+                        "group relative rounded-2xl border bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B73FF] focus-visible:ring-offset-2",
+                        selected ? "border-[#0B73FF] ring-2 ring-blue-100" : "border-slate-200"
+                      )}
+                    >
+                      <span className="block aspect-square overflow-hidden rounded-full bg-slate-100">
+                        <BoyAvatar avatarKey={avatar.key} alt="" />
+                      </span>
+                      <span className={cn("mt-2 block text-[11px] font-bold", selected ? "text-[#0B73FF]" : "text-slate-600")}>
+                        {avatar.label}
+                      </span>
+                      {selected && (
+                        <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white shadow-sm">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="mt-3 text-[11px] font-medium text-slate-400">Click Save Profile below to keep your selection.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -666,50 +725,67 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
-            <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-[10px] font-bold text-red-500 shadow-xs">
-                  <Ticket className="h-3.5 w-3.5" />
-                  Referral Code
+            {referralCodesQuery.isLoading ? (
+              <div className="h-32 animate-pulse rounded-xl border border-slate-100 bg-slate-50" aria-label="Loading referral code" />
+            ) : primaryCode ? (
+              <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-[10px] font-bold text-red-500 shadow-xs">
+                    <Ticket className="h-3.5 w-3.5" />
+                    Referral Code
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800 shadow-xs">
+                      {primaryCode.code}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
+                      onClick={() => copyValue(primaryCode.code, "code")}
+                    >
+                      {copied === "code" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                      {copied === "code" ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <p className="text-xs font-semibold leading-relaxed text-slate-500 pt-1">
+                    {benefitLine(primaryCode)}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-xl border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800 shadow-xs">
-                    {primaryCode.code}
-                  </span>
+
+                <div className="flex flex-wrap gap-2 md:self-end">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
-                    onClick={() => copyValue(primaryCode.code, "code")}
+                    onClick={() => copyValue(shareLink, "link")}
                   >
-                    {copied === "code" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                    {copied === "code" ? "Copied" : "Copy"}
+                    {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
+                    Copy Link
                   </Button>
+                  <a href={buildWhatsappHref(primaryCode.code)} target="_blank" rel="noopener noreferrer">
+                    <Button type="button" size="sm" className="h-9 px-3 rounded-lg bg-[#25d366] hover:bg-[#20ba59] text-white font-bold gap-1">
+                      <MessageCircle className="h-4 w-4" /> Share on WhatsApp
+                    </Button>
+                  </a>
                 </div>
-                <p className="text-xs font-semibold leading-relaxed text-slate-500 pt-1">
-                  {benefitLine(primaryCode)}
-                </p>
               </div>
-
-              <div className="flex flex-wrap gap-2 md:self-end">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
-                  onClick={() => copyValue(shareLink, "link")}
-                >
-                  {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
-                  Copy Link
-                </Button>
-                <a href={buildWhatsappHref(primaryCode.code)} target="_blank" rel="noopener noreferrer">
-                  <Button type="button" size="sm" className="h-9 px-3 rounded-lg bg-[#25d366] hover:bg-[#20ba59] text-white font-bold gap-1">
-                    <MessageCircle className="h-4 w-4" /> Share on WhatsApp
-                  </Button>
-                </a>
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                <div className="flex items-start gap-3">
+                  <Ticket className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                  <div>
+                    <h4 className="text-sm font-black text-amber-950">Your referral code is being set up</h4>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-amber-800">
+                      Copy and sharing options will appear here after TeachPad assigns a code to your account.
+                    </p>
+                    {referralCodesQuery.isError ? <p className="mt-2 text-[11px] font-bold text-red-600">We could not check your code right now. Please try again later.</p> : null}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Performance summary cards */}
             <div className="space-y-3">

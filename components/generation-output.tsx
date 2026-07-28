@@ -36,6 +36,13 @@ import {
 } from "@/lib/lesson-plan-export";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  getWorksheetInstructions,
+  getWorksheetLocale,
+  localizeMarks,
+  localizeWorksheetSectionTitle,
+  type WorksheetLocale,
+} from "@/lib/worksheet-localization";
 
 const differentiationLabels: Record<string, string> = {
   below_grade_level: "Below Grade Level",
@@ -1224,11 +1231,17 @@ export function WorksheetOutput({
   const isNew = searchParams.get("new") === "true";
   const metadata = worksheetOutput?.metadata || {};
   const sections = worksheetOutput?.student_worksheet?.sections || [];
-  const title = worksheetOutput?.title || "Worksheet";
-  const grade = metadata.grade ? `Grade ${metadata.grade}` : metadata.class || "Class";
-  const subject = metadata.subject || "Subject";
-  const chapter = metadata.chapter || "Chapter";
+  const locale = getWorksheetLocale(worksheetOutput);
+  const title = worksheetOutput?.title || locale.worksheet;
+  const grade = metadata.grade ? `${locale.gradePrefix} ${metadata.grade}` : metadata.class || locale.classDefault;
+  const subject = metadata.subject || locale.subject;
+  const chapter = metadata.chapter || locale.chapter;
   const topic = metadata.topic || title;
+  const worksheetTabs = [
+    { key: "Worksheet", label: locale.worksheet },
+    { key: "Answer Key", label: locale.answerKey },
+    { key: "Marking Scheme", label: locale.markingScheme }
+  ];
 
   useEffect(() => {
     setWorksheetOutput(output);
@@ -1298,38 +1311,38 @@ export function WorksheetOutput({
       `}</style>
 
       <div className="no-print mb-5 border-b border-[#dffafa] bg-white pb-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div dir={locale.dir} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
               {isNew ? (
                 <Link href="/dashboard/worksheets/new" className="inline-flex items-center gap-1 text-[#159565]">
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to Inputs
+                  {locale.backToInputs}
                 </Link>
               ) : (
                 <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#159565]">
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Back
+                  {locale.back}
                 </button>
               )}
               <span>/</span>
-              <span>Worksheet Output</span>
+              <span>{locale.worksheetOutput}</span>
             </div>
-            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">Generated Worksheet</h1>
+            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">{locale.generatedWorksheet}</h1>
             <p className="mt-2 text-sm font-medium text-[#6d6f78]">{grade} • {subject} • {chapter}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> Copy</Button>
+            <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> {locale.copy}</Button>
             <Button variant="outline" size="sm" onClick={() => onExport?.(worksheetOutput)}><Download className="h-4 w-4" /> PDF</Button>
-            <Button variant="outline" size="sm" onClick={() => onShare?.(worksheetOutput)}><Share2 className="h-4 w-4" /> Share</Button>
+            <Button variant="outline" size="sm" onClick={() => onShare?.(worksheetOutput)}><Share2 className="h-4 w-4" /> {locale.share}</Button>
             {onSaveToLibrary && (
               isSaved ? (
                 <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
-                  <Check className="h-4 w-4 text-emerald-600" /> Saved
+                  <Check className="h-4 w-4 text-emerald-600" /> {locale.saved}
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
-                  <Save className="h-4 w-4" /> Save
+                  <Save className="h-4 w-4" /> {locale.save}
                 </Button>
               )
             )}
@@ -1337,20 +1350,20 @@ export function WorksheetOutput({
         </div>
 
         <div className="mt-4 flex rounded-[12px] border border-[#dffafa] bg-[#f8ffff] p-1">
-          {["Worksheet", "Answer Key", "Marking Scheme"].map((item) => (
+          {worksheetTabs.map((item) => (
             <button
-              key={item}
-              onClick={() => setTab(item)}
-              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item ? "bg-[#25262b] text-white shadow-sm" : "text-[#6d6f78]"}`}
+              key={item.key}
+              onClick={() => setTab(item.key)}
+              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item.key ? "bg-[#25262b] text-white shadow-sm" : "text-[#6d6f78]"}`}
             >
-              {item}
+              {item.label}
             </button>
           ))}
         </div>
       </div>
 
       {tab === "Worksheet" ? (
-        <article className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]">
+        <article dir={locale.dir} lang={locale.localeCode} className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]">
           <header className="grid min-w-0 gap-4 font-sans sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-6">
             <div className="min-w-0">
               <h2 className="break-words text-[19px] font-black leading-tight text-black sm:text-[22px]">
@@ -1367,28 +1380,28 @@ export function WorksheetOutput({
                 singleLine
               />
               <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-700">
-                <span>Chapter: </span>
+                <span>{locale.chapter}: </span>
                 <EditableText as="span" value={chapter} onCommit={(value) => updateMetadata("chapter", value)} ariaLabel="Worksheet chapter" singleLine />
               </p>
               <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
-                <EditableText as="span" value={metadata.board || "Board"} onCommit={(value) => updateMetadata("board", value)} ariaLabel="Worksheet board" singleLine />
+                <EditableText as="span" value={metadata.board || locale.board} onCommit={(value) => updateMetadata("board", value)} ariaLabel="Worksheet board" singleLine />
                 <span> • </span>
-                <EditableText as="span" value={metadata.book || "Textbook"} onCommit={(value) => updateMetadata("book", value)} ariaLabel="Worksheet textbook" singleLine />
+                <EditableText as="span" value={metadata.book || locale.textbook} onCommit={(value) => updateMetadata("book", value)} ariaLabel="Worksheet textbook" singleLine />
               </p>
             </div>
           </header>
 
           <div className="mt-7 grid gap-4 font-sans text-sm font-black sm:mt-10 sm:grid-cols-2 sm:gap-7">
-            <div className="flex min-w-0 items-end gap-2">Name:<span className="h-5 min-w-0 flex-1 border-b border-slate-400" /></div>
-            <div className="flex min-w-0 items-end gap-2">Date:<span className="h-5 min-w-0 flex-1 border-b border-slate-400" /></div>
+            <div className="flex min-w-0 items-end gap-2">{locale.name}:<span className="h-5 min-w-0 flex-1 border-b border-slate-400" /></div>
+            <div className="flex min-w-0 items-end gap-2">{locale.date}:<span className="h-5 min-w-0 flex-1 border-b border-slate-400" /></div>
           </div>
           <div className="mt-3 border-b border-slate-300" />
 
           <section className="mt-5 rounded-[8px] border border-slate-200 p-3 font-sans sm:p-4">
-            <h3 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">Instructions</h3>
+            <h3 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">{locale.instructions}</h3>
             <EditableText
               as="p"
-              value={worksheetOutput?.instructions || "Read each question carefully and answer in the space provided. For MCQs, choose the correct option. Answer all questions."}
+              value={getWorksheetInstructions(worksheetOutput, locale)}
               onCommit={(instructions) => updateWorksheet((current) => ({ ...current, instructions }))}
               className="mt-1 break-words text-[13px] font-semibold italic leading-6 text-slate-700 sm:text-sm"
               ariaLabel="Worksheet instructions"
@@ -1401,13 +1414,13 @@ export function WorksheetOutput({
                 <div className="mb-4 flex min-w-0 items-start gap-3 border-b border-slate-200 pb-2 font-sans">
                   <EditableText
                     as="h3"
-                    value={section.section_title || `Section ${sectionIndex + 1}`}
+                    value={localizeWorksheetSectionTitle(section.section_title, locale, sectionIndex)}
                     onCommit={(section_title) => updateSection(sectionIndex, (currentSection) => ({ ...currentSection, section_title }))}
                     className="min-w-0 flex-1 break-words text-[15px] font-black leading-6 text-black sm:text-[17px]"
                     ariaLabel={`Worksheet section ${sectionIndex + 1} title`}
                     singleLine
                   />
-                  {section.marks ? <span className="shrink-0 pt-1 text-xs font-black text-slate-500">{section.marks} marks</span> : null}
+                  {section.marks ? <span className="shrink-0 pt-1 text-xs font-black text-slate-500">{section.marks} {locale.marks}</span> : null}
                 </div>
                 <div className="grid gap-4 sm:gap-5">
                   {(section.questions || []).map((question: any, index: number) => (
@@ -1416,6 +1429,7 @@ export function WorksheetOutput({
                       question={question}
                       index={index}
                       questionType={section.question_type || section.section_title}
+                      locale={locale}
                       onQuestionChange={(nextQuestion) => updateQuestion(sectionIndex, index, () => nextQuestion)}
                     />
                   ))}
@@ -1429,12 +1443,21 @@ export function WorksheetOutput({
             grade={grade}
             chapter={chapter}
             source={metadata.book || worksheetOutput?.textbook_source}
+            locale={locale.localeCode}
+            labels={{
+              subject: locale.subject,
+              grade: locale.gradePrefix,
+              chapter: locale.chapter,
+              source: locale.source,
+              generatedOn: locale.generatedOn,
+              notSpecified: locale.notSpecified
+            }}
           />
         </article>
       ) : tab === "Answer Key" ? (
-        <AnswerKeyView items={worksheetOutput?.answer_key || []} onItemsChange={updateAnswerKey} />
+        <AnswerKeyView items={worksheetOutput?.answer_key || []} onItemsChange={updateAnswerKey} locale={locale} />
       ) : (
-        <MarkingSchemeView items={worksheetOutput?.marking_scheme || []} onItemsChange={updateMarkingScheme} />
+        <MarkingSchemeView items={worksheetOutput?.marking_scheme || []} onItemsChange={updateMarkingScheme} locale={locale} />
       )}
     </div>
   );
@@ -1444,11 +1467,13 @@ function WorksheetQuestion({
   question,
   index,
   questionType,
+  locale,
   onQuestionChange
 }: {
   question: any;
   index: number;
   questionType: string;
+  locale: WorksheetLocale;
   onQuestionChange?: (question: any) => void;
 }) {
   const left = question.left_column || question.left || [];
@@ -1502,7 +1527,7 @@ function WorksheetQuestion({
         <div className="mt-3 overflow-x-auto rounded-[6px] border border-slate-300 font-sans text-[13px] sm:text-sm">
           <table className="w-full min-w-[420px] table-fixed border-collapse">
             <thead className="bg-slate-50 text-left text-black">
-              <tr><th className="w-1/2 border-r border-slate-300 px-3 py-2">Column A</th><th className="px-3 py-2">Column B</th></tr>
+              <tr><th className="w-1/2 border-r border-slate-300 px-3 py-2">{locale.columnA}</th><th className="px-3 py-2">{locale.columnB}</th></tr>
             </thead>
             <tbody>
               {left.map((item: string, rowIndex: number) => (
@@ -1555,20 +1580,20 @@ function defaultAnswerLines(questionType: string) {
   return 1;
 }
 
-function AnswerKeyView({ items, onItemsChange }: { items: any[]; onItemsChange?: (items: any[]) => void }) {
+function AnswerKeyView({ items, onItemsChange, locale }: { items: any[]; onItemsChange?: (items: any[]) => void; locale: WorksheetLocale }) {
   function updateSection(index: number, value: any) {
     onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
   }
 
   return (
-    <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#25262b]">Answer Key</h2>
+    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
+      <h2 className="text-xl font-black text-[#25262b]">{locale.answerKey}</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
             <EditableText
               as="h3"
-              value={section.section_title || `Section ${index + 1}`}
+              value={localizeWorksheetSectionTitle(section.section_title, locale, index)}
               onCommit={(section_title) => updateSection(index, { ...section, section_title })}
               className="font-black text-[#25262b]"
               ariaLabel={`Answer key section ${index + 1}`}
@@ -1597,27 +1622,27 @@ function AnswerKeyView({ items, onItemsChange }: { items: any[]; onItemsChange?:
   );
 }
 
-function MarkingSchemeView({ items, onItemsChange }: { items: any[]; onItemsChange?: (items: any[]) => void }) {
+function MarkingSchemeView({ items, onItemsChange, locale }: { items: any[]; onItemsChange?: (items: any[]) => void; locale: WorksheetLocale }) {
   function updateSection(index: number, value: any) {
     onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
   }
 
   return (
-    <section className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#25262b]">Marking Scheme</h2>
+    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
+      <h2 className="text-xl font-black text-[#25262b]">{locale.markingScheme}</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <EditableText
                 as="h3"
-                value={section.section_title || `Section ${index + 1}`}
+                value={localizeWorksheetSectionTitle(section.section_title, locale, index)}
                 onCommit={(section_title) => updateSection(index, { ...section, section_title })}
                 className="font-black text-[#25262b]"
                 ariaLabel={`Marking scheme section ${index + 1}`}
                 singleLine
               />
-              {section.marks_per_question ? <Badge>{section.marks_per_question}</Badge> : null}
+              {section.marks_per_question ? <Badge>{localizeMarks(section.marks_per_question, locale)}</Badge> : null}
             </div>
             <ul className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
               {(section.guidelines || []).map((item: any, itemIndex: number) => (

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+import { getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -20,17 +21,35 @@ export function GoogleButton({
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const supabase = getSupabaseClient();
-
-  if (!supabase) return null;
+  // Public environment variables have the same value during SSR and hydration,
+  // so the server and browser now render identical markup.
+  if (!isSupabaseConfigured()) return null;
 
   async function handleGoogle() {
-    if (!supabase) return; // narrows the type inside this async closure
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      toast({
+        title: "Google sign-in is unavailable",
+        description: "Please refresh the page or use your email and password.",
+        variant: "error",
+      });
+      return;
+    }
     setLoading(true);
     try {
+      const storedCode = getStoredReferralPromoCode();
+      const redirectUrl = storedCode
+        ? `${window.location.origin}/auth/callback?ref=${encodeURIComponent(storedCode)}`
+        : `${window.location.origin}/auth/callback`;
+      const options: { redirectTo: string; data?: { signup_promo_code: string } } = {
+        redirectTo: redirectUrl,
+      };
+      if (storedCode) {
+        options.data = { signup_promo_code: storedCode };
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options,
       });
       if (error) throw error;
       // Success → browser is redirecting to Google; leave `loading` true.

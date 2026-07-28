@@ -31,12 +31,12 @@ interface ResourceItem {
   raw: any;
 }
 
-const typeMeta: Record<ResourceType, { label: string; icon: typeof BookOpen; colors: { bg: string; text: string; border: string } }> = {
-  "lesson plan": { label: "Lesson Plan", icon: BookOpen, colors: { bg: "bg-blue-50/80", text: "text-teachpad-blue", border: "border-blue-100" } },
-  worksheet: { label: "Worksheet", icon: ClipboardCheck, colors: { bg: "bg-emerald-50/80", text: "text-emerald-600", border: "border-emerald-100" } },
-  notes: { label: "Notes", icon: StickyNote, colors: { bg: "bg-pink-50/80", text: "text-pink-600", border: "border-pink-100" } },
-  activity: { label: "Activity", icon: Lightbulb, colors: { bg: "bg-cyan-50/80", text: "text-cyan-600", border: "border-cyan-100" } },
-  presentation: { label: "Presentation", icon: Presentation, colors: { bg: "bg-violet-50/80", text: "text-violet-600", border: "border-violet-100" } },
+const typeMeta: Record<ResourceType, { label: string; pluralLabel: string; icon: typeof BookOpen; colors: { bg: string; text: string; border: string } }> = {
+  "lesson plan": { label: "Lesson Plan", pluralLabel: "Lesson Plans", icon: BookOpen, colors: { bg: "bg-blue-50/80", text: "text-teachpad-blue", border: "border-blue-100" } },
+  worksheet: { label: "Worksheet", pluralLabel: "Worksheets", icon: ClipboardCheck, colors: { bg: "bg-emerald-50/80", text: "text-emerald-600", border: "border-emerald-100" } },
+  notes: { label: "Notes", pluralLabel: "Notes", icon: StickyNote, colors: { bg: "bg-pink-50/80", text: "text-pink-600", border: "border-pink-100" } },
+  activity: { label: "Activity", pluralLabel: "Activities", icon: Lightbulb, colors: { bg: "bg-cyan-50/80", text: "text-cyan-600", border: "border-cyan-100" } },
+  presentation: { label: "Presentation", pluralLabel: "Presentations", icon: Presentation, colors: { bg: "bg-violet-50/80", text: "text-violet-600", border: "border-violet-100" } },
 };
 
 const resourceCardColors: Record<ResourceType, string> = {
@@ -352,7 +352,7 @@ export default function ResourcesPage() {
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
             <Select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); }} className="w-full min-[400px]:flex-1 sm:w-[140px]">
               <option value="all">All Types</option>
-              {Object.entries(typeMeta).map(([key, m]) => <option key={key} value={key}>{m.label}s</option>)}
+              {Object.entries(typeMeta).map(([key, m]) => <option key={key} value={key}>{m.pluralLabel}</option>)}
             </Select>
             {allClasses.length > 0 && (
               <Select value={classFilter} onChange={(e) => { setClassFilter(e.target.value); }} className="w-full min-[400px]:flex-1 sm:w-[130px]">

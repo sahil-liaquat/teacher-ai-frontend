@@ -1,4 +1,5 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
+import type { ProfileAvatarKey } from "@/lib/profile-avatars";
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -8,6 +9,16 @@ function resolveApiBase() {
 
 export const API_BASE = resolveApiBase();
 export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
+
+export function resolveUploadUrl(value?: string | null) {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const relativePath = value
+    .replace(/^\/+/, "")
+    .replace(/^uploads\//, "");
+  return `${BACKEND_ROOT}/uploads/${relativePath}`;
+}
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -39,6 +50,36 @@ export type ApiUser = {
   school_id?: string | null;
   pending_school_name?: string | null;
   feedback_tools?: string[];
+  avatar_key?: ProfileAvatarKey;
+};
+
+export type NotificationSeverity = "info" | "success" | "warning" | "urgent";
+export type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  action_label: string | null;
+  action_url: string | null;
+  expires_at: string | null;
+  is_active: boolean;
+  published_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+  is_read?: boolean;
+  read_at?: string | null;
+};
+export type NotificationInbox = {
+  items: AppNotification[];
+  unread_count: number;
+};
+export type NotificationCreatePayload = {
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  action_label?: string | null;
+  action_url?: string | null;
+  expires_at?: string | null;
 };
 
 /** Tools that fire the first-use feedback popup, one per tool per user. */
@@ -68,6 +109,168 @@ export type Board = { id: string; code: string; name: string; description?: stri
 export type ClassItem = { id: string; board_id: string; grade_number?: number; name: string; description?: string; is_active?: boolean };
 export type Book = { id: string; class_id: string; title: string; subject: string; is_ingested?: boolean; is_active?: boolean; pinecone_index?: string };
 export type Chapter = { id: string; book_id: string; chapter_number?: number; chapter_title: string; title?: string };
+export type WorkspaceResourceType = "lesson_plan" | "presentation" | "worksheet" | "activity" | "notes";
+export type WorkspaceResourceStatus = "missing" | "ready" | "skipped" | "generating" | "failed" | "stale";
+export type WorkspaceTopicStatus = "pending" | "in_progress" | "completed";
+export type WorkspaceResource = {
+  type: WorkspaceResourceType;
+  status: WorkspaceResourceStatus;
+  generation_id: string | null;
+  href: string;
+  generate_href: string;
+  generated_at: string | null;
+  version_count: number;
+};
+export type WorkspaceTopic = {
+  id: string;
+  title: string;
+  description: string | null;
+  position: number;
+  status: WorkspaceTopicStatus;
+  is_current: boolean;
+  is_ready_to_teach: boolean;
+  scheduled_at: string | null;
+  completed_at: string | null;
+  teacher_notes: WorkspaceTeacherNotes;
+  resources: WorkspaceResource[];
+  updated_at: string;
+};
+export type WorkspaceTeacherNotes = {
+  preparation: string;
+  teaching: string;
+  reflection: string;
+};
+export type TeachingWorkspace = {
+  id: string;
+  user_id: string;
+  board_id: string;
+  board_code: string;
+  board_name: string;
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  book_id: string;
+  book_title: string;
+  subject: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  section: string;
+  lesson_duration_minutes: number;
+  is_archived: boolean;
+  is_bookmarked: boolean;
+  last_opened_at: string;
+  resource_preferences: WorkspaceResourceType[];
+  completed_topic_count: number;
+  covered_topic_count: number;
+  total_topic_count: number;
+  ready_resource_count: number;
+  expected_resource_count: number;
+  current_topic_id: string | null;
+  topics: WorkspaceTopic[];
+  created_at: string;
+  updated_at: string;
+};
+export type TeachingWorkspaceCreatePayload = {
+  board_id: string;
+  class_id: string;
+  book_id: string;
+  chapter_id: string;
+  section?: string;
+  lesson_duration_minutes?: number;
+  resource_preferences?: WorkspaceResourceType[];
+  topics: Array<{ title: string; description?: string | null }>;
+};
+
+export type WorkspaceClassSummary = {
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  board_id: string;
+  board_code: string;
+  board_name: string;
+  subjects: string[];
+  chapters_worked_on: number;
+  resources_generated: number;
+  completed_topics: number;
+  total_topics: number;
+  progress_percent: number;
+  last_opened_at: string;
+};
+
+export type WorkspaceChapterSummary = {
+  class_id: string;
+  class_name: string;
+  board_id: string;
+  board_code: string;
+  book_id: string;
+  book_title: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  subject: string;
+  workspace_id: string | null;
+  is_archived: boolean;
+  completed_topics: number;
+  total_topics: number;
+  progress_percent: number;
+  resources_generated: number;
+  last_opened_at: string;
+};
+export type WorkspaceHomeTopic = {
+  workspace_id: string;
+  workspace_is_archived: boolean;
+  topic: WorkspaceTopic;
+  board_code: string;
+  class_id: string;
+  class_name: string;
+  subject: string;
+  chapter_id: string;
+  chapter_number: number;
+  chapter_title: string;
+  section: string;
+  lesson_duration_minutes: number;
+  resource_preferences: WorkspaceResourceType[];
+  last_opened_at: string;
+  last_generated_at: string | null;
+};
+export type WorkspaceHomeClass = {
+  class_id: string;
+  class_name: string;
+  grade_number: number;
+  board_code: string;
+  subjects: string[];
+  current_topic: WorkspaceHomeTopic | null;
+  ready_topics: number;
+  attention_topics: number;
+  last_activity_at: string;
+};
+export type WorkspaceAttentionKind =
+  | "failed_resource"
+  | "generating_resource"
+  | "upcoming_not_ready"
+  | "missing_assessment"
+  | "long_incomplete"
+  | "stale_resource"
+  | "skipped_resource";
+export type WorkspaceAttentionItem = {
+  kind: WorkspaceAttentionKind;
+  priority: number;
+  message: string;
+  topic: WorkspaceHomeTopic;
+};
+export type WorkspaceHome = {
+  continue_preparing: WorkspaceHomeTopic | null;
+  recent_chapters: WorkspaceHomeTopic[];
+  upcoming: WorkspaceHomeTopic[];
+  needs_attention: WorkspaceAttentionItem[];
+  classes: WorkspaceHomeClass[];
+};
+export type WorkspaceClassOverview = {
+  class_summary: WorkspaceHomeClass | null;
+  workspaces: TeachingWorkspace[];
+  available_chapters: WorkspaceChapterSummary[];
+};
 export type School = {
   id: string;
   name: string;
@@ -144,10 +347,10 @@ export type Workshop = {
   registration_deadline?: string | null;
   mode: "online" | "offline" | "hybrid";
   meeting_link?: string | null;
+  whatsapp_group_link?: string | null;
   venue_details?: string | null;
   max_capacity?: number | null;
   banner_url?: string | null;
-  thumbnail_url?: string | null;
   enable_certificates: boolean;
   enable_recordings: boolean;
   publishing_destination: "landing_page" | "teachpad_app" | "both";
@@ -390,7 +593,7 @@ export type WritingDocument = {
 
 export type PresentationGeneratePayload = {
   topic: string;
-  audience: "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
+  audience: "Class 1" | "Class 2" | "Class 3" | "Class 4" | "Class 5" | "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
   slide_count: 6 | 8 | 10 | 12;
   language: "English" | "Hindi" | "Urdu";
   style: "Clean classroom" | "Visual story" | "Activity based" | "Exam revision";
@@ -461,6 +664,95 @@ export type DashboardSummaryResponse = {
   last_7_days_timestamps: string[];
 };
 
+export type StreakRewardStatus = "locked" | "in_progress" | "unlocked" | "claimed" | "expired";
+export type StreakReward = {
+  id: string;
+  milestone_days: number;
+  reward_type: "badge" | "certificate" | "recognition";
+  reward_value: { badge_tier: StreakBadgeTier; has_certificate: boolean; recognition_eligible: boolean };
+  reward_label: string;
+  reward_description: string;
+  includes: string[];
+  badge_tier: StreakBadgeTier;
+  has_certificate: boolean;
+  recognition_eligible: boolean;
+  recognition_consent: boolean | null;
+  status: StreakRewardStatus;
+  days_remaining: number;
+  unlocked_at: string | null;
+  claimed_at: string | null;
+  expires_at: string | null;
+};
+export type StreakBadgeTier = "bronze" | "silver" | "gold" | "champion";
+export type RecognitionProfile = {
+  display_name: string;
+  avatar_key: ProfileAvatarKey;
+  school: string | null;
+  district: string | null;
+  current_streak: number;
+};
+export type RecognitionConsent = { reward: StreakReward; profile: RecognitionProfile | null; message: string };
+export type FeaturedTeacher = {
+  milestone_days: 14 | 30;
+  badge_tier: "gold" | "champion";
+  achievement_date: string;
+  profile: RecognitionProfile;
+};
+export type StreakSummary = {
+  current_streak: number;
+  best_streak: number;
+  total_teaching_days: number;
+  current_month_teaching_days: number;
+  last_qualifying_date: string | null;
+  completed_today: boolean;
+  has_started: boolean;
+  next_reward: StreakReward | null;
+  timezone: string;
+};
+export type StreakWeek = {
+  start: string;
+  end: string;
+  completed_count: number;
+  days: Array<{
+    date: string;
+    label: string;
+    status: "completed" | "pending" | "future" | "missed";
+    resource_count: number;
+  }>;
+};
+export type StreakMonth = {
+  year: number;
+  month: number;
+  today: string;
+  days: Array<{
+    date: string;
+    resource_count: number;
+    resource_types: GenerationTool[];
+    streak_day: number | null;
+    reward_milestone: 3 | 7 | 14 | 30 | null;
+    is_reward_milestone: boolean;
+  }>;
+  projected_rewards: Array<{
+    date: string;
+    milestone_days: 3 | 7 | 14 | 30;
+  }>;
+};
+export type StreakRewards = { items: StreakReward[] };
+export type StreakAdminAnalytics = {
+  activated_users: number;
+  streak_starters: number;
+  activated_users_starting_streak_pct: number;
+  reached_3_pct: number;
+  reached_7_pct: number;
+  reached_14_pct: number;
+  reached_30_pct: number;
+  d7_retention_started_pct: number;
+  d7_retention_not_started_pct: number;
+  paid_conversion_by_milestone: Record<string, number>;
+  average_teaching_days_per_active_teacher: number;
+  reward_claim_rate_pct: number;
+};
+
 export type LibraryItem = {
   id: string;
   type: "lesson_plan" | "worksheet" | "presentation" | "notes" | "activity";
@@ -500,6 +792,170 @@ export type AdminSummary = {
   };
   top_books: Array<{ id: string; title: string; subject?: string; created_at?: string }>;
   top_users: Array<{ id: string; name: string; created_at?: string }>;
+  user_funnel: {
+    total: number;
+    active: number;
+    confirmed: number;
+    logged_in: number;
+    onboarded: number;
+    subscribed: number;
+    new_last_24_hours: number;
+    confirmed_never_logged_in: number;
+    logged_in_without_subscription: number;
+    subscribed_inactive_30d: number;
+  };
+};
+
+export type AdminSignupActivity = {
+  start: string;
+  end: string;
+  total: number;
+  buckets: Array<{
+    day: string;
+    signups: number;
+    generations: number;
+    activated: number;
+    activation_rate: number;
+  }>;
+};
+
+export type AdminFeedbackItem = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tool: string;
+  rating: number | null;
+  comment: string | null;
+  dismissed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminFeedbackResponse = {
+  items: AdminFeedbackItem[];
+  total: number;
+  skip: number;
+  limit: number;
+  tools: string[];
+  summary: {
+    total: number;
+    submitted: number;
+    dismissed: number;
+    with_comments: number;
+    average_rating: number | null;
+  };
+};
+
+export type AdminFeedbackParams = {
+  q?: string;
+  tool?: string;
+  status?: "submitted" | "dismissed";
+  rating?: number;
+  skip?: number;
+  limit?: number;
+};
+
+export type AdminUserDetail = {
+  account: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone: string | null;
+    avatar_key: string;
+    role: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  auth: {
+    confirmed: boolean;
+    logged_in: boolean;
+    email_confirmed_at: string | null;
+    last_sign_in_at: string | null;
+  };
+  onboarding: {
+    completed_at: string | null;
+    board_preference: string | null;
+    role_in_school: string | null;
+    phone_prompt_exempt: boolean;
+    pending_school_name: string | null;
+  };
+  school: {
+    id: string;
+    name: string;
+    city: string | null;
+    district: string | null;
+    state: string | null;
+    board_name: string | null;
+  } | null;
+  subscription: {
+    id: string;
+    plan_code: string;
+    status: string;
+    source: string;
+    price_inr: number | null;
+    access_until: string | null;
+    trial_started_at: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    paid_starts_at: string | null;
+    cancel_at_period_end: boolean;
+    is_launch_gift: boolean;
+    comp_from_influencer: boolean;
+    gift_acknowledged_at: string | null;
+    billing_phone: string | null;
+    razorpay_subscription_id: string | null;
+    razorpay_customer_id: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  referrer: { id: string; name: string; email: string } | null;
+  generation_counts: {
+    lesson_plans: number;
+    worksheets: number;
+    notes: number;
+    activities: number;
+    presentations: number;
+    writing_documents: number;
+    workspaces: number;
+  };
+  usage: {
+    calls: number;
+    failures: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+    cost_inr: number;
+    last_generation_at: string | null;
+  };
+  feedback: Array<{
+    id: string;
+    tool: string;
+    rating: number | null;
+    comment: string | null;
+    dismissed: boolean;
+    created_at: string;
+  }>;
+  workshops: Array<{
+    id: string;
+    workshop_id: string;
+    title: string;
+    scheduled_at: string;
+    attended: boolean;
+    certificate_issued: boolean;
+    feedback_rating: number | null;
+    feedback_text: string | null;
+    registered_at: string;
+  }>;
+  promo_redemptions: Array<{
+    id: string;
+    code: string;
+    kind: string;
+    duration_days: number | null;
+    resulting_access_until: string | null;
+    redeemed_at: string;
+  }>;
 };
 
 export type AdminUsageParams = {
@@ -645,6 +1101,17 @@ type ApiRequestInit = RequestInit & {
 export function getToken() {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem(LEGACY_ACCESS_TOKEN_KEY);
+}
+
+export function hasStoredAuthTokens() {
+  if (typeof window === "undefined") return false;
+  return [
+    ACCESS_TOKEN_KEY,
+    REFRESH_TOKEN_KEY,
+    LEGACY_ACCESS_TOKEN_KEY,
+    LEGACY_REFRESH_TOKEN_KEY,
+    LEGACY_CUSTOM_TOKEN_KEY
+  ].some((key) => Boolean(window.localStorage.getItem(key)));
 }
 
 export function setToken(token: string) {
@@ -1080,6 +1547,9 @@ async function requestWithSession(path: string, init: ApiRequestInit = {}, retry
   if (!publicAuthPath && token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
+  if (typeof window !== "undefined" && !headers.has("X-TeachPad-Timezone")) {
+    headers.set("X-TeachPad-Timezone", Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  }
   const res = await fetch(`${API_BASE}${path}`, { ...fetchInit, headers });
   if (shouldTryRefresh(path, res.status) && retry && await refreshSession()) {
     return requestWithSession(path, init, false);
@@ -1293,6 +1763,48 @@ export async function resetPassword(accessToken: string, password: string) {
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
+  adminSignupActivity: () => apiFetch<AdminSignupActivity>("/admin/signup-activity"),
+  adminStreakAnalytics: () => apiFetch<StreakAdminAnalytics>("/admin/streaks/analytics"),
+  streakSummary: () => apiFetch<StreakSummary>("/streak/summary"),
+  streakWeek: () => apiFetch<StreakWeek>("/streak/week"),
+  streakMonth: (year?: number, month?: number) => {
+    const qs = new URLSearchParams();
+    if (year != null) qs.set("year", String(year));
+    if (month != null) qs.set("month", String(month));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<StreakMonth>(`/streak/month${suffix}`);
+  },
+  streakRewards: () => apiFetch<StreakRewards>("/streak/rewards"),
+  claimStreakReward: (milestone: number) =>
+    apiFetch<{ reward: StreakReward; message: string }>(`/streak/rewards/${milestone}/claim`, { method: "POST" }),
+  streakRecognitionProfile: (milestone: number) =>
+    apiFetch<RecognitionConsent>(`/streak/rewards/${milestone}/recognition`),
+  updateStreakRecognition: (milestone: number, approved: boolean) =>
+    apiFetch<RecognitionConsent>(`/streak/rewards/${milestone}/recognition`, {
+      method: "PUT",
+      body: JSON.stringify({ approved }),
+    }),
+  featuredTeachers: () => apiFetch<{ items: FeaturedTeacher[] }>("/streak/featured-teachers", { redirectOnUnauthorized: false }),
+  trackStreakEvent: (payload: {
+    event_name: "streak_pill_viewed" | "streak_pill_clicked" | "streak_drawer_opened" | "streak_cta_clicked" | "full_journey_viewed";
+    current_streak?: number;
+    milestone?: number;
+    resource_type?: GenerationTool;
+    activity_date?: string;
+    metadata?: Record<string, unknown>;
+  }) => apiFetch<void>("/streak/events", { method: "POST", body: JSON.stringify(payload) }),
+  adminUserDetail: (userId: string) => apiFetch<AdminUserDetail>(`/admin/users/${userId}`),
+  adminFeedback: (params: AdminFeedbackParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.tool) qs.set("tool", params.tool);
+    if (params.status) qs.set("status", params.status);
+    if (params.rating != null) qs.set("rating", String(params.rating));
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminFeedbackResponse>(`/admin/feedback${suffix}`);
+  },
   adminUsage: (params: AdminUsageParams = {}) => {
     const qs = new URLSearchParams();
     if (params.start) qs.set("start", params.start);
@@ -1316,6 +1828,22 @@ export const backendApi = {
   },
   adminActivityDetail: (generationId: string, kind: ActivityKind) =>
     apiFetch<ActivityDetail>(`/admin/activity/${generationId}?kind=${kind}`),
+  notifications: () => apiFetch<NotificationInbox>("/notifications"),
+  markNotificationRead: (id: string) =>
+    apiFetch<{ ok: boolean; marked_read: number }>(`/notifications/${id}/read`, { method: "POST" }),
+  markAllNotificationsRead: () =>
+    apiFetch<{ ok: boolean; marked_read: number }>("/notifications/read-all", { method: "POST" }),
+  clearNotification: (id: string) =>
+    apiFetch<{ ok: boolean; cleared: number }>(`/notifications/${id}/clear`, { method: "POST" }),
+  clearAllNotifications: () =>
+    apiFetch<{ ok: boolean; cleared: number }>("/notifications/clear-all", { method: "POST" }),
+  adminNotifications: () => apiFetch<AppNotification[]>("/admin/notifications"),
+  adminPublishNotification: (payload: NotificationCreatePayload) =>
+    apiFetch<AppNotification>("/admin/notifications", { method: "POST", body: JSON.stringify(payload) }),
+  adminSetNotificationActive: (id: string, isActive: boolean) =>
+    apiFetch<AppNotification>(`/admin/notifications/${id}`, { method: "PATCH", body: JSON.stringify({ is_active: isActive }) }),
+  adminDeleteNotification: (id: string) =>
+    apiFetch<void>(`/admin/notifications/${id}`, { method: "DELETE" }),
   boards: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<Board>>(`/boards?skip=${skip}&limit=${limit}`),
   createBoard: (payload: Pick<Board, "code" | "name"> & { description?: string }) =>
     apiFetch<Board>("/boards", { method: "POST", body: JSON.stringify(payload) }),
@@ -1329,6 +1857,32 @@ export const backendApi = {
   booksByClass: (classId: string, skip = 0, limit = 100) => apiFetch<PaginatedResponse<Book>>(`/books/class/${classId}?skip=${skip}&limit=${limit}`),
   book: (id: string) => apiFetch<Book>(`/books/${id}`),
   chaptersByBook: (bookId: string) => apiFetch<Chapter[]>(`/chapters/book/${bookId}`),
+  teachingWorkspaces: (includeArchived = false) =>
+    apiFetch<TeachingWorkspace[]>(`/teaching-workspaces?include_archived=${includeArchived}`),
+  workspaceHome: () => apiFetch<WorkspaceHome>("/teaching-workspaces/home"),
+  workspaceClassOverview: (classId: string) =>
+    apiFetch<WorkspaceClassOverview>(`/teaching-workspaces/classes/${classId}/overview`),
+  workspaceClasses: () =>
+    apiFetch<WorkspaceClassSummary[]>("/teaching-workspaces/navigation/classes"),
+  workspaceChapters: (classId: string) =>
+    apiFetch<WorkspaceChapterSummary[]>(`/teaching-workspaces/navigation/classes/${classId}/chapters`),
+  openWorkspaceChapter: (chapterId: string) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/navigation/chapters/${chapterId}/open`, { method: "POST" }),
+  currentTeachingWorkspace: () => apiFetch<TeachingWorkspace | null>("/teaching-workspaces/current"),
+  teachingWorkspace: (id: string) => apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}`),
+  createTeachingWorkspace: (payload: TeachingWorkspaceCreatePayload) =>
+    apiFetch<TeachingWorkspace>("/teaching-workspaces", { method: "POST", body: JSON.stringify(payload) }),
+  updateTeachingWorkspace: (id: string, payload: Partial<Pick<TeachingWorkspace, "section" | "lesson_duration_minutes" | "is_archived" | "is_bookmarked" | "resource_preferences">>) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  addTeachingWorkspaceTopic: (id: string, payload: { title: string; description?: string | null }) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${id}/topics`, { method: "POST", body: JSON.stringify(payload) }),
+  updateTeachingWorkspaceTopic: (workspaceId: string, topicId: string, payload: Partial<Pick<WorkspaceTopic, "title" | "description" | "status" | "is_current" | "is_ready_to_teach" | "scheduled_at" | "teacher_notes">>) =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${workspaceId}/topics/${topicId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  updateTeachingWorkspaceResource: (workspaceId: string, topicId: string, resourceType: WorkspaceResourceType, status: "skipped" | "missing") =>
+    apiFetch<TeachingWorkspace>(`/teaching-workspaces/${workspaceId}/topics/${topicId}/resources/${resourceType}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
   schools: (q = "", skip = 0, limit = 100) => apiFetch<PaginatedResponse<School>>(`/schools?q=${encodeURIComponent(q)}&skip=${skip}&limit=${limit}`),
   // Public, unauthenticated school list for the signup picker. redirectOnUnauthorized:false
   // so a logged-out visitor is never bounced to /login if this 401s.
@@ -1349,7 +1903,6 @@ export const backendApi = {
   updateSchoolTemplate: (id: string, payload: Partial<Omit<SchoolFormatTemplate, "id" | "school_id" | "created_at" | "updated_at">>) =>
     apiFetch<SchoolFormatTemplate>(`/schools/admin/templates/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   lessonPlans: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<LessonPlan>>(`/lesson-plans?skip=${skip}&limit=${limit}`),
-  lessonPlanSummary: () => apiFetch<LessonPlanDashboardSummary>("/lesson-plans/summary"),
   dashboardSummary: () => apiFetch<DashboardSummaryResponse>("/dashboard/summary"),
   updateResourceSavedState: (type: string, id: string, isSaved: boolean) =>
     apiFetch<{ ok: boolean }>(`/library/${type}/${id}`, {
@@ -1393,6 +1946,14 @@ export const backendApi = {
   }) => apiFetch<ElifApplyResponse>(`/lesson-plans/${id}/assistant/apply`, { method: "POST", body: JSON.stringify(payload) }),
   undoLatestElifChange: (id: string) =>
     apiFetch<{ lesson_plan: Record<string, any>; change_summary: string; affected_sections: string[]; revision_id: string }>(`/lesson-plans/${id}/assistant/undo`, { method: "POST" }),
+  generateLessonWorksheet: (id: string) =>
+    withGenerationEvent("worksheet", apiFetch<WorksheetGeneration>(`/lesson-plans/${id}/resources/worksheet`, { method: "POST" })),
+  generateLessonPresentation: (id: string) =>
+    withGenerationEvent("presentation", apiFetch<PresentationGeneration>(`/lesson-plans/${id}/resources/presentation`, { method: "POST" })),
+  generateLessonNotes: (id: string) =>
+    withGenerationEvent("notes", apiFetch<NotesGeneration>(`/lesson-plans/${id}/resources/notes`, { method: "POST" })),
+  generateLessonActivity: (id: string) =>
+    withGenerationEvent("activity", apiFetch<ActivityGeneration>(`/lesson-plans/${id}/resources/activity`, { method: "POST" })),
   createLessonPlan: (payload: LessonPlanGeneratePayload) =>
     withGenerationEvent("lesson_plan", apiFetch<LessonPlan>("/lesson-plans", { method: "POST", body: JSON.stringify(payload) })),
   streamLessonPlan: (
@@ -1435,11 +1996,13 @@ export const backendApi = {
     withGenerationEvent("presentation", apiFetch<PresentationGeneration>("/presentations", { method: "POST", body: JSON.stringify(payload) })),
   presentations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<PresentationGeneration>>(`/presentations?skip=${skip}&limit=${limit}`),
   presentation: (id: string) => apiFetch<PresentationGeneration>(`/presentations/${id}`),
+  repairPresentationImages: (id: string) =>
+    apiFetch<PresentationGeneration>(`/presentations/${id}/images/repair`, { method: "POST" }),
   deletePresentation: (id: string) => apiFetch<void>(`/presentations/${id}`, { method: "DELETE" }),
   submitFeedback: (payload: { tool: string; rating?: number | null; comment?: string | null; dismissed?: boolean }) =>
     apiFetch<{ id: string; tool: string }>("/feedback", { method: "POST", body: JSON.stringify(payload) }),
   users: (skip = 0, limit = 100) => apiFetch<PaginatedResponse<ApiUser>>(`/users?skip=${skip}&limit=${limit}`),
-  updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active">> & { password?: string }) =>
+  updateUser: (id: string, payload: Partial<Pick<ApiUser, "full_name" | "email" | "is_active" | "avatar_key">> & { password?: string }) =>
     apiFetch<ApiUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   updateCurrentUser: (payload: Pick<ApiUser, "full_name">) =>
     apiFetch<ApiUser>("/users/me", { method: "PATCH", body: JSON.stringify(payload) }),

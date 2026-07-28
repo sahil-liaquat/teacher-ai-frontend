@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Sparkles, XCircle, Search, X } from "lucide-react";
-import { backendApi, Board, Book, ClassItem } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Loader2, PanelsTopLeft, Sparkles, XCircle, Search, X } from "lucide-react";
+import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { DashboardBannerHeader } from "@/components/dashboard-banner-header";
 import { PastelIconTile } from "@/components/pastel-icon-tile";
@@ -358,7 +359,7 @@ export default function TeacherTextbooksPage() {
           {loadingBooks ? (
             <LibrarySkeleton label="Loading textbooks..." />
           ) : subjectGroups.length ? (
-            subjectGroups.map((group) => <SubjectShelf key={group.subject} subject={group.subject} books={group.books} />)
+            subjectGroups.map((group) => <SubjectShelf key={group.subject} subject={group.subject} books={group.books} boardId={selectedBoardId || ""} classId={selectedClass.id} />)
           ) : (
             <EmptyState
               title={searchQuery ? "No textbooks found" : "No subjects found"}
@@ -435,7 +436,7 @@ function ClassCard({ cls, onSelect }: { cls: ClassItem; onSelect: () => void }) 
   );
 }
 
-function SubjectShelf({ subject, books }: { subject: string; books: Book[] }) {
+function SubjectShelf({ subject, books, boardId, classId }: { subject: string; books: Book[]; boardId: string; classId: string }) {
   const readyCount = books.filter((book) => book.is_ingested).length;
 
   return (
@@ -455,35 +456,85 @@ function SubjectShelf({ subject, books }: { subject: string; books: Book[] }) {
       </div>
       <div className="grid gap-2">
         {books.map((book) => (
-          <BookRow key={book.id} book={book} />
+          <BookRow key={book.id} book={book} boardId={boardId} classId={classId} />
         ))}
       </div>
     </article>
   );
 }
 
-function BookRow({ book }: { book: Book }) {
+function BookRow({ book, boardId, classId }: { book: Book; boardId: string; classId: string }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [startingChapterId, setStartingChapterId] = useState<string | null>(null);
+
+  async function toggleBook() {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+    if (!nextOpen || chapters.length || loading || !book.is_ingested) return;
+    setLoading(true);
+    setError("");
+    try {
+      setChapters(await backendApi.chaptersByBook(book.id));
+    } catch (reason) {
+      setError(getErrorMessage(reason, "Could not load chapters."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function startWorkspace(chapter: Chapter) {
+    setStartingChapterId(chapter.id);
+    try {
+      const workspace = await backendApi.createTeachingWorkspace({
+        board_id: boardId,
+        class_id: classId,
+        book_id: book.id,
+        chapter_id: chapter.id,
+        topics: [{ title: chapter.chapter_title }],
+      });
+      const topic = workspace.topics.find((item) => item.is_current) || workspace.topics[0];
+      router.push(topic ? `/dashboard/my-workspace/topic/${encodeURIComponent(workspace.id)}/${encodeURIComponent(topic.id)}` : "/dashboard/my-workspace");
+    } catch (reason) {
+      toast({ title: "Workspace could not be started", description: getErrorMessage(reason, "Please try again."), variant: "error" });
+    } finally {
+      setStartingChapterId(null);
+    }
+  }
+
   return (
-    <div className="group flex items-center gap-3 rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-3 shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef6ff] text-[#3b82f6]">
-        <BookOpen className="h-5 w-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black leading-5 text-teachpad-ink">{book.title}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full bg-teachpad-tag px-2 py-0.5 text-xs font-bold text-teachpad-muted">{book.subject || "General"}</span>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold",
-              book.is_ingested ? "bg-[#e5ffc6] text-[#3d7b0f]" : "bg-[#fff0bf] text-[#b97800]"
-            )}
-          >
-            {book.is_ingested ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-            {book.is_ingested ? "Ready" : "Pending"}
-          </span>
+    <div className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:border-blue-100 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
+      <button type="button" onClick={() => void toggleBook()} disabled={!book.is_ingested} className="group flex w-full items-center gap-3 p-3 text-left disabled:cursor-not-allowed">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef6ff] text-[#3b82f6]"><BookOpen className="h-5 w-5" /></div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-black leading-5 text-teachpad-ink">{book.title}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-teachpad-tag px-2 py-0.5 text-xs font-bold text-teachpad-muted">{book.subject || "General"}</span>
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold", book.is_ingested ? "bg-[#e5ffc6] text-[#3d7b0f]" : "bg-[#fff0bf] text-[#b97800]")}>
+              {book.is_ingested ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}{book.is_ingested ? "Ready" : "Pending"}
+            </span>
+          </div>
         </div>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-teachpad-muted transition group-hover:translate-x-0.5 group-hover:text-teachpad-blue" />
+        {loading ? <Loader2 className="h-4 w-4 animate-spin text-blue-500" /> : <ChevronRight className={cn("h-4 w-4 shrink-0 text-teachpad-muted transition group-hover:text-teachpad-blue", open && "rotate-90")} />}
+      </button>
+      {open ? (
+        <div className="border-t border-slate-100 bg-white/80 p-2">
+          {error ? <p className="px-2 py-3 text-xs font-bold text-rose-600">{error}</p> : null}
+          {!loading && !error && !chapters.length ? <p className="px-2 py-3 text-xs font-semibold text-slate-500">No chapters are available for this book yet.</p> : null}
+          <div className="space-y-1">
+            {chapters.map((chapter) => (
+              <div key={chapter.id} className="flex flex-col gap-2 rounded-xl px-3 py-2.5 transition hover:bg-blue-50/60 sm:flex-row sm:items-center sm:justify-between">
+                <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-800">Chapter {chapter.chapter_number}: {chapter.chapter_title}</span><span className="mt-0.5 block text-[10px] font-semibold text-slate-400">Open a saved teaching workspace for this chapter.</span></span>
+                <button type="button" disabled={startingChapterId === chapter.id} onClick={() => void startWorkspace(chapter)} className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-50 px-3 text-[10px] font-black text-violet-700 hover:bg-violet-100 disabled:opacity-60">{startingChapterId === chapter.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PanelsTopLeft className="h-3.5 w-3.5" />}Start Workspace</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

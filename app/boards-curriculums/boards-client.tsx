@@ -150,7 +150,7 @@ function HeroSection() {
           className="mt-5 max-w-xl text-base font-semibold leading-7 text-slate-600 sm:text-lg sm:leading-8"
         >
           Explore the boards and curriculums supported by TeachPad. Create textbook-grounded lesson plans, worksheets,
-          presentations, and quizzes based on your selected curriculum.
+          presentations, and assessment questions based on your selected curriculum.
         </motion.p>
 
         <motion.div variants={staggerItem} className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -330,7 +330,7 @@ function GroundingSection() {
             <h2 className="text-2xl font-black text-slate-950">How curriculum grounding works</h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
               TeachPad uses the selected board, class, subject, textbook, and chapter to generate classroom-ready content.
-              This helps teachers create lesson plans, worksheets, presentations, and quizzes that stay aligned with the actual
+              This helps teachers create lesson plans, worksheets, presentations, and assessment questions that stay aligned with the actual
               textbook instead of producing generic AI output.
             </p>
           </div>

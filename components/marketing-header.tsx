@@ -156,7 +156,7 @@ export function MarketingHeader({ active }: { active?: string }) {
         <nav aria-label="Mobile navigation" className="border-t border-slate-200 bg-white px-4 py-3 shadow-[0_18px_36px_rgba(15,23,42,0.08)] lg:hidden">
           <div className="mx-auto grid max-w-7xl gap-2">
             <Link href="/" aria-label="teachpad.in home" onClick={() => setMenuOpen(false)} className="mb-2 inline-flex w-fit">
-              <Image src="/assets/teachpad-logo.png" alt="TeachPad.in" width={1385} height={279} className="h-auto w-44" priority={false} />
+              <Image src="/assets/teachpad-logo.png" alt="TeachPad.in" width={1385} height={279} quality={100} className="h-auto w-44" priority={false} />
             </Link>
             {navItems.map((item) => {
               const isActive = activeKey === item.key;
@@ -203,6 +203,6 @@ export function MarketingHeader({ active }: { active?: string }) {
 
 function TeachPadLogo() {
   return (
-    <Image src="/assets/teachpad-logo.png" alt="TeachPad.in" width={1385} height={279} className="h-auto w-24 min-[390px]:w-32 sm:w-44" priority />
+    <Image src="/assets/teachpad-logo.png" alt="TeachPad.in" width={1385} height={279} quality={100} className="h-auto w-24 min-[390px]:w-32 sm:w-44" priority />
   );
 }

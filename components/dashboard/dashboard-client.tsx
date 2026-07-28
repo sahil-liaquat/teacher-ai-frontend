@@ -26,12 +26,13 @@ import {
   GraduationCap,
   CalendarDays
 } from "lucide-react";
-import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser, type LessonPlanDashboardSummary } from "@/lib/api";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, getToken, type ApiUser } from "@/lib/api";
 import { getTeacherFirstName } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DashboardMyClasses } from "@/components/dashboard/my-classes-section";
 
 const statCards = [
   { label: "Lesson Planner", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
@@ -96,7 +97,7 @@ const ALL_QUICK_ACCESS_OPTIONS = [
   { id: "lesson-planner", title: "Lesson Planner", desc: "Create detailed, curriculum-aligned lesson plans.", href: "/dashboard/lesson-plans/new", icon: BookOpen, tone: "blue" },
   { id: "worksheet-generator", title: "Worksheet Generator", desc: "Generate printable worksheets with answers.", href: "/dashboard/worksheets/new", icon: ClipboardCheck, tone: "green" },
   { id: "notes-generator", title: "Notes Generator", desc: "Create textbook-grounded chapter notes and key terms.", href: "/dashboard/notes-generator", icon: NotebookPen, tone: "red" },
-  { id: "saved-resources", title: "Saved Resources", desc: "Access your saved lessons, worksheets, and resources.", href: "/dashboard/recent-generations", icon: FolderOpen, tone: "orange" },
+  { id: "saved-resources", title: "Saved Resources", desc: "Access your saved lessons, worksheets, and resources.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
   { id: "classroom-tools", title: "Classroom Tools", desc: "Use tools like notes, worksheets, and more.", href: "/dashboard/classroom-tools", icon: Sparkles, tone: "blue" },
   { id: "explore-resources", title: "Explore Resources", desc: "Find high-quality teaching resources and materials.", href: "/dashboard/resources", icon: FolderOpen, tone: "orange" },
   { id: "presentation-generator", title: "Presentation Generator", desc: "Turn any topic into a clean classroom slide deck.", href: "/dashboard/presentation-generator", icon: Presentation, tone: "pink" },
@@ -512,7 +513,7 @@ export default function DashboardClient() {
     const originalStatCards = [
       { label: "Lesson Plans Created", fallback: "0", sub: "Total", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans" },
       { label: "Worksheets Created", fallback: "0", sub: "Total", icon: ClipboardCheck, tone: "green", href: "/dashboard/worksheets" },
-      { label: "Saved Resources", fallback: "0", sub: "Total", icon: FolderOpen, tone: "orange", href: "/dashboard/recent-generations" },
+      { label: "Saved Resources", fallback: "0", sub: "Total", icon: FolderOpen, tone: "orange", href: "/dashboard/resources" },
       { label: "Monthly Generations", fallback: "0", sub: `Used in ${currentMonthName}`, icon: CalendarDays, tone: "pink", href: "/dashboard/billing" }
     ];
 
@@ -541,15 +542,6 @@ export default function DashboardClient() {
             </h1>
             <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
           </div>
-          {sidebarLayout !== "expanded" && (
-            <div className="hidden h-12 w-[190px] shrink-0 items-center justify-end sm:flex sm:h-14 sm:w-[230px] lg:w-[260px]">
-              <img
-                src="/assets/teachpad-logo.png"
-                alt="Teachpad"
-                className="h-auto max-h-10 w-full object-contain object-right sm:max-h-11"
-              />
-            </div>
-          )}
         </header>
 
         {/* Original Grid of 4 cards (stats-first, launching tools) */}
@@ -783,6 +775,8 @@ export default function DashboardClient() {
           </div>
         </section>
 
+        <DashboardMyClasses />
+
         {/* Original Quick Access */}
         <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm mb-16">
           <div className="mb-3 flex items-center justify-between">
@@ -826,16 +820,6 @@ export default function DashboardClient() {
 
   return (
     <div className="mx-auto flex flex-col w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
-      {sidebarLayout !== "expanded" && (
-        <header className="mx-auto hidden lg:flex w-full max-w-[1240px] items-center justify-end px-4 py-2">
-          <img
-            src="/assets/teachpad-logo.png"
-            alt="Teachpad"
-            className="h-auto max-h-9 w-auto object-contain"
-          />
-        </header>
-      )}
-
       {/* Center Stage Greeting */}
       <div className="flex flex-col items-center text-center mt-4 mb-4 px-4 sm:mt-12 sm:mb-8">
         <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-[25px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
@@ -1038,6 +1022,8 @@ export default function DashboardClient() {
           </div>
         </div>
       </section>
+
+      <DashboardMyClasses />
 
       <section className="mx-auto w-full max-w-[1240px] rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
         <div className="mb-3 flex items-center justify-between">
@@ -1444,15 +1430,6 @@ function formatNumber(value: number | undefined, fallback: string) {
   return new Intl.NumberFormat("en-IN").format(value);
 }
 
-function countItemsThisMonth(items: Array<{ created_at?: string; updated_at?: string }>) {
-  const now = new Date();
-  return items.filter((item) => {
-    const created = parseItemDate(item);
-    if (!created) return false;
-    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
-  }).length;
-}
-
 function formatHours(hours: number) {
   return Number.isInteger(hours) ? String(hours) : hours.toFixed(1);
 }
@@ -1515,18 +1492,4 @@ function parseItemDate(item: { created_at?: string; updated_at?: string }) {
   if (!raw) return null;
   const parsed = new Date(raw);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-async function loadLessonPlanDashboardSummary(): Promise<LessonPlanDashboardSummary> {
-  try {
-    return await backendApi.lessonPlanSummary();
-  } catch {
-    const lessonPlans = await backendApi.lessonPlans(0, 100);
-    const items = lessonPlans.items || [];
-    return {
-      total: lessonPlans.total ?? items.length,
-      monthly_total: countItemsThisMonth(items),
-      recent: items.slice(0, 5).map(({ user_id, plan, ...item }) => item),
-    };
-  }
 }

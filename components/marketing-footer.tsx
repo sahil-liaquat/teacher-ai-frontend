@@ -20,6 +20,7 @@ export function MarketingFooter() {
           alt="TeachPad"
           width={1261}
           height={252}
+          quality={100}
           className="h-auto w-full max-w-6xl"
           priority={false}
         />

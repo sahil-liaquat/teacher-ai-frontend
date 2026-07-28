@@ -39,6 +39,7 @@ export function ErrorPageShell({
             alt="TeachPad.in"
             width={1385}
             height={279}
+            quality={100}
             className="h-auto w-36 sm:w-44"
             priority
           />

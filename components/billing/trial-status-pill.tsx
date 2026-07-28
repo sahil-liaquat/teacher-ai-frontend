@@ -28,7 +28,7 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
  * Drives off the real backend `BillingMe` values: status is one of
  * trialing|active|comped|past_due|canceled|free (NOT "trial"/"cancelled").
  */
-export function TrialStatusPill() {
+export function TrialStatusPill({ placement = "content" }: { placement?: "content" | "header" }) {
   const pathname = usePathname();
   const { data, isLoading, isError } = useBilling();
 
@@ -66,7 +66,7 @@ export function TrialStatusPill() {
   }
 
   return (
-    <div className="mb-4 flex justify-end">
+    <div className={cn(placement === "content" && "mb-4 flex justify-end")}>
       <Link
         href="/dashboard/billing"
         aria-label={`${label}. ${cta}.`}

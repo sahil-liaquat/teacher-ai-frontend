@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const siteUrl = "https://teachpad.in";
 const siteTitle = "TeachPad | AI Lesson Plans & Worksheets for Teachers";
-const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, quizzes, and classroom activities in seconds with TeachPad AI.";
+const siteDescription = "Create textbook-based lesson plans, worksheets, notes, presentations, assessment questions, and classroom activities in seconds with TeachPad AI.";
 const previewImage = "/landing/teachpad-main-hero-centered.png";
 
 const structuredData = [

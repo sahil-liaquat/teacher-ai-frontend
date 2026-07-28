@@ -138,6 +138,15 @@ export async function downloadPptx(deck: PresentationDeck) {
     const imageData = imageDataMap.get(slideIndex) ?? "";
     const bullets = slideBullets(slide);
 
+    if (deck.includeSpeakerNotes) {
+      const noteSections = [slide.speakerNote.trim()];
+      if (slideIndex === 0 && deck.teacherNotes.length) {
+        noteSections.push(`Presentation-wide teaching guidance:\n${deck.teacherNotes.map((note) => `• ${note}`).join("\n")}`);
+      }
+      const notes = noteSections.filter(Boolean).join("\n\n");
+      if (notes) pptSlide.addNotes(notes);
+    }
+
     pptSlide.background = { color: "FFFFFF" };
     pptSlide.addShape(pptx.ShapeType.rect, {
       x: 0,

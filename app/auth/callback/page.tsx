@@ -8,7 +8,7 @@ import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
-import { getSupabaseClient } from "@/lib/supabase";
+import { clearSupabaseOAuthStorage, getSupabaseClient } from "@/lib/supabase";
 
 type State =
   | { status: "checking" }
@@ -70,10 +70,9 @@ export default function GoogleCallbackPage() {
           refresh_token: session.refresh_token,
         });
 
-        // Intentionally silent: local sign-out is best-effort cleanup before redirect.
-        // Drop the transient Supabase session (fire-and-forget — the local storage
-        // cleanup is unconditional; no need to wait on the server round-trip).
-        void supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        // The app owns these tokens now. Remove only the SDK's duplicate local
+        // copy; signing out here would revoke the refresh token we just saved.
+        clearSupabaseOAuthStorage();
 
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
         setState({ status: "success", user });

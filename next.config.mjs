@@ -47,12 +47,38 @@ const nextConfig = {
   turbopack: {
     root: __dirname
   },
+  webpack(config, { webpack }) {
+    // pptxgenjs exposes optional Node-only export paths even when it is bundled
+    // for the browser. Webpack tries to resolve those `node:` imports while
+    // compiling Saved Resources, which crashes the development server before
+    // the browser-safe code can run.
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      https: false,
+      os: false,
+      path: false
+    };
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^node:(fs|https)$/
+      })
+    );
+    return config;
+  },
   async redirects() {
-    return signupRedirectSources.map((source) => ({
-      source,
-      destination: "/signup",
-      permanent: false
-    }));
+    return [
+      ...signupRedirectSources.map((source) => ({
+        source,
+        destination: "/signup",
+        permanent: false
+      })),
+      {
+        source: "/dashboard/reports",
+        destination: "/dashboard",
+        permanent: false
+      }
+    ];
   }
 };
 

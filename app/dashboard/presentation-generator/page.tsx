@@ -19,6 +19,7 @@ import { TrialGatePill } from "@/components/billing/trial-gate-pill";
 import { filteredBooksForSubject, findMatchingBoard, findMatchingChapter, findMatchingClass, findMatchingSubject, getCompanionPrefillContext, hasCompanionPrefill } from "@/lib/companion-prefill";
 import { cn } from "@/lib/utils";
 import { HistoryBackButton } from "@/components/history-back-button";
+import { appendWorkspaceContext } from "@/lib/workspace/routes.ts";
 
 const slideCountOptions = [6, 8, 10, 12] as const;
 const languageOptions = ["English", "Hindi", "Urdu"] as const;
@@ -426,7 +427,7 @@ export default function PresentationGeneratorPage() {
         localStorage.setItem(`presentation_theme_${generation.id}`, theme);
       }
       toast({ title: "Presentation generated", description: "Opening the output page." });
-      router.push(`/dashboard/presentation-generator/output?id=${generation.id}&new=true`);
+      router.push(appendWorkspaceContext(`/dashboard/presentation-generator/output?id=${generation.id}&new=true`, searchParams));
     } catch (error) {
       if (getErrorCode(error) === "TRIAL_MANDATE_REQUIRED") {
         setGenerating(false);
@@ -784,7 +785,7 @@ export default function PresentationGeneratorPage() {
                 <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your presentation.</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { key: "includeSpeakerNotes" as const, label: "Speaker Notes", desc: "Teacher talking points for each slide", icon: FileText, color: "teal" },
+                    { key: "includeSpeakerNotes" as const, label: "Teacher Notes", desc: "Teacher talking points for each slide", icon: FileText, color: "teal" },
                     { key: "includeActivities" as const, label: "Activities", desc: "Classroom activities embedded in slides", icon: Users, color: "amber" },
                     { key: "includeQuiz" as const, label: "Quiz Questions", desc: "Quick check-ins throughout the deck", icon: ClipboardCheck, color: "purple" },
                     { key: "includeImages" as const, label: "Images", desc: "Visuals to support each slide", icon: Monitor, color: "sky" },
