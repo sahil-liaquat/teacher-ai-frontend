@@ -1,9 +1,4 @@
-import {
-  UnsupportedScriptError,
-  containsComplexScript,
-  sanitizeFilename,
-  textOf,
-} from "@/lib/lesson-plan-export";
+import { sanitizeFilename, textOf } from "@/lib/lesson-plan-export";
 
 type PdfTextOptions = {
   size?: number;
@@ -23,10 +18,6 @@ const LIGHT_BLUE: RGB = [0.93, 0.97, 1];
 const LINE_BLUE: RGB = [0.72, 0.85, 1];
 
 export async function downloadWorksheetPdf(output: any) {
-  // Same limitation as the lesson-plan writer: Devanagari and Nastaliq are
-  // stripped by cleanPdfText, so a Hindi/Urdu worksheet would download blank.
-  // Fail loudly; the caller routes these to the browser's print pipeline.
-  if (containsComplexScript(output)) throw new UnsupportedScriptError();
   const metadata = output?.metadata || {};
   const title = textOf(output?.title || metadata.topic || "worksheet");
   const filename = `${sanitizeFilename(`worksheet-${title}-${metadata.grade || "class"}`)}.pdf`;

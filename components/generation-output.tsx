@@ -20,7 +20,6 @@ import {
   MoreVertical,
   PanelRight,
   Pencil,
-  Printer,
   Save,
   Share2,
   Target,
@@ -44,12 +43,6 @@ import {
   localizeWorksheetSectionTitle,
   type WorksheetLocale,
 } from "@/lib/worksheet-localization";
-import {
-  canUseBuiltInPdf,
-  getLessonPlanLocale,
-  sectionTitle,
-  type LessonPlanLocale,
-} from "@/lib/lesson-plan-localization";
 
 const differentiationLabels: Record<string, string> = {
   below_grade_level: "Below Grade Level",
@@ -61,12 +54,8 @@ const differentiationLabels: Record<string, string> = {
   challenge: "Challenge"
 };
 
-function formatDifferentiationLabel(key: string, locale?: LessonPlanLocale) {
-  return (
-    locale?.differentiation[key] ||
-    differentiationLabels[key] ||
-    key.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
-  );
+function formatDifferentiationLabel(key: string) {
+  return differentiationLabels[key] || key.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 type LessonDocumentMetadata = {
@@ -104,9 +93,7 @@ function LessonPlanDocumentOutput({
   isSaved,
   onSaveToLibrary,
   highlightedSections = [],
-  onClearHighlights,
-  language,
-  languageSwitcher
+  onClearHighlights
 }: {
   output: any;
   onSave?: (output?: any) => void;
@@ -118,23 +105,18 @@ function LessonPlanDocumentOutput({
   onSaveToLibrary?: () => void;
   highlightedSections?: string[];
   onClearHighlights?: () => void;
-  /** Language of `output`. Falls back to sniffing the plan's script. */
-  language?: string;
-  /** Rendered above the document; the page owns translate state, not this component. */
-  languageSwitcher?: ReactNode;
 }) {
   const [documentOutput, setDocumentOutput] = useState(output);
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNew = searchParams.get("new") === "true";
-  const locale = useMemo(() => getLessonPlanLocale(language, output), [language, output]);
-  const [draft, setDraft] = useState<LessonDocumentDraft>(() => buildLessonDocumentDraft(output, locale));
+  const [draft, setDraft] = useState<LessonDocumentDraft>(() => buildLessonDocumentDraft(output));
   const chapterDisplay = formatChapterDisplay(draft.metadata);
 
   useEffect(() => {
     setDocumentOutput(output);
-    setDraft(buildLessonDocumentDraft(output, locale));
-  }, [output, locale]);
+    setDraft(buildLessonDocumentDraft(output));
+  }, [output]);
 
   function commitDraft(nextDraft: LessonDocumentDraft, notifyChange = true) {
     setDraft(nextDraft);
@@ -150,19 +132,6 @@ function LessonPlanDocumentOutput({
 
   function saveDocument() {
     onSave?.(applyLessonDocumentDraft(documentOutput, draft));
-  }
-
-  // The built-in PDF writer strips non-ASCII text, so Devanagari and Nastaliq
-  // plans would download blank. Hand those to the browser's print pipeline, which
-  // shapes both scripts correctly and offers "Save as PDF".
-  const usePrintForPdf = !canUseBuiltInPdf(locale);
-
-  function handleExport() {
-    if (usePrintForPdf) {
-      window.print();
-      return;
-    }
-    onExport?.(documentOutput);
   }
 
   return (
@@ -184,16 +153,16 @@ function LessonPlanDocumentOutput({
             {isNew ? (
               <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#1677ff]">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                {locale.backToInputs}
+                Back to Inputs
               </Link>
             ) : (
               <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#1677ff]">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                {locale.back}
+                Back
               </button>
             )}
             <span>/</span>
-            <span>{locale.lessonPlanOutput}</span>
+            <span>Lesson Plan Output</span>
           </div>
           <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">
             {chapterDisplay}
@@ -203,32 +172,26 @@ function LessonPlanDocumentOutput({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => onCopy?.(documentOutput)}><Copy className="h-4 w-4" /> {locale.copy}</Button>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            {usePrintForPdf ? <Printer className="h-4 w-4" /> : <Download className="h-4 w-4" />}{" "}
-            {usePrintForPdf ? locale.print : locale.pdf}
-          </Button>
-          {onShare ? <Button variant="outline" size="sm" onClick={() => onShare(documentOutput)}><Share2 className="h-4 w-4" /> {locale.share}</Button> : null}
+          <Button variant="outline" size="sm" onClick={() => onCopy?.(documentOutput)}><Copy className="h-4 w-4" /> Copy</Button>
+          <Button variant="outline" size="sm" onClick={() => onExport?.(documentOutput)}><Download className="h-4 w-4" /> PDF</Button>
+          {onShare ? <Button variant="outline" size="sm" onClick={() => onShare(documentOutput)}><Share2 className="h-4 w-4" /> Share</Button> : null}
           {onSaveToLibrary && (
             isSaved ? (
               <Button variant="outline" size="sm" disabled className="bg-emerald-50 text-emerald-700 border-emerald-200 cursor-not-allowed">
-                <Check className="h-4 w-4 text-emerald-600" /> {locale.saved}
+                <Check className="h-4 w-4 text-emerald-600" /> Saved
               </Button>
             ) : (
               <Button variant="outline" size="sm" onClick={onSaveToLibrary}>
-                <Save className="h-4 w-4" /> {locale.save}
+                <Save className="h-4 w-4" /> Save
               </Button>
             )
           )}
         </div>
         </div>
-        {languageSwitcher ? <div className="mt-4">{languageSwitcher}</div> : null}
       </div>
 
       <div className="min-w-0">
         <article
-          dir={locale.dir}
-          lang={locale.localeCode}
           onClick={highlightedSections.length ? onClearHighlights : undefined}
           className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]"
         >
@@ -240,11 +203,11 @@ function LessonPlanDocumentOutput({
                   value={draft.title}
                   onCommit={(title) => updateDraft((current) => ({ ...current, title }))}
                   className="break-words text-[20px] font-black leading-tight tracking-normal text-black sm:text-[24px]"
-                  ariaLabel={locale.documentTitle}
+                  ariaLabel="Document title"
                   singleLine
                 />
                 <p className="mt-2 break-words text-sm font-bold leading-6 text-slate-700">
-                  <span>{locale.chapter}: </span>
+                  <span>Chapter: </span>
                   <EditableText
                     as="span"
                     value={formatChapterDisplay(draft.metadata)}
@@ -254,9 +217,9 @@ function LessonPlanDocumentOutput({
                   />
                 </p>
                 <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
-                  {formatMetadataValue(draft.metadata.board || locale.board)}
+                  {formatMetadataValue(draft.metadata.board || "Board")}
                   <span> • </span>
-                  {formatMetadataValue(draft.metadata.book || locale.textbook)}
+                  {formatMetadataValue(draft.metadata.book || "Textbook")}
                 </p>
               </div>
             </div>
@@ -709,7 +672,7 @@ function InlineTextArea({
   );
 }
 
-function buildLessonDocumentDraft(output: any, locale: LessonPlanLocale): LessonDocumentDraft {
+function buildLessonDocumentDraft(output: any): LessonDocumentDraft {
   const plan = normalizeLessonPlan(output);
   const metadata = plan.metadata || {};
   const schoolFormatEnabled = Boolean(output?.school_format?.requested && output?.school_format?.available);
@@ -734,7 +697,7 @@ function buildLessonDocumentDraft(output: any, locale: LessonPlanLocale): Lesson
   const selectedComponents = arrayOf(output?.selected_components);
   const schoolFormatSections = schoolFormatEnabled ? normalizeSchoolFormatSections(output?.school_format_sections) : [];
   const differentiationLines = Object.entries(plan.differentiation || {}).map(
-    ([key, value]) => `${formatDifferentiationLabel(key, locale)}: ${value}`
+    ([key, value]) => `${formatDifferentiationLabel(key)}: ${value}`
   );
   const assessmentLines = plan.assessments.map((item, index) => {
     const marks = item.marks ? ` (${item.marks} mark${Number(item.marks) === 1 ? "" : "s"})` : "";
@@ -755,22 +718,22 @@ function buildLessonDocumentDraft(output: any, locale: LessonPlanLocale): Lesson
       board: textOf(metadata.board)
     },
     sections: schoolFormatSections.length ? schoolFormatSections : filterLessonSectionsBySelection([
-      { key: "objectives", title: sectionTitle(locale, "objectives"), lines: plan.objectives },
-      { key: "previous_knowledge", title: sectionTitle(locale, "previous_knowledge"), lines: valueToLines(output?.previous_knowledge) },
-      { key: "key_points", title: sectionTitle(locale, "key_points"), lines: keyPoints },
-      { key: "materials", title: sectionTitle(locale, "materials"), lines: plan.materials },
-      { key: "introduction", title: sectionTitle(locale, "introduction"), lines: valueToLines(output?.introduction_warm_up) },
-      { key: "explanation", title: sectionTitle(locale, "explanation"), lines: valueToLines(output?.explanation_of_concept) },
-      { key: "lesson_flow", title: sectionTitle(locale, "lesson_flow"), outline: plan.outline },
-      { key: "activity", title: sectionTitle(locale, "activity"), lines: valueToLines(output?.classroom_activity || output?.activity || plan.classroomActivity) },
-      { key: "main_details", title: sectionTitle(locale, "main_details"), lines: valueToLines(output?.chemical_properties_main_concept_details) },
-      { key: "daily_life", title: sectionTitle(locale, "daily_life"), lines: valueToLines(output?.uses_daily_life_connection) },
-      { key: "differentiation", title: sectionTitle(locale, "differentiation"), lines: differentiationLines },
-      { key: "assessment", title: sectionTitle(locale, "assessment"), lines: assessmentLines },
-      { key: "board_work", title: sectionTitle(locale, "board_work"), lines: valueToLines(output?.board_work) },
-      { key: "homework", title: sectionTitle(locale, "homework"), lines: valueToLines(plan.homework) },
-      { key: "learning_outcome", title: sectionTitle(locale, "learning_outcome"), lines: valueToLines(output?.learning_outcome) },
-      { key: "teacher_notes", title: sectionTitle(locale, "teacher_notes"), lines: valueToLines(plan.teacherNotes) }
+      { key: "objectives", title: "Learning Objectives", lines: plan.objectives },
+      { key: "previous_knowledge", title: "Previous Knowledge", lines: valueToLines(output?.previous_knowledge) },
+      { key: "key_points", title: "Key Textbook Points", lines: keyPoints },
+      { key: "materials", title: "Teaching-Learning Materials", lines: plan.materials },
+      { key: "introduction", title: "Introduction / Warm-up", lines: valueToLines(output?.introduction_warm_up) },
+      { key: "explanation", title: "Explanation of Concept", lines: valueToLines(output?.explanation_of_concept) },
+      { key: "lesson_flow", title: "Lesson Flow", outline: plan.outline },
+      { key: "activity", title: "Classroom Activity", lines: valueToLines(output?.classroom_activity || output?.activity || plan.classroomActivity) },
+      { key: "main_details", title: "Main Concept Details", lines: valueToLines(output?.chemical_properties_main_concept_details) },
+      { key: "daily_life", title: "Daily Life Connection", lines: valueToLines(output?.uses_daily_life_connection) },
+      { key: "differentiation", title: "Differentiation", lines: differentiationLines },
+      { key: "assessment", title: "Assessment", lines: assessmentLines },
+      { key: "board_work", title: "Board Work", lines: valueToLines(output?.board_work) },
+      { key: "homework", title: "Homework", lines: valueToLines(plan.homework) },
+      { key: "learning_outcome", title: "Learning Outcome", lines: valueToLines(output?.learning_outcome) },
+      { key: "teacher_notes", title: "Teacher Notes", lines: valueToLines(plan.teacherNotes) }
     ], selectedComponents)
   };
 }
@@ -955,9 +918,7 @@ export function LessonPlanOutput({
   onCopy,
   onShare,
   isSaved,
-  onSaveToLibrary,
-  language,
-  languageSwitcher
+  onSaveToLibrary
 }: {
   output: any;
   streamKey?: string;
@@ -971,10 +932,8 @@ export function LessonPlanOutput({
   onShare?: (output?: any) => void;
   isSaved?: boolean;
   onSaveToLibrary?: () => void;
-  language?: string;
-  languageSwitcher?: ReactNode;
 }) {
-  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} isSaved={isSaved} onSaveToLibrary={onSaveToLibrary} highlightedSections={highlightedSections} onClearHighlights={onClearHighlights} language={language} languageSwitcher={languageSwitcher} />;
+  return <LessonPlanDocumentOutput output={output} onSave={onSave} onChange={onChange} onExport={onExport} onCopy={onCopy} onShare={onShare} isSaved={isSaved} onSaveToLibrary={onSaveToLibrary} highlightedSections={highlightedSections} onClearHighlights={onClearHighlights} />;
 
   const metadata = output?.metadata || {};
   const outline = output?.lesson_outline || [];
@@ -1283,17 +1242,6 @@ export function WorksheetOutput({
     { key: "Answer Key", label: locale.answerKey },
     { key: "Marking Scheme", label: locale.markingScheme }
   ];
-  // The PDF writer strips Devanagari and Nastaliq, so Hindi/Urdu worksheets went
-  // out blank. Hand those to the browser's print pipeline, which shapes both.
-  const worksheetUsesPrint = locale.language !== "English";
-
-  function handleWorksheetExport() {
-    if (worksheetUsesPrint) {
-      window.print();
-      return;
-    }
-    onExport?.(worksheetOutput);
-  }
 
   useEffect(() => {
     setWorksheetOutput(output);
@@ -1385,9 +1333,7 @@ export function WorksheetOutput({
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> {locale.copy}</Button>
-            <Button variant="outline" size="sm" onClick={handleWorksheetExport}>
-              {worksheetUsesPrint ? <Printer className="h-4 w-4" /> : <Download className="h-4 w-4" />} {locale.printOrPdf}
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => onExport?.(worksheetOutput)}><Download className="h-4 w-4" /> PDF</Button>
             <Button variant="outline" size="sm" onClick={() => onShare?.(worksheetOutput)}><Share2 className="h-4 w-4" /> {locale.share}</Button>
             {onSaveToLibrary && (
               isSaved ? (

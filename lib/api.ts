@@ -388,26 +388,6 @@ export type LessonPlan = {
   is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
-  /** Every language this lesson can be read in, primary first. */
-  available_languages?: string[];
-  /** The language `plan` itself is written in. */
-  primary_language?: string;
-};
-
-/**
- * One language variant of a lesson plan. `plan` has the same shape as
- * LessonPlan.plan, so it renders through the same component.
- */
-export type LessonPlanTranslation = {
-  id: string;
-  lesson_plan_id: string;
-  language: string;
-  plan: any;
-  model?: string | null;
-  /** The source plan was edited after this translation — offer a re-translate. */
-  is_stale: boolean;
-  created_at?: string;
-  updated_at?: string;
 };
 
 export type LessonPlanDashboardSummary = {
@@ -1947,26 +1927,6 @@ export const backendApi = {
   deleteLessonPlan: (id: string) => apiFetch<void>(`/lesson-plans/${id}`, { method: "DELETE" }),
   tweakLessonPlan: (id: string, instruction: string) =>
     apiFetch<any>(`/lesson-plans/${id}/tweak`, { method: "POST", body: JSON.stringify({ instruction }) }),
-  /**
-   * Translate a lesson plan into another language, or re-translate a stale one.
-   * Spends a generation — only call when the language is missing or the teacher
-   * explicitly asked to re-translate. Deliberately not wrapped in
-   * withGenerationEvent: a translation should not re-trigger the feedback prompt
-   * for a tool the teacher has already rated.
-   */
-  translateLessonPlan: (id: string, language: string) =>
-    apiFetch<LessonPlanTranslation>(`/lesson-plans/${id}/translations`, {
-      method: "POST",
-      body: JSON.stringify({ language }),
-    }),
-  /** Read an existing language variant. Free — no generation is spent. */
-  lessonPlanTranslation: (id: string, language: string) =>
-    apiFetch<LessonPlanTranslation>(`/lesson-plans/${id}/translations/${encodeURIComponent(language)}`),
-  updateLessonPlanTranslation: (id: string, language: string, plan: any) =>
-    apiFetch<LessonPlanTranslation>(`/lesson-plans/${id}/translations/${encodeURIComponent(language)}`, {
-      method: "PATCH",
-      body: JSON.stringify({ plan }),
-    }),
   analyseLessonPlanWithElif: (id: string, force = false) =>
     apiFetch<ElifAnalysis>(`/lesson-plans/${id}/assistant/analyse?force=${force}`, { method: "POST" }),
   chatWithElif: (id: string, message: string, conversationHistory: Array<{ role: "user" | "assistant"; content: string }>) =>

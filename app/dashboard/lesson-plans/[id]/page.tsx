@@ -1,23 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { backendApi, normalizeLessonPlanForOutput } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { LessonPlanChatbotPanel } from "@/components/lesson-plan-chatbot-panel";
 import { LessonPlanOutput } from "@/components/generation-output";
-import { LessonPlanLanguageSwitcher } from "@/components/lesson-plan-language-switcher";
 import { isResourceSaved, saveResourceId } from "@/lib/saved-resources";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { downloadLessonPlanPdf, formatLessonPlanForClipboard, shareLessonPlan } from "@/lib/lesson-plan-export";
 import { WorkspaceReturnBanner } from "@/components/workspace/workspace-return-banner";
-import {
-  LESSON_PLAN_LANGUAGE_LABELS,
-  isLessonPlanLanguage,
-  type LessonPlanLanguage,
-} from "@/lib/lesson-plan-localization";
 
 export default function LessonPlanDetailPage() {
   const params = useParams<{ id: string }>();
@@ -28,27 +22,7 @@ export default function LessonPlanDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [highlightedSections, setHighlightedSections] = useState<string[]>([]);
-  const [activeLanguage, setActiveLanguage] = useState<LessonPlanLanguage | null>(null);
-  const [translatingLanguage, setTranslatingLanguage] = useState<LessonPlanLanguage | null>(null);
   const lesson = useQuery({ queryKey: ["lesson-plan", params.id], queryFn: () => backendApi.lessonPlan(params.id) });
-
-  const primaryLanguage: LessonPlanLanguage = isLessonPlanLanguage(lesson.data?.primary_language)
-    ? lesson.data.primary_language
-    : "English";
-  const availableLanguages = lesson.data?.available_languages?.length
-    ? lesson.data.available_languages
-    : [primaryLanguage];
-  // Until the plan loads we don't know its primary language, so hold off.
-  const currentLanguage: LessonPlanLanguage = activeLanguage ?? primaryLanguage;
-  const isViewingTranslation = Boolean(lesson.data) && currentLanguage !== primaryLanguage;
-
-  // Variant bodies are fetched on demand — the list endpoint only carries the
-  // available languages, so opening a plan stays as cheap as it was.
-  const translation = useQuery({
-    queryKey: ["lesson-plan-translation", params.id, currentLanguage],
-    queryFn: () => backendApi.lessonPlanTranslation(params.id, currentLanguage),
-    enabled: isViewingTranslation,
-  });
 
   useEffect(() => {
     if (lesson.data) {
@@ -87,15 +61,7 @@ export default function LessonPlanDetailPage() {
       }
     }
   };
-
-  // The plan being displayed: an in-flight edit, else the active language's body.
-  // Spread the lesson row under the variant's plan so normalizeLessonPlanForOutput
-  // still has its metadata fallbacks (class_name, subject, chapter_name, topic)
-  // for any field the translated metadata happens to be missing.
-  const savedOutput = isViewingTranslation
-    ? (translation.data ? normalizeLessonPlanForOutput({ ...lesson.data, plan: translation.data.plan }) : null)
-    : (lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null);
-  const output = editedOutput || savedOutput;
+  const output = editedOutput || (lesson.data ? normalizeLessonPlanForOutput(lesson.data) : null);
 
   useEffect(() => {
     if (!editedOutput) return;
@@ -109,57 +75,10 @@ export default function LessonPlanDetailPage() {
 
   async function saveEditedOutput(currentOutput = output, options: { silent?: boolean } = {}) {
     if (!currentOutput) return;
-    // Edits follow whichever language is on screen: a variant PATCHes its own row
-    // so it never overwrites the primary plan.
-    if (isViewingTranslation) {
-      const saved = await backendApi.updateLessonPlanTranslation(params.id, currentLanguage, currentOutput);
-      queryClient.setQueryData(["lesson-plan-translation", params.id, currentLanguage], saved);
-    } else {
-      const saved = await backendApi.updateLessonPlan(params.id, { plan: currentOutput });
-      queryClient.setQueryData(["lesson-plan", params.id], saved);
-    }
+    const saved = await backendApi.updateLessonPlan(params.id, { plan: currentOutput });
+    queryClient.setQueryData(["lesson-plan", params.id], saved);
     if (!options.silent) {
       toast({ title: "Changes saved", description: "Your edits are saved in this lesson plan.", variant: "success" });
-    }
-  }
-
-  function selectLanguage(language: LessonPlanLanguage) {
-    if (language === currentLanguage) return;
-    // Flush any pending edit before switching, or the debounce would fire after
-    // the language changed and write it to the wrong row.
-    if (editedOutput) {
-      void saveEditedOutput(editedOutput, { silent: true }).catch(() => setAutoSaveFailed(true));
-    }
-    setEditedOutput(null);
-    setHighlightedSections([]);
-    setActiveLanguage(language);
-  }
-
-  async function translateTo(language: LessonPlanLanguage) {
-    if (translatingLanguage) return;
-    setTranslatingLanguage(language);
-    try {
-      if (editedOutput) {
-        await saveEditedOutput(editedOutput, { silent: true });
-        setEditedOutput(null);
-      }
-      const created = await backendApi.translateLessonPlan(params.id, language);
-      queryClient.setQueryData(["lesson-plan-translation", params.id, language], created);
-      await queryClient.invalidateQueries({ queryKey: ["lesson-plan", params.id] });
-      setActiveLanguage(language);
-      toast({
-        title: `${LESSON_PLAN_LANGUAGE_LABELS[language]} version ready`,
-        description: "Same lesson plan, translated. Edit it here and it saves separately.",
-        variant: "success",
-      });
-    } catch (err) {
-      toast({
-        title: "Translation failed",
-        description: getErrorMessage(err, "Couldn't translate this lesson plan. Please try again."),
-        variant: "error",
-      });
-    } finally {
-      setTranslatingLanguage(null);
     }
   }
 
@@ -191,21 +110,6 @@ export default function LessonPlanDetailPage() {
       toast({ title: "Save failed", description: getErrorMessage(err, "Try again"), variant: "error" });
     }
   }
-
-  const languageSwitcher = useMemo(
-    () => (
-      <LessonPlanLanguageSwitcher
-        availableLanguages={availableLanguages}
-        activeLanguage={currentLanguage}
-        translatingLanguage={translatingLanguage}
-        isActiveStale={isViewingTranslation && Boolean(translation.data?.is_stale)}
-        onSelect={selectLanguage}
-        onTranslate={translateTo}
-      />
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [availableLanguages.join("|"), currentLanguage, translatingLanguage, isViewingTranslation, translation.data?.is_stale]
-  );
 
   if (lesson.isLoading) return <LessonPlanLoadingState />;
   if (lesson.error) return <Card><CardContent className="p-7"><h1 className="text-2xl font-black text-red-700">Could not open lesson plan</h1><p className="mt-2 text-sm text-[#6d6f78]">{getErrorMessage(lesson.error, "Couldn't open this lesson plan.")}</p></CardContent></Card>;
@@ -242,26 +146,20 @@ export default function LessonPlanDetailPage() {
             </button>
           </div>
         ) : null}
-        {isViewingTranslation && translation.isLoading ? (
-          <LessonPlanLoadingState />
-        ) : (
-          <LessonPlanOutput
-            output={output}
-            streamKey={`lesson-plan-${params.id}-${currentLanguage}`}
-            streamSpeed="fast"
-            language={currentLanguage}
-            languageSwitcher={languageSwitcher}
-            highlightedSections={highlightedSections}
-            onClearHighlights={() => setHighlightedSections([])}
-            onCopy={copy}
-            onExport={exportPdf}
-            onShare={share}
-            onSave={editsSaved}
-            onChange={setEditedOutput}
-            isSaved={isSaved}
-            onSaveToLibrary={handleSaveToLibrary}
-          />
-        )}
+        <LessonPlanOutput
+          output={output}
+          streamKey={`lesson-plan-${params.id}`}
+          streamSpeed="fast"
+          highlightedSections={highlightedSections}
+          onClearHighlights={() => setHighlightedSections([])}
+          onCopy={copy}
+          onExport={exportPdf}
+          onShare={share}
+          onSave={editsSaved}
+          onChange={setEditedOutput}
+          isSaved={isSaved}
+          onSaveToLibrary={handleSaveToLibrary}
+        />
       </div>
       <LessonPlanChatbotPanel
         lessonPlanId={params.id}
