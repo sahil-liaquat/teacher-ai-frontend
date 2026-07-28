@@ -508,21 +508,6 @@ export type WorksheetGeneration = {
   is_saved?: boolean;
   created_at?: string;
   updated_at?: string;
-  /** Languages this worksheet can be read in, primary first. */
-  available_languages?: string[];
-  primary_language?: string;
-};
-
-export type WorksheetTranslation = {
-  id: string;
-  worksheet_id: string;
-  language: string;
-  output_json: any;
-  model?: string | null;
-  /** The source worksheet was edited after this translation — offer a re-translate. */
-  is_stale: boolean;
-  created_at?: string;
-  updated_at?: string;
 };
 
 export type NotesGeneratePayload = {
@@ -2021,25 +2006,6 @@ export const backendApi = {
   worksheet: (id: string) => apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`),
   updateWorksheet: (id: string, payload: Partial<Pick<WorksheetGeneration, "output_json">>) =>
     apiFetch<WorksheetGeneration>(`/generate/worksheet/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  /**
-   * Translate a worksheet into another language. Spends a generation slot.
-   *
-   * Deliberately NOT wrapped in withGenerationEvent: this is the same worksheet
-   * in another language, so it must not re-trigger the first-use feedback popup.
-   */
-  translateWorksheet: (id: string, language: string) =>
-    apiFetch<WorksheetTranslation>(`/generate/worksheet/${id}/translations`, {
-      method: "POST",
-      body: JSON.stringify({ language }),
-    }),
-  /** Read an existing language variant. Free — no generation is spent. */
-  worksheetTranslation: (id: string, language: string) =>
-    apiFetch<WorksheetTranslation>(`/generate/worksheet/${id}/translations/${encodeURIComponent(language)}`),
-  updateWorksheetTranslation: (id: string, language: string, output_json: any) =>
-    apiFetch<WorksheetTranslation>(`/generate/worksheet/${id}/translations/${encodeURIComponent(language)}`, {
-      method: "PATCH",
-      body: JSON.stringify({ output_json }),
-    }),
   createNotes: (payload: NotesGeneratePayload) =>
     withGenerationEvent("notes", apiFetch<NotesGeneration>("/notes", { method: "POST", body: JSON.stringify(payload) })),
   notesGenerations: (skip = 0, limit = 20) => apiFetch<PaginatedResponse<NotesGeneration>>(`/notes?skip=${skip}&limit=${limit}`),

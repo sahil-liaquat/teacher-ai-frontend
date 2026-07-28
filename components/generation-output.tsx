@@ -38,10 +38,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  WORKSHEET_LOCALES,
   getWorksheetInstructions,
   getWorksheetLocale,
-  isWorksheetLanguage,
   localizeMarks,
   localizeWorksheetSectionTitle,
   type WorksheetLocale,
@@ -1255,9 +1253,7 @@ export function WorksheetOutput({
   onCopy,
   onShare,
   isSaved,
-  onSaveToLibrary,
-  language,
-  languageSwitcher
+  onSaveToLibrary
 }: {
   output: any;
   tab: string;
@@ -1269,10 +1265,6 @@ export function WorksheetOutput({
   onShare?: (output?: any) => void;
   isSaved?: boolean;
   onSaveToLibrary?: () => void;
-  /** The language being viewed. Wins over sniffing the output. */
-  language?: string;
-  /** Rendered above the tabs — one language drives all three. */
-  languageSwitcher?: ReactNode;
 }) {
   const [worksheetOutput, setWorksheetOutput] = useState(output);
   const router = useRouter();
@@ -1280,9 +1272,7 @@ export function WorksheetOutput({
   const isNew = searchParams.get("new") === "true";
   const metadata = worksheetOutput?.metadata || {};
   const sections = worksheetOutput?.student_worksheet?.sections || [];
-  const locale = isWorksheetLanguage(language)
-    ? WORKSHEET_LOCALES[language]
-    : getWorksheetLocale(worksheetOutput);
+  const locale = getWorksheetLocale(worksheetOutput);
   const title = worksheetOutput?.title || locale.worksheet;
   const grade = metadata.grade ? `${locale.gradePrefix} ${metadata.grade}` : metadata.class || locale.classDefault;
   const subject = metadata.subject || locale.subject;
@@ -1412,8 +1402,6 @@ export function WorksheetOutput({
             )}
           </div>
         </div>
-
-        {languageSwitcher ? <div className="mt-4">{languageSwitcher}</div> : null}
 
         <div className="mt-4 flex rounded-[12px] border border-[#dffafa] bg-[#f8ffff] p-1">
           {worksheetTabs.map((item) => (

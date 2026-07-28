@@ -273,17 +273,6 @@ export function sectionTitle(locale: LessonPlanLocale, key: string, fallback?: s
   return locale.sections[key] || fallback || ENGLISH_SECTIONS[key] || key;
 }
 
-/** The shared TranslationLanguageSwitcher's strings, in the language being read. */
-export function lessonPlanSwitcherStrings(language?: unknown) {
-  const locale = getLessonPlanLocale(language);
-  return {
-    language: locale.language_,
-    translating: locale.translating,
-    sourceEdited: locale.sourceEdited,
-    retranslate: locale.retranslate
-  };
-}
-
 /**
  * Whether the built-in PDF writer can render this text.
  *
