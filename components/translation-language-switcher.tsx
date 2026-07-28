@@ -1,7 +1,9 @@
 "use client";
 
-import { Check, Globe, Loader2, Plus, RefreshCw } from "lucide-react";
+import { Check, Globe, Loader2, Lock, Plus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parsePairing } from "@/lib/localized-text";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** The four strings the control needs, in the language currently being read. */
 export type TranslationSwitcherStrings = {
@@ -10,6 +12,7 @@ export type TranslationSwitcherStrings = {
   translating: string;
   sourceEdited: string;
   retranslate: string;
+  refresh: string;
 };
 
 type TranslationLanguageSwitcherProps<Language extends string> = {
@@ -27,8 +30,12 @@ type TranslationLanguageSwitcherProps<Language extends string> = {
   strings: TranslationSwitcherStrings;
   /** Text direction of the language being read, so the row mirrors for Urdu. */
   dir?: "ltr" | "rtl";
+  /** Variants that cannot be created yet, with the reason shown on hover. */
+  blockedLanguages?: { name: string; reason: string }[];
   onSelect: (language: Language) => void;
   onTranslate: (language: Language) => void;
+  /** Create a variant that costs no generation (a bilingual pairing). */
+  onCompose?: (language: string) => void;
 };
 
 /**
@@ -52,8 +59,10 @@ export function TranslationLanguageSwitcher<Language extends string>({
   isActiveStale,
   strings,
   dir = "ltr",
+  blockedLanguages,
   onSelect,
   onTranslate,
+  onCompose,
 }: TranslationLanguageSwitcherProps<Language>) {
   const available = new Set(availableLanguages);
   const isTranslating = Boolean(translatingLanguage);
@@ -96,7 +105,7 @@ export function TranslationLanguageSwitcher<Language extends string>({
               key={language}
               type="button"
               disabled={isTranslating}
-              onClick={() => onTranslate(language)}
+              onClick={() => (parsePairing(language) && onCompose ? onCompose(language) : onTranslate(language))}
               className={cn(
                 "inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed px-3.5 text-sm font-semibold transition-all duration-200",
                 isPending
@@ -119,6 +128,27 @@ export function TranslationLanguageSwitcher<Language extends string>({
             </button>
           );
         })}
+        {(blockedLanguages ?? []).map(({ name, reason }) => (
+          <Tooltip key={name}>
+            <TooltipTrigger asChild>
+              {/*
+                aria-disabled, never `disabled`: a disabled element emits no
+                pointer events, so the tooltip would never fire — which is the
+                exact failure this chip exists to explain.
+              */}
+              <button
+                type="button"
+                aria-disabled="true"
+                onClick={(event) => event.preventDefault()}
+                className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-xl border border-dashed border-teachpad-cardBorder bg-white px-3.5 text-sm font-semibold text-teachpad-muted opacity-60"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                {name}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{reason}</TooltipContent>
+          </Tooltip>
+        ))}
       </div>
 
       {isActiveStale ? (
@@ -127,11 +157,15 @@ export function TranslationLanguageSwitcher<Language extends string>({
           <button
             type="button"
             disabled={isTranslating}
-            onClick={() => onTranslate(activeLanguage)}
+            onClick={() =>
+              parsePairing(activeLanguage) && onCompose
+                ? onCompose(activeLanguage)
+                : onTranslate(activeLanguage)
+            }
             className="inline-flex items-center gap-1 font-black text-amber-900 underline disabled:opacity-50"
           >
             <RefreshCw className={cn("h-3 w-3", isTranslating && "animate-spin")} />
-            {strings.retranslate}
+            {parsePairing(activeLanguage) ? strings.refresh : strings.retranslate}
           </button>
         </div>
       ) : null}

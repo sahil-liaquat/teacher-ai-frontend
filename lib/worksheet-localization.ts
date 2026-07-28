@@ -21,6 +21,7 @@ export type WorksheetLocale = {
   translating: string;
   sourceEdited: string;
   retranslate: string;
+  refresh: string;
   backToInputs: string;
   back: string;
   copy: string;
@@ -71,6 +72,7 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
     translating: "Translating…",
     sourceEdited: "The original was edited after this translation.",
     retranslate: "Re-translate",
+    refresh: "Refresh",
     backToInputs: "Back to Inputs",
     back: "Back",
     copy: "Copy",
@@ -119,6 +121,7 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
     translating: "अनुवाद हो रहा है…",
     sourceEdited: "इस अनुवाद के बाद मूल कार्यपत्रक बदला गया है।",
     retranslate: "फिर से अनुवाद करें",
+    refresh: "ताज़ा करें",
     backToInputs: "इनपुट पर वापस",
     back: "वापस",
     copy: "कॉपी करें",
@@ -167,6 +170,7 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
     translating: "ترجمہ ہو رہا ہے…",
     sourceEdited: "اس ترجمے کے بعد اصل ورک شیٹ تبدیل ہو چکی ہے۔",
     retranslate: "دوبارہ ترجمہ کریں",
+    refresh: "تازہ کریں",
     backToInputs: "معلومات پر واپس",
     back: "واپس",
     copy: "نقل کریں",
@@ -224,7 +228,8 @@ export function worksheetSwitcherStrings(language?: unknown) {
     language: locale.language_,
     translating: locale.translating,
     sourceEdited: locale.sourceEdited,
-    retranslate: locale.retranslate
+    retranslate: locale.retranslate,
+    refresh: locale.refresh
   };
 }
 
