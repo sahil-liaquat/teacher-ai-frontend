@@ -240,7 +240,10 @@ function PlanCard({
 }) {
   const { is_pro, status, plan_code, price_inr, access_until, gift, paid_starts_at } = data;
 
-  const isGift = gift.granted;
+  // gift.granted is a permanent historical marker on the backend, not "still
+  // active" — gate on is_pro here too so an expired gift doesn't hide the
+  // upgrade CTA or paint the plan card as active Pro.
+  const isGift = gift.granted && is_pro;
   const isTrial = status === "trialing";
   const hasUpgraded = Boolean(paid_starts_at);
   // An un-upgraded trial is presented purely as an upgrade surface: no trial
