@@ -140,7 +140,51 @@ export function formatLessonPlanForClipboard(output: any, includeAnswerKey = tru
   return lines.filter(Boolean).join("\n");
 }
 
+/**
+ * Scripts the built-in PDF writer cannot render: Devanagari (Hindi) and
+ * Perso-Arabic (Urdu).
+ *
+ * `cleanPdfText` strips every non-ASCII character, so these come out blank. And
+ * embedding a font would not be enough — both need complex-script shaping
+ * (conjuncts, Nastaliq ligatures) that a glyph-per-codepoint writer cannot do.
+ */
+// Explicit escapes, not literal glyphs, so the ranges stay auditable. Arabic
+// Presentation Forms-B stops at FE FC deliberately: U+FEFF is the byte-order mark
+// and would false-positive on otherwise-ASCII content.
+const COMPLEX_SCRIPT_PATTERN = new RegExp(
+  "[" +
+  "\\u0900-\\u097F" +   // Devanagari
+  "\\uA8E0-\\uA8FF" +   // Devanagari Extended
+  "\\u0600-\\u06FF" +   // Arabic
+  "\\u0750-\\u077F" +   // Arabic Supplement
+  "\\u08A0-\\u08FF" +   // Arabic Extended-A
+  "\\uFB50-\\uFDFF" +   // Arabic Presentation Forms-A
+  "\\uFE70-\\uFEFC" +   // Arabic Presentation Forms-B
+  "]"
+);
+
+export class UnsupportedScriptError extends Error {
+  constructor() {
+    super(
+      "This document contains Hindi or Urdu text that the PDF download can't render. " +
+      "Use Print / Save as PDF instead — your browser renders both scripts correctly."
+    );
+    this.name = "UnsupportedScriptError";
+  }
+}
+
+export function containsComplexScript(value: unknown): boolean {
+  try {
+    return COMPLEX_SCRIPT_PATTERN.test(JSON.stringify(value ?? ""));
+  } catch {
+    return false;
+  }
+}
+
 export async function downloadLessonPlanPdf(output: any, includeAnswerKey = false) {
+  // Fail loudly rather than handing the teacher a document with its content
+  // silently deleted. Callers route non-Latin plans to the print path instead.
+  if (containsComplexScript(output)) throw new UnsupportedScriptError();
   const plan = normalizeLessonPlan(output);
   const filename = `${sanitizeFilename(`lesson-plan-${plan.title}-${plan.metadata.class || "class"}`)}.pdf`;
   const blob = createLessonPlanPdfBlob(output, includeAnswerKey);

@@ -12,6 +12,7 @@ export type WorksheetLocale = {
   backToInputs: string;
   back: string;
   copy: string;
+  printOrPdf: string;
   share: string;
   save: string;
   saved: string;
@@ -58,6 +59,7 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     backToInputs: "Back to Inputs",
     back: "Back",
     copy: "Copy",
+    printOrPdf: "PDF",
     share: "Share",
     save: "Save",
     saved: "Saved",
@@ -102,6 +104,7 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     backToInputs: "इनपुट पर वापस",
     back: "वापस",
     copy: "कॉपी करें",
+    printOrPdf: "प्रिंट / पीडीएफ",
     share: "साझा करें",
     save: "सहेजें",
     saved: "सहेजा गया",
@@ -146,6 +149,7 @@ const locales: Record<WorksheetLanguage, WorksheetLocale> = {
     backToInputs: "معلومات پر واپس",
     back: "واپس",
     copy: "نقل کریں",
+    printOrPdf: "پرنٹ / پی ڈی ایف",
     share: "شیئر کریں",
     save: "محفوظ کریں",
     saved: "محفوظ شدہ",
