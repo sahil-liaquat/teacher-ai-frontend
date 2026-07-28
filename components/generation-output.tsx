@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createElement, useEffect, useMemo, useState } from "react";
-import type { ComponentType, FocusEvent, KeyboardEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -28,6 +28,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { OutputMetadataFooter } from "@/components/output-metadata-footer";
+import { EditableText } from "@/components/editable-text";
+import { BilingualText } from "@/components/bilingual-text";
 import {
   arrayOf,
   normalizeLessonPlan,
@@ -36,6 +38,7 @@ import {
 } from "@/lib/lesson-plan-export";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { parsePairing, type LocalizedText } from "@/lib/localized-text";
 import {
   WORKSHEET_LOCALES,
   getWorksheetInstructions,
@@ -43,6 +46,7 @@ import {
   isWorksheetLanguage,
   localizeMarks,
   localizeWorksheetSectionTitle,
+  type WorksheetLanguage,
   type WorksheetLocale,
 } from "@/lib/worksheet-localization";
 
@@ -587,50 +591,6 @@ function formatChapterDisplay(metadata: Partial<LessonDocumentMetadata>) {
   if (!chapter) return "Chapter not provided";
   if (/^chapter\s+\d+/i.test(chapter)) return chapter;
   return chapterNumber ? `Chapter ${chapterNumber}: ${chapter}` : chapter;
-}
-
-function EditableText({
-  as = "span",
-  value,
-  onCommit,
-  className,
-  ariaLabel,
-  singleLine = false
-}: {
-  as?: keyof HTMLElementTagNameMap;
-  value: string;
-  onCommit: (value: string) => void;
-  className?: string;
-  ariaLabel: string;
-  singleLine?: boolean;
-}) {
-  const editableClassName = [
-    "min-w-0 rounded-[6px] outline-none ring-[#1677ff]/20 transition focus:bg-[#f8ffff] focus:ring-2",
-    className || ""
-  ].join(" ");
-
-  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (!singleLine || event.key !== "Enter") return;
-    event.preventDefault();
-    event.currentTarget.blur();
-  }
-
-  return createElement(
-    as,
-    {
-      contentEditable: true,
-      suppressContentEditableWarning: true,
-      role: "textbox",
-      "aria-label": ariaLabel,
-      className: editableClassName,
-      onBlur: (event: FocusEvent<HTMLElement>) => {
-        const text = event.currentTarget.innerText.replace(/\u00a0/g, " ").trim();
-        if (text !== value) onCommit(text);
-      },
-      onKeyDown: handleKeyDown
-    },
-    value
-  );
 }
 
 function InlineTextInput({
@@ -1242,6 +1202,11 @@ export function WorksheetOutput({
   const locale = isWorksheetLanguage(language)
     ? WORKSHEET_LOCALES[language]
     : getWorksheetLocale(worksheetOutput);
+  const pairing = parsePairing(metadata.language);
+  const languages = {
+    primary: (pairing?.primary ?? locale.language) as WorksheetLanguage,
+    secondary: pairing?.secondary as WorksheetLanguage | undefined
+  };
   const title = worksheetOutput?.title || locale.worksheet;
   const grade = metadata.grade ? `${locale.gradePrefix} ${metadata.grade}` : metadata.class || locale.classDefault;
   const subject = metadata.subject || locale.subject;
@@ -1411,9 +1376,10 @@ export function WorksheetOutput({
 
           <section className="mt-5 rounded-[8px] border border-slate-200 p-3 font-sans sm:p-4">
             <h3 className="text-xs font-black uppercase tracking-wide text-slate-900 sm:text-sm">{locale.instructions}</h3>
-            <EditableText
+            <BilingualText
               as="p"
-              value={getWorksheetInstructions(worksheetOutput, locale)}
+              value={worksheetOutput?.instructions || getWorksheetInstructions(worksheetOutput, locale)}
+              languages={languages}
               onCommit={(instructions) => updateWorksheet((current) => ({ ...current, instructions }))}
               className="mt-1 break-words text-[13px] font-semibold italic leading-6 text-slate-700 sm:text-sm"
               ariaLabel="Worksheet instructions"
@@ -1424,9 +1390,10 @@ export function WorksheetOutput({
             {sections.map((section: any, sectionIndex: number) => (
               <section key={`${section.section_title}-${sectionIndex}`} className="break-inside-avoid">
                 <div className="mb-4 flex min-w-0 items-start gap-3 border-b border-slate-200 pb-2 font-sans">
-                  <EditableText
+                  <BilingualText
                     as="h3"
-                    value={localizeWorksheetSectionTitle(section.section_title, locale, sectionIndex)}
+                    value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, sectionIndex)}
+                    languages={languages}
                     onCommit={(section_title) => updateSection(sectionIndex, (currentSection) => ({ ...currentSection, section_title }))}
                     className="min-w-0 flex-1 break-words text-[15px] font-black leading-6 text-black sm:text-[17px]"
                     ariaLabel={`Worksheet section ${sectionIndex + 1} title`}
@@ -1442,6 +1409,7 @@ export function WorksheetOutput({
                       index={index}
                       questionType={section.question_type || section.section_title}
                       locale={locale}
+                      languages={languages}
                       onQuestionChange={(nextQuestion) => updateQuestion(sectionIndex, index, () => nextQuestion)}
                     />
                   ))}
@@ -1467,9 +1435,9 @@ export function WorksheetOutput({
           />
         </article>
       ) : tab === "Answer Key" ? (
-        <AnswerKeyView items={worksheetOutput?.answer_key || []} onItemsChange={updateAnswerKey} locale={locale} />
+        <AnswerKeyView items={worksheetOutput?.answer_key || []} onItemsChange={updateAnswerKey} locale={locale} languages={languages} />
       ) : (
-        <MarkingSchemeView items={worksheetOutput?.marking_scheme || []} onItemsChange={updateMarkingScheme} locale={locale} />
+        <MarkingSchemeView items={worksheetOutput?.marking_scheme || []} onItemsChange={updateMarkingScheme} locale={locale} languages={languages} />
       )}
     </div>
   );
@@ -1480,12 +1448,14 @@ function WorksheetQuestion({
   index,
   questionType,
   locale,
+  languages,
   onQuestionChange
 }: {
   question: any;
   index: number;
   questionType: string;
   locale: WorksheetLocale;
+  languages: { primary: WorksheetLanguage; secondary?: WorksheetLanguage };
   onQuestionChange?: (question: any) => void;
 }) {
   const left = question.left_column || question.left || [];
@@ -1493,14 +1463,14 @@ function WorksheetQuestion({
   const options = question.options || [];
   const lineCount = Number(question.answer_lines || defaultAnswerLines(questionType));
 
-  function updateOption(optionIndex: number, value: string) {
+  function updateOption(optionIndex: number, value: LocalizedText) {
     onQuestionChange?.({
       ...question,
       options: options.map((option: string, index: number) => index === optionIndex ? value : option)
     });
   }
 
-  function updateMatchColumn(column: "left_column" | "right_column", values: string[], rowIndex: number, value: string) {
+  function updateMatchColumn(column: "left_column" | "right_column", values: string[], rowIndex: number, value: LocalizedText) {
     onQuestionChange?.({
       ...question,
       [column]: values.map((item: string, index: number) => index === rowIndex ? value : item),
@@ -1512,9 +1482,10 @@ function WorksheetQuestion({
     <div className="min-w-0 break-inside-avoid">
       <p className="break-words font-serif text-[14px] leading-6 sm:text-[15px]">
         <span className="mr-3 font-sans font-black">{index + 1}.</span>
-        <EditableText
+        <BilingualText
           as="span"
           value={question.question || ""}
+          languages={languages}
           onCommit={(value) => onQuestionChange?.({ ...question, question: value })}
           ariaLabel={`Worksheet question ${index + 1}`}
         />
@@ -1524,9 +1495,10 @@ function WorksheetQuestion({
           {options.map((option: string, optionIndex: number) => (
             <span key={`${option}-${optionIndex}`} className="flex min-w-0 items-start gap-2">
               <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-slate-300" />
-              <EditableText
+              <BilingualText
                 as="span"
                 value={option}
+                languages={languages}
                 onCommit={(value) => updateOption(optionIndex, value)}
                 className="min-w-0 break-words"
                 ariaLabel={`Question ${index + 1} option ${optionIndex + 1}`}
@@ -1546,18 +1518,20 @@ function WorksheetQuestion({
                 <tr key={`${item}-${rowIndex}`} className="border-t border-slate-200">
                   <td className="break-words border-r border-slate-200 px-3 py-2">
                     <span>{rowIndex + 1}. </span>
-                    <EditableText
+                    <BilingualText
                       as="span"
                       value={item}
+                      languages={languages}
                       onCommit={(value) => updateMatchColumn("left_column", left, rowIndex, value)}
                       ariaLabel={`Question ${index + 1} column A row ${rowIndex + 1}`}
                     />
                   </td>
                   <td className="break-words px-3 py-2">
                     <span>{String.fromCharCode(65 + rowIndex)}. </span>
-                    <EditableText
+                    <BilingualText
                       as="span"
                       value={right[rowIndex] || ""}
+                      languages={languages}
                       onCommit={(value) => updateMatchColumn("right_column", right, rowIndex, value)}
                       ariaLabel={`Question ${index + 1} column B row ${rowIndex + 1}`}
                     />
@@ -1592,7 +1566,17 @@ function defaultAnswerLines(questionType: string) {
   return 1;
 }
 
-function AnswerKeyView({ items, onItemsChange, locale }: { items: any[]; onItemsChange?: (items: any[]) => void; locale: WorksheetLocale }) {
+function AnswerKeyView({
+  items,
+  onItemsChange,
+  locale,
+  languages
+}: {
+  items: any[];
+  onItemsChange?: (items: any[]) => void;
+  locale: WorksheetLocale;
+  languages: { primary: WorksheetLanguage; secondary?: WorksheetLanguage };
+}) {
   function updateSection(index: number, value: any) {
     onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
   }
@@ -1603,9 +1587,10 @@ function AnswerKeyView({ items, onItemsChange, locale }: { items: any[]; onItems
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
-            <EditableText
+            <BilingualText
               as="h3"
-              value={localizeWorksheetSectionTitle(section.section_title, locale, index)}
+              value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, index)}
+              languages={languages}
               onCommit={(section_title) => updateSection(index, { ...section, section_title })}
               className="font-black text-[#25262b]"
               ariaLabel={`Answer key section ${index + 1}`}
@@ -1615,9 +1600,10 @@ function AnswerKeyView({ items, onItemsChange, locale }: { items: any[]; onItems
               {(section.answers || []).map((answer: any, answerIndex: number) => (
                 <li key={answerIndex} className="flex gap-2">
                   <span className="font-black">{answerIndex + 1}.</span>
-                  <EditableText
+                  <BilingualText
                     as="span"
-                    value={String(answer)}
+                    value={answer}
+                    languages={languages}
                     onCommit={(value) => updateSection(index, {
                       ...section,
                       answers: (section.answers || []).map((item: any, itemIndex: number) => itemIndex === answerIndex ? value : item)
@@ -1634,7 +1620,17 @@ function AnswerKeyView({ items, onItemsChange, locale }: { items: any[]; onItems
   );
 }
 
-function MarkingSchemeView({ items, onItemsChange, locale }: { items: any[]; onItemsChange?: (items: any[]) => void; locale: WorksheetLocale }) {
+function MarkingSchemeView({
+  items,
+  onItemsChange,
+  locale,
+  languages
+}: {
+  items: any[];
+  onItemsChange?: (items: any[]) => void;
+  locale: WorksheetLocale;
+  languages: { primary: WorksheetLanguage; secondary?: WorksheetLanguage };
+}) {
   function updateSection(index: number, value: any) {
     onItemsChange?.(items.map((item, itemIndex) => itemIndex === index ? value : item));
   }
@@ -1646,9 +1642,10 @@ function MarkingSchemeView({ items, onItemsChange, locale }: { items: any[]; onI
         {items.map((section, index) => (
           <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <EditableText
+              <BilingualText
                 as="h3"
-                value={localizeWorksheetSectionTitle(section.section_title, locale, index)}
+                value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, index)}
+                languages={languages}
                 onCommit={(section_title) => updateSection(index, { ...section, section_title })}
                 className="font-black text-[#25262b]"
                 ariaLabel={`Marking scheme section ${index + 1}`}
@@ -1660,9 +1657,10 @@ function MarkingSchemeView({ items, onItemsChange, locale }: { items: any[]; onI
               {(section.guidelines || []).map((item: any, itemIndex: number) => (
                 <li key={itemIndex} className="flex gap-2">
                   <span className="font-black text-[#25262b]">•</span>
-                  <EditableText
+                  <BilingualText
                     as="span"
-                    value={String(item)}
+                    value={item}
+                    languages={languages}
                     onCommit={(value) => updateSection(index, {
                       ...section,
                       guidelines: (section.guidelines || []).map((guideline: any, guidelineIndex: number) => guidelineIndex === itemIndex ? value : guideline)
