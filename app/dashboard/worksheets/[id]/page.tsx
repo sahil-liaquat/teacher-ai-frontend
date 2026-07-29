@@ -281,7 +281,10 @@ export default function WorksheetDetailPage() {
         translatingLanguage={translatingLanguage}
         isActiveStale={isViewingTranslation && Boolean(translation?.is_stale)}
         strings={worksheetSwitcherStrings(currentLanguage)}
-        dir={WORKSHEET_LOCALES[currentLanguage].dir}
+        // A pairing (e.g. "English + Hindi") isn't a WORKSHEET_LOCALES key — it
+        // always starts with this worksheet's own primaryLanguage, so the
+        // chrome follows that, same as generation-output.tsx's locale.
+        dir={WORKSHEET_LOCALES[isWorksheetLanguage(currentLanguage) ? currentLanguage : primaryLanguage].dir}
         blockedLanguages={blockedLanguages}
         onSelect={(language: string) => selectLanguage(language as WorksheetLanguage)}
         onTranslate={(language: string) => translateTo(language as WorksheetLanguage)}
