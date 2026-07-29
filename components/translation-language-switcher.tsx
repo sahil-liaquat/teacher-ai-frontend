@@ -3,7 +3,7 @@
 import { Check, Globe, Loader2, Lock, Plus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { parsePairing } from "@/lib/localized-text";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /** The four strings the control needs, in the language currently being read. */
 export type TranslationSwitcherStrings = {
@@ -128,27 +128,36 @@ export function TranslationLanguageSwitcher<Language extends string>({
             </button>
           );
         })}
-        {(blockedLanguages ?? []).map(({ name, reason }) => (
-          <Tooltip key={name}>
-            <TooltipTrigger asChild>
-              {/*
-                aria-disabled, never `disabled`: a disabled element emits no
-                pointer events, so the tooltip would never fire — which is the
-                exact failure this chip exists to explain.
-              */}
-              <button
-                type="button"
-                aria-disabled="true"
-                onClick={(event) => event.preventDefault()}
-                className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-xl border border-dashed border-teachpad-cardBorder bg-white px-3.5 text-sm font-semibold text-teachpad-muted opacity-60"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                {name}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{reason}</TooltipContent>
-          </Tooltip>
-        ))}
+        {(blockedLanguages ?? []).length ? (
+          // Self-contained provider: this component is rendered on dashboard
+          // pages, which sit OUTSIDE app-shell's sidebar-scoped TooltipProvider
+          // (components/app-shell.tsx only wraps the floating nav, not
+          // {children}). Nesting a provider here is a supported Radix pattern
+          // and makes this chip work regardless of what wraps it.
+          <TooltipProvider delayDuration={0} skipDelayDuration={0}>
+            {(blockedLanguages ?? []).map(({ name, reason }) => (
+              <Tooltip key={name}>
+                <TooltipTrigger asChild>
+                  {/*
+                    aria-disabled, never `disabled`: a disabled element emits no
+                    pointer events, so the tooltip would never fire — which is the
+                    exact failure this chip exists to explain.
+                  */}
+                  <button
+                    type="button"
+                    aria-disabled="true"
+                    onClick={(event) => event.preventDefault()}
+                    className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-xl border border-dashed border-teachpad-cardBorder bg-white px-3.5 text-sm font-semibold text-teachpad-muted opacity-60"
+                  >
+                    <Lock className="h-3.5 w-3.5" />
+                    {name}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{reason}</TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+        ) : null}
       </div>
 
       {isActiveStale ? (
