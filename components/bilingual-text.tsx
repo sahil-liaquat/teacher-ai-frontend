@@ -40,12 +40,12 @@ export function BilingualText({
   const lines = toLines(value, languages);
 
   if (typeof value === "object" && value !== null && !isPaired(value)) {
-    // [BILINGUAL_DEBUG] temporary, grep+delete before merge — an object that
-    // isn't a well-formed {primary, secondary} pair silently renders as an
-    // empty line (primaryText's "" fallback). This should never happen since
-    // compose_bilingual only ever produces plain strings or complete pairs.
+    // An object that isn't a well-formed {primary, secondary} pair silently
+    // renders as an empty line (primaryText's "" fallback). This should never
+    // happen since compose_bilingual only ever produces plain strings or
+    // complete pairs — this warning exists to catch a violation of that.
     // eslint-disable-next-line no-console
-    console.warn("[BILINGUAL_DEBUG] BilingualText: malformed pair-like value", { ariaLabel, value });
+    console.warn("BilingualText: malformed pair-like value", { ariaLabel, value });
   }
 
   if (!isPaired(value)) {

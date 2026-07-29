@@ -82,11 +82,6 @@ export default function WorksheetDetailPage() {
     backendApi.worksheet(params.id)
       .then((worksheet) => {
         if (cancelled) return;
-        // eslint-disable-next-line no-console -- [BILINGUAL_DEBUG] temporary, grep+delete before merge
-        console.log("[BILINGUAL_DEBUG] worksheet loaded", {
-          primary_language: (worksheet as any)?.primary_language,
-          available_languages: (worksheet as any)?.available_languages
-        });
         setGeneration(worksheet);
       })
       .catch((err) => {
@@ -227,18 +222,9 @@ export default function WorksheetDetailPage() {
   }
 
   async function composePairing(language: string) {
-    // eslint-disable-next-line no-console -- [BILINGUAL_DEBUG] temporary, grep+delete before merge
-    console.log("[BILINGUAL_DEBUG] composePairing: requesting", { worksheetId: params.id, language, availableLanguages });
     await flushPendingEdits();
     try {
       const created = await backendApi.composeWorksheetPairing(params.id, language);
-      // eslint-disable-next-line no-console -- [BILINGUAL_DEBUG] temporary, grep+delete before merge
-      console.log("[BILINGUAL_DEBUG] composePairing: received", {
-        language: created?.language,
-        isStale: created?.is_stale,
-        titleIsPair: typeof created?.output_json?.title === "object",
-        sectionsCount: created?.output_json?.student_worksheet?.sections?.length
-      });
       setTranslation(created);
       setActiveLanguage(language as WorksheetLanguage);
       setGeneration((current: any) => current ? {
@@ -249,8 +235,6 @@ export default function WorksheetDetailPage() {
       } : current);
       toast({ title: `Opened ${language}`, description: "Both languages on one paper.", variant: "success" });
     } catch (err) {
-      // eslint-disable-next-line no-console -- [BILINGUAL_DEBUG] temporary, grep+delete before merge
-      console.log("[BILINGUAL_DEBUG] composePairing: FAILED", err);
       toast({ title: "Could not build that pairing", description: getErrorMessage(err, "Try again"), variant: "error" });
     }
   }
