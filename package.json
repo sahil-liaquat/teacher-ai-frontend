@@ -9,7 +9,7 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
-    "test": "node --experimental-strip-types --test tests/workspace/*.test.ts",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts",
     "test:routes": "node scripts/smoke-routes.mjs"
   },
   "dependencies": {
