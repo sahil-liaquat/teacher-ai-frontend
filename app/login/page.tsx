@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
+import { getSafeNextPath } from "@/lib/auth-redirect";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -110,9 +111,8 @@ export default function LoginPage() {
       const user = await login(values.email, values.password);
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
       toast({ title: "Welcome!", description: user.name });
-      const next = new URLSearchParams(window.location.search).get("next");
-      const destination = next?.startsWith("/") ? next : dashboardForRole(user.role);
-      router.replace(destination);
+      const next = getSafeNextPath(new URLSearchParams(window.location.search).get("next"));
+      router.replace(next ?? dashboardForRole(user.role));
       router.refresh();
     } catch (error) {
       toast({ title: "Login failed", description: getErrorMessage(error, "Try again"), variant: "error" });
