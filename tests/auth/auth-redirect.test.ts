@@ -71,3 +71,9 @@ test("getSafeNextPath rejects a leading-tab control-character bypass", () => {
 test("getSafeNextPath rejects a leading-carriage-return control-character bypass", () => {
   assert.equal(getSafeNextPath("/\r/evil.com"), null);
 });
+
+test("getSafeNextPath rejects malformed bracket-host input instead of throwing", () => {
+  assert.equal(getSafeNextPath("//[not-valid-ipv6"), null);
+  assert.equal(getSafeNextPath("//[::1"), null);
+  assert.equal(getSafeNextPath("//[zzzz]"), null);
+});
