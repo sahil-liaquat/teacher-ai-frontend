@@ -8,6 +8,7 @@ import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
+import { getSafeNextPath } from "@/lib/auth-redirect";
 import { clearSupabaseOAuthStorage, getSupabaseClient } from "@/lib/supabase";
 
 type State =
@@ -37,8 +38,9 @@ export default function GoogleCallbackPage() {
       const params = new URLSearchParams(window.location.search);
       const errorDescription = params.get("error_description") || params.get("error");
       const code = params.get("code");
+      const next = getSafeNextPath(params.get("next"));
 
-      // Strip the code/error from the URL so it never lingers in history.
+      // Strip the code/error/next from the URL so they never linger in history.
       window.history.replaceState(null, "", window.location.pathname);
 
       if (errorDescription) {
@@ -78,7 +80,7 @@ export default function GoogleCallbackPage() {
         setState({ status: "success", user });
 
         window.setTimeout(() => {
-          router.replace(dashboardForRole(user.role));
+          router.replace(next ?? dashboardForRole(user.role));
           router.refresh();
         }, 800);
       } catch (err) {
