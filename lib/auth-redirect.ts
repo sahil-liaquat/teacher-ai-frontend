@@ -7,8 +7,10 @@
  */
 export function getSafeNextPath(value: string | null | undefined): string | null {
   if (!value) return null;
-  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return null;
-  return value;
+  if (!value.startsWith("/")) return null;
+  const url = new URL(value, "https://invalid.example");
+  if (url.origin !== "https://invalid.example") return null;
+  return url.pathname + url.search + url.hash;
 }
 
 /**

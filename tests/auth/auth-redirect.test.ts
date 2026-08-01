@@ -59,3 +59,15 @@ test("buildGoogleCallbackUrl ignores an empty-string ref", () => {
   const url = buildGoogleCallbackUrl("https://teachpad.in", { ref: "" });
   assert.equal(url, "https://teachpad.in/auth/callback");
 });
+
+test("getSafeNextPath rejects a leading-newline control-character bypass", () => {
+  assert.equal(getSafeNextPath("/\n/evil.com"), null);
+});
+
+test("getSafeNextPath rejects a leading-tab control-character bypass", () => {
+  assert.equal(getSafeNextPath("/\t/evil.com"), null);
+});
+
+test("getSafeNextPath rejects a leading-carriage-return control-character bypass", () => {
+  assert.equal(getSafeNextPath("/\r/evil.com"), null);
+});
