@@ -1,0 +1,137 @@
+.primary-shell {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 78% 8%, rgba(223, 250, 250, .74), transparent 27%),
+    radial-gradient(circle at 42% 42%, rgba(233, 225, 255, .52), transparent 35%),
+    #fbfcff;
+}
+.primary-card {
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 74%);
+  box-shadow: 0 14px 34px rgba(15,23,42,.07);
+  backdrop-filter: blur(10px);
+}
+.primary-tool-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 18px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.07);
+  transition: transform .3s ease-in-out, box-shadow .3s ease-in-out;
+}
+.primary-tool-card::before {
+  content: "";
+  position: absolute;
+  top: -2rem;
+  left: -2rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 9999px;
+  filter: blur(1rem);
+  opacity: .3;
+  pointer-events: none;
+}
+.primary-tool-card:hover {
+  transform: translateY(-.5rem);
+  box-shadow: 0 20px 46px var(--teachpad-shadowToolCard);
+}
+.primary-card-art {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 1.14 / 1;
+  overflow: hidden;
+  background: #f6f8ff;
+}
+.primary-card-art img {
+  transition: transform .3s ease-in-out;
+}
+.primary-tool-card:hover .primary-card-art img {
+  transform: scale(1.04);
+}
+.primary-journey-card,
+.primary-recent-card {
+  display: flex;
+  flex-direction: column;
+  background: white !important;
+}
+.primary-journey-card .primary-card-art {
+  margin: .65rem .65rem 0;
+  border-radius: 12px;
+}
+.primary-recent-card .primary-card-art {
+  margin: .5rem .5rem 0;
+  border-radius: 10px;
+}
+.primary-tool-card:nth-child(7n + 1) { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 74%); }
+.primary-tool-card:nth-child(7n + 1)::before { background: #bfdbfe; }
+.primary-tool-card:nth-child(7n + 2) { background: linear-gradient(135deg, #ffffff 0%, rgba(236,253,245,.7) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n + 2)::before { background: #a7f3d0; }
+.primary-tool-card:nth-child(7n + 3) { background: linear-gradient(135deg, #fffaf0 0%, rgba(255,251,235,.8) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n + 3)::before { background: #fde68a; }
+.primary-tool-card:nth-child(7n + 4) { background: linear-gradient(135deg, #ffffff 0%, rgba(253,242,248,.7) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n + 4)::before { background: #fbcfe8; }
+.primary-tool-card:nth-child(7n + 5) { background: linear-gradient(135deg, #ffffff 0%, rgba(245,243,255,.7) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n + 5)::before { background: #ddd6fe; }
+.primary-tool-card:nth-child(7n + 6) { background: linear-gradient(135deg, #f0fdff 0%, rgba(236,254,255,.7) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n + 6)::before { background: #a5f3fc; }
+.primary-tool-card:nth-child(7n) { background: linear-gradient(135deg, #ffffff 0%, rgba(255,247,237,.75) 50%, #ffffff 100%); }
+.primary-tool-card:nth-child(7n)::before { background: #fed7aa; }
+
+/* Apply the AI Tools card system to every nested Primary workspace card. */
+.primary-main .primary-card .grid > article,
+.primary-main .primary-card .grid > aside.rounded-2xl,
+.primary-main .primary-card .grid > button.rounded-2xl,
+.primary-main .primary-card .grid > div.rounded-xl,
+.primary-main .primary-card .space-y-2 > button.rounded-2xl,
+.primary-main .primary-card .space-y-3 > div.rounded-2xl,
+.primary-main .primary-card .space-y-3 > div.rounded-xl,
+.primary-main .primary-card .space-y-2 > a.rounded-xl {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.7) !important;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 74%) !important;
+  box-shadow: 0 14px 34px rgba(15,23,42,.07);
+  transition: transform .3s ease-in-out, box-shadow .3s ease-in-out, color .3s ease-in-out;
+}
+.primary-main .primary-card .grid > article::before,
+.primary-main .primary-card .grid > aside.rounded-2xl::before,
+.primary-main .primary-card .grid > button.rounded-2xl::before,
+.primary-main .primary-card .grid > div.rounded-xl::before,
+.primary-main .primary-card .space-y-2 > button.rounded-2xl::before,
+.primary-main .primary-card .space-y-3 > div.rounded-2xl::before,
+.primary-main .primary-card .space-y-3 > div.rounded-xl::before,
+.primary-main .primary-card .space-y-2 > a.rounded-xl::before {
+  content: "";
+  position: absolute;
+  left: -2rem;
+  top: -2rem;
+  height: 6rem;
+  width: 6rem;
+  border-radius: 9999px;
+  background: #bfdbfe;
+  filter: blur(1rem);
+  opacity: .3;
+  pointer-events: none;
+}
+.primary-main .primary-card .grid > :nth-child(2n),
+.primary-main .primary-card .space-y-3 > :nth-child(2n) { background: linear-gradient(135deg, #ffffff 0%, rgba(236,253,245,.7) 50%, #ffffff 100%) !important; }
+.primary-main .primary-card .grid > :nth-child(3n),
+.primary-main .primary-card .space-y-3 > :nth-child(3n) { background: linear-gradient(135deg, #fffaf0 0%, rgba(255,251,235,.8) 50%, #ffffff 100%) !important; }
+.primary-main .primary-card .grid > :nth-child(4n),
+.primary-main .primary-card .space-y-3 > :nth-child(4n) { background: linear-gradient(135deg, #ffffff 0%, rgba(253,242,248,.7) 50%, #ffffff 100%) !important; }
+.primary-main .primary-card .grid > article:hover,
+.primary-main .primary-card .grid > button.rounded-2xl:hover,
+.primary-main .primary-card .space-y-2 > button.rounded-2xl:hover,
+.primary-main .primary-card .space-y-3 > div.rounded-2xl:hover,
+.primary-main .primary-card .space-y-2 > a.rounded-xl:hover {
+  transform: translateY(-.5rem);
+  box-shadow: 0 20px 46px var(--teachpad-shadowToolCard);
+}
+.primary-hero { min-height: 122px; background: radial-gradient(circle at 70% 10%, rgba(201,247,251,.66), transparent 35%), radial-gradient(circle at 45% 85%, rgba(233,225,255,.65), transparent 30%); }
+.secondary-btn { border: 1px solid #bfdbfe; border-radius: 10px; padding: 9px 12px; color: var(--teachpad-blue); font-size: 12px; font-weight: 700; background: white; }
+.primary-embedded .primary-main { padding: 0; }
+.primary-embedded .primary-shell { background: transparent; }
+.primary-embedded .primary-hero { padding-top: .25rem; }
+@media (max-width: 1023px) { .primary-hero { min-height: 105px; } }

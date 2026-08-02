@@ -12,3 +12,7 @@ next-env.d.ts
 .DS_Store
 .env.example
 .env
+
+# TeachPad Primary printables (~900MB) — served from Cloudinary, never committed.
+# Restore locally from ../primary-assets-staging/ if you need the library to render.
+/public/primary-resources/
