@@ -16,3 +16,6 @@ next-env.d.ts
 # TeachPad Primary printables (~900MB) — served from Cloudinary, never committed.
 # Restore locally from ../primary-assets-staging/ if you need the library to render.
 /public/primary-resources/
+
+# Claude Code worktrees (created via EnterWorktree during SDD execution)
+.claude/
