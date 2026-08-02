@@ -237,6 +237,10 @@ export function themesForSubject(subject: string): string[] {
   return THEMES_BY_SUBJECT[subject] ?? THEMES_BY_SUBJECT.English;
 }
 
+// Exported only so scripts/export-primary-seed.mjs can lift this content into
+// Postgres. Both this constant and this file are deleted in Task 14.
+export const THEMES_BY_SUBJECT_FOR_SEED = THEMES_BY_SUBJECT;
+
 export function learningAreaForSubject(subject: string): string {
   return LEARNING_AREA_BY_SUBJECT[subject] ?? "Language & Literacy";
 }

@@ -597,6 +597,14 @@ const THEME_LESSON_DATA: Record<string, ThemeLessonData> = {
   },
 };
 
+// Exported only so scripts/export-primary-seed.mjs can lift this content into
+// Postgres. Both this constant and this file are deleted in Task 14.
+export const THEME_LESSON_DATA_FOR_SEED = THEME_LESSON_DATA;
+
+// Re-exported so the exporter can import both seed constants from this one
+// module. Deleted along with this file in Task 14.
+export { THEMES_BY_SUBJECT_FOR_SEED } from "./primary-theme-content.ts";
+
 function buildGenericLessonData(theme: string, content: { description: string; keywords: string[]; resources: string[] }): ThemeLessonData {
   const keywords = content.keywords.filter((word) => word.length > 2).slice(0, 7);
   return {
