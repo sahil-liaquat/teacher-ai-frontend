@@ -18,7 +18,8 @@ import {
 import { backendApi, type PrimaryPlannerActivity } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
-import { assembleKit, KIT_SEQUENCE_TYPE_LABELS } from "@/lib/teaching-kit";
+import { buildGeneratePayload, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
+import { getErrorMessage } from "@/lib/errors";
 import { PRIMARY_RESOURCES } from "@/lib/primary-resource-catalog";
 import ActivityDrawer from "./activity_drawer";
 import { cn } from "@/lib/utils";
@@ -58,42 +59,6 @@ function getActivityConfig(type: string) {
   if (clean.includes("story")) return ACTIVITY_TYPES_CONFIG.story;
   if (clean.includes("reflection") || clean.includes("wrap")) return ACTIVITY_TYPES_CONFIG.reflection;
   return ACTIVITY_TYPES_CONFIG.routine;
-}
-
-// Every generation creates a brand-new kit, so the backend's dedup (scoped to a single kit id)
-// never catches repeats across runs. Clear the day first so "Generate"/"Regenerate" replaces
-// the plan instead of piling more activities on top of it each time.
-async function clearPlanForDate(date: string) {
-  const workspace = await backendApi.getTodayWorkspace(date);
-  await Promise.all(workspace.planner_activities.map((activity) => backendApi.deletePlannerActivity(activity.id)));
-}
-
-// Assembles a kit from the teacher's current context and turns it into a day of planner activities.
-// Note: this used to POST the whole kit to /teaching-kits then batch-create activities via
-// /primary-planner-activities/from-kit — neither route was ever actually mounted on the backend
-// (confirmed: no teaching-kit route exists in app/api/v1/router.py). assembleKit's local,
-// backend-independent assembly logic is unchanged; persistence now goes straight through the
-// real, existing createPlannerActivity endpoint, one activity at a time.
-async function generatePlanForContext(context: PrimaryTeachingContext, date: string) {
-  const assembled = assembleKit(context);
-
-  const steps = assembled.content?.sequence ?? [];
-  for (let index = 0; index < steps.length; index++) {
-    const step = steps[index];
-    const startH = 8 + Math.floor((index * 10) / 60);
-    const startM = (index * 10) % 60;
-    await backendApi.createPlannerActivity({
-      date,
-      start_time: `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`,
-      duration_minutes: step.duration || 10,
-      title: step.title,
-      activity_type: KIT_SEQUENCE_TYPE_LABELS[step.type] || "Activity",
-      resource_ids: step.resourceIds || [],
-      notes: step.instructions.join("\n"),
-      status: "planned",
-    });
-  }
-  return steps.length;
 }
 
 export default function PrimaryTodayPage({ notify }: { notify: (s: string) => void }) {
@@ -146,19 +111,53 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     []
   );
 
-  const runGenerate = async (overrideContext?: PrimaryTeachingContext, overrideDate?: string) => {
+  // The teacher's selected theme name resolved to its curriculum row. The
+  // server matches on theme_id, so the picker's display string is not enough.
+  const { data: themes = [] } = useQuery({
+    queryKey: ["primary-curriculum-themes", context.level, context.subject],
+    queryFn: () =>
+      backendApi.primaryCurriculumThemes({
+        level: PRIMARY_LEVEL_TO_API[context.level],
+        subject: context.subject ?? undefined,
+      }),
+    enabled: !!context.level && !!context.subject,
+  });
+
+  const selectedThemeId = useMemo(
+    () => themes.find((t) => t.name === context.theme)?.id ?? "",
+    [themes, context.theme]
+  );
+
+  const runGenerate = async (
+    overrideContext?: PrimaryTeachingContext,
+    overrideDate?: string,
+    replace = false
+  ) => {
     const ctx = overrideContext ?? context;
     const date = overrideDate ?? selectedDate;
+    const themeId =
+      themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
+
+    const payload = buildGeneratePayload(ctx, themeId, date, replace);
+    if (!payload) {
+      setGenerateError("Pick a level, subject and theme before generating a plan.");
+      return;
+    }
+
     setGenerateError(null);
     setGenerating(true);
     try {
-      await clearPlanForDate(date);
-      const count = await generatePlanForContext(ctx, date);
-      notify(`Plan ready — ${count} activities added ✨`);
-      await queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", date] });
+      // One atomic server call. It resolves the published lesson, upserts the
+      // day, matches a printable per step and writes the activities in a single
+      // transaction — which is why regenerating no longer duplicates a day.
+      await backendApi.generatePrimaryToday(payload);
+      notify("Plan ready ✨");
+      await queryClient.invalidateQueries({
+        queryKey: ["primary-today-workspace", date],
+      });
     } catch (err) {
       console.error("Failed to generate plan:", err);
-      setGenerateError("We couldn't generate a plan. Try again or add an activity manually.");
+      setGenerateError(getErrorMessage(err, "We couldn't generate a plan. Try again or add an activity manually."));
     } finally {
       setGenerating(false);
     }
@@ -380,7 +379,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         <div className="flex items-center gap-2">
           {plannerActivities.length > 0 && (
             <button
-              onClick={() => void runGenerate()}
+              onClick={() => void runGenerate(undefined, undefined, true)}
               disabled={generating}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5b32d3] transition shadow-md shadow-violet-100 disabled:opacity-60"
             >

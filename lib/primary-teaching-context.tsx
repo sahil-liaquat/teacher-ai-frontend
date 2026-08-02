@@ -10,6 +10,8 @@ import {
   CACHE_KEY,
   LEGACY_CACHE_KEY,
   DEFAULT_PRIMARY_TEACHING_CONTEXT,
+  PRIMARY_LEVEL_TO_API,
+  apiLevelToPrimaryLevel,
   sanitizeContext,
   migrateLegacyContext,
   reconcileServerContext,
@@ -99,14 +101,20 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
     syncRequestInProgress.current = true;
 
     try {
+      // The backend's PrimaryTeachingContextUpdate.level is a snake_case
+      // Literal enum ("class_1", ...), not this file's Title-Case display
+      // string ("Class 1") — convert on the way out or every save 422s.
       const saved = await apiFetch<{ updated_at: string } & PrimaryTeachingContext>("/primary/context", {
         method: "PUT",
-        body: JSON.stringify(nextContext),
+        body: JSON.stringify({ ...nextContext, level: PRIMARY_LEVEL_TO_API[nextContext.level] }),
         redirectOnUnauthorized: false,
       });
 
       if (versionToSync === latestVersionRef.current) {
-        const clean = sanitizeContext(saved);
+        // ...and the response comes back with that same snake_case level, so
+        // convert on the way in too or sanitizeContext silently rejects it
+        // and resets the level to the default.
+        const clean = sanitizeContext({ ...saved, level: apiLevelToPrimaryLevel(saved.level) });
         const serverTime = new Date(saved.updated_at).toISOString();
 
         setContext(clean);
@@ -161,7 +169,9 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
 
         const serverTime = new Date(saved.updated_at).toISOString();
         const latestEnvelope = readCachedEnvelope();
-        const { nextEnvelope, action } = reconcileServerContext(latestEnvelope, saved, serverTime);
+        // Same snake_case-vs-Title-Case mismatch as persist()'s response above.
+        const resolvedContext: PrimaryTeachingContext = { ...saved, level: apiLevelToPrimaryLevel(saved.level) };
+        const { nextEnvelope, action } = reconcileServerContext(latestEnvelope, resolvedContext, serverTime);
 
         if (action === "overwrite_local") {
           setContext(nextEnvelope.context);
