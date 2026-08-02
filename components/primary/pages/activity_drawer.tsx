@@ -181,12 +181,18 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
     if (!rescheduleDate) return;
     setSavingStatus(true);
     try {
+      // `date` is deliberately NOT part of PrimaryPlannerActivityUpdate
+      // (extra="forbid"), so sending it 422'd this call every time. Moving an
+      // activity across days is not just a column write either: the row's
+      // teaching_day_id would still point at the old day, and regenerating
+      // that day would delete the moved activity. So this marks the activity
+      // as rescheduled and records where it came from; a real move needs
+      // backend support that does not exist yet.
       await backendApi.updatePlannerActivity(activity.id, {
-        date: rescheduleDate,
         status: "rescheduled",
         rescheduled_from_date: activity.date,
       });
-      notify(`Activity moved to ${rescheduleDate}`);
+      notify(`Marked as rescheduled for ${rescheduleDate}`);
       onClose();
     } catch {
       notify("Failed to reschedule activity.");
@@ -292,7 +298,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   min="1"
-                  max="600"
+                  max="120"
                   required
                 />
               </label>

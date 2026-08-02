@@ -21,6 +21,15 @@ import { themesForSubject, subjectsForClass, skillsForContext } from "./primary-
 export type { PrimaryTeachingContext, StoredPrimaryContext };
 export { PRIMARY_LEVELS, PRIMARY_LANGUAGES, CACHE_KEY, LEGACY_CACHE_KEY, DEFAULT_PRIMARY_TEACHING_CONTEXT };
 
+// GET/PUT /primary/context return `updated_at` (PrimaryTeachingContextRead).
+// `new Date(undefined).toISOString()` throws RangeError, not NaN — when the
+// field went missing, that throw landed in the catch blocks below and every
+// successful save was reported to the user as "unsynced". Degrade instead.
+function serverTimestamp(raw: unknown): string {
+  const parsed = new Date(typeof raw === "string" ? raw : NaN);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
+
 function readCachedEnvelope(): StoredPrimaryContext {
   if (typeof window === "undefined") {
     return {
@@ -115,7 +124,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         // convert on the way in too or sanitizeContext silently rejects it
         // and resets the level to the default.
         const clean = sanitizeContext({ ...saved, level: apiLevelToPrimaryLevel(saved.level) });
-        const serverTime = new Date(saved.updated_at).toISOString();
+        const serverTime = serverTimestamp(saved.updated_at);
 
         setContext(clean);
         setSyncStatus("synced");
@@ -167,7 +176,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
           return;
         }
 
-        const serverTime = new Date(saved.updated_at).toISOString();
+        const serverTime = serverTimestamp(saved.updated_at);
         const latestEnvelope = readCachedEnvelope();
         // Same snake_case-vs-Title-Case mismatch as persist()'s response above.
         const resolvedContext: PrimaryTeachingContext = { ...saved, level: apiLevelToPrimaryLevel(saved.level) };

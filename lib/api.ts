@@ -1949,11 +1949,11 @@ export const backendApi = {
   plannerActivity: (id: string) => apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`),
   getTodayWorkspace: (date: string) =>
     apiFetch<PrimaryTodayRead>(`/primary/today?date=${date}`),
-  updateTodayDayRecord: (date: string, payload: Partial<PrimaryTeachingDay>) =>
+  updateTodayDayRecord: (date: string, payload: PrimaryTeachingDayUpdatePayload) =>
     apiFetch<PrimaryTeachingDay>(`/primary/today?date=${date}`, { method: "PUT", body: JSON.stringify(payload) }),
   createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload) =>
     apiFetch<PrimaryPlannerActivity>("/primary-planner-activities", { method: "POST", body: JSON.stringify(payload) }),
-  updatePlannerActivity: (id: string, payload: Partial<PrimaryPlannerActivityCreatePayload>) =>
+  updatePlannerActivity: (id: string, payload: PrimaryPlannerActivityUpdatePayload) =>
     apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deletePlannerActivity: (id: string) =>
     apiFetch<void>(`/primary-planner-activities/${id}`, { method: "DELETE" }),
@@ -2435,92 +2435,6 @@ export function onboardingCreateFirstHref(id: string): string {
   return tool ? tool.dashboardHref : "/dashboard";
 }
 
-// ─── Teaching Kits (Primary) ────────────────────────────────────────────────
-
-export type KitComponent =
-  | "daily-plan"
-  | "objectives"
-  | "warm-up"
-  | "explanation"
-  | "story"
-  | "flashcards"
-  | "picture-talk"
-  | "classroom-activity"
-  | "worksheet"
-  | "homework"
-  | "assessment"
-  | "parent-update";
-
-export type TeachingKitResource = {
-  id: string;
-  component: KitComponent;
-  title: string;
-  fileUrl?: string;
-  thumbnailUrl?: string;
-  fileType?: "pdf" | "png" | "jpg";
-  content?: string;
-  category?: string;
-};
-
-export type KitLearningObjective = {
-  id: string;
-  text: string;
-  source?: "curated" | "template" | "resource" | "teacher-edited";
-};
-
-export type KitSequenceItemType =
-  | "warm_up"
-  | "introduction"
-  | "story_or_rhyme"
-  | "picture_talk"
-  | "classroom_activity"
-  | "worksheet"
-  | "assessment";
-
-export type KitSequenceItem = {
-  id: string;
-  type: KitSequenceItemType;
-  title: string;
-  instructions: string[];
-  duration: number;
-  objectiveIds: string[];
-  resourceIds: string[];
-  source?: "curated" | "template" | "resource" | "teacher-edited";
-};
-
-export type KitAssessmentBlock = {
-  type: "oral" | "worksheet" | "observation";
-  title: string;
-  questions: string[];
-  successCriteria: string[];
-  source?: "curated" | "template" | "resource" | "teacher-edited";
-};
-
-export type KitResourceItem = {
-  id: string;
-  title: string;
-  fileUrl?: string;
-  thumbnailUrl?: string;
-  fileType?: string;
-  category?: string;
-  instruction?: string;
-  usedFor: string[];
-};
-
-export type PrimaryTeachingKitContent = {
-  version: number;
-  learningObjectives: KitLearningObjective[];
-  vocabulary: string[];
-  sequence: KitSequenceItem[];
-  resources: KitResourceItem[];
-  assessment: KitAssessmentBlock;
-  homework: string;
-  parentUpdate: string;
-  homeworkSource?: "curated" | "template" | "resource" | "teacher-edited";
-  parentUpdateSource?: "curated" | "template" | "resource" | "teacher-edited";
-  objectivesSource?: "curated" | "template" | "resource" | "teacher-edited";
-};
-
 // TeachPad Primary. snake_case throughout, matching the backend's wire format
 // and every other type in this file. (Sahil's originals were camelCase on
 // responses and snake_case on payloads — the client sent one convention and
@@ -2688,11 +2602,15 @@ export type PrimaryPlannerActivityCreatePayload = {
   status?: PrimaryPlannerActivityStatus;
 };
 
+// Mirrors backend PrimaryPlannerActivityUpdate exactly. That schema is
+// extra="forbid", so any field NOT listed here 422s the whole PATCH — notably
+// `date` and, until recently, `activity_type`. Keep the two in lockstep.
 export type PrimaryPlannerActivityUpdatePayload = Partial<
   Pick<
     PrimaryPlannerActivity,
-    | "start_time" | "duration_minutes" | "title" | "resource_ids"
-    | "rescheduled_from_date" | "notes" | "observation" | "status"
+    | "start_time" | "duration_minutes" | "title" | "activity_type"
+    | "resource_ids" | "rescheduled_from_date" | "notes" | "observation"
+    | "status"
   >
 >;
 
@@ -2709,6 +2627,8 @@ export type PrimaryTeachingContextRead = {
   skill?: string | null;
   language: string;
   version: number;
+  /** Drives the cache reconciliation in lib/primary-teaching-context.tsx. */
+  updated_at: string;
 };
 
 export type PrimaryTodayRead = {
