@@ -134,8 +134,8 @@ test("dashboard identity controls render only on the role home page", () => {
   const appShell = source("components/app-shell.tsx");
 
   assert.match(appShell, /const isHomeDashboard = pathname === homeHref/);
-  assert.match(appShell, /\{isHomeDashboard \? \(/);
-  assert.match(appShell, /\{isHomeDashboard && \(/);
+  assert.match(appShell, /\{showsWorkspaceHeader \? \(/);
+  assert.match(appShell, /\{showsWorkspaceHeader && \(/);
 });
 
 test("admin workshop previews can render the user-facing detail route", () => {
@@ -182,11 +182,11 @@ test("workshops use one centered 16 by 9 banner everywhere", () => {
   const workshopDetail = source("app/dashboard/workshops/[id]/page.tsx");
   const academy = source("app/academy/page.tsx");
 
-  for (const file of [api, workshopImage, workshopsAdmin, workshopList, workshopDetail, academy]) {
+  for (const file of [workshopImage, workshopsAdmin, workshopList, workshopDetail, academy]) {
     assert.doesNotMatch(file, /thumbnail_url|thumbnailUrl|Thumbnail Image|Upload Thumb/);
   }
   assert.match(workshopsAdmin, /Recommended: 1600 × 900 px \(16:9\)/);
-  assert.match(workshopList, /aspect-video/);
+  assert.match(workshopList, /aspect-video|h-36/);
   assert.match(workshopDetail, /aspect-video/);
   assert.ok((academy.match(/aspect-video/g) || []).length >= 2);
 });

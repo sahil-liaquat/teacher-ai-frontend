@@ -1,5 +1,7 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
 import type { ProfileAvatarKey } from "@/lib/profile-avatars";
+import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import type { PrimaryResource } from "./primary-resource-catalog";
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -409,6 +411,7 @@ export type LessonPlanGeneratePayload = {
   class_size: "small" | "medium" | "large";
   language?: string;
   teaching_style?: string;
+  workspace?: string;
   use_school_format?: boolean;
   format_type?: "teachpad_standard" | "school_format";
 };
@@ -460,6 +463,7 @@ export type WorksheetGeneratePayload = {
   question_type_counts?: Record<string, number>;
   question_type_marks?: Record<string, number>;
   language?: string;
+  workspace?: string;
   difficulty_distribution?: { easy: number; medium: number; hard: number };
   question_mix?: Array<
     "recall_based" |
@@ -511,6 +515,7 @@ export type NotesGeneratePayload = {
   chapter_names?: string[];
   topic?: string;
   language?: string;
+  workspace?: string;
   note_style?: string;
   detail_level?: string;
   include_key_terms?: boolean;
@@ -534,6 +539,7 @@ export type ActivityGeneratePayload = {
   chapter_names?: string[];
   topic?: string;
   language?: string;
+  workspace?: string;
   activity_type?: string;
   duration_minutes?: number;
   group_size?: string;
@@ -611,6 +617,7 @@ export type PresentationGeneratePayload = {
   audience: "Class 1" | "Class 2" | "Class 3" | "Class 4" | "Class 5" | "Class 6" | "Class 7" | "Class 8" | "Class 9" | "Class 10" | "Class 11" | "Class 12";
   slide_count: 6 | 8 | 10 | 12;
   language: "English" | "Hindi" | "Urdu";
+  workspace?: string;
   style: "Clean classroom" | "Visual story" | "Activity based" | "Exam revision";
   tone: "Simple" | "Conversational" | "Academic" | "Revision focused";
   detail_level: "Brief" | "Balanced" | "Detailed";
@@ -785,6 +792,8 @@ export type RecentGenerationItem = {
   subject: string;
   class_name: string;
   chapter_name: string;
+  topic?: string | null;
+  language?: string | null;
   created_at: string;
   href: string;
 };
@@ -1934,8 +1943,65 @@ export const backendApi = {
     if (params.subject) qStr.set("subject", params.subject);
     return apiFetch<PaginatedResponse<LibraryItem>>(`/library?${qStr.toString()}`);
   },
-  recentGenerations: (skip = 0, limit = 10) =>
-    apiFetch<PaginatedResponse<RecentGenerationItem>>(`/dashboard/recent-generations?skip=${skip}&limit=${limit}`),
+  teachingKits: () => apiFetch<TeachingKit[]>("/teaching-kits"),
+  teachingKit: (id: string) => apiFetch<TeachingKit>(`/teaching-kits/${id}`),
+  createTeachingKit: (payload: TeachingKitCreatePayload) =>
+    apiFetch<TeachingKit>("/teaching-kits", { method: "POST", body: JSON.stringify(payload) }),
+  updateTeachingKit: (id: string, payload: Partial<TeachingKitCreatePayload>) =>
+    apiFetch<TeachingKit>(`/teaching-kits/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteTeachingKit: (id: string) => apiFetch<void>(`/teaching-kits/${id}`, { method: "DELETE" }),
+  primaryActivityEvents: (limit = 30) => apiFetch<PrimaryActivityEvent[]>(`/primary-activity-events?limit=${limit}`),
+  createPrimaryActivityEvent: (payload: PrimaryActivityEventCreatePayload) =>
+    apiFetch<PrimaryActivityEvent>("/primary-activity-events", { method: "POST", body: JSON.stringify(payload) }),
+  plannerActivities: (start: string, end: string) =>
+    apiFetch<PrimaryPlannerActivity[]>(`/primary-planner-activities?start=${start}&end=${end}`),
+  plannerActivity: (id: string) => apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`),
+  getTodayWorkspace: (date: string) =>
+    apiFetch<PrimaryTodayRead>(`/primary/today?date=${date}`),
+  updateTodayDayRecord: (date: string, payload: Partial<PrimaryTeachingDay>) =>
+    apiFetch<PrimaryTeachingDay>(`/primary/today?date=${date}`, { method: "PUT", body: JSON.stringify(payload) }),
+  createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload) =>
+    apiFetch<PrimaryPlannerActivity>("/primary-planner-activities", { method: "POST", body: JSON.stringify(payload) }),
+  createPlannerActivitiesFromKit: (payload: { kit_id: string; activities: any[] }) =>
+    apiFetch<PrimaryPlannerActivity[]>("/primary-planner-activities/from-kit", { method: "POST", body: JSON.stringify(payload) }),
+  updatePlannerActivity: (id: string, payload: Partial<PrimaryPlannerActivityCreatePayload>) =>
+    apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deletePlannerActivity: (id: string) =>
+    apiFetch<void>(`/primary-planner-activities/${id}`, { method: "DELETE" }),
+  primaryResources: (filters: {
+    search?: string;
+    category?: string;
+    subject?: string;
+    level?: string;
+    theme?: string;
+    language?: string;
+    page?: number;
+    page_size?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters.search) params.append("search", filters.search);
+    if (filters.category && filters.category !== "All Resources") params.append("category", filters.category);
+    if (filters.subject) params.append("subject", filters.subject);
+    if (filters.level) params.append("level", filters.level);
+    if (filters.theme) params.append("theme", filters.theme);
+    if (filters.language) params.append("language", filters.language);
+    if (filters.page) params.append("page", String(filters.page));
+    if (filters.page_size) params.append("page_size", String(filters.page_size));
+    return apiFetch<PrimaryResourceListResponse>(`/primary/resources?${params.toString()}`);
+  },
+  primaryResource: (id: string) => apiFetch<PrimaryResource>(`/primary/resources/${encodeURIComponent(id)}`),
+  savedPrimaryResources: () => apiFetch<SavedPrimaryResource[]>("/primary/saved-resources"),
+  savePrimaryResource: (resourceId: string) =>
+    apiFetch<SavedPrimaryResource>("/primary/saved-resources", {
+      method: "POST",
+      body: JSON.stringify({ resource_id: resourceId }),
+    }),
+  unsavePrimaryResource: (resourceId: string) =>
+    apiFetch<void>(`/primary/saved-resources/${encodeURIComponent(resourceId)}`, { method: "DELETE" }),
+  recentGenerations: (skip = 0, limit = 10, workspace?: string) =>
+    apiFetch<PaginatedResponse<RecentGenerationItem>>(
+      `/dashboard/recent-generations?skip=${skip}&limit=${limit}${workspace ? `&workspace=${encodeURIComponent(workspace)}` : ""}`,
+    ),
   lessonPlan: (id: string) => apiFetch<LessonPlan>(`/lesson-plans/${id}`),
   updateLessonPlan: (id: string, payload: Partial<Pick<LessonPlan, "class_name" | "subject" | "chapter_name" | "topic" | "duration_minutes" | "plan">>) =>
     apiFetch<LessonPlan>(`/lesson-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
@@ -2323,3 +2389,277 @@ export function onboardingCreateFirstHref(id: string): string {
   const tool = TOOL_REGISTRY.find((t) => t.id === id);
   return tool ? tool.dashboardHref : "/dashboard";
 }
+
+// ─── Teaching Kits (Primary) ────────────────────────────────────────────────
+
+export type KitComponent =
+  | "daily-plan"
+  | "objectives"
+  | "warm-up"
+  | "explanation"
+  | "story"
+  | "flashcards"
+  | "picture-talk"
+  | "classroom-activity"
+  | "worksheet"
+  | "homework"
+  | "assessment"
+  | "parent-update";
+
+export type TeachingKitResource = {
+  id: string;
+  component: KitComponent;
+  title: string;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileType?: "pdf" | "png" | "jpg";
+  content?: string;
+  category?: string;
+};
+
+export type KitLearningObjective = {
+  id: string;
+  text: string;
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitSequenceItemType =
+  | "warm_up"
+  | "introduction"
+  | "story_or_rhyme"
+  | "picture_talk"
+  | "classroom_activity"
+  | "worksheet"
+  | "assessment";
+
+export type KitSequenceItem = {
+  id: string;
+  type: KitSequenceItemType;
+  title: string;
+  instructions: string[];
+  duration: number;
+  objectiveIds: string[];
+  resourceIds: string[];
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitAssessmentBlock = {
+  type: "oral" | "worksheet" | "observation";
+  title: string;
+  questions: string[];
+  successCriteria: string[];
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitResourceItem = {
+  id: string;
+  title: string;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileType?: string;
+  category?: string;
+  instruction?: string;
+  usedFor: string[];
+};
+
+export type PrimaryTeachingKitContent = {
+  version: number;
+  learningObjectives: KitLearningObjective[];
+  vocabulary: string[];
+  sequence: KitSequenceItem[];
+  resources: KitResourceItem[];
+  assessment: KitAssessmentBlock;
+  homework: string;
+  parentUpdate: string;
+  homeworkSource?: "curated" | "template" | "resource" | "teacher-edited";
+  parentUpdateSource?: "curated" | "template" | "resource" | "teacher-edited";
+  objectivesSource?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type TeachingKit = {
+  id: string;
+  userId: string;
+  context: PrimaryTeachingContext;
+  title: string;
+  resources: TeachingKitResource[];
+  content?: PrimaryTeachingKitContent | null;
+  lessonPlanId?: string;
+  plannerActivityIds: string[];
+  assessmentIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TeachingKitCreatePayload = {
+  context: PrimaryTeachingContext;
+  title: string;
+  resources: TeachingKitResource[];
+  content?: PrimaryTeachingKitContent | null;
+  lesson_plan_id?: string | null;
+  planner_activity_ids: string[];
+  assessment_ids: string[];
+};
+
+export type PrimaryActivityEntityType = "resource" | "teaching_kit" | "lesson_plan" | "planner_activity" | "assessment" | "ai_creation";
+export type PrimaryActivityAction = "viewed" | "downloaded" | "created" | "edited" | "saved";
+
+export type PrimaryActivityEvent = {
+  id: string;
+  userId: string;
+  entityType: PrimaryActivityEntityType;
+  entityId: string;
+  action: PrimaryActivityAction;
+  createdAt: string;
+  clientEventId?: string;
+};
+
+export type PrimaryActivityEventCreatePayload = {
+  entity_type: PrimaryActivityEntityType;
+  entity_id: string;
+  action: PrimaryActivityAction;
+  client_event_id?: string;
+};
+
+export type PrimaryPlannerActivityStatus =
+  | "planned"
+  | "completed"
+  | "partially completed"
+  | "skipped"
+  | "rescheduled";
+
+export type PrimaryPlannerActivity = {
+  id: string;
+  userId: string;
+  date: string;
+  startTime?: string | null;
+  durationMinutes?: number | null;
+  title: string;
+  activityType: string;
+  context: PrimaryTeachingContext;
+  resourceIds: string[];
+  teachingKitId?: string | null;
+  assessmentId?: string | null;
+  componentKey?: string | null;
+  rescheduledFromDate?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status: PrimaryPlannerActivityStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PrimaryPlannerActivityCreatePayload = {
+  date: string;
+  start_time?: string | null;
+  duration_minutes?: number | null;
+  title: string;
+  activity_type: string;
+  context: PrimaryTeachingContext;
+  resource_ids: string[];
+  teaching_kit_id?: string | null;
+  assessment_id?: string | null;
+  component_key?: string | null;
+  rescheduled_from_date?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status?: PrimaryPlannerActivityStatus;
+};
+
+export type PrimaryAssessmentStatus = "draft" | "ready" | "completed_manually";
+
+export type PrimaryAssessmentContentQuestion = {
+  type: string;
+  prompt: string;
+};
+
+export type PrimaryAssessmentContent = {
+  instructions?: string;
+  questions?: PrimaryAssessmentContentQuestion[];
+  skills?: string[];
+  criteria?: string[];
+};
+
+export type PrimaryAssessment = {
+  id: string;
+  userId: string;
+  title: string;
+  assessmentType: string;
+  classLevel: string;
+  subject: string;
+  theme?: string | null;
+  language: string;
+  teachingKitId?: string | null;
+  sourceComponentKey?: string | null;
+  sourceObjectiveKey?: string | null;
+  contentJson: PrimaryAssessmentContent;
+  status: PrimaryAssessmentStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PrimaryAssessmentCreatePayload = {
+  title: string;
+  assessment_type: string;
+  class_level: string;
+  subject: string;
+  theme?: string | null;
+  language?: string;
+  teaching_kit_id?: string | null;
+  source_component_key?: string | null;
+  source_objective_key?: string | null;
+  content_json: PrimaryAssessmentContent;
+  status?: PrimaryAssessmentStatus;
+};
+
+export type SavedPrimaryResource = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SavedPrimaryResourceCreatePayload = {
+  resource_id: string;
+};
+
+export type PrimaryResourceListResponse = {
+  items: PrimaryResource[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};
+
+export type PrimaryTeachingDay = {
+  id: string;
+  userId: string;
+  date: string;
+  classLevel?: string | null;
+  subject?: string | null;
+  theme?: string | null;
+  topic?: string | null;
+  skill?: string | null;
+  language?: string | null;
+  teachingKitId?: string | null;
+  objectives: string[];
+  competencies: string[];
+  materials: string[];
+  homeConnection?: string | null;
+  teacherNotes?: string | null;
+  reflectionJson?: {
+    workedWell?: string;
+    needsSupport?: string;
+    continueTomorrow?: string;
+    prepNeeded?: string;
+  } | null;
+  status: "not_started" | "in_progress" | "completed";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PrimaryTodayRead = {
+  planner_activities: PrimaryPlannerActivity[];
+  day_record: PrimaryTeachingDay | null;
+  context: PrimaryTeachingContext | null;
+};

@@ -423,6 +423,7 @@ export default function NotesGeneratorPage() {
         chapter_names: chapterNames,
         topic: topic.trim() || undefined,
         language,
+        workspace: searchParams.get("workspace") === "primary" ? "primary" : undefined,
         note_style: noteStyle,
         detail_level: detailLevel,
         include_key_terms: includeKeyTerms,
