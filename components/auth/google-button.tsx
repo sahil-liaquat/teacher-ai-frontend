@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buildGoogleCallbackUrl } from "@/lib/auth-redirect";
 import { getErrorMessage } from "@/lib/errors";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 import { getStoredReferralPromoCode } from "@/components/referral-capture";
@@ -10,7 +11,9 @@ import { cn } from "@/lib/utils";
 /**
  * "Continue with Google" button. Kicks off Supabase Google OAuth (PKCE) and
  * redirects the browser to Google; the return trip is handled by
- * /auth/callback. Renders nothing when Supabase env vars are unset.
+ * /auth/callback. Forwards this page's `?next=` param through so the user
+ * lands back where they started, same as email/password login. Renders
+ * nothing when Supabase env vars are unset.
  */
 export function GoogleButton({
   label = "Continue with Google",
@@ -38,9 +41,8 @@ export function GoogleButton({
     setLoading(true);
     try {
       const storedCode = getStoredReferralPromoCode();
-      const redirectUrl = storedCode
-        ? `${window.location.origin}/auth/callback?ref=${encodeURIComponent(storedCode)}`
-        : `${window.location.origin}/auth/callback`;
+      const next = new URLSearchParams(window.location.search).get("next");
+      const redirectUrl = buildGoogleCallbackUrl(window.location.origin, { next, ref: storedCode });
       const options: { redirectTo: string; data?: { signup_promo_code: string } } = {
         redirectTo: redirectUrl,
       };
