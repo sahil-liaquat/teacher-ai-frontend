@@ -1,4 +1,4 @@
-import { type PrimaryResource } from "./primary-resource-catalog.ts";
+import type { PrimaryResource } from "./api.ts";
 
 export type SavedResourceResolution = {
   resolved: PrimaryResource[];

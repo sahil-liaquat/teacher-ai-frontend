@@ -41,10 +41,10 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
 
   // Form states
   const [title, setTitle] = useState(activity.title);
-  const [duration, setDuration] = useState(activity.durationMinutes || 10);
-  const [startTime, setStartTime] = useState(activity.startTime?.slice(0, 5) || "");
-  const [activityType, setActivityType] = useState(activity.activityType);
-  const [resourceIds, setResourceIds] = useState(activity.resourceIds || []);
+  const [duration, setDuration] = useState(activity.duration_minutes || 10);
+  const [startTime, setStartTime] = useState(activity.start_time?.slice(0, 5) || "");
+  const [activityType, setActivityType] = useState(activity.activity_type);
+  const [resourceIds, setResourceIds] = useState(activity.resource_ids || []);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Note & Observation states
@@ -100,9 +100,12 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       .map((id) => PRIMARY_RESOURCES.find((r) => r.id === id))
       .filter(Boolean) as PrimaryResource[];
   }, [resourceIds]);
+  // activity.context is a freeform backend JSON dict (Record<string, unknown>) —
+  // no schema guarantees these fields exist or are strings, so read defensively.
+  const contextSubject = typeof activity.context.subject === "string" ? activity.context.subject : "";
   const resourceCandidates = useMemo(() => PRIMARY_RESOURCES
-    .filter((resource) => resource.subjects.length === 0 || resource.subjects.includes(activity.context.subject))
-    .slice(0, 30), [activity.context.subject]);
+    .filter((resource) => resource.subjects.length === 0 || resource.subjects.includes(contextSubject))
+    .slice(0, 30), [contextSubject]);
   const resourceEmoji = (resource: PrimaryResource) => {
     const category = resource.category.toLowerCase();
     if (category.includes("worksheet") || category.includes("tracing") || category.includes("colouring")) return "📝";
@@ -233,7 +236,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               Activity Details
             </h2>
             <p className="text-xs font-semibold text-slate-400 capitalize">
-              Type: {activity.activityType} • {statusLabel}
+              Type: {activity.activity_type} • {statusLabel}
             </p>
           </div>
           <button
@@ -309,8 +312,8 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-slate-400">
                 <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>{activity.durationMinutes || 10} minutes</span>
-                {activity.startTime && <span className="ml-2 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black text-[9px]">{activity.startTime.slice(0, 5)}</span>}
+                <span>{activity.duration_minutes || 10} minutes</span>
+                {activity.start_time && <span className="ml-2 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black text-[9px]">{activity.start_time.slice(0, 5)}</span>}
               </div>
             </div>
           )}
@@ -321,10 +324,10 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               <GraduationCap className="h-3.5 w-3.5" /> Teaching Context
             </h4>
             <div className="space-y-1.5 text-xs text-slate-700">
-              <p><strong>Grade level:</strong> {activity.context.level}</p>
-              <p><strong>Learning area:</strong> {activity.context.subject}</p>
-              <p><strong>Theme:</strong> {activity.context.theme || "Generic"}</p>
-              {activity.context.topic && <p><strong>Topic:</strong> {activity.context.topic}</p>}
+              <p><strong>Grade level:</strong> {typeof activity.context.level === "string" ? activity.context.level : "—"}</p>
+              <p><strong>Learning area:</strong> {contextSubject || "—"}</p>
+              <p><strong>Theme:</strong> {typeof activity.context.theme === "string" && activity.context.theme ? activity.context.theme : "Generic"}</p>
+              {typeof activity.context.topic === "string" && activity.context.topic && <p><strong>Topic:</strong> {activity.context.topic}</p>}
             </div>
           </div>
 

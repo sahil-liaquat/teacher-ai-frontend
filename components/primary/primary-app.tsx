@@ -550,8 +550,8 @@ export function AiStudio({ notify }: { notify: (s: string) => void }) {
   const creationCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const event of events) {
-      if (event.entityType !== "ai_creation") continue;
-      const label = event.entityId.trim() || "AI Creation";
+      if (event.entity_type !== "ai_creation") continue;
+      const label = event.entity_id.trim() || "AI Creation";
       counts.set(label, (counts.get(label) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
