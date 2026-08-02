@@ -64,3 +64,51 @@ export function sanitizeStepsForSubmit(steps: StepDraft[]): StepDraft[] {
     }))
   );
 }
+
+export type StepValidationError = {
+  index: number;
+  field: "title" | "duration_minutes";
+  message: string;
+};
+
+const MAX_TITLE_LENGTH = 255;
+const MIN_DURATION_MINUTES = 1;
+const MAX_DURATION_MINUTES = 120;
+
+/**
+ * Mirrors the backend's `StepInput` constraints exactly
+ * (`backend/app/schemas/primary_admin.py`: `title` is
+ * `Field(..., min_length=1, max_length=255)`, `duration_minutes` is
+ * `Field(..., ge=1, le=120)`). A step that fails these 422s the *entire*
+ * steps array on save — not just that row — so this must run before the
+ * network call, not after, and it must say which step and field is wrong.
+ */
+export function validateSteps(steps: StepDraft[]): StepValidationError[] {
+  const errors: StepValidationError[] = [];
+  steps.forEach((step, index) => {
+    const title = step.title.trim();
+    if (!title) {
+      errors.push({ index, field: "title", message: `Step ${index + 1}: title can't be blank.` });
+    } else if (title.length > MAX_TITLE_LENGTH) {
+      errors.push({
+        index,
+        field: "title",
+        message: `Step ${index + 1}: title is too long (max ${MAX_TITLE_LENGTH} characters).`,
+      });
+    }
+    const duration = step.duration_minutes;
+    if (
+      typeof duration !== "number" ||
+      !Number.isFinite(duration) ||
+      duration < MIN_DURATION_MINUTES ||
+      duration > MAX_DURATION_MINUTES
+    ) {
+      errors.push({
+        index,
+        field: "duration_minutes",
+        message: `Step ${index + 1}: duration must be between ${MIN_DURATION_MINUTES} and ${MAX_DURATION_MINUTES} minutes.`,
+      });
+    }
+  });
+  return errors;
+}

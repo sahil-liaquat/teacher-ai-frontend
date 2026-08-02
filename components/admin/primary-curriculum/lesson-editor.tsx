@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CopyPlus, PencilLine, Save, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, CopyPlus, PencilLine, Save, Send, Sparkles } from "lucide-react";
 import { backendApi, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
-import { parseLines, sanitizeStepsForSubmit, type StepDraft } from "@/lib/primary-authoring";
+import { parseLines, sanitizeStepsForSubmit, validateSteps, type StepDraft } from "@/lib/primary-authoring";
 import { AdminPanel, LoadingState, StatusPill } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/field";
@@ -91,17 +91,59 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
   const isPublished = form.status === "published";
   const isEmpty = form.lessonId === null;
 
+  // Computed on every render from current form state — not just at submit
+  // time — so the inline field errors in StepRows and the Save/Publish
+  // disabled state always agree with what's on screen.
+  const stepErrors = validateSteps(form.steps);
+  const hasStepErrors = stepErrors.length > 0;
+
+  /**
+   * Two independent try/catches, not one wrapped around both calls. If the
+   * lesson-level update lands but the steps replace then fails (easy to
+   * trigger before the validation above existed — see review), the old code
+   * left local `form` state unsynced and told the user "Couldn't save draft"
+   * with no indication that half the save actually landed, implying a full
+   * retry was needed. Now: the lesson-level fields sync into `form`
+   * immediately after they're confirmed persisted, and a steps-only failure
+   * throws a distinguishable `STEPS_SAVE_FAILED` error so the caller's toast
+   * can say exactly that.
+   */
   async function saveDraft(): Promise<PrimaryCurriculumLesson | null> {
     if (!form.lessonId) return null;
+    if (hasStepErrors) {
+      throw Object.assign(
+        new Error("Fix the highlighted step issues before saving."),
+        { code: "STEP_VALIDATION" }
+      );
+    }
     setSaving(true);
     try {
-      await backendApi.adminUpdatePrimaryLesson(form.lessonId, {
+      const updated = await backendApi.adminUpdatePrimaryLesson(form.lessonId, {
         objectives: parseLines(form.objectives),
         vocabulary: parseLines(form.vocabulary),
         assessment_questions: parseLines(form.assessmentQuestions),
         homework: form.homework.trim() || null,
         parent_update: form.parentUpdate.trim() || null,
       });
+      // Confirmed persisted — sync the lesson-level fields now, independent
+      // of whether the steps call below succeeds. `steps` is left alone: it
+      // still shows whatever the admin has pending.
+      setForm((prev) => ({
+        ...prev,
+        objectives: updated.objectives.join("\n"),
+        vocabulary: updated.vocabulary.join("\n"),
+        assessmentQuestions: updated.assessment_questions.join("\n"),
+        homework: updated.homework ?? "",
+        parentUpdate: updated.parent_update ?? "",
+        version: updated.version,
+        status: updated.status,
+      }));
+    } catch (error) {
+      setSaving(false);
+      throw error; // nothing persisted — the caller's generic message is accurate
+    }
+
+    try {
       const steps = sanitizeStepsForSubmit(form.steps).map((step) => ({
         position: step.position,
         step_type: step.step_type,
@@ -114,6 +156,13 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
       const lesson = await backendApi.adminReplacePrimarySteps(form.lessonId, steps);
       setForm(toFormState(lesson));
       return lesson;
+    } catch (error) {
+      throw Object.assign(
+        new Error(
+          "Objectives, vocabulary, homework and parent update saved. The steps didn't — fix the issue and save again."
+        ),
+        { code: "STEPS_SAVE_FAILED" }
+      );
     } finally {
       setSaving(false);
     }
@@ -124,7 +173,13 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
       await saveDraft();
       toast({ title: "Draft saved" });
     } catch (error) {
-      toast({ title: "Couldn't save draft", description: getErrorMessage(error, "Try again."), variant: "error" });
+      toast({
+        title: "Couldn't save draft",
+        description: getErrorMessage(error, "Try again.", {
+          STEP_VALIDATION: "Fix the highlighted step issues, then save again.",
+        }),
+        variant: "error",
+      });
     }
   }
 
@@ -133,6 +188,22 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
     setPublishing(true);
     try {
       await saveDraft();
+    } catch (error) {
+      // Named as a save failure, not a publish failure — publish was never
+      // attempted, so "Couldn't publish" would misattribute where this broke.
+      toast({
+        title: "Couldn't save before publishing",
+        description: getErrorMessage(error, "Try again.", {
+          STEP_VALIDATION: "Fix the highlighted step issues, then publish again.",
+          STEPS_SAVE_FAILED:
+            "Objectives, vocabulary, homework and parent update saved — the steps didn't. Fix the issue and try publishing again.",
+        }),
+        variant: "error",
+      });
+      setPublishing(false);
+      return;
+    }
+    try {
       const lesson = await backendApi.adminPublishPrimaryLesson(form.lessonId);
       setForm(toFormState(lesson));
       toast({ title: "Lesson published", description: `Live for ${theme.name} at this level.` });
@@ -213,6 +284,9 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
         <div className="space-y-4">
           <p className="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-800">
             {theme.name} has no published lesson for this level yet. Start authoring to create the first draft.
+            {" "}This screen can only find <em>published</em> lessons — if this theme+level was half-authored in an
+            earlier session and never published, that draft can&apos;t be found or resumed here, and starting again
+            creates a separate new draft rather than continuing it.
           </p>
           <Button onClick={handleStartAuthoring} disabled={starting}>
             <Sparkles className="h-4 w-4" />
@@ -283,17 +357,27 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
               steps={form.steps}
               onChange={(steps) => setForm({ ...form, steps })}
               disabled={readOnly}
+              errors={stepErrors}
             />
           </div>
+
+          {!readOnly && hasStepErrors ? (
+            <p className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              Fix {stepErrors.length} step issue{stepErrors.length === 1 ? "" : "s"} above before saving or
+              publishing — a blank title or an out-of-range duration gets rejected by the server for the whole
+              lesson, not just that step.
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap gap-3 border-t border-gray-100 pt-4">
             {!readOnly ? (
               <>
-                <Button variant="outline" onClick={handleSaveDraft} disabled={saving || publishing}>
+                <Button variant="outline" onClick={handleSaveDraft} disabled={saving || publishing || hasStepErrors}>
                   <Save className="h-4 w-4" />
                   {saving ? "Saving..." : "Save draft"}
                 </Button>
-                <Button onClick={handlePublish} disabled={saving || publishing}>
+                <Button onClick={handlePublish} disabled={saving || publishing || hasStepErrors}>
                   <Send className="h-4 w-4" />
                   {publishing ? "Publishing..." : "Publish"}
                 </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   RESOURCE_CATEGORIES,
   STEP_TYPES,
@@ -8,11 +8,13 @@ import {
   moveStep,
   renumberSteps,
   type StepDraft,
+  type StepValidationError,
 } from "@/lib/primary-authoring";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 function titleCase(value: string) {
   return value
@@ -25,18 +27,29 @@ function titleCase(value: string) {
  * Markup over `lib/primary-authoring.ts` — no logic of its own. Every mutation
  * (reorder, add, delete, edit a field) goes through `moveStep`/`renumberSteps`
  * so positions stay contiguous, which is what the server requires.
+ *
+ * `errors` (from `validateSteps`, computed by the caller) is rendered inline
+ * per field — a blank title or an out-of-range duration 422s the *entire*
+ * steps array on the server, and a generic toast can't tell a non-technical
+ * admin which of N steps is the problem. This can.
  */
 export function StepRows({
   steps,
   onChange,
   disabled = false,
+  errors = [],
 }: {
   steps: StepDraft[];
   onChange: (steps: StepDraft[]) => void;
   disabled?: boolean;
+  errors?: StepValidationError[];
 }) {
   function updateStep(index: number, patch: Partial<StepDraft>) {
     onChange(steps.map((step, i) => (i === index ? { ...step, ...patch } : step)));
+  }
+
+  function errorFor(index: number, field: StepValidationError["field"]) {
+    return errors.find((error) => error.index === index && error.field === field)?.message;
   }
 
   function removeStep(index: number) {
@@ -120,7 +133,15 @@ export function StepRows({
                 onChange={(event) => updateStep(index, { title: event.target.value })}
                 placeholder="e.g. Warm-up rhyme"
                 disabled={disabled}
+                aria-invalid={Boolean(errorFor(index, "title"))}
+                className={cn(errorFor(index, "title") && "border-rose-400 focus:border-rose-500 focus:ring-rose-100")}
               />
+              {errorFor(index, "title") ? (
+                <span className="flex items-center gap-1 text-xs font-medium text-rose-600">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {errorFor(index, "title")}
+                </span>
+              ) : null}
             </label>
             <label className="grid gap-1.5">
               <span className="text-xs font-semibold text-gray-500">Duration (minutes)</span>
@@ -131,7 +152,15 @@ export function StepRows({
                 value={step.duration_minutes}
                 onChange={(event) => updateStep(index, { duration_minutes: Number(event.target.value) || 0 })}
                 disabled={disabled}
+                aria-invalid={Boolean(errorFor(index, "duration_minutes"))}
+                className={cn(errorFor(index, "duration_minutes") && "border-rose-400 focus:border-rose-500 focus:ring-rose-100")}
               />
+              {errorFor(index, "duration_minutes") ? (
+                <span className="flex items-center gap-1 text-xs font-medium text-rose-600">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {errorFor(index, "duration_minutes")}
+                </span>
+              ) : null}
             </label>
           </div>
 
