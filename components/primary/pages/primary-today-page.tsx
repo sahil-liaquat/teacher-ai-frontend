@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
   ChevronDown,
@@ -20,7 +20,7 @@ import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/pr
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorMessage } from "@/lib/errors";
-import { PRIMARY_RESOURCES } from "@/lib/primary-resource-catalog";
+import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import ActivityDrawer from "./activity_drawer";
 import { cn } from "@/lib/utils";
 
@@ -236,13 +236,32 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     return plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 4);
   }, [dayRecord, plannerActivities]);
 
+  const materialIds = useMemo(
+    () => Array.from(new Set(plannerActivities.flatMap((activity) => activity.resource_ids))),
+    [plannerActivities]
+  );
+  const materialResourceQueries = useQueries({
+    queries: materialIds.map((id) => ({
+      queryKey: ["primary-resource", id],
+      queryFn: async () => {
+        try {
+          return adaptApiResource(await backendApi.primaryResource(id));
+        } catch {
+          return null;
+        }
+      },
+      enabled: !(dayRecord?.materials && dayRecord.materials.length > 0),
+      staleTime: 60_000,
+      retry: 0,
+    })),
+  });
   const materialsList = useMemo(() => {
     if (dayRecord?.materials && dayRecord.materials.length > 0) return dayRecord.materials;
-    return Array.from(new Set(plannerActivities.flatMap((activity) => activity.resource_ids)))
-      .map((id) => PRIMARY_RESOURCES.find((resource) => resource.id === id)?.title)
+    return materialResourceQueries
+      .map((q) => q.data?.title)
       .filter((title): title is string => Boolean(title))
       .slice(0, 4);
-  }, [dayRecord, plannerActivities]);
+  }, [dayRecord, materialResourceQueries]);
 
   const overview = useMemo(() => {
     const titles = plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 3);

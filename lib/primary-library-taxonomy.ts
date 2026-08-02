@@ -3,9 +3,9 @@
 //
 // `catalogCategory` links a resource type to the real `PrimaryResource.category`
 // string it should show — only 10 of the ~70 types below have resources in the
-// catalogue today (see lib/primary-resource-catalog.ts). Types without one render
-// a "coming soon" empty state instead of an empty grid, so the navigation can be
-// built out ahead of content without ever looking broken.
+// catalogue today (served from the backend, GET /primary/resources). Types
+// without one render a "coming soon" empty state instead of an empty grid, so
+// the navigation can be built out ahead of content without ever looking broken.
 
 export type LibraryResourceType = {
   slug: string;

@@ -1,11 +1,7 @@
 import { useMemo } from "react";
-import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueries } from "@tanstack/react-query";
 import { backendApi } from "./api";
-import { adaptApiResource } from "./primary-resource-adapter";
-import { PRIMARY_RESOURCES, type PrimaryResource } from "./primary-resource-catalog";
-import { themeContent } from "./primary-theme-content";
-
-export const USE_BACKEND_CATALOGUE = process.env.NEXT_PUBLIC_USE_BACKEND_CATALOGUE === "true";
+import { adaptApiResource, type PrimaryResource } from "./primary-resource-adapter";
 
 export type UsePrimaryResourcesFilters = {
   search?: string;
@@ -19,10 +15,8 @@ export type UsePrimaryResourcesFilters = {
 };
 
 export function usePrimaryResources(filters: UsePrimaryResourcesFilters) {
-  const useBackend = USE_BACKEND_CATALOGUE;
-
   // -------------------------------------------------------------------------
-  // 1. Saved Resources Resolution (when isSavedView is true and backend is ON)
+  // 1. Saved Resources Resolution (when isSavedView is true)
   // -------------------------------------------------------------------------
   const savedIdsArray = useMemo(() => {
     return filters.isSavedView && filters.savedIds ? Array.from(filters.savedIds) : [];
@@ -40,68 +34,55 @@ export function usePrimaryResources(filters: UsePrimaryResourcesFilters) {
           return null;
         }
       },
-      enabled: useBackend && filters.isSavedView === true && savedIdsArray.length > 0,
+      enabled: filters.isSavedView === true && savedIdsArray.length > 0,
       staleTime: 60_000,
       retry: 0,
     })),
   });
 
   const resolvedSavedResources = useMemo(() => {
-    if (!useBackend || !filters.isSavedView) return [];
+    if (!filters.isSavedView) return [];
     return savedQueries
       .map((q) => q.data)
       .filter((item): item is PrimaryResource => item !== null && item !== undefined);
-  }, [savedQueries, useBackend, filters.isSavedView]);
+  }, [savedQueries, filters.isSavedView]);
 
   const isSavedQueriesLoading = useMemo(() => {
-    if (!useBackend || !filters.isSavedView) return false;
+    if (!filters.isSavedView) return false;
     return savedQueries.some((q) => q.isLoading);
-  }, [savedQueries, useBackend, filters.isSavedView]);
+  }, [savedQueries, filters.isSavedView]);
 
   const isSavedQueriesError = useMemo(() => {
-    if (!useBackend || !filters.isSavedView) return false;
+    if (!filters.isSavedView) return false;
     // Don't fail the whole view if one resource 404s, but if all queries fail it might be an error
     return savedQueries.length > 0 && savedQueries.every((q) => q.isError);
-  }, [savedQueries, useBackend, filters.isSavedView]);
+  }, [savedQueries, filters.isSavedView]);
 
   // -------------------------------------------------------------------------
-  // 2. Main paginated query (when isSavedView is false and backend is ON)
+  // 2. Main paginated query (when isSavedView is false)
   // -------------------------------------------------------------------------
   const backendInfiniteQuery = useInfiniteQuery({
     queryKey: ["primary-resources-list", { ...filters, isSavedView: false, savedIds: undefined }],
     queryFn: async ({ pageParam }) => {
-      try {
-        return await backendApi.primaryResources({
-          search: filters.search,
-          category: filters.category,
-          subject: filters.subject,
-          level: filters.level,
-          theme: filters.theme,
-          language: filters.language,
-          page: pageParam,
-          page_size: 24,
-        });
-      } catch (err) {
-        console.error("[Resource Catalogue] API failed, check NEXT_PUBLIC_USE_BACKEND_CATALOGUE and backend health:", err);
-        throw err;
-      }
+      return await backendApi.primaryResources({
+        search: filters.search,
+        category: filters.category,
+        subject: filters.subject,
+        level: filters.level,
+        theme: filters.theme,
+        language: filters.language,
+        page: pageParam,
+        page_size: 24,
+      });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.has_more ? allPages.length + 1 : undefined;
     },
-    enabled: useBackend && !filters.isSavedView,
+    enabled: !filters.isSavedView,
     staleTime: 30_000,
   });
 
-  // -------------------------------------------------------------------------
-  // 3. Both paths are computed unconditionally, then we pick which to return.
-  //
-  // Every hook below MUST run on every render. `useBackend` is a build-time
-  // constant today, so branching around hooks happened to survive — but it is a
-  // Rules-of-Hooks violation that breaks the instant the flag becomes dynamic.
-  // Compute both, branch only on the returned value.
-  // -------------------------------------------------------------------------
   const backendResources = useMemo(() => {
     if (!backendInfiniteQuery.data) return [];
     return backendInfiniteQuery.data.pages.flatMap((page) =>
@@ -109,93 +90,36 @@ export function usePrimaryResources(filters: UsePrimaryResourcesFilters) {
     );
   }, [backendInfiniteQuery.data]);
 
-  // Local fallback (the hardcoded PRIMARY_RESOURCES array)
-  const localResolvedSaved = useMemo(() => {
-    if (!filters.isSavedView || !filters.savedIds) return { resolved: [], unresolvedIds: [] };
-    const resolved: PrimaryResource[] = [];
-    const unresolvedIds: string[] = [];
-    filters.savedIds.forEach((id) => {
-      const found = PRIMARY_RESOURCES.find((r) => r.id === id);
-      if (found) {
-        if (!resolved.some((r) => r.id === found.id)) resolved.push(found);
-      } else {
-        if (!unresolvedIds.includes(id)) unresolvedIds.push(id);
-      }
+  if (filters.isSavedView) {
+    const unresolvedIds = savedIdsArray.filter((id, index) => {
+      const queryResult = savedQueries[index];
+      const isLoaded = resolvedSavedResources.some((r) => r.id === id);
+      const isLoading = queryResult ? queryResult.isLoading : false;
+      return !isLoaded && !isLoading;
     });
-    return { resolved, unresolvedIds };
-  }, [filters.isSavedView, filters.savedIds]);
-
-  const catalogue = filters.isSavedView ? localResolvedSaved.resolved : PRIMARY_RESOURCES;
-
-  // Apply frontend filters
-  const content = useMemo(() => {
-    return themeContent(filters.theme, filters.subject || "");
-  }, [filters.theme, filters.subject]);
-
-  const visible = useMemo(() => {
-    return catalogue.filter((resource) => {
-      const text = `${resource.title} ${resource.category} ${resource.keywords.join(" ")} ${resource.skills.join(" ")}`.toLowerCase();
-      if (filters.category && filters.category !== "All Resources" && resource.category !== filters.category) return false;
-      if (filters.search) {
-        const clean = filters.search.trim().toLowerCase();
-        if (clean && !text.includes(clean)) return false;
-      }
-      if (filters.subject && !resource.subjects.includes(filters.subject)) return false;
-      if (filters.theme) {
-        const themed = resource.themes.includes(filters.theme);
-        if (!themed && !content.keywords.some((keyword) => text.includes(keyword.toLowerCase()))) return false;
-      }
-      if (filters.level && resource.levels.length > 0 && !resource.levels.includes(filters.level)) return false;
-      if (filters.language && resource.languages.length > 0 && !resource.languages.includes(filters.language)) return false;
-      return true;
-    });
-  }, [catalogue, filters.category, filters.search, filters.subject, filters.theme, content]);
-
-  // ---- All hooks have run. Safe to branch on the return value from here. ----
-
-  if (useBackend) {
-    if (filters.isSavedView) {
-      const unresolvedIds = savedIdsArray.filter((id, index) => {
-        const queryResult = savedQueries[index];
-        const isLoaded = resolvedSavedResources.some((r) => r.id === id);
-        const isLoading = queryResult ? queryResult.isLoading : false;
-        return !isLoaded && !isLoading;
-      });
-
-      return {
-        resources: resolvedSavedResources,
-        total: resolvedSavedResources.length,
-        isLoading: isSavedQueriesLoading,
-        isError: isSavedQueriesError,
-        hasMore: false,
-        fetchNextPage: () => {},
-        refetch: () => {
-          savedQueries.forEach((q) => q.refetch());
-        },
-        unresolvedIds,
-      };
-    }
 
     return {
-      resources: backendResources,
-      total: backendInfiniteQuery.data?.pages[0]?.total ?? 0,
-      isLoading: backendInfiniteQuery.isLoading,
-      isError: backendInfiniteQuery.isError,
-      hasMore: !!backendInfiniteQuery.hasNextPage,
-      fetchNextPage: () => backendInfiniteQuery.fetchNextPage(),
-      refetch: () => backendInfiniteQuery.refetch(),
-      unresolvedIds: [] as string[],
+      resources: resolvedSavedResources,
+      total: resolvedSavedResources.length,
+      isLoading: isSavedQueriesLoading,
+      isError: isSavedQueriesError,
+      hasMore: false,
+      fetchNextPage: () => {},
+      refetch: () => {
+        savedQueries.forEach((q) => q.refetch());
+      },
+      unresolvedIds,
     };
   }
 
   return {
-    resources: visible,
-    total: visible.length,
-    isLoading: false,
-    isError: false,
-    hasMore: false,
-    fetchNextPage: () => {},
-    refetch: () => {},
-    unresolvedIds: filters.isSavedView ? localResolvedSaved.unresolvedIds : [],
+    resources: backendResources,
+    total: backendInfiniteQuery.data?.pages[0]?.total ?? 0,
+    isLoading: backendInfiniteQuery.isLoading,
+    isError: backendInfiniteQuery.isError,
+    hasMore: !!backendInfiniteQuery.hasNextPage,
+    fetchNextPage: () => backendInfiniteQuery.fetchNextPage(),
+    refetch: () => backendInfiniteQuery.refetch(),
+    unresolvedIds: [] as string[],
   };
 }
