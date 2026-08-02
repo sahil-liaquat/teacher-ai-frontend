@@ -3,14 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { backendApi, CURRENT_USER_QUERY_KEY, type ApiUser } from "@/lib/api";
 import { learningAreaForSubject, themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import { PRIMARY_RESOURCES } from "@/lib/primary-resource-catalog";
+import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import { libraryPathForCatalogCategory } from "@/lib/primary-library-taxonomy";
 import {
   Calendar,
@@ -213,16 +213,29 @@ export default function PrimaryHomePage({ notify }: { notify: (s: string) => voi
     const day = new Date(`${todayISOStr}T12:00:00`).getDay();
     return day === 0 || day === 6;
   }, [todayISOStr]);
-  const quickAccess = useMemo(() => QUICK_ACCESS.map((item) => {
-    const matchingResources = PRIMARY_RESOURCES.filter((resource) => {
-      if (resource.category !== item.category) return false;
-      if (selectedLevel && resource.levels.length > 0 && !resource.levels.includes(selectedLevel)) return false;
-      if (selectedSubject && resource.subjects.length > 0 && !resource.subjects.includes(selectedSubject)) return false;
-      if (selectedTheme && resource.themes.length > 0 && !resource.themes.includes(selectedTheme)) return false;
-      return true;
-    });
-    return { ...item, resources: matchingResources };
-  }), [selectedLevel, selectedSubject, selectedTheme]);
+  const quickAccessQueries = useQueries({
+    queries: QUICK_ACCESS.map((item) => ({
+      queryKey: ["primary-resources-quick-access", item.category, selectedLevel, selectedSubject, selectedTheme],
+      queryFn: () =>
+        backendApi.primaryResources({
+          category: item.category,
+          level: selectedLevel || undefined,
+          subject: selectedSubject || undefined,
+          theme: selectedTheme || undefined,
+          page_size: 1,
+        }),
+      staleTime: 30_000,
+    })),
+  });
+  const quickAccess = useMemo(
+    () =>
+      QUICK_ACCESS.map((item, index) => {
+        const data = quickAccessQueries[index]?.data;
+        const resources = (data?.items ?? []).map((entry) => adaptApiResource(entry));
+        return { ...item, resources, total: data?.total ?? 0 };
+      }),
+    [quickAccessQueries]
+  );
 
   const downloadResource = (item: typeof quickAccess[number]) => {
     const resource = item.resources[0];
@@ -470,7 +483,7 @@ export default function PrimaryHomePage({ notify }: { notify: (s: string) => voi
                 {item.name}
               </b>
               <span className="text-[10px] font-bold text-slate-400 mt-0.5">
-                {item.resources.length} {item.resources.length === 1 ? "resource" : "resources"}
+                {item.total} {item.total === 1 ? "resource" : "resources"}
               </span>
 
               {/* Download Icon Wrapper */}

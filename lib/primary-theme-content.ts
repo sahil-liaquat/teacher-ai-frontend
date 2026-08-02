@@ -1,5 +1,4 @@
 import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import { PRIMARY_RESOURCES } from "./primary-resource-catalog.ts";
 
 export const PRIMARY_LEVELS = ["Nursery", "LKG", "UKG", "Class 1", "Class 2", "Class 3", "Class 4", "Class 5"] as const;
 export const PRIMARY_LANGUAGES = ["English", "Hindi", "Bilingual"] as const;
@@ -12,7 +11,6 @@ export type ThemeContent = {
   resources: string[];
   activities: string[];
   assessments: string[];
-  resourceImages?: string[];
 };
 
 const THEMES_BY_SUBJECT: Record<string, string[]> = {
@@ -37,21 +35,12 @@ const LEARNING_AREA_BY_SUBJECT: Record<string, string> = {
   "Physical Education": "Physical Development",
 };
 
-const MY_FAMILY_IMAGES = [
-  "/assets/primary/dashboard-my-family.webp",
-  "/assets/primary/dashboard-family-members.webp",
-  "/assets/primary/dashboard-my-family-house.webp",
-  "/assets/primary/dashboard-all-about-my-family.webp",
-  "/assets/primary/dashboard-family-story.webp",
-];
-
 const THEME_CONTENT: Record<string, ThemeContent> = {
   "My Family": {
     emoji: "👨‍👩‍👧‍👦",
     description: "Students will learn about family members, their roles, relationships and the importance of family.",
     keywords: ["family", "home", "house", "myself", "me", "baby"],
     resources: ["My Family", "Family Members", "My Family House", "All About My Family", "Family Story"],
-    resourceImages: MY_FAMILY_IMAGES,
     activities: ["Circle Time", "My Family — Introduction", "Teach & Explore", "Worksheet Time", "Craft Activity", "Wrap Up & Song"],
     assessments: ["My Family Quiz", "Family Members Worksheet", "Oral Assessment — Vocabulary", "Family Skills Checklist", "Exit Ticket — Family"],
   },
@@ -237,10 +226,6 @@ export function themesForSubject(subject: string): string[] {
   return THEMES_BY_SUBJECT[subject] ?? THEMES_BY_SUBJECT.English;
 }
 
-// Exported only so scripts/export-primary-seed.mjs can lift this content into
-// Postgres. Both this constant and this file are deleted in Task 14.
-export const THEMES_BY_SUBJECT_FOR_SEED = THEMES_BY_SUBJECT;
-
 export function learningAreaForSubject(subject: string): string {
   return LEARNING_AREA_BY_SUBJECT[subject] ?? "Language & Literacy";
 }
@@ -303,25 +288,13 @@ export function subjectsForClass(level: string): string[] {
 
 export function skillsForContext(level: string, subject: string, theme: string | undefined): string[] {
   if (!theme) return [];
-  
-  const matches = PRIMARY_RESOURCES.filter((r) => 
-    r.subjects.includes(subject) && 
-    r.themes.includes(theme) && 
-    r.levels.includes(level)
-  );
-  
-  const skills = new Set<string>();
-  matches.forEach((r) => r.skills.forEach((s) => skills.add(s)));
-  
-  if (skills.size === 0) {
-    // Return standard skills fallback
-    if (subject === "English" || subject === "Hindi") {
-      return ["Reading", "Writing", "Speaking", "Listening", "Vocabulary", "Phonics"];
-    } else if (subject === "Maths") {
-      return ["Counting", "Problem Solving", "Logic", "Spatial Awareness"];
-    } else {
-      return ["Observation", "Cognitive Skills", "Creativity", "Fine Motor", "Gross Motor"];
-    }
+
+  // Standard skills fallback — per-resource skill matching now lives server-side.
+  if (subject === "English" || subject === "Hindi") {
+    return ["Reading", "Writing", "Speaking", "Listening", "Vocabulary", "Phonics"];
+  } else if (subject === "Maths") {
+    return ["Counting", "Problem Solving", "Logic", "Spatial Awareness"];
+  } else {
+    return ["Observation", "Cognitive Skills", "Creativity", "Fine Motor", "Gross Motor"];
   }
-  return Array.from(skills);
 }

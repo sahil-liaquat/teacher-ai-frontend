@@ -8,10 +8,10 @@ import {
   ArrowLeft, ArrowRight, BookOpen, ChevronDown, ClipboardCheck, FileText,
   Search, Sparkles, BarChart3, NotebookPen, Puzzle, CircleHelp, Download, Eye, X, Pencil,
 } from "lucide-react";
-import { type PrimaryResource } from "@/lib/primary-resource-catalog";
+import { type PrimaryResource } from "@/lib/primary-resource-adapter";
 import { usePrimaryActivityHistory, useTrackActivity } from "@/lib/primary-activity";
 import { useSavedResourceIds, useToggleSavePrimaryResource } from "@/lib/primary-saved-resources";
-import { usePrimaryResources, USE_BACKEND_CATALOGUE } from "@/lib/use-primary-resources";
+import { usePrimaryResources } from "@/lib/use-primary-resources";
 import { PRIMARY_LEVELS, PRIMARY_LANGUAGES, generatorHref, quickIdeaText, themeContent, themesForSubject, subjectsForClass, skillsForContext, type QuickIdeaKind } from "@/lib/primary-theme-content";
 import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { cn } from "@/lib/utils";
@@ -157,8 +157,6 @@ function ActionButton({ children, onClick, href }: { children: React.ReactNode; 
 const RESOURCE_TABS = ["All Resources", "Worksheets", "Colouring Pages", "Tracing Sheets", "Matching Activities", "Flashcards", "Picture Talk Cards", "Story Cards", "Vocabulary Cards", "Circle Time Prompts", "Calendar Activities"];
 const resourceCategorySlug = (category: string) => category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-const PAGE_SIZE = 24;
-
 export function Resources({
   notify,
   resourceCategory,
@@ -182,7 +180,6 @@ export function Resources({
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchInput, setSearchInput] = useState(searchParams.get("search") ?? "");
   const query = searchInput.trim().toLowerCase();
-  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [matchTopic, setMatchTopic] = useState(true);
   const [matchSubject, setMatchSubject] = useState(false);
   const [matchLevel, setMatchLevel] = useState(false);
@@ -215,10 +212,6 @@ export function Resources({
     }
   };
 
-  useEffect(() => {
-    setVisibleLimit(PAGE_SIZE);
-  }, [query, activeCategory, matchTopic, matchSubject, matchLevel, matchLanguage]);
-
   const filters = useMemo(() => {
     return {
       search: query || undefined,
@@ -249,30 +242,20 @@ export function Resources({
     }
   }, [unresolvedIds]);
 
-  const displayed = useMemo(() => {
-    return USE_BACKEND_CATALOGUE ? visible : visible.slice(0, visibleLimit);
-  }, [visible, visibleLimit]);
-
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          if (USE_BACKEND_CATALOGUE) {
-            if (hasMore) {
-              fetchNextPage();
-            }
-          } else {
-            setVisibleLimit((current) => (current < visible.length ? Math.min(current + PAGE_SIZE, visible.length) : current));
-          }
+        if (entries.some((entry) => entry.isIntersecting) && hasMore) {
+          fetchNextPage();
         }
       },
       { rootMargin: "800px 0px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [visible.length, hasMore, fetchNextPage]);
+  }, [hasMore, fetchNextPage]);
 
   if (catalogLoading) {
     return (
@@ -371,14 +354,14 @@ export function Resources({
         </div>
         {isCategoryPage && (
           <p className="mt-4 text-sm font-medium text-[#454c86]">
-            {total} resources in <b>{activeCategory}</b> — showing {USE_BACKEND_CATALOGUE ? `the first ${displayed.length}` : (visibleLimit >= total ? "all of them" : `the first ${visibleLimit}`)}.
+            {total} resources in <b>{activeCategory}</b> — showing the first {visible.length}.
           </p>
         )}
         <SectionCard title={heading} className="mt-4">
           {total ? (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {displayed.map((resource, index) => (
+                {visible.map((resource, index) => (
                   <article key={resource.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e8e7fb] bg-white hover:border-[#bca5ff]">
                     <button
                       type="button"
@@ -430,21 +413,15 @@ export function Resources({
                   </article>
                 ))}
               </div>
-              {((USE_BACKEND_CATALOGUE && hasMore) || (!USE_BACKEND_CATALOGUE && visibleLimit < total)) && (
+              {hasMore && (
                 <>
                   <div ref={sentinelRef} aria-hidden="true" />
                   <button
                     type="button"
-                    onClick={() => {
-                      if (USE_BACKEND_CATALOGUE) {
-                        fetchNextPage();
-                      } else {
-                        setVisibleLimit((current) => Math.min(current + PAGE_SIZE, total));
-                      }
-                    }}
+                    onClick={() => fetchNextPage()}
                     className="mt-6 block w-full rounded-xl border border-[#d9dcf5] bg-white px-4 py-3 text-sm font-bold text-[#454c86] hover:bg-[#f7f4ff]"
                   >
-                    Load {USE_BACKEND_CATALOGUE ? "more" : `${Math.min(PAGE_SIZE, total - visibleLimit)} more (${total - visibleLimit} remaining)`}
+                    Load more
                   </button>
                 </>
               )}

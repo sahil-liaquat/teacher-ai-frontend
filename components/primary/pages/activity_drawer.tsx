@@ -16,8 +16,8 @@ import {
   Trash2
 } from "lucide-react";
 import { backendApi, type PrimaryPlannerActivity, type PrimaryPlannerActivityStatus } from "@/lib/api";
-import { PRIMARY_RESOURCES, type PrimaryResource } from "@/lib/primary-resource-catalog";
-import { useQueryClient } from "@tanstack/react-query";
+import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 interface ActivityDrawerProps {
@@ -94,18 +94,38 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
     localStorage.setItem(draftObsKey, val);
   };
 
-  // Find actual resources in catalog
+  // Resolve linked resources from the backend catalog (resourceIds are legacy
+  // catalog ids stored on the activity).
+  const linkedResourceQueries = useQueries({
+    queries: resourceIds.map((id) => ({
+      queryKey: ["primary-resource", id],
+      queryFn: async () => {
+        try {
+          return adaptApiResource(await backendApi.primaryResource(id));
+        } catch {
+          return null;
+        }
+      },
+      staleTime: 60_000,
+      retry: 0,
+    })),
+  });
   const linkedResources = useMemo(() => {
-    return resourceIds
-      .map((id) => PRIMARY_RESOURCES.find((r) => r.id === id))
-      .filter(Boolean) as PrimaryResource[];
-  }, [resourceIds]);
+    return linkedResourceQueries
+      .map((q) => q.data)
+      .filter((item): item is PrimaryResource => item !== null && item !== undefined);
+  }, [linkedResourceQueries]);
   // activity.context is a freeform backend JSON dict (Record<string, unknown>) —
   // no schema guarantees these fields exist or are strings, so read defensively.
   const contextSubject = typeof activity.context.subject === "string" ? activity.context.subject : "";
-  const resourceCandidates = useMemo(() => PRIMARY_RESOURCES
-    .filter((resource) => resource.subjects.length === 0 || resource.subjects.includes(contextSubject))
-    .slice(0, 30), [contextSubject]);
+  const resourceCandidatesQuery = useQuery({
+    queryKey: ["primary-resources-candidates", contextSubject],
+    queryFn: () => backendApi.primaryResources({ subject: contextSubject || undefined, page_size: 30 }),
+    staleTime: 60_000,
+  });
+  const resourceCandidates = useMemo(() => {
+    return (resourceCandidatesQuery.data?.items ?? []).map((item) => adaptApiResource(item));
+  }, [resourceCandidatesQuery.data]);
   const resourceEmoji = (resource: PrimaryResource) => {
     const category = resource.category.toLowerCase();
     if (category.includes("worksheet") || category.includes("tracing") || category.includes("colouring")) return "📝";
