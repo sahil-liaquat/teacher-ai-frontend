@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { resolveSavedResources } from "../../lib/primary-saved-resources-helpers.ts";
-import { type PrimaryResource } from "../../lib/primary-resource-catalog.ts";
+import type { PrimaryResource } from "../../lib/api.ts";
 
 const mockCatalog: PrimaryResource[] = [
-  { id: "res-1", title: "Resource 1", category: "worksheets", fileUrl: "/file1.png", themes: [], skills: [], subjects: ["English"], levels: ["UKG"], fileType: "png", keywords: [], languages: ["English"] },
-  { id: "res-2", title: "Resource 2", category: "flashcards", fileUrl: "/file2.png", themes: [], skills: [], subjects: ["Maths"], levels: ["Class 1"], fileType: "png", keywords: [], languages: ["English"] },
-  { id: "res-3", title: "Resource 3", category: "worksheets", fileUrl: "/file3.png", themes: [], skills: [], subjects: ["EVS"], levels: ["Class 2"], fileType: "png", keywords: [], languages: ["English"] },
+  { id: "res-1", title: "Resource 1", category: "worksheets", file_url: "/file1.png", themes: [], skills: [], subjects: ["English"], levels: ["ukg"], file_type: "png", keywords: [], languages: ["English"] },
+  { id: "res-2", title: "Resource 2", category: "flashcards", file_url: "/file2.png", themes: [], skills: [], subjects: ["Maths"], levels: ["class_1"], file_type: "png", keywords: [], languages: ["English"] },
+  { id: "res-3", title: "Resource 3", category: "worksheets", file_url: "/file3.png", themes: [], skills: [], subjects: ["EVS"], levels: ["class_2"], file_type: "png", keywords: [], languages: ["English"] },
 ];
 
 test("resolveSavedResources: all IDs resolve", () => {

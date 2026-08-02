@@ -16,7 +16,7 @@ export function useSavedResourceIds(): {
     staleTime: 15_000,
     retry: 1,
   });
-  const ids = useMemo(() => new Set((query.data ?? []).map((record) => record.resourceId)), [query.data]);
+  const ids = useMemo(() => new Set((query.data ?? []).map((record) => record.resource_id)), [query.data]);
   return {
     ids,
     isLoading: query.isLoading,
@@ -30,13 +30,13 @@ export function useToggleSavePrimaryResource() {
   const applyOptimistic = (resourceId: string, saved: boolean) => {
     queryClient.setQueryData<SavedPrimaryResource[]>(SAVED_RESOURCES_QUERY_KEY, (current = []) => {
       if (saved) {
-        if (current.some((record) => record.resourceId === resourceId)) return current;
+        if (current.some((record) => record.resource_id === resourceId)) return current;
         return [
           ...current,
-          { id: `optimistic-${resourceId}`, userId: "", resourceId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: `optimistic-${resourceId}`, user_id: "", resource_id: resourceId, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
         ];
       }
-      return current.filter((record) => record.resourceId !== resourceId);
+      return current.filter((record) => record.resource_id !== resourceId);
     });
   };
   const invalidate = () => void queryClient.invalidateQueries({ queryKey: SAVED_RESOURCES_QUERY_KEY });

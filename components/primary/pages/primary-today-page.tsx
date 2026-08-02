@@ -69,22 +69,20 @@ async function clearPlanForDate(date: string) {
 }
 
 // Assembles a kit from the teacher's current context and turns it into a day of planner activities.
+// Note: this used to POST the whole kit to /teaching-kits then batch-create activities via
+// /primary-planner-activities/from-kit — neither route was ever actually mounted on the backend
+// (confirmed: no teaching-kit route exists in app/api/v1/router.py). assembleKit's local,
+// backend-independent assembly logic is unchanged; persistence now goes straight through the
+// real, existing createPlannerActivity endpoint, one activity at a time.
 async function generatePlanForContext(context: PrimaryTeachingContext, date: string) {
   const assembled = assembleKit(context);
 
-  const savedKit = await backendApi.createTeachingKit({
-    context,
-    title: assembled.title,
-    resources: assembled.resources,
-    content: assembled.content,
-    planner_activity_ids: [],
-    assessment_ids: [],
-  });
-
-  const activities = (assembled.content?.sequence ?? []).map((step, index) => {
+  const steps = assembled.content?.sequence ?? [];
+  for (let index = 0; index < steps.length; index++) {
+    const step = steps[index];
     const startH = 8 + Math.floor((index * 10) / 60);
     const startM = (index * 10) % 60;
-    return {
+    await backendApi.createPlannerActivity({
       date,
       start_time: `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`,
       duration_minutes: step.duration || 10,
@@ -93,11 +91,9 @@ async function generatePlanForContext(context: PrimaryTeachingContext, date: str
       resource_ids: step.resourceIds || [],
       notes: step.instructions.join("\n"),
       status: "planned",
-    };
-  });
-
-  await backendApi.createPlannerActivitiesFromKit({ kit_id: savedKit.id, activities });
-  return activities.length;
+    });
+  }
+  return steps.length;
 }
 
 export default function PrimaryTodayPage({ notify }: { notify: (s: string) => void }) {
@@ -219,7 +215,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   const materialsList = useMemo(() => {
     if (dayRecord?.materials && dayRecord.materials.length > 0) return dayRecord.materials;
-    return Array.from(new Set(plannerActivities.flatMap((activity) => activity.resourceIds)))
+    return Array.from(new Set(plannerActivities.flatMap((activity) => activity.resource_ids)))
       .map((id) => PRIMARY_RESOURCES.find((resource) => resource.id === id)?.title)
       .filter((title): title is string => Boolean(title))
       .slice(0, 4);
@@ -230,7 +226,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     return titles.length > 0 ? `Today's plan includes ${titles.join(", ")}.` : "Generate a plan or add an activity to build today's schedule.";
   }, [plannerActivities]);
 
-  const totalDuration = useMemo(() => plannerActivities.reduce((sum, act) => sum + (act.durationMinutes || 0), 0), [plannerActivities]);
+  const totalDuration = useMemo(() => plannerActivities.reduce((sum, act) => sum + (act.duration_minutes || 0), 0), [plannerActivities]);
   const completedCount = useMemo(
     () => plannerActivities.filter((activity) => activity.status === "completed" || activity.status === "skipped").length,
     [plannerActivities]
@@ -242,16 +238,22 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   useEffect(() => {
     setReflection({
-      workedWell: dayRecord?.reflectionJson?.workedWell || "",
-      needsSupport: dayRecord?.reflectionJson?.needsSupport || "",
-      continueTomorrow: dayRecord?.reflectionJson?.continueTomorrow || "",
+      workedWell: dayRecord?.reflection_json?.worked_well || "",
+      needsSupport: dayRecord?.reflection_json?.needs_support || "",
+      continueTomorrow: dayRecord?.reflection_json?.continue_tomorrow || "",
     });
   }, [selectedDate, dayRecord]);
 
   const handleSaveReflection = async () => {
     setSavingReflection(true);
     try {
-      await backendApi.updateTodayDayRecord(selectedDate, { reflectionJson: reflection });
+      await backendApi.updateTodayDayRecord(selectedDate, {
+        reflection_json: {
+          worked_well: reflection.workedWell,
+          needs_support: reflection.needsSupport,
+          continue_tomorrow: reflection.continueTomorrow,
+        },
+      });
       notify("Daily reflection saved!");
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", selectedDate] });
     } catch {
@@ -421,7 +423,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-[22px] border border-blue-100 bg-blue-50/20 p-5 shadow-sm">
               <span className="flex items-center gap-1.5 text-xs font-black text-blue-600">📖 Day Overview</span>
-              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{dayRecord?.theme || context.theme || "Today's learning"}</h4>
+              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{context.theme || "Today's learning"}</h4>
               <p className="mt-2 text-xs font-semibold text-slate-400 leading-normal">{overview}</p>
             </div>
 
@@ -470,7 +472,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
             <div className="relative space-y-2 border-l border-dashed border-slate-200 pl-5 sm:pl-7">
               {plannerActivities.map((act) => {
-                const config = getActivityConfig(act.activityType);
+                const config = getActivityConfig(act.activity_type);
                 return (
                   <div
                     key={act.id}
@@ -479,8 +481,8 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                     <span className={cn("absolute -left-[25px] top-6 h-2 w-2 rounded-full ring-4 ring-white shadow-xs", config.dotBg)} />
 
                     <div className="w-24 shrink-0">
-                      <span className="block text-xs font-black text-slate-800">{act.startTime ? act.startTime.slice(0, 5) : "—"}</span>
-                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.durationMinutes || 10} min</span>
+                      <span className="block text-xs font-black text-slate-800">{act.start_time ? act.start_time.slice(0, 5) : "—"}</span>
+                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.duration_minutes || 10} min</span>
                     </div>
 
                     <div className="flex items-start gap-3 flex-1 min-w-0">

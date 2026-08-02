@@ -1,7 +1,5 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
 import type { ProfileAvatarKey } from "@/lib/profile-avatars";
-import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import type { PrimaryResource } from "./primary-resource-catalog";
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -1943,13 +1941,6 @@ export const backendApi = {
     if (params.subject) qStr.set("subject", params.subject);
     return apiFetch<PaginatedResponse<LibraryItem>>(`/library?${qStr.toString()}`);
   },
-  teachingKits: () => apiFetch<TeachingKit[]>("/teaching-kits"),
-  teachingKit: (id: string) => apiFetch<TeachingKit>(`/teaching-kits/${id}`),
-  createTeachingKit: (payload: TeachingKitCreatePayload) =>
-    apiFetch<TeachingKit>("/teaching-kits", { method: "POST", body: JSON.stringify(payload) }),
-  updateTeachingKit: (id: string, payload: Partial<TeachingKitCreatePayload>) =>
-    apiFetch<TeachingKit>(`/teaching-kits/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
-  deleteTeachingKit: (id: string) => apiFetch<void>(`/teaching-kits/${id}`, { method: "DELETE" }),
   primaryActivityEvents: (limit = 30) => apiFetch<PrimaryActivityEvent[]>(`/primary-activity-events?limit=${limit}`),
   createPrimaryActivityEvent: (payload: PrimaryActivityEventCreatePayload) =>
     apiFetch<PrimaryActivityEvent>("/primary-activity-events", { method: "POST", body: JSON.stringify(payload) }),
@@ -1962,8 +1953,6 @@ export const backendApi = {
     apiFetch<PrimaryTeachingDay>(`/primary/today?date=${date}`, { method: "PUT", body: JSON.stringify(payload) }),
   createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload) =>
     apiFetch<PrimaryPlannerActivity>("/primary-planner-activities", { method: "POST", body: JSON.stringify(payload) }),
-  createPlannerActivitiesFromKit: (payload: { kit_id: string; activities: any[] }) =>
-    apiFetch<PrimaryPlannerActivity[]>("/primary-planner-activities/from-kit", { method: "POST", body: JSON.stringify(payload) }),
   updatePlannerActivity: (id: string, payload: Partial<PrimaryPlannerActivityCreatePayload>) =>
     apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deletePlannerActivity: (id: string) =>
@@ -1998,6 +1987,25 @@ export const backendApi = {
     }),
   unsavePrimaryResource: (resourceId: string) =>
     apiFetch<void>(`/primary/saved-resources/${encodeURIComponent(resourceId)}`, { method: "DELETE" }),
+  primaryCurriculumThemes: (params: {
+    level?: string; subject?: string; language?: string;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.level) query.set("level", params.level);
+    if (params.subject) query.set("subject", params.subject);
+    if (params.language) query.set("language", params.language);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryCurriculumTheme[]>(`/primary/curriculum/themes${suffix}`);
+  },
+  primaryCurriculumLesson: (themeId: string, level: string) =>
+    apiFetch<PrimaryCurriculumLesson>(
+      `/primary/curriculum/lessons/${themeId}?level=${encodeURIComponent(level)}`
+    ),
+  generatePrimaryToday: (payload: PrimaryTodayGeneratePayload) =>
+    apiFetch<PrimaryTeachingDay>("/primary/today/generate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   recentGenerations: (skip = 0, limit = 10, workspace?: string) =>
     apiFetch<PaginatedResponse<RecentGenerationItem>>(
       `/dashboard/recent-generations?skip=${skip}&limit=${limit}${workspace ? `&workspace=${encodeURIComponent(workspace)}` : ""}`,
@@ -2476,41 +2484,225 @@ export type PrimaryTeachingKitContent = {
   objectivesSource?: "curated" | "template" | "resource" | "teacher-edited";
 };
 
-export type TeachingKit = {
+// TeachPad Primary. snake_case throughout, matching the backend's wire format
+// and every other type in this file. (Sahil's originals were camelCase on
+// responses and snake_case on payloads — the client sent one convention and
+// expected the other. No endpoint existed to disagree, so it typechecked.)
+//
+// `PrimaryTeachingContext` (Title-Case levels, cached client-side teaching
+// context used across the whole Primary UI for dropdowns/content-matching) is
+// deliberately NOT redefined here to match the backend's snake_case
+// PrimaryTeachingContextRead. It lives in lib/primary-context-helpers.ts and
+// is out of this task's declared scope — unifying it would mean rewriting
+// every level dropdown across Primary, not a mechanical rename. The backend
+// DTO for PrimaryTodayRead.context is named PrimaryTeachingContextRead below
+// to avoid colliding with it.
+export type PrimaryLevel =
+  | "nursery" | "lkg" | "ukg"
+  | "class_1" | "class_2" | "class_3" | "class_4" | "class_5";
+
+export type PrimaryStepType =
+  | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
+  | "classroom_activity" | "worksheet" | "assessment" | "movement" | "routine";
+
+export type PrimaryResource = {
   id: string;
-  userId: string;
-  context: PrimaryTeachingContext;
   title: string;
-  resources: TeachingKitResource[];
-  content?: PrimaryTeachingKitContent | null;
-  lessonPlanId?: string;
-  plannerActivityIds: string[];
-  assessmentIds: string[];
-  createdAt: string;
-  updatedAt: string;
+  category: string;
+  file_url: string;
+  thumbnail_url?: string | null;
+  file_type: string;
+  subjects: string[];
+  levels: string[];
+  themes: string[];
+  keywords: string[];
+  languages: string[];
+  skills: string[];
+  difficulty?: "beginner" | "intermediate" | "advanced" | null;
 };
 
-export type TeachingKitCreatePayload = {
-  context: PrimaryTeachingContext;
-  title: string;
-  resources: TeachingKitResource[];
-  content?: PrimaryTeachingKitContent | null;
-  lesson_plan_id?: string | null;
-  planner_activity_ids: string[];
-  assessment_ids: string[];
+export type PrimaryResourceListResponse = {
+  items: PrimaryResource[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
 };
 
-export type PrimaryActivityEntityType = "resource" | "teaching_kit" | "lesson_plan" | "planner_activity" | "assessment" | "ai_creation";
-export type PrimaryActivityAction = "viewed" | "downloaded" | "created" | "edited" | "saved";
+export type PrimaryCurriculumStep = {
+  id: string;
+  position: number;
+  step_type: PrimaryStepType;
+  title: string;
+  instructions: string[];
+  duration_minutes: number;
+  objective_indexes: number[];
+  resource_category?: string | null;
+};
+
+export type PrimaryCurriculumTheme = {
+  id: string;
+  name: string;
+  language: string;
+  subject: string;
+  description?: string | null;
+  emoji?: string | null;
+  is_active: boolean;
+  /** False when no lesson is published for the requested level. The picker
+   *  greys these out instead of letting a teacher choose one and get a 404. */
+  has_published_lesson: boolean;
+};
+
+export type PrimaryCurriculumLesson = {
+  id: string;
+  theme_id: string;
+  level: PrimaryLevel;
+  version: number;
+  status: "draft" | "published" | "archived";
+  objectives: string[];
+  vocabulary: string[];
+  assessment_questions: string[];
+  homework?: string | null;
+  parent_update?: string | null;
+  steps: PrimaryCurriculumStep[];
+};
+
+export type PrimaryReflection = {
+  worked_well?: string | null;
+  needs_support?: string | null;
+  continue_tomorrow?: string | null;
+  /** Rendered by the UI since day one and written by nothing until now. */
+  prep_needed?: string | null;
+};
+
+export type PrimaryTeachingDay = {
+  id: string;
+  user_id: string;
+  date: string;
+  section_id?: string | null;
+  level: PrimaryLevel;
+  subject?: string | null;
+  language: string;
+  theme_id?: string | null;
+  lesson_id?: string | null;
+  topic?: string | null;
+  skill?: string | null;
+  objectives: string[];
+  vocabulary: string[];
+  competencies: string[];
+  materials: string[];
+  assessment_questions: string[];
+  homework?: string | null;
+  parent_update?: string | null;
+  home_connection?: string | null;
+  teacher_notes?: string | null;
+  reflection_json?: PrimaryReflection | null;
+  status: "not_started" | "in_progress" | "completed";
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryTeachingDayUpdatePayload = Partial<
+  Pick<
+    PrimaryTeachingDay,
+    | "objectives" | "vocabulary" | "competencies" | "materials"
+    | "assessment_questions" | "homework" | "parent_update"
+    | "home_connection" | "teacher_notes" | "reflection_json" | "status"
+  >
+>;
+
+export type PrimaryPlannerActivityStatus =
+  | "planned" | "completed" | "partially completed" | "skipped" | "rescheduled";
+
+export type PrimaryPlannerActivity = {
+  id: string;
+  user_id: string;
+  teaching_day_id: string;
+  curriculum_step_id?: string | null;
+  date: string;
+  start_time?: string | null;
+  duration_minutes: number;
+  title: string;
+  activity_type: string;
+  context: Record<string, unknown>;
+  resource_ids: string[];
+  component_key?: string | null;
+  rescheduled_from_date?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status: PrimaryPlannerActivityStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryPlannerActivityCreatePayload = {
+  date: string;
+  start_time?: string | null;
+  duration_minutes?: number;
+  title: string;
+  activity_type: string;
+  context?: Record<string, unknown>;
+  resource_ids?: string[];
+  curriculum_step_id?: string | null;
+  component_key?: string | null;
+  rescheduled_from_date?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status?: PrimaryPlannerActivityStatus;
+};
+
+export type PrimaryPlannerActivityUpdatePayload = Partial<
+  Pick<
+    PrimaryPlannerActivity,
+    | "start_time" | "duration_minutes" | "title" | "resource_ids"
+    | "rescheduled_from_date" | "notes" | "observation" | "status"
+  >
+>;
+
+// Backend wire format for a teacher's saved Primary teaching context, as
+// returned inside PrimaryTodayRead.context. NOT the same type as the
+// client-cached `PrimaryTeachingContext` (see file-header note above) — kept
+// distinctly named so the two never collide.
+export type PrimaryTeachingContextRead = {
+  user_id: string;
+  level: PrimaryLevel;
+  subject?: string | null;
+  theme?: string | null;
+  topic?: string | null;
+  skill?: string | null;
+  language: string;
+  version: number;
+};
+
+export type PrimaryTodayRead = {
+  planner_activities: PrimaryPlannerActivity[];
+  day_record: PrimaryTeachingDay | null;
+  context: PrimaryTeachingContextRead | null;
+};
+
+export type PrimaryTodayGeneratePayload = {
+  date: string;
+  level: PrimaryLevel;
+  subject: string;
+  theme_id: string;
+  language?: string;
+  /** Clears the day's existing activities inside the same transaction. */
+  replace?: boolean;
+};
+
+export type PrimaryActivityEntityType =
+  "resource" | "lesson_plan" | "planner_activity" | "ai_creation";
+export type PrimaryActivityAction =
+  "viewed" | "downloaded" | "created" | "edited" | "saved";
 
 export type PrimaryActivityEvent = {
   id: string;
-  userId: string;
-  entityType: PrimaryActivityEntityType;
-  entityId: string;
+  user_id: string;
+  entity_type: PrimaryActivityEntityType;
+  entity_id: string;
   action: PrimaryActivityAction;
-  createdAt: string;
-  clientEventId?: string;
+  client_event_id?: string | null;
+  created_at: string;
 };
 
 export type PrimaryActivityEventCreatePayload = {
@@ -2520,146 +2712,14 @@ export type PrimaryActivityEventCreatePayload = {
   client_event_id?: string;
 };
 
-export type PrimaryPlannerActivityStatus =
-  | "planned"
-  | "completed"
-  | "partially completed"
-  | "skipped"
-  | "rescheduled";
-
-export type PrimaryPlannerActivity = {
-  id: string;
-  userId: string;
-  date: string;
-  startTime?: string | null;
-  durationMinutes?: number | null;
-  title: string;
-  activityType: string;
-  context: PrimaryTeachingContext;
-  resourceIds: string[];
-  teachingKitId?: string | null;
-  assessmentId?: string | null;
-  componentKey?: string | null;
-  rescheduledFromDate?: string | null;
-  notes?: string | null;
-  observation?: string | null;
-  status: PrimaryPlannerActivityStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PrimaryPlannerActivityCreatePayload = {
-  date: string;
-  start_time?: string | null;
-  duration_minutes?: number | null;
-  title: string;
-  activity_type: string;
-  context: PrimaryTeachingContext;
-  resource_ids: string[];
-  teaching_kit_id?: string | null;
-  assessment_id?: string | null;
-  component_key?: string | null;
-  rescheduled_from_date?: string | null;
-  notes?: string | null;
-  observation?: string | null;
-  status?: PrimaryPlannerActivityStatus;
-};
-
-export type PrimaryAssessmentStatus = "draft" | "ready" | "completed_manually";
-
-export type PrimaryAssessmentContentQuestion = {
-  type: string;
-  prompt: string;
-};
-
-export type PrimaryAssessmentContent = {
-  instructions?: string;
-  questions?: PrimaryAssessmentContentQuestion[];
-  skills?: string[];
-  criteria?: string[];
-};
-
-export type PrimaryAssessment = {
-  id: string;
-  userId: string;
-  title: string;
-  assessmentType: string;
-  classLevel: string;
-  subject: string;
-  theme?: string | null;
-  language: string;
-  teachingKitId?: string | null;
-  sourceComponentKey?: string | null;
-  sourceObjectiveKey?: string | null;
-  contentJson: PrimaryAssessmentContent;
-  status: PrimaryAssessmentStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PrimaryAssessmentCreatePayload = {
-  title: string;
-  assessment_type: string;
-  class_level: string;
-  subject: string;
-  theme?: string | null;
-  language?: string;
-  teaching_kit_id?: string | null;
-  source_component_key?: string | null;
-  source_objective_key?: string | null;
-  content_json: PrimaryAssessmentContent;
-  status?: PrimaryAssessmentStatus;
-};
-
 export type SavedPrimaryResource = {
   id: string;
-  userId: string;
-  resourceId: string;
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  resource_id: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type SavedPrimaryResourceCreatePayload = {
   resource_id: string;
-};
-
-export type PrimaryResourceListResponse = {
-  items: PrimaryResource[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-};
-
-export type PrimaryTeachingDay = {
-  id: string;
-  userId: string;
-  date: string;
-  classLevel?: string | null;
-  subject?: string | null;
-  theme?: string | null;
-  topic?: string | null;
-  skill?: string | null;
-  language?: string | null;
-  teachingKitId?: string | null;
-  objectives: string[];
-  competencies: string[];
-  materials: string[];
-  homeConnection?: string | null;
-  teacherNotes?: string | null;
-  reflectionJson?: {
-    workedWell?: string;
-    needsSupport?: string;
-    continueTomorrow?: string;
-    prepNeeded?: string;
-  } | null;
-  status: "not_started" | "in_progress" | "completed";
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PrimaryTodayRead = {
-  planner_activities: PrimaryPlannerActivity[];
-  day_record: PrimaryTeachingDay | null;
-  context: PrimaryTeachingContext | null;
 };
