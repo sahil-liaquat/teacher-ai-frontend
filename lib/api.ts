@@ -2276,6 +2276,43 @@ export const backendApi = {
     apiFetch<{ message: string }>(`/admin/users/${userId}/resend-confirmation`, { method: "POST" }),
   adminDeleteUser: (userId: string) =>
     apiFetch<void>(`/admin/users/${userId}`, { method: "DELETE" }),
+  adminPrimaryThemes: (level?: string) =>
+    apiFetch<PrimaryCurriculumTheme[]>(
+      `/admin/primary/curriculum/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
+    ),
+  adminCreatePrimaryTheme: (payload: {
+    name: string; subject: string; language?: string;
+    description?: string | null; emoji?: string | null;
+  }) =>
+    apiFetch<PrimaryCurriculumTheme>("/admin/primary/curriculum/themes", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminPrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
+  adminCreatePrimaryLesson: (payload: {
+    theme_id: string; level: string; objectives: string[]; vocabulary: string[];
+    assessment_questions: string[]; homework?: string | null;
+    parent_update?: string | null; steps: unknown[];
+  }) =>
+    apiFetch<PrimaryCurriculumLesson>("/admin/primary/curriculum/lessons", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryLesson: (lessonId: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminReplacePrimarySteps: (lessonId: string, steps: unknown[]) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/steps`, {
+      method: "PUT", body: JSON.stringify({ steps }),
+    }),
+  adminPublishPrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/publish`, {
+      method: "POST",
+    }),
+  adminDuplicatePrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/duplicate`, {
+      method: "POST",
+    }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
