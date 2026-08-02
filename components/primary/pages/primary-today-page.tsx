@@ -135,8 +135,32 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   ) => {
     const ctx = overrideContext ?? context;
     const date = overrideDate ?? selectedDate;
-    const themeId =
-      themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
+
+    // `themes`/`selectedThemeId` above are scoped to THIS render's
+    // `context.level`/`context.subject`. When called with an overrideContext
+    // (the quick-select "View full plan" path), `updateContext()` is async —
+    // React hasn't necessarily re-rendered with the new context yet, so those
+    // would still reflect the OLD level/subject. Looking a theme name up
+    // against the wrong subject's theme list can resolve to a real theme id
+    // for a DIFFERENT subject (the backend does not cross-validate
+    // payload.subject against the resolved theme's actual subject), silently
+    // generating a day with a mismatched subject/theme pairing. Fetch the
+    // theme list freshly scoped to the actual ctx being generated for instead
+    // of trusting render state — this is correct regardless of render timing.
+    // Same queryKey/queryFn shape as the useQuery above, so when ctx matches
+    // the current render it's just a cache hit, not an extra request.
+    const themeId = overrideContext
+      ? (
+          await queryClient.fetchQuery({
+            queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject],
+            queryFn: () =>
+              backendApi.primaryCurriculumThemes({
+                level: PRIMARY_LEVEL_TO_API[ctx.level],
+                subject: ctx.subject ?? undefined,
+              }),
+          })
+        ).find((t) => t.name === ctx.theme)?.id ?? ""
+      : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
 
     const payload = buildGeneratePayload(ctx, themeId, date, replace);
     if (!payload) {
