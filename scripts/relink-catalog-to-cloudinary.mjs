@@ -76,10 +76,17 @@ if (!resources.length) {
 const byKey = new Map();
 for (const r of resources) {
   const publicId = r.public_id ?? "";
-  // Drop the upload folder prefix so keys line up with local catalog paths.
-  const rel = publicId.startsWith(`${UPLOAD_FOLDER}/`)
-    ? publicId.slice(UPLOAD_FOLDER.length + 1)
-    : publicId;
+  // In dynamic-folder mode Cloudinary assigns a RANDOM public_id
+  // ("undhkzstzk4c40x8me5a") and keeps the human path in asset_folder +
+  // display_name. Match on the logical path; deliver via the real public_id.
+  // Fall back to the public_id itself for fixed-public_id upload modes.
+  const logical =
+    r.asset_folder && r.display_name
+      ? `${r.asset_folder}/${r.display_name}`
+      : publicId;
+  const rel = logical.startsWith(`${UPLOAD_FOLDER}/`)
+    ? logical.slice(UPLOAD_FOLDER.length + 1)
+    : logical;
   byKey.set(keyOf(rel), { publicId, format: r.format, resourceType: r.resource_type ?? "image" });
 }
 console.log(`Cloudinary assets indexed: ${byKey.size}`);
@@ -99,12 +106,15 @@ const rewritten = source.replace(/"fileUrl":"([^"]+)"/g, (whole, localUrl) => {
   }
   matched += 1;
   const isRaw = hit.resourceType === "raw";
+  const isPdf = (hit.format ?? "").toLowerCase() === "pdf";
   const kind = isRaw ? "raw" : "image";
   const base = `https://res.cloudinary.com/${cloud}/${kind}/upload`;
   const ext = hit.format ? `.${hit.format}` : "";
-  // Raw assets (our PDFs) reject image transformations — a /raw/upload/f_auto/...
-  // URL errors rather than degrading. Only image assets get a transform segment.
-  const tx = isRaw ? "" : `${FULL_TX}/`;
+  // No transformations on PDFs, whichever resource_type they landed under.
+  // Raw rejects image transforms outright (401/error); and Cloudinary often
+  // stores PDFs as resource_type=image, where a transform would *rasterise*
+  // the document — silently turning a printable download into a picture.
+  const tx = isRaw || isPdf ? "" : `${FULL_TX}/`;
   return `"fileUrl":"${base}/${tx}${encodePublicId(hit.publicId)}${ext}"`;
 });
 
