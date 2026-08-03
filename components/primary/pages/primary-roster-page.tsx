@@ -14,6 +14,7 @@ import { PRIMARY_LEVEL_KEYS, levelFromDisplay, levelLabel } from "@/lib/primary-
 import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { isValidStudentCode, normaliseStudentCode } from "@/lib/primary-roster";
 import { cn } from "@/lib/utils";
+import PrimaryStudentProfilePanel from "./primary-student-profile";
 
 const SECTIONS_KEY = ["primary-sections"] as const;
 
@@ -28,6 +29,7 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
     () => levelFromDisplay(context.level) || "nursery",
   );
   const [newStudentCode, setNewStudentCode] = useState("");
+  const [profileStudent, setProfileStudent] = useState<PrimaryStudent | null>(null);
 
   const sections = useQuery({
     queryKey: [...SECTIONS_KEY, showArchived],
@@ -129,6 +131,7 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
   const deleteStudent = useMutation({
     mutationFn: (student: PrimaryStudent) => backendApi.deletePrimaryStudent(student.id),
     onSuccess: () => {
+      setProfileStudent(null);
       refreshStudents();
       notify("Child removed");
     },
@@ -332,6 +335,13 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
                   <div className="ml-auto flex flex-wrap items-center gap-3">
                     <button
                       type="button"
+                      onClick={() => setProfileStudent(student)}
+                      className="text-[11px] font-bold text-[#1677ff] hover:underline"
+                    >
+                      View profile
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => archiveStudent.mutate(student)}
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-[#454c86] hover:underline"
                     >
@@ -351,6 +361,13 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
             </ul>
           )}
         </section>
+      )}
+
+      {profileStudent && (
+        <PrimaryStudentProfilePanel
+          student={profileStudent}
+          onClose={() => setProfileStudent(null)}
+        />
       )}
     </div>
   );
