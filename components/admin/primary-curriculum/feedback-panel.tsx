@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { backendApi, type PrimaryLevel, type PrimaryStepFeedback } from "@/lib/api";
 import { AdminPanel, EmptyState, LoadingState, StatusPill } from "@/components/admin/admin-ui";
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { formatSkipRate, skipSeverity } from "@/lib/primary-feedback";
 import { LEVEL_OPTIONS } from "@/components/admin/primary-curriculum/theme-list";
@@ -47,7 +48,20 @@ export function FeedbackPanel() {
       contentClassName="p-0"
     >
       {feedback.isLoading ? <div className="p-6"><LoadingState label="Loading feedback" /></div> : null}
-      {!feedback.isLoading && !items.length ? (
+      {feedback.isError ? (
+        <div className="p-6">
+          <EmptyState
+            title="Couldn't load feedback"
+            description="Something went wrong fetching skip-rate feedback. Please try again."
+            action={
+              <Button type="button" variant="outline" size="sm" onClick={() => void feedback.refetch()}>
+                Try again
+              </Button>
+            }
+          />
+        </div>
+      ) : null}
+      {!feedback.isLoading && !feedback.isError && !items.length ? (
         <div className="p-6">
           <EmptyState title="No published steps yet" description="Author and publish a lesson to start seeing feedback here." />
         </div>
