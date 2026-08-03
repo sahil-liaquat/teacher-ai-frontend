@@ -2417,6 +2417,16 @@ export const backendApi = {
     apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/duplicate`, {
       method: "POST",
     }),
+  adminPrimaryCurriculumFeedback: (params?: { level?: string; subject?: string; language?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.level) query.set("level", params.level);
+    if (params?.subject) query.set("subject", params.subject);
+    if (params?.language) query.set("language", params.language);
+    const suffix = query.toString();
+    return apiFetch<PrimaryStepFeedback[]>(
+      `/admin/primary/curriculum/feedback${suffix ? `?${suffix}` : ""}`
+    );
+  },
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
@@ -2620,6 +2630,31 @@ export type PrimaryCurriculumLesson = {
   homework?: string | null;
   parent_update?: string | null;
   steps: PrimaryCurriculumStep[];
+};
+
+export type PrimaryStepFeedback = {
+  step_id: string;
+  lesson_id: string;
+  theme_id: string;
+  theme_name: string;
+  level: PrimaryLevel;
+  subject: string;
+  language: string;
+  step_type: PrimaryStepType;
+  position: number;
+  title: string;
+  resource_category?: string | null;
+  attempts: number;
+  completed_count: number;
+  partial_count: number;
+  skipped_count: number;
+  rescheduled_count: number;
+  planned_count: number;
+  resolved_attempts: number;
+  distinct_teachers: number;
+  /** Percent of resolved_attempts that were "skipped". null means no
+   *  resolved attempts exist yet — never render that as "0%". */
+  skip_rate: number | null;
 };
 
 export type PrimaryReflection = {
