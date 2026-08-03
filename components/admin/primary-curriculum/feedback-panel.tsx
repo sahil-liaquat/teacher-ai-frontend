@@ -66,30 +66,30 @@ export function FeedbackPanel() {
           <EmptyState title="No published steps yet" description="Author and publish a lesson to start seeing feedback here." />
         </div>
       ) : null}
-      {!feedback.isLoading && items.length > 0 && !withData.length ? (
+      {!feedback.isLoading && !feedback.isError && items.length > 0 && !withData.length ? (
         <div className="p-6">
           <EmptyState title="No teacher has generated a day yet" description="Feedback appears once teachers start marking activities complete, partial, or skipped." />
         </div>
-      ) : null}
-
-      <ul className="divide-y divide-gray-100">
-        {items.map((item: PrimaryStepFeedback) => (
-          <li key={item.step_id} className="flex items-start justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-gray-900">{item.title}</p>
-              <p className="mt-0.5 truncate text-xs text-gray-500">
-                {item.theme_name} · {item.subject} · {item.level} · step {item.position + 1}
-              </p>
-              <p className="mt-0.5 text-xs text-gray-400">
-                {item.resolved_attempts} resolved · {item.distinct_teachers} teacher{item.distinct_teachers === 1 ? "" : "s"}
-              </p>
-            </div>
-            <StatusPill status={SEVERITY_STATUS[skipSeverity(item.skip_rate)]}>
-              {formatSkipRate(item.skip_rate)}
-            </StatusPill>
-          </li>
-        ))}
-      </ul>
+      ) : (
+        <ul className="divide-y divide-gray-100">
+          {items.map((item: PrimaryStepFeedback) => (
+            <li key={item.step_id} className="flex items-start justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-gray-900">{item.title}</p>
+                <p className="mt-0.5 truncate text-xs text-gray-500">
+                  {item.theme_name} · {item.subject} · {item.level} · step {item.position + 1}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {item.resolved_attempts} resolved · {item.distinct_teachers} teacher{item.distinct_teachers === 1 ? "" : "s"}
+                </p>
+              </div>
+              <StatusPill status={SEVERITY_STATUS[skipSeverity(item.skip_rate)]}>
+                {formatSkipRate(item.skip_rate)}
+              </StatusPill>
+            </li>
+          ))}
+        </ul>
+      )}
     </AdminPanel>
   );
 }
