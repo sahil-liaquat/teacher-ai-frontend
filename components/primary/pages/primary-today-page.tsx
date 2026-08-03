@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { backendApi, type PrimaryPlannerActivity } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorMessage } from "@/lib/errors";
@@ -71,9 +72,15 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const [generateError, setGenerateError] = useState<string | null>(null);
   const attemptedRef = useRef<string | null>(null);
 
+  const { sectionId, setSectionId } = usePrimarySection();
+  const sections = useQuery({
+    queryKey: ["primary-sections", false],
+    queryFn: () => backendApi.primarySections(),
+  });
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["primary-today-workspace", selectedDate],
-    queryFn: () => backendApi.getTodayWorkspace(selectedDate),
+    queryKey: ["primary-today-workspace", selectedDate, sectionId],
+    queryFn: () => backendApi.getTodayWorkspace(selectedDate, sectionId ?? undefined),
   });
 
   const plannerActivities = data?.planner_activities ?? [];
@@ -167,6 +174,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       setGenerateError("Pick a level, subject and theme before generating a plan.");
       return;
     }
+    payload.section_id = sectionId;
 
     setGenerateError(null);
     setGenerating(true);
@@ -289,13 +297,17 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const handleSaveReflection = async () => {
     setSavingReflection(true);
     try {
-      await backendApi.updateTodayDayRecord(selectedDate, {
-        reflection_json: {
-          worked_well: reflection.workedWell,
-          needs_support: reflection.needsSupport,
-          continue_tomorrow: reflection.continueTomorrow,
+      await backendApi.updateTodayDayRecord(
+        selectedDate,
+        {
+          reflection_json: {
+            worked_well: reflection.workedWell,
+            needs_support: reflection.needsSupport,
+            continue_tomorrow: reflection.continueTomorrow,
+          },
         },
-      });
+        sectionId ?? undefined,
+      );
       notify("Daily reflection saved!");
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", selectedDate] });
     } catch {
@@ -404,6 +416,24 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           </button>
         </div>
       </div>
+
+      {(sections.data || []).length > 0 && (
+        <label className="mt-4 block text-xs font-bold text-slate-600">
+          Class
+          <select
+            value={sectionId || ""}
+            onChange={(event) => setSectionId(event.target.value || null)}
+            className="mt-1 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          >
+            <option value="">All children (no class)</option>
+            {(sections.data || []).map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       {/* Date navigation strip */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 p-3 shadow-sm">

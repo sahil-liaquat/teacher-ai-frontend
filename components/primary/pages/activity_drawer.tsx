@@ -15,10 +15,19 @@ import {
   Lightbulb,
   Trash2
 } from "lucide-react";
-import { backendApi, type PrimaryPlannerActivity, type PrimaryPlannerActivityStatus } from "@/lib/api";
+import {
+  backendApi,
+  type PrimaryObservation,
+  type PrimaryPlannerActivity,
+  type PrimaryPlannerActivityStatus,
+  type PrimaryStudent,
+} from "@/lib/api";
 import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
+import { OBSERVATION_RATINGS, RATING_LABELS, ratingTone, type ObservationRating } from "@/lib/primary-roster";
+import { usePrimarySection } from "@/lib/use-primary-section";
 
 interface ActivityDrawerProps {
   activity: PrimaryPlannerActivity;
@@ -50,6 +59,56 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
   // Note & Observation states
   const [notes, setNotes] = useState(activity.notes || "");
   const [observation, setObservation] = useState(activity.observation || "");
+
+  const { sectionId } = usePrimarySection();
+
+  // Only children of the day's class can be rated on it — the backend rejects
+  // the mismatch with a 409, so offering them here would be a dead end.
+  const students = useQuery({
+    queryKey: ["primary-students", sectionId, false],
+    queryFn: () => backendApi.primaryStudents({ sectionId: sectionId as string }),
+    enabled: Boolean(sectionId),
+  });
+
+  const observations = useQuery({
+    queryKey: ["primary-observations", activity.teaching_day_id, activity.id],
+    queryFn: () =>
+      backendApi.primaryObservations({
+        start: activity.date,
+        end: activity.date,
+        teachingDayId: activity.teaching_day_id,
+      }),
+    enabled: Boolean(sectionId),
+  });
+
+  const rateChild = useMutation({
+    mutationFn: (input: { studentId: string; rating: ObservationRating }) =>
+      backendApi.upsertPrimaryObservation({
+        student_id: input.studentId,
+        teaching_day_id: activity.teaching_day_id,
+        planner_activity_id: activity.id,
+        // The day's focus skill, so a term profile groups by something
+        // meaningful instead of filing everything under "General".
+        skill: (activity.context?.skill as string | undefined) || null,
+        rating: input.rating,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["primary-observations"] });
+      void queryClient.invalidateQueries({ queryKey: ["primary-student-profile"] });
+      notify("Observation saved");
+    },
+    onError: (error) => notify(getErrorMessage(error, "Could not save that observation.")),
+  });
+
+  const ratingByStudent = useMemo(() => {
+    const map: Record<string, ObservationRating> = {};
+    for (const observation of observations.data || []) {
+      if (observation.planner_activity_id === activity.id) {
+        map[observation.student_id] = observation.rating;
+      }
+    }
+    return map;
+  }, [observations.data, activity.id]);
 
   // Local drafts safety
   const draftNotesKey = `draft-notes-${activity.id}-${activity.date}`;
@@ -390,6 +449,48 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               </div>
             )}
           </div>
+
+          {sectionId && (students.data || []).length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-extrabold text-slate-900">How did each child do?</h3>
+              <p className="mt-1 text-[11px] font-medium text-[#454c86]">
+                One rating per child for this activity. Tap again to change it.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {(students.data || []).map((student: PrimaryStudent) => (
+                  <li
+                    key={student.id}
+                    className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e8e7fb] bg-white px-3 py-2"
+                  >
+                    <b className="text-xs text-slate-900">{student.code}</b>
+                    <div className="ml-auto flex flex-wrap gap-1.5">
+                      {OBSERVATION_RATINGS.map((rating) => {
+                        const active = ratingByStudent[student.id] === rating;
+                        const tone = ratingTone(rating);
+                        return (
+                          <button
+                            key={rating}
+                            type="button"
+                            disabled={rateChild.isPending}
+                            aria-pressed={active}
+                            onClick={() => rateChild.mutate({ studentId: student.id, rating })}
+                            className={cn(
+                              "rounded-full border px-2.5 py-1 text-[11px] font-bold transition disabled:opacity-50",
+                              active
+                                ? `${tone.chip} ${tone.text}`
+                                : "border-[#e8e7fb] bg-white text-[#454c86] hover:bg-[#f7f4ff]",
+                            )}
+                          >
+                            {RATING_LABELS[rating]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Notes & Observations inputs */}
           <div className="space-y-4">
