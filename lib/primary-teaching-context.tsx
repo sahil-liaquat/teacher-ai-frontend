@@ -215,22 +215,33 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
     async (next: Partial<PrimaryTeachingContext>) => {
       const updated = { ...context, ...next };
 
+      // These cascades exist to drop values that the change just made STALE.
+      // A field the caller passed in this same call is not stale — it is the
+      // teacher's actual choice. Clearing it anyway means a caller that sets
+      // level+subject+theme together (the Today setup modal, the home card's
+      // "View full plan") loses the theme it just picked and gets whatever
+      // themesForSubject() happens to list first backfilled in its place.
+
       // 1. Class (level) changes
       if (next.level && next.level !== context.level) {
         const validSubjects = subjectsForClass(next.level);
-        if (!validSubjects.includes(updated.subject)) {
+        // Only rescue a subject the caller left alone. subjectsForClass is a
+        // static list and the curriculum has since outgrown it (EVS is
+        // published for UKG but missing from its entry), so overriding an
+        // explicit subject here silently teaches the wrong one.
+        if (next.subject === undefined && !validSubjects.includes(updated.subject)) {
           updated.subject = validSubjects[0];
         }
-        updated.theme = undefined;
-        updated.topic = undefined;
-        updated.skill = undefined;
+        if (next.theme === undefined) updated.theme = undefined;
+        if (next.topic === undefined) updated.topic = undefined;
+        if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 2. Subject changes
       if (next.subject && next.subject !== context.subject) {
-        updated.theme = undefined;
-        updated.topic = undefined;
-        updated.skill = undefined;
+        if (next.theme === undefined) updated.theme = undefined;
+        if (next.topic === undefined) updated.topic = undefined;
+        if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 3. Theme changes

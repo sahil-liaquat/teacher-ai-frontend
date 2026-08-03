@@ -72,7 +72,20 @@ const VALID_LEVELS = new Set<string>(PRIMARY_LEVELS);
 const VALID_LANGUAGES = new Set<string>(PRIMARY_LANGUAGES);
 
 export function sanitizeContext(input: Partial<PrimaryTeachingContext> | null | undefined): PrimaryTeachingContext {
-  const base: PrimaryTeachingContext = { ...DEFAULT_PRIMARY_TEACHING_CONTEXT, ...(input ?? {}) };
+  const raw = input ?? {};
+  // Copy the known keys ONLY — never spread the input wholesale. Callers hand
+  // this the raw GET/PUT /primary/context response, which also carries
+  // id/user_id/version/updated_at. Spreading those in makes them part of the
+  // context, so the next PUT echoes them back at PrimaryTeachingContextUpdate
+  // (extra="forbid") and every save 422s for the rest of the session.
+  const base: PrimaryTeachingContext = {
+    level: raw.level ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.level,
+    subject: raw.subject ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.subject,
+    theme: raw.theme,
+    topic: raw.topic,
+    skill: raw.skill,
+    language: raw.language ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.language,
+  };
   if (!VALID_LEVELS.has(base.level)) base.level = DEFAULT_PRIMARY_TEACHING_CONTEXT.level;
   if (!VALID_LANGUAGES.has(base.language)) base.language = DEFAULT_PRIMARY_TEACHING_CONTEXT.language;
   const subject = base.subject?.trim();

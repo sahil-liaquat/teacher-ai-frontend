@@ -27,6 +27,25 @@ test("sanitizeContext fills defaults for missing fields", () => {
   assert.equal(partial.theme, "My Family"); // default fallback
 });
 
+test("sanitizeContext drops server-only fields from the API response", () => {
+  // The provider feeds the raw /primary/context payload straight in. Anything
+  // extra that survives ends up on the next PUT, which the backend schema
+  // rejects with extra="forbid" — a 422 on every save, silent to the teacher.
+  const fromServer = sanitizeContext({
+    level: "Class 1",
+    subject: "Maths",
+    theme: "Numbers",
+    topic: "Numbers",
+    language: "English",
+    id: "9f1e",
+    user_id: "abc",
+    version: 4,
+    updated_at: "2026-08-03T00:00:00Z",
+  } as never);
+
+  assert.deepEqual(Object.keys(fromServer).sort(), ["language", "level", "subject", "theme", "topic"]);
+});
+
 test("migrateLegacyContext handles schema version 1 cache objects", () => {
   const oldCache = JSON.stringify({
     level: "Class 3",
