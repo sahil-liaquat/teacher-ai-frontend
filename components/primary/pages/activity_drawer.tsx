@@ -55,6 +55,14 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
   const [startTime, setStartTime] = useState(activity.start_time?.slice(0, 5) || "");
   const [activityType, setActivityType] = useState(activity.activity_type);
   const [resourceIds, setResourceIds] = useState(activity.resource_ids || []);
+  // One instruction per line. The stored value is a list of strings, but a
+  // textarea is what a teacher rewriting a step actually wants — splitting on
+  // newlines at save time is cheaper than a per-line add/remove/reorder UI.
+  const [instructions, setInstructions] = useState(() =>
+    (Array.isArray(activity.context.instructions) ? activity.context.instructions : [])
+      .filter((line): line is string => typeof line === "string")
+      .join("\n")
+  );
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Note & Observation states
@@ -292,9 +300,15 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
         start_time: startTime || null,
         activity_type: activityType,
         resource_ids: resourceIds,
+        // Blank lines are dropped server-side too; trimming here keeps the
+        // textarea's trailing newline from becoming an empty step.
+        instructions: instructions
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
       });
       setEditing(false);
-      notify("Activity metadata updated!");
+      notify("Activity updated!");
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
@@ -374,6 +388,17 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
                   <input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                 </label>
               </div>
+              <label className="block text-xs font-black text-slate-600">
+                Instructions
+                <span className="ml-1 font-bold text-slate-400">— one step per line</span>
+                <textarea
+                  value={instructions}
+                  onChange={(event) => setInstructions(event.target.value)}
+                  rows={6}
+                  placeholder="Sit the children in a circle&#10;Sing the welcome song&#10;Ask each child to name one thing they see"
+                  className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </label>
               <fieldset>
                 <legend className="text-xs font-black text-slate-600">Linked resources</legend>
                 <div className="mt-2 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
@@ -424,11 +449,11 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
           {/* Step instructions — personalised by Gemini when available, the
               authored curriculum text otherwise. Absent entirely on
               activities created before this field existed. */}
-          {Array.isArray(activity.context.instructions) && activity.context.instructions.length > 0 ? (
-            <div className="rounded-2xl border border-slate-100 bg-white p-4">
-              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
-                Instructions
-              </h4>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+              Instructions
+            </h4>
+            {Array.isArray(activity.context.instructions) && activity.context.instructions.length > 0 ? (
               <ol className="space-y-1.5 text-xs text-slate-700 list-decimal list-inside">
                 {(activity.context.instructions as unknown[])
                   .filter((line): line is string => typeof line === "string")
@@ -436,8 +461,19 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
                     <li key={index}>{line}</li>
                   ))}
               </ol>
-            </div>
-          ) : null}
+            ) : (
+              // Rendering nothing here used to hide the fact that instructions
+              // exist at all — including from teachers whose activities predate
+              // the field, who then had no way to discover they can write them.
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="text-xs font-bold text-[#6e41f5] hover:underline"
+              >
+                No instructions yet — add your own
+              </button>
+            )}
+          </div>
 
           {/* Direct Resource Access */}
           <div>

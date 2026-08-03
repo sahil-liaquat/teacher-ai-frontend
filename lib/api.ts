@@ -2110,6 +2110,13 @@ export const backendApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  /** Clones an already-planned day onto another class. Not a generation —
+   *  no Gemini call, so it never consumes the teacher's quota. */
+  copyPrimaryToday: (payload: PrimaryTodayCopyPayload) =>
+    apiFetch<PrimaryTeachingDay>("/primary/today/copy", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   recentGenerations: (skip = 0, limit = 10, workspace?: string) =>
     apiFetch<PaginatedResponse<RecentGenerationItem>>(
       `/dashboard/recent-generations?skip=${skip}&limit=${limit}${workspace ? `&workspace=${encodeURIComponent(workspace)}` : ""}`,
@@ -2751,7 +2758,12 @@ export type PrimaryPlannerActivityUpdatePayload = Partial<
     | "resource_ids" | "rescheduled_from_date" | "notes" | "observation"
     | "status"
   >
->;
+> & {
+  /** Not a column — the backend merges this into the activity's `context`
+   *  JSONB, leaving level/subject/language in place. Omit to leave the
+   *  existing steps alone; [] clears them. */
+  instructions?: string[];
+};
 
 // Backend wire format for a teacher's saved Primary teaching context, as
 // returned inside PrimaryTodayRead.context. NOT the same type as the
@@ -2875,6 +2887,15 @@ export type PrimaryTodayGeneratePayload = {
   replace?: boolean;
   /** Omitted means the section-less day — what every teacher gets today. */
   section_id?: string | null;
+};
+
+export type PrimaryTodayCopyPayload = {
+  date: string;
+  /** The class to copy FROM. Null means the section-less day. */
+  from_section_id: string | null;
+  /** The class to copy INTO. Null means the section-less day. */
+  section_id: string | null;
+  replace?: boolean;
 };
 
 export type PrimaryActivityEntityType =

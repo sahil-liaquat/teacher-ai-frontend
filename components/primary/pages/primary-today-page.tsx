@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ArrowRight,
   CheckCircle2,
+  Copy,
   XCircle,
   AlertTriangle,
   Loader2,
@@ -19,11 +20,12 @@ import { backendApi, type PrimaryPlannerActivity } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
-import { buildGeneratePayload, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
+import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import ActivityDrawer from "./activity_drawer";
+import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 import { cn } from "@/lib/utils";
 
 const toLocalISODate = (date: Date) =>
@@ -37,6 +39,10 @@ const addDays = (date: Date, days: number) => {
   next.setDate(next.getDate() + days);
   return next;
 };
+
+// The section-less day has no id, so it needs a stand-in value to be selectable
+// in a <select> alongside real section ids.
+const NO_SECTION = "__no_section__";
 
 const ACTIVITY_TYPES_CONFIG: Record<
   string,
@@ -72,8 +78,13 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const [selectedActivity, setSelectedActivity] = useState<PrimaryPlannerActivity | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [setupSubmitting, setSetupSubmitting] = useState(false);
+  // "" = nothing picked yet; NO_SECTION = the section-less day.
+  const [copyFrom, setCopyFrom] = useState("");
+  const [copying, setCopying] = useState(false);
 
-  const { sectionId, setSectionId } = usePrimarySection();
+  const { sectionId, setSectionId, hasChosen } = usePrimarySection();
   const sections = useQuery({
     queryKey: ["primary-sections", false],
     queryFn: () => backendApi.primarySections(),
@@ -90,6 +101,17 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       setSectionId(null);
     }
   }, [sections.isSuccess, sections.data, sectionId, setSectionId]);
+
+  // A teacher who has built a roster expects to be planning for one of their
+  // classes. Landing on the section-less day instead gives them two places to
+  // plan with no sign which is which — they plan in one, open their real class,
+  // and find it empty. Default to the first class; `hasChosen` keeps this from
+  // overriding anyone who deliberately picked "All children".
+  useEffect(() => {
+    if (!sections.isSuccess || hasChosen || sectionId) return;
+    const first = sections.data.find((section) => section.is_active) ?? sections.data[0];
+    if (first) setSectionId(first.id, false);
+  }, [sections.isSuccess, sections.data, sectionId, hasChosen, setSectionId]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["primary-today-workspace", selectedDate, sectionId],
@@ -147,11 +169,15 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     [themes, context.theme]
   );
 
-  const runGenerate = async (
-    overrideContext?: PrimaryTeachingContext,
-    overrideDate?: string,
-    replace = false
-  ) => {
+  const runGenerate = async (options: {
+    /** Context to generate for, when it differs from the saved one. */
+    context?: PrimaryTeachingContext;
+    date?: string;
+    /** A theme id already resolved by the caller — skips the name lookup below. */
+    themeId?: string;
+    replace?: boolean;
+  } = {}) => {
+    const { context: overrideContext, date: overrideDate, replace = false } = options;
     const ctx = overrideContext ?? context;
     const date = overrideDate ?? selectedDate;
 
@@ -168,22 +194,31 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     // of trusting render state — this is correct regardless of render timing.
     // Same queryKey/queryFn shape as the useQuery above, so when ctx matches
     // the current render it's just a cache hit, not an extra request.
-    const themeId = overrideContext
-      ? (
-          await queryClient.fetchQuery({
-            queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject],
-            queryFn: () =>
-              backendApi.primaryCurriculumThemes({
-                level: PRIMARY_LEVEL_TO_API[ctx.level],
-                subject: ctx.subject ?? undefined,
-              }),
-          })
-        ).find((t) => t.name === ctx.theme)?.id ?? ""
-      : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
+    let themeId = options.themeId ?? "";
+    if (!themeId) {
+      themeId = overrideContext
+        ? (
+            await queryClient.fetchQuery({
+              queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject],
+              queryFn: () =>
+                backendApi.primaryCurriculumThemes({
+                  level: PRIMARY_LEVEL_TO_API[ctx.level],
+                  subject: ctx.subject ?? undefined,
+                }),
+            })
+          ).find((t) => t.name === ctx.theme)?.id ?? ""
+        : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
+    }
 
     const payload = buildGeneratePayload(ctx, themeId, date, replace);
+    // Nothing to generate from — either the context is incomplete, or its theme
+    // name has no curriculum row behind it. A teacher can't tell those apart
+    // from an error line, and the second one looks like a lie when the pickers
+    // above are visibly filled in. Open the setup modal and let them choose
+    // from themes that actually exist.
     if (!payload) {
-      setGenerateError("Pick a level, subject and theme before generating a plan.");
+      setGenerateError(null);
+      setSetupOpen(true);
       return;
     }
     payload.section_id = sectionId;
@@ -226,9 +261,68 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       const todayDate = toLocalISODate(new Date());
       await updateContext(resolvedContext);
       setSelectedDate(todayDate);
-      await runGenerate(resolvedContext, todayDate);
+      await runGenerate({ context: resolvedContext, date: todayDate });
     } finally {
       setSavingContext(false);
+    }
+  };
+
+  const handleSetupSubmit = async (setup: PrimaryPlanSetup) => {
+    setSetupSubmitting(true);
+    try {
+      const resolvedContext: PrimaryTeachingContext = {
+        ...context,
+        level: setup.level,
+        subject: setup.subject,
+        theme: setup.themeName,
+        topic: setup.themeName,
+        // Curriculum themes are authored per language, so generating a Hindi
+        // theme's day in English would narrate content the lesson isn't written
+        // in. Follow the theme, but only to a language the context can hold.
+        language: (PRIMARY_LANGUAGES as readonly string[]).includes(setup.language)
+          ? (setup.language as PrimaryTeachingContext["language"])
+          : context.language,
+      };
+      await updateContext(resolvedContext);
+      setSetupOpen(false);
+      // The modal picked a real curriculum row, so hand its id straight to the
+      // generator rather than round-tripping through a name lookup.
+      await runGenerate({ context: resolvedContext, themeId: setup.themeId });
+    } finally {
+      setSetupSubmitting(false);
+    }
+  };
+
+  // Every other group the same date could already be planned for. The backend
+  // is the authority on whether one actually has a plan — it 404s with a plain
+  // sentence — so this list doesn't try to pre-check each one.
+  const copySources = useMemo(() => {
+    const groups: Array<{ value: string; label: string }> = [
+      { value: NO_SECTION, label: "Not assigned to a class" },
+      ...(sections.data || []).map((section) => ({ value: section.id, label: section.name })),
+    ];
+    return groups.filter((group) => group.value !== (sectionId ?? NO_SECTION));
+  }, [sections.data, sectionId]);
+
+  const handleCopyDay = async () => {
+    if (!copyFrom) return;
+    setCopying(true);
+    setGenerateError(null);
+    try {
+      await backendApi.copyPrimaryToday({
+        date: selectedDate,
+        from_section_id: copyFrom === NO_SECTION ? null : copyFrom,
+        section_id: sectionId,
+      });
+      notify("Plan copied ✨");
+      await queryClient.invalidateQueries({
+        queryKey: ["primary-today-workspace", selectedDate],
+      });
+    } catch (err) {
+      console.error("Failed to copy plan:", err);
+      setGenerateError(getErrorMessage(err, "We couldn't copy that plan. Try generating one instead."));
+    } finally {
+      setCopying(false);
     }
   };
 
@@ -427,7 +521,10 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
             onChange={(event) => setSectionId(event.target.value || null)}
             className="mt-1 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
           >
-            <option value="">All children (no class)</option>
+            {/* NOT "All children" — this is its own day, a sibling of every
+                class, not a view across them. The old label read as a superset,
+                so picking a class looked like the plan had been deleted. */}
+            <option value="">Not assigned to a class</option>
             {(sections.data || []).map((section) => (
               <option key={section.id} value={section.id}>
                 {section.name}
@@ -454,7 +551,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         <div className="flex items-center gap-2">
           {plannerActivities.length > 0 && (
             <button
-              onClick={() => void runGenerate(undefined, undefined, true)}
+              onClick={() => void runGenerate({ replace: true })}
               disabled={generating}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5b32d3] transition shadow-md shadow-violet-100 disabled:opacity-60"
             >
@@ -483,13 +580,54 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
-              onClick={() => void runGenerate()}
+              onClick={() => setSetupOpen(true)}
               disabled={generating}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white disabled:opacity-60"
             >
               <Sparkles className="h-3.5 w-3.5" /> Generate plan
             </button>
           </div>
+
+          {/* Copying costs nothing — it's a straight clone of a day already
+              generated, so a teacher with two sections on one theme doesn't
+              pay twice, and keeps the edits they made to the first one. */}
+          {copySources.length > 0 && (
+            <div className="mt-5 border-t border-slate-200/70 pt-4">
+              <p className="text-[11px] font-bold text-slate-400">
+                Already planned this day for another class?
+              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <div className="relative">
+                  <select
+                    value={copyFrom}
+                    onChange={(event) => setCopyFrom(event.target.value)}
+                    aria-label="Copy this day's plan from"
+                    className="appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-xs font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                  >
+                    <option value="">Copy from…</option>
+                    {copySources.map((group) => (
+                      <option key={group.value} value={group.value}>
+                        {group.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyDay()}
+                  disabled={!copyFrom || copying}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-black text-[#6e41f5] transition hover:bg-[#6e41f5]/5 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                  Copy here
+                </button>
+              </div>
+              <p className="mt-2 text-[10px] font-semibold text-slate-400">
+                Copies the plan only — reflections and each child&rsquo;s progress stay with that class.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -638,6 +776,16 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           </div>
         </div>
       )}
+
+      <PrimaryPlanSetupModal
+        open={setupOpen}
+        initialLevel={context.level || ""}
+        initialSubject={context.subject || ""}
+        initialTheme={context.theme || ""}
+        submitting={setupSubmitting}
+        onClose={() => setSetupOpen(false)}
+        onSubmit={(setup) => void handleSetupSubmit(setup)}
+      />
 
       {selectedActivity && (
         <ActivityDrawer

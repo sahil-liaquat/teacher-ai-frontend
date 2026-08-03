@@ -194,7 +194,7 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
           <button
             type="submit"
             disabled={!canAddSection}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50"
           >
             {createSection.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Add class
@@ -292,7 +292,7 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
             <button
               type="submit"
               disabled={!canAddStudent}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               {createStudent.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Add child
