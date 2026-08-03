@@ -86,6 +86,7 @@ const primaryNav: NavItem[] = [
   { href: "/primary", label: "Home", icon: Home },
   { href: "/primary/today", label: "Today", icon: Sun },
   { href: "/primary/coverage", label: "Coverage", icon: CalendarCheck },
+  { href: "/primary/roster", label: "My Class", icon: Users },
   { href: "/primary/library", label: "Library", icon: BookOpen },
   { href: "/primary/create", label: "Create", icon: Sparkles },
   { href: "/primary/saved", label: "Saved", icon: Heart },
