@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
@@ -20,8 +20,9 @@ import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/pr
 import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { adaptApiResource } from "@/lib/primary-resource-adapter";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import ActivityDrawer from "./activity_drawer";
 import { cn } from "@/lib/utils";
 
@@ -65,12 +66,12 @@ function getActivityConfig(type: string) {
 export default function PrimaryTodayPage({ notify }: { notify: (s: string) => void }) {
   const queryClient = useQueryClient();
   const { context, updateContext, isLoading: contextLoading } = usePrimaryTeachingContext();
+  const { openUpgrade } = useUpgradeModal();
 
   const [selectedDate, setSelectedDate] = useState(() => toLocalISODate(new Date()));
   const [selectedActivity, setSelectedActivity] = useState<PrimaryPlannerActivity | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const attemptedRef = useRef<string | null>(null);
 
   const { sectionId, setSectionId } = usePrimarySection();
   const sections = useQuery({
@@ -97,7 +98,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   const plannerActivities = data?.planner_activities ?? [];
   const dayRecord = data?.day_record ?? null;
-  const isToday = selectedDate === toLocalISODate(new Date());
 
   // Today's Plan selector — mirrors the Home page card so context can be changed here too.
   const [selLevel, setSelLevel] = useState<string>(context.level || "");
@@ -201,6 +201,11 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       });
     } catch (err) {
       console.error("Failed to generate plan:", err);
+      if (getErrorCode(err) === "TRIAL_MANDATE_REQUIRED") {
+        setGenerating(false);
+        openUpgrade("You've used your free Primary day. Add a payment method to generate more — or try your other tools free.");
+        return;
+      }
       setGenerateError(getErrorMessage(err, "We couldn't generate a plan. Try again or add an activity manually."));
     } finally {
       setGenerating(false);
@@ -219,9 +224,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         topic: selTheme,
       };
       const todayDate = toLocalISODate(new Date());
-      // Mark this combination as already attempted before updateContext re-renders the page,
-      // so the auto-generate effect below doesn't race us with a second, concurrent generation.
-      attemptedRef.current = `${todayDate}|${resolvedContext.level}|${resolvedContext.subject}|${resolvedContext.theme}`;
       await updateContext(resolvedContext);
       setSelectedDate(todayDate);
       await runGenerate(resolvedContext, todayDate);
@@ -229,18 +231,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       setSavingContext(false);
     }
   };
-
-  // Arriving here from Home with an empty "today" builds the plan automatically,
-  // so the full details show right away without an extra click.
-  useEffect(() => {
-    if (contextLoading || isLoading || generating || !isToday) return;
-    if (plannerActivities.length > 0) return;
-    const key = `${selectedDate}|${context.level}|${context.subject}|${context.theme}`;
-    if (attemptedRef.current === key) return;
-    attemptedRef.current = key;
-    void runGenerate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contextLoading, isLoading, generating, isToday, plannerActivities.length, selectedDate, context.level, context.subject, context.theme]);
 
   const handlePrevDay = () => setSelectedDate(toLocalISODate(addDays(parseLocalISODate(selectedDate), -1)));
   const handleNextDay = () => setSelectedDate(toLocalISODate(addDays(parseLocalISODate(selectedDate), 1)));
