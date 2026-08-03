@@ -38,6 +38,16 @@ test("the fixture week really does start on a Monday", () => {
 });
 
 test("state unions match their labels and tones exactly", () => {
+  // Pinned exact values/order, not just length: these two unions are
+  // hand-maintained independently here and in backend/app/schemas/primary.py,
+  // with no compiler link between them, so a typo'd rename here would pass
+  // tsc and this file's own label/tone checks and only blow up at runtime.
+  assert.deepEqual(COVERAGE_DAY_STATES, [
+    "no_plan", "plan_cleared", "not_started", "partly_taught", "taught", "not_taught",
+  ]);
+  assert.deepEqual(THEME_COVERAGE_STATES, [
+    "not_authored", "not_started", "in_progress", "complete",
+  ]);
   assert.equal(COVERAGE_DAY_STATES.length, 6);
   assert.equal(THEME_COVERAGE_STATES.length, 4);
   assert.equal(PRIMARY_LEVEL_KEYS.length, 8);

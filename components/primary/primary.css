@@ -141,58 +141,12 @@
    document — it has tabs, arrows and an export button — so the printable
    rendition is always in the DOM and hidden on screen. CSS-only: no state and
    no setTimeout, so there is no race between React committing a print layout
-   and the browser opening its dialog. */
+   and the browser opening its dialog.
+   The @media print rules that make this element the only thing visible on
+   the page live in an inline <style> in primary-coverage-page.tsx (matching
+   generation-output.tsx's pattern), not here — this file is @import'ed by
+   app/globals.css and reaches every route, so a global `body * { visibility:
+   hidden }` rule here would blank print output app-wide. */
 .primary-coverage-print {
   display: none;
-}
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .primary-coverage-print,
-  .primary-coverage-print * {
-    visibility: visible;
-  }
-  .primary-coverage-print {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 24px;
-    color: #111;
-    font-size: 11px;
-  }
-  .primary-coverage-print h1 {
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 4px;
-  }
-  .primary-coverage-print h2 {
-    font-size: 13px;
-    font-weight: 800;
-    margin: 18px 0 6px;
-  }
-  .primary-coverage-print table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .primary-coverage-print th,
-  .primary-coverage-print td {
-    border: 1px solid #ccc;
-    padding: 3px 5px;
-    text-align: left;
-  }
-  .primary-coverage-print thead {
-    display: table-header-group;
-  }
-  .primary-coverage-print tr {
-    break-inside: avoid;
-  }
-  .primary-coverage-print-note {
-    margin-top: 14px;
-    font-size: 9px;
-    color: #555;
-  }
 }

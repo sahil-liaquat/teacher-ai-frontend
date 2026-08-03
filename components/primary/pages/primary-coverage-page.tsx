@@ -175,6 +175,63 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
 
   return (
     <div className="mt-4 space-y-5">
+      {/* Scoped to this component so these print rules only exist in the DOM
+          while the coverage page is mounted — see the comment on
+          .primary-coverage-print in primary.css for why they can't live in
+          that (globally-imported) stylesheet. */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .primary-coverage-print,
+          .primary-coverage-print * {
+            visibility: visible;
+          }
+          .primary-coverage-print {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px;
+            color: #111;
+            font-size: 11px;
+          }
+          .primary-coverage-print h1 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+          }
+          .primary-coverage-print h2 {
+            font-size: 13px;
+            font-weight: 800;
+            margin: 18px 0 6px;
+          }
+          .primary-coverage-print table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          .primary-coverage-print th,
+          .primary-coverage-print td {
+            border: 1px solid #ccc;
+            padding: 3px 5px;
+            text-align: left;
+          }
+          .primary-coverage-print thead {
+            display: table-header-group;
+          }
+          .primary-coverage-print tr {
+            break-inside: avoid;
+          }
+          .primary-coverage-print-note {
+            margin-top: 14px;
+            font-size: 9px;
+            color: #555;
+          }
+        }
+      `}</style>
+
       {/* ── controls ─────────────────────────────────────────────────── */}
       <section className="flex flex-wrap items-center gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff]">
         <div className="inline-flex rounded-full bg-[#f4f4ff] p-1">
