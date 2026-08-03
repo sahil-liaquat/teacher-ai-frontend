@@ -1,5 +1,15 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
 import type { ProfileAvatarKey } from "@/lib/profile-avatars";
+import type {
+  PrimaryCoverageDayState,
+  PrimaryLevelKey,
+  PrimaryThemeCoverageState,
+} from "./primary-coverage";
+
+// Re-exported so every consumer keeps treating lib/api.ts as the source of truth
+// for API types. The unions themselves live in lib/primary-coverage.ts because
+// that module is import-free and node-testable, and it needs them at runtime.
+export type { PrimaryCoverageDayState, PrimaryLevelKey, PrimaryThemeCoverageState };
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -1947,6 +1957,14 @@ export const backendApi = {
   plannerActivities: (start: string, end: string) =>
     apiFetch<PrimaryPlannerActivity[]>(`/primary-planner-activities?start=${start}&end=${end}`),
   plannerActivity: (id: string) => apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`),
+  primaryCoverage: (start: string, end: string) =>
+    apiFetch<PrimaryCoverageReport>(`/primary/coverage?start=${start}&end=${end}`),
+  primaryThemeCoverage: (filters: { level: PrimaryLevelKey; subject?: string; language?: string }) => {
+    const params = new URLSearchParams({ level: filters.level });
+    if (filters.subject) params.append("subject", filters.subject);
+    if (filters.language) params.append("language", filters.language);
+    return apiFetch<PrimaryThemeCoverageReport>(`/primary/coverage/themes?${params.toString()}`);
+  },
   getTodayWorkspace: (date: string) =>
     apiFetch<PrimaryTodayRead>(`/primary/today?date=${date}`),
   updateTodayDayRecord: (date: string, payload: PrimaryTeachingDayUpdatePayload) =>
@@ -2635,6 +2653,95 @@ export type PrimaryTodayRead = {
   planner_activities: PrimaryPlannerActivity[];
   day_record: PrimaryTeachingDay | null;
   context: PrimaryTeachingContextRead | null;
+};
+
+// ─── Primary coverage (Spec C) ──────────────────────────────────────────────
+// Read-only derived shapes from GET /primary/coverage and
+// /primary/coverage/themes. Every `state` is computed server-side so the screen
+// and the PDF export cannot disagree about what "taught" means.
+
+export type PrimaryDayCoverage = {
+  date: string;
+  /** null means there is no primary_teaching_days row at all for this date. */
+  teaching_day_id: string | null;
+  level: PrimaryLevelKey | null;
+  subject: string | null;
+  language: string | null;
+  theme_id: string | null;
+  theme_name: string | null;
+  lesson_id: string | null;
+  /**
+   * The teacher-set value. Nothing in the backend ever writes it, so it reads
+   * "not_started" on a fully taught day — colour off `state`, not this.
+   */
+  day_status: "not_started" | "in_progress" | "completed" | null;
+  total: number;
+  planned: number;
+  completed: number;
+  partially_completed: number;
+  skipped: number;
+  rescheduled: number;
+  minutes_planned: number;
+  /** Only status === "completed". Partials are counted, never half-weighted. */
+  minutes_completed: number;
+  state: PrimaryCoverageDayState;
+};
+
+export type PrimaryCoverageTotals = {
+  days_in_range: number;
+  days_with_plan: number;
+  days_without_plan: number;
+  activities: number;
+  planned: number;
+  completed: number;
+  partially_completed: number;
+  skipped: number;
+  rescheduled: number;
+  minutes_planned: number;
+  minutes_completed: number;
+};
+
+export type PrimaryCoverageReport = {
+  start: string;
+  end: string;
+  /** Every date in the range, including the ones with nothing on them. */
+  days: PrimaryDayCoverage[];
+  totals: PrimaryCoverageTotals;
+};
+
+export type PrimaryThemeCoverage = {
+  theme_id: string;
+  theme_name: string;
+  subject: string;
+  language: string;
+  emoji: string | null;
+  level: PrimaryLevelKey;
+  lesson_id: string | null;
+  lesson_version: number | null;
+  authored: boolean;
+  steps_total: number;
+  steps_taught: number;
+  steps_partially_taught: number;
+  steps_planned_only: number;
+  steps_untouched: number;
+  completion_pct: number;
+  state: PrimaryThemeCoverageState;
+};
+
+export type PrimaryThemeCoverageReport = {
+  level: PrimaryLevelKey;
+  themes: PrimaryThemeCoverage[];
+  themes_total: number;
+  themes_authored: number;
+  /** > 0 means TeachPad has content missing, not that the teacher skipped it. */
+  themes_not_authored: number;
+  themes_complete: number;
+  themes_in_progress: number;
+  themes_not_started: number;
+  /** Authored themes only — the backlog never sits in the denominator. */
+  steps_total: number;
+  steps_taught: number;
+  completion_pct: number;
 };
 
 export type PrimaryTodayGeneratePayload = {
