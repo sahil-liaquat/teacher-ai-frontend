@@ -16,10 +16,11 @@ import { PRIMARY_LEVELS, PRIMARY_LANGUAGES, generatorHref, quickIdeaText, themeC
 import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { cn } from "@/lib/utils";
 
-export type PrimaryPage = "home" | "today" | "library" | "create" | "saved" | "settings";
+export type PrimaryPage = "home" | "today" | "coverage" | "library" | "create" | "saved" | "settings";
 
 import PrimaryHomePage from "./pages/primary-home-page";
 import PrimaryTodayPage from "./pages/primary-today-page";
+import PrimaryCoveragePage from "./pages/primary-coverage-page";
 import PrimaryLibraryPage from "./pages/primary-library-page";
 import PrimaryCreatePage from "./pages/primary-create-page";
 import PrimarySavedPage from "./pages/primary-saved-page";
@@ -30,6 +31,7 @@ import PrimarySettingsPage from "./pages/primary-settings-page";
 const title: Record<PrimaryPage, [string, string]> = {
   home: ["Let’s make today wonderful! 💜", "Plan, teach and inspire young minds with NEP 2020 aligned resources."],
   today: ["Today’s Schedule ☀️", "Track your daily teaching plan and activities."],
+  coverage: ["Coverage 📅", "See what you taught last week and last month."],
   library: ["Resource Library 📚", "Explore and search educational activities and worksheets."],
   create: ["Creative Studio ✨", "Design custom worksheets, stories, and class resources."],
   saved: ["Saved Content ❤️", "Your personal workspace of bookmarked files and generated kits."],
@@ -59,6 +61,7 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
 
       {page === "home" && <PrimaryHomePage notify={notify} />}
       {page === "today" && <PrimaryTodayPage notify={notify} />}
+      {page === "coverage" && <PrimaryCoveragePage notify={notify} />}
       {page === "library" && <PrimaryLibraryPage Resources={Resources} notify={notify} />}
       {page === "create" && <PrimaryCreatePage AiStudio={AiStudio} notify={notify} />}
       {page === "saved" && <PrimarySavedPage Resources={Resources} notify={notify} />}

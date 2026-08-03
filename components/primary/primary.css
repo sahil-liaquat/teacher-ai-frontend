@@ -135,3 +135,64 @@
 .primary-embedded .primary-shell { background: transparent; }
 .primary-embedded .primary-hero { padding-top: .25rem; }
 @media (max-width: 1023px) { .primary-hero { min-height: 105px; } }
+
+/* The window.print() fallback for non-Latin coverage reports.
+   Unlike the worksheet detail page, /primary/coverage is not itself the
+   document — it has tabs, arrows and an export button — so the printable
+   rendition is always in the DOM and hidden on screen. CSS-only: no state and
+   no setTimeout, so there is no race between React committing a print layout
+   and the browser opening its dialog. */
+.primary-coverage-print {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .primary-coverage-print,
+  .primary-coverage-print * {
+    visibility: visible;
+  }
+  .primary-coverage-print {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+    color: #111;
+    font-size: 11px;
+  }
+  .primary-coverage-print h1 {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .primary-coverage-print h2 {
+    font-size: 13px;
+    font-weight: 800;
+    margin: 18px 0 6px;
+  }
+  .primary-coverage-print table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .primary-coverage-print th,
+  .primary-coverage-print td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+    text-align: left;
+  }
+  .primary-coverage-print thead {
+    display: table-header-group;
+  }
+  .primary-coverage-print tr {
+    break-inside: avoid;
+  }
+  .primary-coverage-print-note {
+    margin-top: 14px;
+    font-size: 9px;
+    color: #555;
+  }
+}
