@@ -11,6 +11,13 @@ import type {
 // that module is import-free and node-testable, and it needs them at runtime.
 export type { PrimaryCoverageDayState, PrimaryLevelKey, PrimaryThemeCoverageState };
 
+import type { ObservationRating, ObservationTrend } from "./primary-roster";
+
+// Re-exported so callers import every Primary wire type from one module. The
+// unions themselves live in lib/primary-roster.ts because that module must stay
+// import-free for the node test runner.
+export type { ObservationRating, ObservationTrend };
+
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   if (configured) return configured.endsWith("/api/v1") ? configured : `${configured}/api/v1`;
@@ -1954,23 +1961,102 @@ export const backendApi = {
   primaryActivityEvents: (limit = 30) => apiFetch<PrimaryActivityEvent[]>(`/primary-activity-events?limit=${limit}`),
   createPrimaryActivityEvent: (payload: PrimaryActivityEventCreatePayload) =>
     apiFetch<PrimaryActivityEvent>("/primary-activity-events", { method: "POST", body: JSON.stringify(payload) }),
-  plannerActivities: (start: string, end: string) =>
-    apiFetch<PrimaryPlannerActivity[]>(`/primary-planner-activities?start=${start}&end=${end}`),
+  plannerActivities: (start: string, end: string, sectionId?: string) =>
+    apiFetch<PrimaryPlannerActivity[]>(
+      `/primary-planner-activities?start=${start}&end=${end}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
   plannerActivity: (id: string) => apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`),
-  primaryCoverage: (start: string, end: string) =>
-    apiFetch<PrimaryCoverageReport>(`/primary/coverage?start=${start}&end=${end}`),
+  primaryCoverage: (start: string, end: string, sectionId?: string) =>
+    apiFetch<PrimaryCoverageReport>(
+      `/primary/coverage?start=${start}&end=${end}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
   primaryThemeCoverage: (filters: { level: PrimaryLevelKey; subject?: string; language?: string }) => {
     const params = new URLSearchParams({ level: filters.level });
     if (filters.subject) params.append("subject", filters.subject);
     if (filters.language) params.append("language", filters.language);
     return apiFetch<PrimaryThemeCoverageReport>(`/primary/coverage/themes?${params.toString()}`);
   },
-  getTodayWorkspace: (date: string) =>
-    apiFetch<PrimaryTodayRead>(`/primary/today?date=${date}`),
-  updateTodayDayRecord: (date: string, payload: PrimaryTeachingDayUpdatePayload) =>
-    apiFetch<PrimaryTeachingDay>(`/primary/today?date=${date}`, { method: "PUT", body: JSON.stringify(payload) }),
-  createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload) =>
-    apiFetch<PrimaryPlannerActivity>("/primary-planner-activities", { method: "POST", body: JSON.stringify(payload) }),
+  primarySections: (includeArchived = false) =>
+    apiFetch<PrimarySection[]>(
+      `/primary/sections${includeArchived ? "?include_archived=true" : ""}`,
+    ),
+  createPrimarySection: (payload: PrimarySectionCreatePayload) =>
+    apiFetch<PrimarySection>("/primary/sections", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimarySection: (id: string, payload: PrimarySectionUpdatePayload) =>
+    apiFetch<PrimarySection>(`/primary/sections/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimarySection: (id: string) =>
+    apiFetch<void>(`/primary/sections/${id}`, { method: "DELETE" }),
+  primaryStudents: (filters: { sectionId?: string; includeArchived?: boolean } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.sectionId) params.set("section_id", filters.sectionId);
+    if (filters.includeArchived) params.set("include_archived", "true");
+    const suffix = params.toString();
+    return apiFetch<PrimaryStudent[]>(`/primary/students${suffix ? `?${suffix}` : ""}`);
+  },
+  createPrimaryStudent: (payload: PrimaryStudentCreatePayload) =>
+    apiFetch<PrimaryStudent>("/primary/students", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimaryStudent: (id: string, payload: PrimaryStudentUpdatePayload) =>
+    apiFetch<PrimaryStudent>(`/primary/students/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimaryStudent: (id: string) =>
+    apiFetch<void>(`/primary/students/${id}`, { method: "DELETE" }),
+  primaryStudentProfile: (id: string, start: string, end: string) =>
+    apiFetch<PrimaryStudentProfile>(
+      `/primary/students/${id}/profile?start=${start}&end=${end}`,
+    ),
+  primaryObservations: (filters: {
+    start: string;
+    end: string;
+    studentId?: string;
+    teachingDayId?: string;
+  }) => {
+    const params = new URLSearchParams({ start: filters.start, end: filters.end });
+    if (filters.studentId) params.set("student_id", filters.studentId);
+    if (filters.teachingDayId) params.set("teaching_day_id", filters.teachingDayId);
+    return apiFetch<PrimaryObservation[]>(`/primary/observations?${params.toString()}`);
+  },
+  // POST is create-or-replace here, not create — see the route's comment.
+  upsertPrimaryObservation: (payload: PrimaryObservationUpsertPayload) =>
+    apiFetch<PrimaryObservation>("/primary/observations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimaryObservation: (id: string, payload: PrimaryObservationUpdatePayload) =>
+    apiFetch<PrimaryObservation>(`/primary/observations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimaryObservation: (id: string) =>
+    apiFetch<void>(`/primary/observations/${id}`, { method: "DELETE" }),
+  getTodayWorkspace: (date: string, sectionId?: string) =>
+    apiFetch<PrimaryTodayRead>(
+      `/primary/today?date=${date}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
+  updateTodayDayRecord: (
+    date: string,
+    payload: PrimaryTeachingDayUpdatePayload,
+    sectionId?: string,
+  ) =>
+    apiFetch<PrimaryTeachingDay>(
+      `/primary/today?date=${date}${sectionId ? `&section_id=${sectionId}` : ""}`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
+  createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload, sectionId?: string) =>
+    apiFetch<PrimaryPlannerActivity>(
+      `/primary-planner-activities${sectionId ? `?section_id=${sectionId}` : ""}`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
   updatePlannerActivity: (id: string, payload: PrimaryPlannerActivityUpdatePayload) =>
     apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deletePlannerActivity: (id: string) =>
@@ -2752,6 +2838,8 @@ export type PrimaryTodayGeneratePayload = {
   language?: string;
   /** Clears the day's existing activities inside the same transaction. */
   replace?: boolean;
+  /** Omitted means the section-less day — what every teacher gets today. */
+  section_id?: string | null;
 };
 
 export type PrimaryActivityEntityType =
@@ -2786,4 +2874,114 @@ export type SavedPrimaryResource = {
 
 export type SavedPrimaryResourceCreatePayload = {
   resource_id: string;
+};
+
+// ─── Primary roster + observations (Spec D) ─────────────────────────────────
+// snake_case, matching the backend wire format. `display_name` appears nowhere
+// on purpose: the column exists but is reserved for a future consent flow, and
+// no route returns it (see backend app/models/primary.py PrimaryStudent).
+
+export type PrimarySection = {
+  id: string;
+  user_id: string;
+  name: string;
+  level: PrimaryLevel;
+  is_active: boolean;
+  /** Active children only — archived ones are excluded server-side. */
+  student_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimarySectionCreatePayload = {
+  name: string;
+  level: PrimaryLevel;
+};
+
+export type PrimarySectionUpdatePayload = Partial<{
+  name: string;
+  level: PrimaryLevel;
+  is_active: boolean;
+}>;
+
+export type PrimaryStudent = {
+  id: string;
+  user_id: string;
+  section_id: string;
+  /** A code, initials or nickname the teacher chose. Never a real name. */
+  code: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryStudentCreatePayload = {
+  section_id: string;
+  code: string;
+};
+
+// No section_id: the backend refuses to move a child between sections, because
+// it would break (section_id, code) uniqueness and strand their observations.
+export type PrimaryStudentUpdatePayload = Partial<{
+  code: string;
+  is_active: boolean;
+}>;
+
+export type PrimaryObservation = {
+  id: string;
+  user_id: string;
+  student_id: string;
+  teaching_day_id: string;
+  planner_activity_id?: string | null;
+  date: string;
+  skill?: string | null;
+  rating: ObservationRating;
+  note?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// Create-or-replace against the two partial unique indexes. No `date`: it is
+// copied from the teaching day server-side.
+export type PrimaryObservationUpsertPayload = {
+  student_id: string;
+  teaching_day_id: string;
+  planner_activity_id?: string | null;
+  skill?: string | null;
+  rating: ObservationRating;
+  note?: string | null;
+};
+
+export type PrimaryObservationUpdatePayload = Partial<{
+  skill: string | null;
+  rating: ObservationRating;
+  note: string | null;
+}>;
+
+export type PrimarySkillSummary = {
+  skill: string;
+  observations: number;
+  not_yet: number;
+  emerging: number;
+  secure: number;
+  latest_rating: ObservationRating;
+  /** First versus last rating in range — not an average. */
+  trend: ObservationTrend;
+};
+
+export type PrimaryStudentProfile = {
+  student: PrimaryStudent;
+  section_name: string;
+  start: string;
+  end: string;
+  observations_total: number;
+  days_observed: number;
+  activities_observed: number;
+  not_yet: number;
+  emerging: number;
+  secure: number;
+  secure_pct: number;
+  skills: PrimarySkillSummary[];
+  /** Chronological, oldest first. The profile renders it as a timeline. */
+  observations: PrimaryObservation[];
 };
