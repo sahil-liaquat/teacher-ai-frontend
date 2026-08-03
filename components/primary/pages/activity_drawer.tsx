@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/errors";
 import { OBSERVATION_RATINGS, RATING_LABELS, ratingTone, type ObservationRating } from "@/lib/primary-roster";
 import { usePrimarySection } from "@/lib/use-primary-section";
+import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
 
 interface ActivityDrawerProps {
   activity: PrimaryPlannerActivity;
@@ -61,6 +62,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
   const [observation, setObservation] = useState(activity.observation || "");
 
   const { sectionId } = usePrimarySection();
+  const { context: teachingContext } = usePrimaryTeachingContext();
 
   // Only children of the day's class can be rated on it — the backend rejects
   // the mismatch with a 409, so offering them here would be a dead end.
@@ -87,9 +89,12 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
         student_id: input.studentId,
         teaching_day_id: activity.teaching_day_id,
         planner_activity_id: activity.id,
-        // The day's focus skill, so a term profile groups by something
-        // meaningful instead of filing everything under "General".
-        skill: (activity.context?.skill as string | undefined) || null,
+        // The generated activity's own `context` never carries a `skill` key
+        // (see primary_planner.py's `generate`, which builds it as exactly
+        // {level, subject, language}), so the day's focus skill lives on the
+        // teacher's current teaching context instead — that's what a term
+        // profile groups by, instead of filing everything under "General".
+        skill: teachingContext.skill || null,
         rating: input.rating,
       }),
     onSuccess: () => {

@@ -13,6 +13,7 @@ import {
   type ObservationRating,
 } from "@/lib/primary-roster";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function PrimaryStudentProfilePanel({
   student,
@@ -76,7 +77,7 @@ export default function PrimaryStudentProfilePanel({
         <p className="mt-4 text-sm font-medium text-[#454c86]">Loading observations…</p>
       ) : profile.isError ? (
         <div className="mt-4 rounded-2xl bg-[#f7f4ff] p-6 text-center">
-          <p className="text-sm font-extrabold text-[#2f377e]">Couldn&rsquo;t load this profile</p>
+          <p className="text-sm font-extrabold text-[#2f377e]">{getErrorMessage(profile.error, "Couldn't load this profile")}</p>
           <button
             type="button"
             onClick={() => void profile.refetch()}

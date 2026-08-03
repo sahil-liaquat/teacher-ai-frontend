@@ -78,6 +78,18 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     queryFn: () => backendApi.primarySections(),
   });
 
+  // A section that gets deleted (allowed once it has zero children/days)
+  // leaves its id stranded in localStorage. Once the sections list has
+  // loaded, if that id is no longer present, clear it — otherwise every
+  // subsequent request scoped to it 404s with no picker on screen to recover
+  // from (the picker only renders when there's at least one section).
+  useEffect(() => {
+    if (!sections.isSuccess) return;
+    if (sectionId && !sections.data.some((section) => section.id === sectionId)) {
+      setSectionId(null);
+    }
+  }, [sections.isSuccess, sections.data, sectionId, setSectionId]);
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["primary-today-workspace", selectedDate, sectionId],
     queryFn: () => backendApi.getTodayWorkspace(selectedDate, sectionId ?? undefined),
@@ -419,7 +431,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
       {(sections.data || []).length > 0 && (
         <label className="mt-4 block text-xs font-bold text-slate-600">
-          Class
+          Group
           <select
             value={sectionId || ""}
             onChange={(event) => setSectionId(event.target.value || null)}

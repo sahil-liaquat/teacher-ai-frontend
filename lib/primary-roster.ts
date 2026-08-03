@@ -38,7 +38,12 @@ export const RATING_LABELS: Record<ObservationRating, string> = {
   secure: "Secure",
 };
 
-/** For the per-child chips in the activity drawer, where space is tight. */
+/**
+ * Currently byte-identical to `RATING_LABELS` — nothing consumes this for a
+ * shortened display yet. Reserved for a future tighter-space UI (e.g. the
+ * per-child chips in the activity drawer) that needs shorter text than the
+ * full labels.
+ */
 export const RATING_SHORT_LABELS: Record<ObservationRating, string> = {
   not_yet: "Not yet",
   emerging: "Emerging",
@@ -71,7 +76,8 @@ export function ratingOrdinal(rating: string): number {
  *
  * First versus last, deliberately — the same rule the backend applies in
  * services/primary_roster.trend_from. Duplicated rather than only trusted from
- * the wire so the drawer can show a direction before the profile is fetched.
+ * the wire, matching this module's general pattern of exporting more helpers
+ * than any one screen currently consumes.
  */
 export function trendFrom(ratings: readonly string[]): ObservationTrend {
   if (ratings.length <= 1) return "single";
