@@ -236,16 +236,17 @@ export function themeContent(theme: string | undefined, subject: string): ThemeC
 }
 
 export function generatorHref(path: string, context: PrimaryTeachingContext): string {
+  // Only these three params are ever read on the receiving side —
+  // getCompanionPrefillContext() (lib/companion-prefill.ts), shared by every
+  // "Generate X" page. `workspace` and the `primary_*` duplicates below used
+  // to be set here too; nothing has ever read them, on either side of the
+  // request (confirmed: the backend's *GenerateRequest schemas don't declare
+  // a `workspace` field, so it was silently dropped there as well).
   const params = new URLSearchParams();
-  params.set("workspace", "primary");
   if (context.level) params.set("class", context.level);
   if (context.subject) params.set("subject", context.subject);
   const topic = context.theme || context.topic;
   if (topic) params.set("topic", topic);
-  if (context.level) params.set("primary_class", context.level);
-  if (context.subject) params.set("primary_subject", context.subject);
-  if (context.theme) params.set("primary_theme", context.theme);
-  params.set("primary_language", context.language);
   const query = params.toString();
   return query ? `${path}?${query}` : path;
 }
