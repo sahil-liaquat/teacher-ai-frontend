@@ -239,9 +239,11 @@ export function generatorHref(path: string, context: PrimaryTeachingContext): st
   // Only these three params are ever read on the receiving side —
   // getCompanionPrefillContext() (lib/companion-prefill.ts), shared by every
   // "Generate X" page. `workspace` and the `primary_*` duplicates below used
-  // to be set here too; nothing has ever read them, on either side of the
-  // request (confirmed: the backend's *GenerateRequest schemas don't declare
-  // a `workspace` field, so it was silently dropped there as well).
+  // to be set here too. `workspace` IS read elsewhere (lib/workspace/routes.ts:
+  // returnTopicRoute/appendWorkspaceContext), but only acts when
+  // `workspace_topic` is also present, which this function never set — so
+  // removing it here is safe. The `primary_*` duplicates were never read by
+  // anything.
   const params = new URLSearchParams();
   if (context.level) params.set("class", context.level);
   if (context.subject) params.set("subject", context.subject);
