@@ -421,6 +421,24 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
             </div>
           </div>
 
+          {/* Step instructions — personalised by Gemini when available, the
+              authored curriculum text otherwise. Absent entirely on
+              activities created before this field existed. */}
+          {Array.isArray(activity.context.instructions) && activity.context.instructions.length > 0 ? (
+            <div className="rounded-2xl border border-slate-100 bg-white p-4">
+              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                Instructions
+              </h4>
+              <ol className="space-y-1.5 text-xs text-slate-700 list-decimal list-inside">
+                {(activity.context.instructions as unknown[])
+                  .filter((line): line is string => typeof line === "string")
+                  .map((line, index) => (
+                    <li key={index}>{line}</li>
+                  ))}
+              </ol>
+            </div>
+          ) : null}
+
           {/* Direct Resource Access */}
           <div>
             <h4 className="text-xs font-black text-slate-900 mb-3">Resource Attachments</h4>
