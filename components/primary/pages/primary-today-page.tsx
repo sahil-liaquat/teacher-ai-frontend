@@ -22,6 +22,7 @@ import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
+import { primaryTodayViewState } from "@/lib/primary-today-view-state";
 import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import ActivityDrawer from "./activity_drawer";
@@ -113,7 +114,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     if (first) setSectionId(first.id, false);
   }, [sections.isSuccess, sections.data, sectionId, hasChosen, setSectionId]);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, isFetching, error, refetch } = useQuery({
     queryKey: ["primary-today-workspace", selectedDate, sectionId],
     queryFn: () => backendApi.getTodayWorkspace(selectedDate, sectionId ?? undefined),
   });
@@ -259,7 +260,8 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         topic: selTheme,
       };
       const todayDate = toLocalISODate(new Date());
-      await updateContext(resolvedContext);
+      const saved = await updateContext(resolvedContext);
+      if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
       setSelectedDate(todayDate);
       await runGenerate({ context: resolvedContext, date: todayDate });
     } finally {
@@ -283,7 +285,8 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           ? (setup.language as PrimaryTeachingContext["language"])
           : context.language,
       };
-      await updateContext(resolvedContext);
+      const saved = await updateContext(resolvedContext);
+      if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
       setSetupOpen(false);
       // The modal picked a real curriculum row, so hand its id straight to the
       // generator rather than round-tripping through a name lookup.
@@ -406,14 +409,23 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       );
       notify("Daily reflection saved!");
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", selectedDate] });
-    } catch {
-      notify("Failed to save reflection.");
+    } catch (err) {
+      // The backend's own sentence matters here: the commonest failure is a
+      // 404 "There's no plan for that day yet", which tells the teacher exactly
+      // what to do — generate the day first.
+      notify(getErrorMessage(err, "Couldn't save your reflection. Please try again."));
     } finally {
       setSavingReflection(false);
     }
   };
 
-  const showLoading = contextLoading || isLoading;
+  const viewState = primaryTodayViewState({
+    contextLoading,
+    dayLoading: isLoading,
+    dayFailed: isError,
+    generating,
+    activityCount: plannerActivities.length,
+  });
 
   return (
     <div className="space-y-6">
@@ -513,6 +525,18 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
+      {/* A failed roster fetch used to be indistinguishable from "this teacher
+          has no classes": the picker vanished and they planned into the
+          section-less day without knowing their classes existed. */}
+      {sections.isError && (
+        <p className="mt-4 text-xs font-bold text-rose-600">
+          We couldn't load your classes, so this is the day that isn't assigned to one.{" "}
+          <button type="button" onClick={() => void sections.refetch()} className="underline hover:text-rose-800">
+            Retry
+          </button>
+        </p>
+      )}
+
       {(sections.data || []).length > 0 && (
         <label className="mt-4 block text-xs font-bold text-slate-600">
           Group
@@ -562,21 +586,48 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
-      {showLoading ? (
+      {/* Outside the state switch below, because a failed regenerate leaves the
+          existing plan on screen — the old placement (inside the empty-state
+          branch only) meant Regenerate could fail in total silence. */}
+      {generateError && viewState !== "generating" && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3">
+          <p className="text-xs font-bold text-rose-700">{generateError}</p>
+        </div>
+      )}
+
+      {viewState === "loading" ? (
         <div className="flex h-72 items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
         </div>
-      ) : generating ? (
+      ) : viewState === "generating" ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed border-indigo-200 bg-indigo-50/30 p-14 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           <p className="text-sm font-bold text-indigo-700">
             Building today's plan for {context.level} • {context.subject} • {context.theme}…
           </p>
         </div>
-      ) : plannerActivities.length === 0 ? (
+      ) : viewState === "error" ? (
+        <div className="rounded-[22px] border border-rose-200 bg-rose-50/40 p-10 text-center">
+          <p className="text-base font-extrabold text-rose-700">We couldn't load this day</p>
+          <p className="mt-1 text-sm font-semibold text-rose-600">
+            {getErrorMessage(error, "Check your connection and try again.")}
+          </p>
+          {/* Never offer Generate here. Whether this day is already planned is
+              exactly what we failed to find out, and generating blind either
+              409s or silently replaces a plan the teacher can't currently see. */}
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-60"
+          >
+            {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Try again
+          </button>
+        </div>
+      ) : viewState === "empty" ? (
         <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50/30 p-10 text-center">
           <p className="text-sm font-semibold text-slate-400">No activities planned for this day yet.</p>
-          {generateError && <p className="mt-2 text-xs font-bold text-rose-600">{generateError}</p>}
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"

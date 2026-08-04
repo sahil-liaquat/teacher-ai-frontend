@@ -17,6 +17,7 @@ import {
   reconcileServerContext,
 } from "./primary-context-helpers";
 import { themesForSubject, subjectsForClass, skillsForContext } from "./primary-theme-content";
+import { readStoredItem, removeStoredItem, writeStoredItem } from "./safe-storage";
 
 export type { PrimaryTeachingContext, StoredPrimaryContext };
 export { PRIMARY_LEVELS, PRIMARY_LANGUAGES, CACHE_KEY, LEGACY_CACHE_KEY, DEFAULT_PRIMARY_TEACHING_CONTEXT };
@@ -42,12 +43,12 @@ function readCachedEnvelope(): StoredPrimaryContext {
   }
 
   try {
-    const rawCache = window.localStorage.getItem(CACHE_KEY);
-    const rawLegacy = window.localStorage.getItem(LEGACY_CACHE_KEY);
+    const rawCache = readStoredItem(CACHE_KEY);
+    const rawLegacy = readStoredItem(LEGACY_CACHE_KEY);
     const migrated = migrateLegacyContext(rawCache, rawLegacy);
     if (migrated) {
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify(migrated));
-      if (rawLegacy) window.localStorage.removeItem(LEGACY_CACHE_KEY);
+      writeStoredItem(CACHE_KEY, JSON.stringify(migrated));
+      if (rawLegacy) removeStoredItem(LEGACY_CACHE_KEY);
       return migrated;
     }
 
@@ -65,7 +66,7 @@ function readCachedEnvelope(): StoredPrimaryContext {
       }
     }
   } catch {
-    window.localStorage.removeItem(CACHE_KEY);
+    removeStoredItem(CACHE_KEY);
   }
 
   const defaultEnvelope: StoredPrimaryContext = {
@@ -75,7 +76,7 @@ function readCachedEnvelope(): StoredPrimaryContext {
     syncStatus: "synced",
     version: 1,
   };
-  window.localStorage.setItem(CACHE_KEY, JSON.stringify(defaultEnvelope));
+  writeStoredItem(CACHE_KEY, JSON.stringify(defaultEnvelope));
   return defaultEnvelope;
 }
 
@@ -102,13 +103,17 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
   const latestVersionRef = useRef<number>(1);
   const syncRequestInProgress = useRef<boolean>(false);
   const autoSyncAttempted = useRef<boolean>(false);
+  // One slot, many waiters: a save that arrives mid-flight replaces whatever is
+  // queued (updateContext always persists the whole merged context, so the
+  // newest write subsumes the older one), and every caller still waiting gets
+  // the outcome of the write that actually ran.
+  const pendingWrite = useRef<{
+    context: PrimaryTeachingContext;
+    version: number;
+    waiters: Array<(saved: boolean) => void>;
+  } | null>(null);
 
-  const persist = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
-    if (syncRequestInProgress.current) {
-      return false;
-    }
-    syncRequestInProgress.current = true;
-
+  const persistOnce = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
     try {
       // The backend's PrimaryTeachingContextUpdate.level is a snake_case
       // Literal enum ("class_1", ...), not this file's Title-Case display
@@ -139,7 +144,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
           serverUpdatedAt: serverTime,
           version: versionToSync,
         };
-        window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+        writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
       }
       return true;
     } catch (error) {
@@ -149,14 +154,50 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         const currentEnvelope = readCachedEnvelope();
         if (currentEnvelope && currentEnvelope.version === versionToSync) {
           currentEnvelope.syncStatus = "unsynced";
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(currentEnvelope));
+          writeStoredItem(CACHE_KEY, JSON.stringify(currentEnvelope));
         }
       }
       return false;
+    }
+  }, []);
+
+  const persist = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
+    if (syncRequestInProgress.current) {
+      // Queue it — do NOT drop it. This used to return false on the spot, which
+      // lost the teacher's most recent class/subject/theme choice AND left
+      // syncStatus pinned to "syncing" forever, so the TopicBar showed a save
+      // that was never going to happen and offered no Retry.
+      return new Promise<boolean>((resolve) => {
+        const queued = pendingWrite.current;
+        pendingWrite.current = {
+          context: nextContext,
+          version: versionToSync,
+          waiters: [...(queued?.waiters ?? []), resolve],
+        };
+      });
+    }
+
+    syncRequestInProgress.current = true;
+    try {
+      let contextToSave = nextContext;
+      let versionToSave = versionToSync;
+      // Waiters for the write about to run. Empty on the first pass — that
+      // caller gets this function's return value instead.
+      let waiters: Array<(saved: boolean) => void> = [];
+      for (;;) {
+        const saved = await persistOnce(contextToSave, versionToSave);
+        waiters.forEach((resolve) => resolve(saved));
+        const queued = pendingWrite.current;
+        if (!queued) return saved;
+        pendingWrite.current = null;
+        contextToSave = queued.context;
+        versionToSave = queued.version;
+        waiters = queued.waiters;
+      }
     } finally {
       syncRequestInProgress.current = false;
     }
-  }, []);
+  }, [persistOnce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,7 +228,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
           setSyncStatus("synced");
           setServerUpdatedAt(nextEnvelope.serverUpdatedAt);
           setUpdatedAt(nextEnvelope.updatedAt);
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(nextEnvelope));
+          writeStoredItem(CACHE_KEY, JSON.stringify(nextEnvelope));
         } else if (action === "auto_sync") {
           if (!autoSyncAttempted.current) {
             autoSyncAttempted.current = true;
@@ -284,7 +325,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         serverUpdatedAt,
         version: nextVersion,
       };
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+      writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
 
       return persist(merged, nextVersion);
     },
@@ -313,7 +354,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
       serverUpdatedAt,
       version: nextVersion,
     };
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+    writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
 
     return persist(context, nextVersion);
   }, [context, syncStatus, version, serverUpdatedAt, persist]);

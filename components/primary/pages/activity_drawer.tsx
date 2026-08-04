@@ -228,7 +228,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to save changes. Please try again.");
+      notify(getErrorMessage(err, "Couldn't save your notes. Please try again."));
     } finally {
       setSavingNotes(false);
     }
@@ -243,7 +243,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to update status.");
+      notify(getErrorMessage(err, "Couldn't update the status. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -266,8 +266,8 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       });
       notify(`Marked as rescheduled for ${rescheduleDate}`);
       onClose();
-    } catch {
-      notify("Failed to reschedule activity.");
+    } catch (err) {
+      notify(getErrorMessage(err, "Couldn't reschedule that activity. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -282,8 +282,8 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
       notify("Activity deleted");
       onClose();
-    } catch {
-      notify("Failed to delete activity.");
+    } catch (err) {
+      notify(getErrorMessage(err, "Couldn't delete that activity. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -312,7 +312,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to update activity details.");
+      notify(getErrorMessage(err, "Couldn't update the activity. Please try again."));
     } finally {
       setSavingMetadata(false);
     }

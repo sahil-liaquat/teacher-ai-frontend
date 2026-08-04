@@ -194,12 +194,16 @@ export default function PrimaryHomePage({ notify }: { notify: (s: string) => voi
     if (!canViewPlan) return;
     setSavingContext(true);
     try {
-      await updateContext({
+      const saved = await updateContext({
         level: selectedLevel as PrimaryTeachingContext["level"],
         subject: selectedSubject,
         theme: selectedTheme,
         topic: selectedTheme,
       });
+      // Still navigate — the choice is live in memory and Today plans from it.
+      // But say so, because it won't survive a reload and the teacher would
+      // otherwise find their class silently reverted tomorrow.
+      if (!saved) notify("We couldn't save this class for next time, but you can plan with it now.");
       router.push("/primary/today");
     } finally {
       setSavingContext(false);
