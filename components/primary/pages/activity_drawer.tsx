@@ -15,17 +15,26 @@ import {
   Lightbulb,
   Trash2
 } from "lucide-react";
-import { backendApi, type PrimaryPlannerActivity, type PrimaryPlannerActivityStatus } from "@/lib/api";
-import { PRIMARY_RESOURCES, type PrimaryResource } from "@/lib/primary-resource-catalog";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  backendApi,
+  type PrimaryObservation,
+  type PrimaryPlannerActivity,
+  type PrimaryPlannerActivityStatus,
+  type PrimaryStudent,
+} from "@/lib/api";
+import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
+import { OBSERVATION_RATINGS, RATING_LABELS, ratingTone, type ObservationRating } from "@/lib/primary-roster";
+import { usePrimarySection } from "@/lib/use-primary-section";
+import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
 
 interface ActivityDrawerProps {
   activity: PrimaryPlannerActivity;
   onClose: () => void;
   notify: (s: string) => void;
 }
-
 export default function ActivityDrawer({ activity, onClose, notify }: ActivityDrawerProps) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -41,15 +50,77 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
 
   // Form states
   const [title, setTitle] = useState(activity.title);
-  const [duration, setDuration] = useState(activity.durationMinutes || 10);
-  const [startTime, setStartTime] = useState(activity.startTime?.slice(0, 5) || "");
-  const [activityType, setActivityType] = useState(activity.activityType);
-  const [resourceIds, setResourceIds] = useState(activity.resourceIds || []);
+  const [duration, setDuration] = useState(activity.duration_minutes || 10);
+  const [startTime, setStartTime] = useState(activity.start_time?.slice(0, 5) || "");
+  const [activityType, setActivityType] = useState(activity.activity_type);
+  const [resourceIds, setResourceIds] = useState(activity.resource_ids || []);
+  // One instruction per line. The stored value is a list of strings, but a
+  // textarea is what a teacher rewriting a step actually wants — splitting on
+  // newlines at save time is cheaper than a per-line add/remove/reorder UI.
+  const [instructions, setInstructions] = useState(() =>
+    (Array.isArray(activity.context.instructions) ? activity.context.instructions : [])
+      .filter((line): line is string => typeof line === "string")
+      .join("\n")
+  );
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Note & Observation states
   const [notes, setNotes] = useState(activity.notes || "");
   const [observation, setObservation] = useState(activity.observation || "");
+
+  const { sectionId } = usePrimarySection();
+  const { context: teachingContext } = usePrimaryTeachingContext();
+
+  // Only children of the day's class can be rated on it — the backend rejects
+  // the mismatch with a 409, so offering them here would be a dead end.
+  const students = useQuery({
+    queryKey: ["primary-students", sectionId, false],
+    queryFn: () => backendApi.primaryStudents({ sectionId: sectionId as string }),
+    enabled: Boolean(sectionId),
+  });
+
+  const observations = useQuery({
+    queryKey: ["primary-observations", activity.teaching_day_id, activity.id],
+    queryFn: () =>
+      backendApi.primaryObservations({
+        start: activity.date,
+        end: activity.date,
+        teachingDayId: activity.teaching_day_id,
+      }),
+    enabled: Boolean(sectionId),
+  });
+
+  const rateChild = useMutation({
+    mutationFn: (input: { studentId: string; rating: ObservationRating }) =>
+      backendApi.upsertPrimaryObservation({
+        student_id: input.studentId,
+        teaching_day_id: activity.teaching_day_id,
+        planner_activity_id: activity.id,
+        // The generated activity's own `context` never carries a `skill` key
+        // (see primary_planner.py's `generate`, which builds it as exactly
+        // {level, subject, language}), so the day's focus skill lives on the
+        // teacher's current teaching context instead — that's what a term
+        // profile groups by, instead of filing everything under "General".
+        skill: teachingContext.skill || null,
+        rating: input.rating,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["primary-observations"] });
+      void queryClient.invalidateQueries({ queryKey: ["primary-student-profile"] });
+      notify("Observation saved");
+    },
+    onError: (error) => notify(getErrorMessage(error, "Could not save that observation.")),
+  });
+
+  const ratingByStudent = useMemo(() => {
+    const map: Record<string, ObservationRating> = {};
+    for (const observation of observations.data || []) {
+      if (observation.planner_activity_id === activity.id) {
+        map[observation.student_id] = observation.rating;
+      }
+    }
+    return map;
+  }, [observations.data, activity.id]);
 
   // Local drafts safety
   const draftNotesKey = `draft-notes-${activity.id}-${activity.date}`;
@@ -94,15 +165,38 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
     localStorage.setItem(draftObsKey, val);
   };
 
-  // Find actual resources in catalog
+  // Resolve linked resources from the backend catalog (resourceIds are legacy
+  // catalog ids stored on the activity).
+  const linkedResourceQueries = useQueries({
+    queries: resourceIds.map((id) => ({
+      queryKey: ["primary-resource", id],
+      queryFn: async () => {
+        try {
+          return adaptApiResource(await backendApi.primaryResource(id));
+        } catch {
+          return null;
+        }
+      },
+      staleTime: 60_000,
+      retry: 0,
+    })),
+  });
   const linkedResources = useMemo(() => {
-    return resourceIds
-      .map((id) => PRIMARY_RESOURCES.find((r) => r.id === id))
-      .filter(Boolean) as PrimaryResource[];
-  }, [resourceIds]);
-  const resourceCandidates = useMemo(() => PRIMARY_RESOURCES
-    .filter((resource) => resource.subjects.length === 0 || resource.subjects.includes(activity.context.subject))
-    .slice(0, 30), [activity.context.subject]);
+    return linkedResourceQueries
+      .map((q) => q.data)
+      .filter((item): item is PrimaryResource => item !== null && item !== undefined);
+  }, [linkedResourceQueries]);
+  // activity.context is a freeform backend JSON dict (Record<string, unknown>) —
+  // no schema guarantees these fields exist or are strings, so read defensively.
+  const contextSubject = typeof activity.context.subject === "string" ? activity.context.subject : "";
+  const resourceCandidatesQuery = useQuery({
+    queryKey: ["primary-resources-candidates", contextSubject],
+    queryFn: () => backendApi.primaryResources({ subject: contextSubject || undefined, page_size: 30 }),
+    staleTime: 60_000,
+  });
+  const resourceCandidates = useMemo(() => {
+    return (resourceCandidatesQuery.data?.items ?? []).map((item) => adaptApiResource(item));
+  }, [resourceCandidatesQuery.data]);
   const resourceEmoji = (resource: PrimaryResource) => {
     const category = resource.category.toLowerCase();
     if (category.includes("worksheet") || category.includes("tracing") || category.includes("colouring")) return "📝";
@@ -133,7 +227,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to save changes. Please try again.");
+      notify(getErrorMessage(err, "Couldn't save your notes. Please try again."));
     } finally {
       setSavingNotes(false);
     }
@@ -148,7 +242,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to update status.");
+      notify(getErrorMessage(err, "Couldn't update the status. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -158,15 +252,21 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
     if (!rescheduleDate) return;
     setSavingStatus(true);
     try {
+      // `date` is deliberately NOT part of PrimaryPlannerActivityUpdate
+      // (extra="forbid"), so sending it 422'd this call every time. Moving an
+      // activity across days is not just a column write either: the row's
+      // teaching_day_id would still point at the old day, and regenerating
+      // that day would delete the moved activity. So this marks the activity
+      // as rescheduled and records where it came from; a real move needs
+      // backend support that does not exist yet.
       await backendApi.updatePlannerActivity(activity.id, {
-        date: rescheduleDate,
         status: "rescheduled",
         rescheduled_from_date: activity.date,
       });
-      notify(`Activity moved to ${rescheduleDate}`);
+      notify(`Marked as rescheduled for ${rescheduleDate}`);
       onClose();
-    } catch {
-      notify("Failed to reschedule activity.");
+    } catch (err) {
+      notify(getErrorMessage(err, "Couldn't reschedule that activity. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -181,8 +281,8 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
       notify("Activity deleted");
       onClose();
-    } catch {
-      notify("Failed to delete activity.");
+    } catch (err) {
+      notify(getErrorMessage(err, "Couldn't delete that activity. Please try again."));
     } finally {
       setSavingStatus(false);
     }
@@ -199,13 +299,19 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
         start_time: startTime || null,
         activity_type: activityType,
         resource_ids: resourceIds,
+        // Blank lines are dropped server-side too; trimming here keeps the
+        // textarea's trailing newline from becoming an empty step.
+        instructions: instructions
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
       });
       setEditing(false);
-      notify("Activity metadata updated!");
+      notify("Activity updated!");
       queryClient.invalidateQueries({ queryKey: ["primary-planner-activities"] });
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace"] });
     } catch (err) {
-      notify("Failed to update activity details.");
+      notify(getErrorMessage(err, "Couldn't update the activity. Please try again."));
     } finally {
       setSavingMetadata(false);
     }
@@ -233,7 +339,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               Activity Details
             </h2>
             <p className="text-xs font-semibold text-slate-400 capitalize">
-              Type: {activity.activityType} • {statusLabel}
+              Type: {activity.activity_type} • {statusLabel}
             </p>
           </div>
           <button
@@ -269,7 +375,7 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   min="1"
-                  max="600"
+                  max="120"
                   required
                 />
               </label>
@@ -281,6 +387,17 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
                   <input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                 </label>
               </div>
+              <label className="block text-xs font-black text-slate-600">
+                Instructions
+                <span className="ml-1 font-bold text-slate-400">— one step per line</span>
+                <textarea
+                  value={instructions}
+                  onChange={(event) => setInstructions(event.target.value)}
+                  rows={6}
+                  placeholder="Sit the children in a circle&#10;Sing the welcome song&#10;Ask each child to name one thing they see"
+                  className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </label>
               <fieldset>
                 <legend className="text-xs font-black text-slate-600">Linked resources</legend>
                 <div className="mt-2 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
@@ -309,8 +426,8 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-slate-400">
                 <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>{activity.durationMinutes || 10} minutes</span>
-                {activity.startTime && <span className="ml-2 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black text-[9px]">{activity.startTime.slice(0, 5)}</span>}
+                <span>{activity.duration_minutes || 10} minutes</span>
+                {activity.start_time && <span className="ml-2 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black text-[9px]">{activity.start_time.slice(0, 5)}</span>}
               </div>
             </div>
           )}
@@ -321,11 +438,40 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               <GraduationCap className="h-3.5 w-3.5" /> Teaching Context
             </h4>
             <div className="space-y-1.5 text-xs text-slate-700">
-              <p><strong>Grade level:</strong> {activity.context.level}</p>
-              <p><strong>Learning area:</strong> {activity.context.subject}</p>
-              <p><strong>Theme:</strong> {activity.context.theme || "Generic"}</p>
-              {activity.context.topic && <p><strong>Topic:</strong> {activity.context.topic}</p>}
+              <p><strong>Grade level:</strong> {typeof activity.context.level === "string" ? activity.context.level : "—"}</p>
+              <p><strong>Learning area:</strong> {contextSubject || "—"}</p>
+              <p><strong>Theme:</strong> {typeof activity.context.theme === "string" && activity.context.theme ? activity.context.theme : "Generic"}</p>
+              {typeof activity.context.topic === "string" && activity.context.topic && <p><strong>Topic:</strong> {activity.context.topic}</p>}
             </div>
+          </div>
+
+          {/* Step instructions — personalised by Gemini when available, the
+              authored curriculum text otherwise. Absent entirely on
+              activities created before this field existed. */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-4">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+              Instructions
+            </h4>
+            {Array.isArray(activity.context.instructions) && activity.context.instructions.length > 0 ? (
+              <ol className="space-y-1.5 text-xs text-slate-700 list-decimal list-inside">
+                {(activity.context.instructions as unknown[])
+                  .filter((line): line is string => typeof line === "string")
+                  .map((line, index) => (
+                    <li key={index}>{line}</li>
+                  ))}
+              </ol>
+            ) : (
+              // Rendering nothing here used to hide the fact that instructions
+              // exist at all — including from teachers whose activities predate
+              // the field, who then had no way to discover they can write them.
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="text-xs font-bold text-[#6e41f5] hover:underline"
+              >
+                No instructions yet — add your own
+              </button>
+            )}
           </div>
 
           {/* Direct Resource Access */}
@@ -361,6 +507,48 @@ export default function ActivityDrawer({ activity, onClose, notify }: ActivityDr
               </div>
             )}
           </div>
+
+          {sectionId && (students.data || []).length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-extrabold text-slate-900">How did each child do?</h3>
+              <p className="mt-1 text-[11px] font-medium text-[#454c86]">
+                One rating per child for this activity. Tap again to change it.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {(students.data || []).map((student: PrimaryStudent) => (
+                  <li
+                    key={student.id}
+                    className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e8e7fb] bg-white px-3 py-2"
+                  >
+                    <b className="text-xs text-slate-900">{student.code}</b>
+                    <div className="ml-auto flex flex-wrap gap-1.5">
+                      {OBSERVATION_RATINGS.map((rating) => {
+                        const active = ratingByStudent[student.id] === rating;
+                        const tone = ratingTone(rating);
+                        return (
+                          <button
+                            key={rating}
+                            type="button"
+                            disabled={rateChild.isPending}
+                            aria-pressed={active}
+                            onClick={() => rateChild.mutate({ studentId: student.id, rating })}
+                            className={cn(
+                              "rounded-full border px-2.5 py-1 text-[11px] font-bold transition disabled:opacity-50",
+                              active
+                                ? `${tone.chip} ${tone.text}`
+                                : "border-[#e8e7fb] bg-white text-[#454c86] hover:bg-[#f7f4ff]",
+                            )}
+                          >
+                            {RATING_LABELS[rating]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Notes & Observations inputs */}
           <div className="space-y-4">

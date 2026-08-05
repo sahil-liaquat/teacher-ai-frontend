@@ -10,14 +10,26 @@ import {
   CACHE_KEY,
   LEGACY_CACHE_KEY,
   DEFAULT_PRIMARY_TEACHING_CONTEXT,
+  PRIMARY_LEVEL_TO_API,
+  apiLevelToPrimaryLevel,
   sanitizeContext,
   migrateLegacyContext,
   reconcileServerContext,
 } from "./primary-context-helpers";
 import { themesForSubject, subjectsForClass, skillsForContext } from "./primary-theme-content";
+import { readStoredItem, removeStoredItem, writeStoredItem } from "./safe-storage";
 
 export type { PrimaryTeachingContext, StoredPrimaryContext };
 export { PRIMARY_LEVELS, PRIMARY_LANGUAGES, CACHE_KEY, LEGACY_CACHE_KEY, DEFAULT_PRIMARY_TEACHING_CONTEXT };
+
+// GET/PUT /primary/context return `updated_at` (PrimaryTeachingContextRead).
+// `new Date(undefined).toISOString()` throws RangeError, not NaN — when the
+// field went missing, that throw landed in the catch blocks below and every
+// successful save was reported to the user as "unsynced". Degrade instead.
+function serverTimestamp(raw: unknown): string {
+  const parsed = new Date(typeof raw === "string" ? raw : NaN);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
 
 function readCachedEnvelope(): StoredPrimaryContext {
   if (typeof window === "undefined") {
@@ -31,12 +43,12 @@ function readCachedEnvelope(): StoredPrimaryContext {
   }
 
   try {
-    const rawCache = window.localStorage.getItem(CACHE_KEY);
-    const rawLegacy = window.localStorage.getItem(LEGACY_CACHE_KEY);
+    const rawCache = readStoredItem(CACHE_KEY);
+    const rawLegacy = readStoredItem(LEGACY_CACHE_KEY);
     const migrated = migrateLegacyContext(rawCache, rawLegacy);
     if (migrated) {
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify(migrated));
-      if (rawLegacy) window.localStorage.removeItem(LEGACY_CACHE_KEY);
+      writeStoredItem(CACHE_KEY, JSON.stringify(migrated));
+      if (rawLegacy) removeStoredItem(LEGACY_CACHE_KEY);
       return migrated;
     }
 
@@ -54,7 +66,7 @@ function readCachedEnvelope(): StoredPrimaryContext {
       }
     }
   } catch {
-    window.localStorage.removeItem(CACHE_KEY);
+    removeStoredItem(CACHE_KEY);
   }
 
   const defaultEnvelope: StoredPrimaryContext = {
@@ -64,13 +76,14 @@ function readCachedEnvelope(): StoredPrimaryContext {
     syncStatus: "synced",
     version: 1,
   };
-  window.localStorage.setItem(CACHE_KEY, JSON.stringify(defaultEnvelope));
+  writeStoredItem(CACHE_KEY, JSON.stringify(defaultEnvelope));
   return defaultEnvelope;
 }
 
 type PrimaryTeachingContextValue = {
   context: PrimaryTeachingContext;
   isLoading: boolean;
+  needsSetup: boolean;
   contextKey: string;
   syncStatus: "synced" | "syncing" | "unsynced";
   updateContext: (next: Partial<PrimaryTeachingContext>) => Promise<boolean>;
@@ -87,29 +100,55 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
   const [serverUpdatedAt, setServerUpdatedAt] = useState<string | undefined>(undefined);
   const [version, setVersion] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [needsSetup, setNeedsSetup] = useState(false);
 
   const latestVersionRef = useRef<number>(1);
   const syncRequestInProgress = useRef<boolean>(false);
   const autoSyncAttempted = useRef<boolean>(false);
+  // One slot, many waiters: a save that arrives mid-flight replaces whatever is
+  // queued (updateContext always persists the whole merged context, so the
+  // newest write subsumes the older one), and every caller still waiting gets
+  // the outcome of the write that actually ran.
+  const pendingWrite = useRef<{
+    context: PrimaryTeachingContext;
+    version: number;
+    waiters: Array<(saved: boolean) => void>;
+  } | null>(null);
 
-  const persist = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
-    if (syncRequestInProgress.current) {
-      return false;
-    }
-    syncRequestInProgress.current = true;
-
+  const persistOnce = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
     try {
+      // The backend's PrimaryTeachingContextUpdate.level is a snake_case
+      // Literal enum ("class_1", ...), not this file's Title-Case display
+      // string ("Class 1") — convert on the way out or every save 422s.
       const saved = await apiFetch<{ updated_at: string } & PrimaryTeachingContext>("/primary/context", {
         method: "PUT",
-        body: JSON.stringify(nextContext),
+        body: JSON.stringify({
+          level: PRIMARY_LEVEL_TO_API[nextContext.level],
+          subject: nextContext.subject,
+          theme: nextContext.theme,
+          theme_id: nextContext.themeId,
+          topic: nextContext.topic,
+          topic_id: nextContext.topicId,
+          skill: nextContext.skill,
+          language: nextContext.language,
+        }),
         redirectOnUnauthorized: false,
       });
 
       if (versionToSync === latestVersionRef.current) {
-        const clean = sanitizeContext(saved);
-        const serverTime = new Date(saved.updated_at).toISOString();
+        // ...and the response comes back with that same snake_case level, so
+        // convert on the way in too or sanitizeContext silently rejects it
+        // and resets the level to the default.
+        const clean = sanitizeContext({
+          ...saved,
+          level: apiLevelToPrimaryLevel(saved.level),
+          themeId: (saved as any).theme_id,
+          topicId: (saved as any).topic_id,
+        });
+        const serverTime = serverTimestamp(saved.updated_at);
 
         setContext(clean);
+        setNeedsSetup(false);
         setSyncStatus("synced");
         setServerUpdatedAt(serverTime);
         setUpdatedAt(serverTime);
@@ -122,7 +161,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
           serverUpdatedAt: serverTime,
           version: versionToSync,
         };
-        window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+        writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
       }
       return true;
     } catch (error) {
@@ -132,14 +171,50 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         const currentEnvelope = readCachedEnvelope();
         if (currentEnvelope && currentEnvelope.version === versionToSync) {
           currentEnvelope.syncStatus = "unsynced";
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(currentEnvelope));
+          writeStoredItem(CACHE_KEY, JSON.stringify(currentEnvelope));
         }
       }
       return false;
+    }
+  }, []);
+
+  const persist = useCallback(async (nextContext: PrimaryTeachingContext, versionToSync: number): Promise<boolean> => {
+    if (syncRequestInProgress.current) {
+      // Queue it — do NOT drop it. This used to return false on the spot, which
+      // lost the teacher's most recent class/subject/theme choice AND left
+      // syncStatus pinned to "syncing" forever, so the TopicBar showed a save
+      // that was never going to happen and offered no Retry.
+      return new Promise<boolean>((resolve) => {
+        const queued = pendingWrite.current;
+        pendingWrite.current = {
+          context: nextContext,
+          version: versionToSync,
+          waiters: [...(queued?.waiters ?? []), resolve],
+        };
+      });
+    }
+
+    syncRequestInProgress.current = true;
+    try {
+      let contextToSave = nextContext;
+      let versionToSave = versionToSync;
+      // Waiters for the write about to run. Empty on the first pass — that
+      // caller gets this function's return value instead.
+      let waiters: Array<(saved: boolean) => void> = [];
+      for (;;) {
+        const saved = await persistOnce(contextToSave, versionToSave);
+        waiters.forEach((resolve) => resolve(saved));
+        const queued = pendingWrite.current;
+        if (!queued) return saved;
+        pendingWrite.current = null;
+        contextToSave = queued.context;
+        versionToSave = queued.version;
+        waiters = queued.waiters;
+      }
     } finally {
       syncRequestInProgress.current = false;
     }
-  }, []);
+  }, [persistOnce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -154,21 +229,31 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
 
     apiFetch<{ updated_at: string } & PrimaryTeachingContext | null>("/primary/context", { redirectOnUnauthorized: false })
       .then((saved) => {
-        if (cancelled || !saved) {
+        if (cancelled) return;
+        if (!saved) {
+          setNeedsSetup(true);
           setIsLoading(false);
           return;
         }
+        setNeedsSetup(false);
 
-        const serverTime = new Date(saved.updated_at).toISOString();
+        const serverTime = serverTimestamp(saved.updated_at);
         const latestEnvelope = readCachedEnvelope();
-        const { nextEnvelope, action } = reconcileServerContext(latestEnvelope, saved, serverTime);
+        // Same snake_case-vs-Title-Case mismatch as persist()'s response above.
+        const resolvedContext: PrimaryTeachingContext = {
+          ...saved,
+          level: apiLevelToPrimaryLevel(saved.level),
+          themeId: (saved as any).theme_id,
+          topicId: (saved as any).topic_id,
+        };
+        const { nextEnvelope, action } = reconcileServerContext(latestEnvelope, resolvedContext, serverTime);
 
         if (action === "overwrite_local") {
           setContext(nextEnvelope.context);
           setSyncStatus("synced");
           setServerUpdatedAt(nextEnvelope.serverUpdatedAt);
           setUpdatedAt(nextEnvelope.updatedAt);
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(nextEnvelope));
+          writeStoredItem(CACHE_KEY, JSON.stringify(nextEnvelope));
         } else if (action === "auto_sync") {
           if (!autoSyncAttempted.current) {
             autoSyncAttempted.current = true;
@@ -196,27 +281,43 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
     async (next: Partial<PrimaryTeachingContext>) => {
       const updated = { ...context, ...next };
 
+      // These cascades exist to drop values that the change just made STALE.
+      // A field the caller passed in this same call is not stale — it is the
+      // teacher's actual choice. Clearing it anyway means a caller that sets
+      // level+subject+theme together (the Today setup modal, the home card's
+      // "View full plan") loses the theme it just picked and gets whatever
+      // themesForSubject() happens to list first backfilled in its place.
+
       // 1. Class (level) changes
       if (next.level && next.level !== context.level) {
         const validSubjects = subjectsForClass(next.level);
-        if (!validSubjects.includes(updated.subject)) {
+        // Only rescue a subject the caller left alone. subjectsForClass is a
+        // static list and the curriculum has since outgrown it (EVS is
+        // published for UKG but missing from its entry), so overriding an
+        // explicit subject here silently teaches the wrong one.
+        if (next.subject === undefined && !validSubjects.includes(updated.subject)) {
           updated.subject = validSubjects[0];
         }
-        updated.theme = undefined;
-        updated.topic = undefined;
-        updated.skill = undefined;
+        if (next.theme === undefined) updated.theme = undefined;
+        if (next.themeId === undefined) updated.themeId = undefined;
+        if (next.topic === undefined) updated.topic = undefined;
+        if (next.topicId === undefined) updated.topicId = undefined;
+        if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 2. Subject changes
       if (next.subject && next.subject !== context.subject) {
-        updated.theme = undefined;
-        updated.topic = undefined;
-        updated.skill = undefined;
+        if (next.theme === undefined) updated.theme = undefined;
+        if (next.themeId === undefined) updated.themeId = undefined;
+        if (next.topic === undefined) updated.topic = undefined;
+        if (next.topicId === undefined) updated.topicId = undefined;
+        if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 3. Theme changes
       if (next.theme && next.theme !== context.theme) {
-        updated.topic = next.theme;
+        if (next.topic === undefined) updated.topic = next.theme;
+        if (next.topicId === undefined) updated.topicId = undefined;
         updated.skill = undefined;
       }
 
@@ -254,7 +355,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         serverUpdatedAt,
         version: nextVersion,
       };
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+      writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
 
       return persist(merged, nextVersion);
     },
@@ -283,19 +384,19 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
       serverUpdatedAt,
       version: nextVersion,
     };
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
+    writeStoredItem(CACHE_KEY, JSON.stringify(envelope));
 
     return persist(context, nextVersion);
   }, [context, syncStatus, version, serverUpdatedAt, persist]);
 
   const contextKey = useMemo(
-    () => `${context.level}|${context.subject}|${context.theme ?? ""}`,
-    [context.level, context.subject, context.theme]
+    () => `${context.level}|${context.subject}|${context.themeId ?? context.theme ?? ""}|${context.topicId ?? context.topic ?? ""}`,
+    [context.level, context.subject, context.themeId, context.theme, context.topicId, context.topic]
   );
 
   const value = useMemo<PrimaryTeachingContextValue>(
-    () => ({ context, isLoading, contextKey, syncStatus, updateContext, resetContext, retrySync }),
-    [context, isLoading, contextKey, syncStatus, updateContext, resetContext, retrySync]
+    () => ({ context, isLoading, needsSetup, contextKey, syncStatus, updateContext, resetContext, retrySync }),
+    [context, isLoading, needsSetup, contextKey, syncStatus, updateContext, resetContext, retrySync]
   );
 
   return <PrimaryContext.Provider value={value}>{children}</PrimaryContext.Provider>;

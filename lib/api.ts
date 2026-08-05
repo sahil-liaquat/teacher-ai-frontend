@@ -1,7 +1,23 @@
 import { TOOL_REGISTRY } from "@/lib/tools";
 import type { ProfileAvatarKey } from "@/lib/profile-avatars";
-import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import type { PrimaryResource } from "./primary-resource-catalog";
+import type {
+  PrimaryCoverageDayState,
+  PrimaryLevelKey,
+  PrimaryThemeCoverageState,
+} from "./primary-coverage";
+
+// Re-exported so every consumer keeps treating lib/api.ts as the source of truth
+// for API types. The unions themselves live in lib/primary-coverage.ts because
+// that module is import-free and node-testable, and it needs them at runtime.
+export type { PrimaryCoverageDayState, PrimaryLevelKey, PrimaryThemeCoverageState };
+
+import type { ObservationRating, ObservationTrend } from "./primary-roster";
+import type { PrimaryTeachingContext } from "./primary-context-helpers";
+
+// Re-exported so callers import every Primary wire type from one module. The
+// unions themselves live in lib/primary-roster.ts because that module must stay
+// import-free for the node test runner.
+export type { ObservationRating, ObservationTrend };
 
 function resolveApiBase() {
   const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -15,6 +31,7 @@ export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 export function resolveUploadUrl(value?: string | null) {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/assets/") || value.startsWith("/landing/") || value.startsWith("/ai-tools/")) return value;
 
   const relativePath = value
     .replace(/^\/+/, "")
@@ -1943,28 +1960,106 @@ export const backendApi = {
     if (params.subject) qStr.set("subject", params.subject);
     return apiFetch<PaginatedResponse<LibraryItem>>(`/library?${qStr.toString()}`);
   },
-  teachingKits: () => apiFetch<TeachingKit[]>("/teaching-kits"),
-  teachingKit: (id: string) => apiFetch<TeachingKit>(`/teaching-kits/${id}`),
-  createTeachingKit: (payload: TeachingKitCreatePayload) =>
-    apiFetch<TeachingKit>("/teaching-kits", { method: "POST", body: JSON.stringify(payload) }),
-  updateTeachingKit: (id: string, payload: Partial<TeachingKitCreatePayload>) =>
-    apiFetch<TeachingKit>(`/teaching-kits/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
-  deleteTeachingKit: (id: string) => apiFetch<void>(`/teaching-kits/${id}`, { method: "DELETE" }),
   primaryActivityEvents: (limit = 30) => apiFetch<PrimaryActivityEvent[]>(`/primary-activity-events?limit=${limit}`),
   createPrimaryActivityEvent: (payload: PrimaryActivityEventCreatePayload) =>
     apiFetch<PrimaryActivityEvent>("/primary-activity-events", { method: "POST", body: JSON.stringify(payload) }),
-  plannerActivities: (start: string, end: string) =>
-    apiFetch<PrimaryPlannerActivity[]>(`/primary-planner-activities?start=${start}&end=${end}`),
+  plannerActivities: (start: string, end: string, sectionId?: string) =>
+    apiFetch<PrimaryPlannerActivity[]>(
+      `/primary-planner-activities?start=${start}&end=${end}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
   plannerActivity: (id: string) => apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`),
-  getTodayWorkspace: (date: string) =>
-    apiFetch<PrimaryTodayRead>(`/primary/today?date=${date}`),
-  updateTodayDayRecord: (date: string, payload: Partial<PrimaryTeachingDay>) =>
-    apiFetch<PrimaryTeachingDay>(`/primary/today?date=${date}`, { method: "PUT", body: JSON.stringify(payload) }),
-  createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload) =>
-    apiFetch<PrimaryPlannerActivity>("/primary-planner-activities", { method: "POST", body: JSON.stringify(payload) }),
-  createPlannerActivitiesFromKit: (payload: { kit_id: string; activities: any[] }) =>
-    apiFetch<PrimaryPlannerActivity[]>("/primary-planner-activities/from-kit", { method: "POST", body: JSON.stringify(payload) }),
-  updatePlannerActivity: (id: string, payload: Partial<PrimaryPlannerActivityCreatePayload>) =>
+  primaryCoverage: (start: string, end: string, sectionId?: string) =>
+    apiFetch<PrimaryCoverageReport>(
+      `/primary/coverage?start=${start}&end=${end}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
+  primaryThemeCoverage: (filters: { level: PrimaryLevelKey; subject?: string; language?: string }) => {
+    const params = new URLSearchParams({ level: filters.level });
+    if (filters.subject) params.append("subject", filters.subject);
+    if (filters.language) params.append("language", filters.language);
+    return apiFetch<PrimaryThemeCoverageReport>(`/primary/coverage/themes?${params.toString()}`);
+  },
+  primarySections: (includeArchived = false) =>
+    apiFetch<PrimarySection[]>(
+      `/primary/sections${includeArchived ? "?include_archived=true" : ""}`,
+    ),
+  createPrimarySection: (payload: PrimarySectionCreatePayload) =>
+    apiFetch<PrimarySection>("/primary/sections", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimarySection: (id: string, payload: PrimarySectionUpdatePayload) =>
+    apiFetch<PrimarySection>(`/primary/sections/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimarySection: (id: string) =>
+    apiFetch<void>(`/primary/sections/${id}`, { method: "DELETE" }),
+  primaryStudents: (filters: { sectionId?: string; includeArchived?: boolean } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.sectionId) params.set("section_id", filters.sectionId);
+    if (filters.includeArchived) params.set("include_archived", "true");
+    const suffix = params.toString();
+    return apiFetch<PrimaryStudent[]>(`/primary/students${suffix ? `?${suffix}` : ""}`);
+  },
+  createPrimaryStudent: (payload: PrimaryStudentCreatePayload) =>
+    apiFetch<PrimaryStudent>("/primary/students", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimaryStudent: (id: string, payload: PrimaryStudentUpdatePayload) =>
+    apiFetch<PrimaryStudent>(`/primary/students/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimaryStudent: (id: string) =>
+    apiFetch<void>(`/primary/students/${id}`, { method: "DELETE" }),
+  primaryStudentProfile: (id: string, start: string, end: string) =>
+    apiFetch<PrimaryStudentProfile>(
+      `/primary/students/${id}/profile?start=${start}&end=${end}`,
+    ),
+  primaryObservations: (filters: {
+    start: string;
+    end: string;
+    studentId?: string;
+    teachingDayId?: string;
+  }) => {
+    const params = new URLSearchParams({ start: filters.start, end: filters.end });
+    if (filters.studentId) params.set("student_id", filters.studentId);
+    if (filters.teachingDayId) params.set("teaching_day_id", filters.teachingDayId);
+    return apiFetch<PrimaryObservation[]>(`/primary/observations?${params.toString()}`);
+  },
+  // POST is create-or-replace here, not create — see the route's comment.
+  upsertPrimaryObservation: (payload: PrimaryObservationUpsertPayload) =>
+    apiFetch<PrimaryObservation>("/primary/observations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updatePrimaryObservation: (id: string, payload: PrimaryObservationUpdatePayload) =>
+    apiFetch<PrimaryObservation>(`/primary/observations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deletePrimaryObservation: (id: string) =>
+    apiFetch<void>(`/primary/observations/${id}`, { method: "DELETE" }),
+  getTodayWorkspace: (date: string, sectionId?: string) =>
+    apiFetch<PrimaryTodayRead>(
+      `/primary/today?date=${date}${sectionId ? `&section_id=${sectionId}` : ""}`,
+    ),
+  updateTodayDayRecord: (
+    date: string,
+    payload: PrimaryTeachingDayUpdatePayload,
+    sectionId?: string,
+  ) =>
+    apiFetch<PrimaryTeachingDay>(
+      `/primary/today?date=${date}${sectionId ? `&section_id=${sectionId}` : ""}`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
+  createPlannerActivity: (payload: PrimaryPlannerActivityCreatePayload, sectionId?: string) =>
+    apiFetch<PrimaryPlannerActivity>(
+      `/primary-planner-activities${sectionId ? `?section_id=${sectionId}` : ""}`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
+  updatePlannerActivity: (id: string, payload: PrimaryPlannerActivityUpdatePayload) =>
     apiFetch<PrimaryPlannerActivity>(`/primary-planner-activities/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deletePlannerActivity: (id: string) =>
     apiFetch<void>(`/primary-planner-activities/${id}`, { method: "DELETE" }),
@@ -1998,6 +2093,32 @@ export const backendApi = {
     }),
   unsavePrimaryResource: (resourceId: string) =>
     apiFetch<void>(`/primary/saved-resources/${encodeURIComponent(resourceId)}`, { method: "DELETE" }),
+  primaryCurriculumThemes: (params: {
+    level?: string; subject?: string; language?: string;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.level) query.set("level", params.level);
+    if (params.subject) query.set("subject", params.subject);
+    if (params.language) query.set("language", params.language);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryCurriculumTheme[]>(`/primary/curriculum/themes${suffix}`);
+  },
+  primaryCurriculumLesson: (themeId: string, level: string, topicId?: string) =>
+    apiFetch<PrimaryCurriculumLesson>(
+      `/primary/curriculum/lessons/${themeId}?level=${encodeURIComponent(level)}${topicId ? `&topic_id=${encodeURIComponent(topicId)}` : ""}`
+    ),
+  generatePrimaryToday: (payload: PrimaryTodayGeneratePayload) =>
+    apiFetch<PrimaryTeachingDay>("/primary/today/generate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  /** Clones an already-planned day onto another class. Not a generation —
+   *  no Gemini call, so it never consumes the teacher's quota. */
+  copyPrimaryToday: (payload: PrimaryTodayCopyPayload) =>
+    apiFetch<PrimaryTeachingDay>("/primary/today/copy", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   recentGenerations: (skip = 0, limit = 10, workspace?: string) =>
     apiFetch<PaginatedResponse<RecentGenerationItem>>(
       `/dashboard/recent-generations?skip=${skip}&limit=${limit}${workspace ? `&workspace=${encodeURIComponent(workspace)}` : ""}`,
@@ -2268,6 +2389,145 @@ export const backendApi = {
     apiFetch<{ message: string }>(`/admin/users/${userId}/resend-confirmation`, { method: "POST" }),
   adminDeleteUser: (userId: string) =>
     apiFetch<void>(`/admin/users/${userId}`, { method: "DELETE" }),
+  adminPrimaryThemes: (level?: string) =>
+    apiFetch<PrimaryCurriculumTheme[]>(
+      `/admin/primary/curriculum/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
+    ),
+  adminPrimaryAcademicYears: () =>
+    apiFetch<PrimaryAcademicYear[]>("/admin/primary/academic-years"),
+  adminCreatePrimaryAcademicYear: (payload: Omit<PrimaryAcademicYear, "id">) =>
+    apiFetch<PrimaryAcademicYear>("/admin/primary/academic-years", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryAcademicYear: (id: string, payload: Partial<Omit<PrimaryAcademicYear, "id">>) =>
+    apiFetch<PrimaryAcademicYear>(`/admin/primary/academic-years/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminCreatePrimaryTheme: (payload: {
+    name: string; subject?: string; language?: string;
+    description?: string | null; emoji?: string | null;
+    hero_image_url?: string | null; background_image_url?: string | null;
+    illustration_pack?: string[]; color_palette?: Record<string, string>;
+    icon_map?: Record<string, string>; decorations?: Array<Record<string, unknown>>;
+    keywords?: string[]; aliases?: string[];
+  }) =>
+    apiFetch<PrimaryCurriculumTheme>("/admin/primary/curriculum/themes", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryTheme: (id: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminUploadPrimaryHero: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiFetch<{ path: string }>("/admin/primary/media/hero", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  adminDuplicatePrimaryTheme: (id: string) =>
+    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/duplicate`, { method: "POST" }),
+  adminArchivePrimaryTheme: (id: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/themes/${id}`, { method: "DELETE" }),
+  adminDeletePrimaryTheme: (id: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/themes/${id}/permanent`, { method: "DELETE" }),
+  adminCreatePrimaryTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
+    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/themes/${themeId}/topics`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryTopic: (topicId: string, payload: Partial<PrimaryCurriculumTopic>) =>
+    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/topics/${topicId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminArchivePrimaryTopic: (topicId: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/topics/${topicId}`, { method: "DELETE" }),
+  adminPrimaryLessons: (params: { theme_id?: string; level?: string; topic_id?: string } = {}) => {
+    const query = new URLSearchParams(params);
+    return apiFetch<PrimaryCurriculumLesson[]>(`/admin/primary/curriculum/lessons${query.size ? `?${query}` : ""}`);
+  },
+  adminPrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
+  adminCreatePrimaryLesson: (payload: {
+    theme_id: string; topic_id?: string | null; academic_year_id?: string | null;
+    title?: string | null; month?: number | null; week?: number | null; day?: number | null;
+    level: string; objectives: string[]; vocabulary: string[];
+    assessment_questions: string[]; homework?: string | null;
+    parent_update?: string | null; steps: unknown[];
+  }) =>
+    apiFetch<PrimaryCurriculumLesson>("/admin/primary/curriculum/lessons", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryLesson: (lessonId: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminReplacePrimarySteps: (lessonId: string, steps: unknown[]) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/steps`, {
+      method: "PUT", body: JSON.stringify({ steps }),
+    }),
+  adminPublishPrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/publish`, {
+      method: "POST",
+    }),
+  adminDuplicatePrimaryLesson: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/duplicate`, {
+      method: "POST",
+    }),
+  adminPrimaryCurriculumFeedback: (params?: { level?: string; subject?: string; language?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.level) query.set("level", params.level);
+    if (params?.subject) query.set("subject", params.subject);
+    if (params?.language) query.set("language", params.language);
+    const suffix = query.toString();
+    return apiFetch<PrimaryStepFeedback[]>(
+      `/admin/primary/curriculum/feedback${suffix ? `?${suffix}` : ""}`
+    );
+  },
+  adminCloneAcademicYear: (yearId: string, payload: {
+    destination_year_id: string;
+    classes?: string[];
+    months?: number[];
+    include_drafts?: boolean;
+    include_published?: boolean;
+    include_resources?: boolean;
+  }) =>
+    apiFetch<{ cloned_count: number }>(`/admin/primary/academic-years/${yearId}/clone`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminResources: (params: {
+    search?: string; category?: string; subject?: string;
+    level?: string; theme?: string; language?: string;
+    page?: number; page_size?: number;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.category) query.set("category", params.category);
+    if (params.subject) query.set("subject", params.subject);
+    if (params.level) query.set("level", params.level);
+    if (params.theme) query.set("theme", params.theme);
+    if (params.language) query.set("language", params.language);
+    if (params.page) query.set("page", String(params.page));
+    if (params.page_size) query.set("page_size", String(params.page_size));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryResourceListResponse>(`/admin/primary/resources${suffix}`);
+  },
+  adminCreateResource: (payload: any) =>
+    apiFetch<PrimaryResource>("/admin/primary/resources", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdateResource: (id: string, payload: any) =>
+    apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminDeleteResource: (id: string) =>
+    apiFetch<void>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+  adminBulkCreateResources: (payload: { resources: any[] }) =>
+    apiFetch<{ added_count: number; skipped_count: number }>("/admin/primary/resources/bulk", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
@@ -2390,21 +2650,13 @@ export function onboardingCreateFirstHref(id: string): string {
   return tool ? tool.dashboardHref : "/dashboard";
 }
 
-// ─── Teaching Kits (Primary) ────────────────────────────────────────────────
-
+// Teaching Kit content remains a client-side composition layer used by the
+// existing Primary generators. Keep these contracts alongside the server-led
+// curriculum types below so the refactor reuses those generators unchanged.
 export type KitComponent =
-  | "daily-plan"
-  | "objectives"
-  | "warm-up"
-  | "explanation"
-  | "story"
-  | "flashcards"
-  | "picture-talk"
-  | "classroom-activity"
-  | "worksheet"
-  | "homework"
-  | "assessment"
-  | "parent-update";
+  | "daily-plan" | "objectives" | "warm-up" | "explanation" | "story"
+  | "flashcards" | "picture-talk" | "classroom-activity" | "worksheet"
+  | "homework" | "assessment" | "parent-update";
 
 export type TeachingKitResource = {
   id: string;
@@ -2424,13 +2676,8 @@ export type KitLearningObjective = {
 };
 
 export type KitSequenceItemType =
-  | "warm_up"
-  | "introduction"
-  | "story_or_rhyme"
-  | "picture_talk"
-  | "classroom_activity"
-  | "worksheet"
-  | "assessment";
+  | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
+  | "classroom_activity" | "worksheet" | "assessment";
 
 export type KitSequenceItem = {
   id: string;
@@ -2490,27 +2737,406 @@ export type TeachingKit = {
   updatedAt: string;
 };
 
-export type TeachingKitCreatePayload = {
-  context: PrimaryTeachingContext;
-  title: string;
-  resources: TeachingKitResource[];
-  content?: PrimaryTeachingKitContent | null;
-  lesson_plan_id?: string | null;
-  planner_activity_ids: string[];
-  assessment_ids: string[];
+// TeachPad Primary. snake_case throughout, matching the backend's wire format
+// and every other type in this file. (Sahil's originals were camelCase on
+// responses and snake_case on payloads — the client sent one convention and
+// expected the other. No endpoint existed to disagree, so it typechecked.)
+//
+// `PrimaryTeachingContext` (Title-Case levels, cached client-side teaching
+// context used across the whole Primary UI for dropdowns/content-matching) is
+// deliberately NOT redefined here to match the backend's snake_case
+// PrimaryTeachingContextRead. It lives in lib/primary-context-helpers.ts and
+// is out of this task's declared scope — unifying it would mean rewriting
+// every level dropdown across Primary, not a mechanical rename. The backend
+// DTO for PrimaryTodayRead.context is named PrimaryTeachingContextRead below
+// to avoid colliding with it.
+export type PrimaryLevel =
+  | "nursery" | "lkg" | "ukg"
+  | "class_1" | "class_2" | "class_3" | "class_4" | "class_5";
+
+export type PrimaryStepType =
+  | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
+  | "classroom_activity" | "worksheet" | "assessment" | "movement" | "routine"
+  | "circle_time" | "story" | "flashcards" | "craft" | "song" | "game"
+  | "reflection" | "parent_note";
+
+export type PrimaryAcademicYear = {
+  id: string;
+  name: string;
+  starts_on: string;
+  ends_on: string;
+  is_active: boolean;
 };
 
-export type PrimaryActivityEntityType = "resource" | "teaching_kit" | "lesson_plan" | "planner_activity" | "assessment" | "ai_creation";
-export type PrimaryActivityAction = "viewed" | "downloaded" | "created" | "edited" | "saved";
+export type PrimaryCurriculumTopic = {
+  id: string;
+  theme_id: string;
+  name: string;
+  description?: string | null;
+  position: number;
+  keywords: string[];
+  aliases: string[];
+  is_active: boolean;
+  has_published_lesson: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PrimaryResource = {
+  id: string;
+  title: string;
+  category: string;
+  file_url: string;
+  thumbnail_url?: string | null;
+  file_type: string;
+  subjects: string[];
+  levels: string[];
+  themes: string[];
+  keywords: string[];
+  languages: string[];
+  skills: string[];
+  difficulty?: "beginner" | "intermediate" | "advanced" | null;
+  is_active?: boolean;
+};
+
+export type PrimaryResourceListResponse = {
+  items: PrimaryResource[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+};
+
+export type PrimaryCurriculumStep = {
+  id: string;
+  position: number;
+  step_type: PrimaryStepType;
+  title: string;
+  instructions: string[];
+  duration_minutes: number;
+  objective_indexes: number[];
+  resource_category?: string | null;
+  resource_ids?: string[] | null;
+};
+
+export type PrimaryCurriculumTheme = {
+  id: string;
+  name: string;
+  language: string;
+  subject: string;
+  description?: string | null;
+  emoji?: string | null;
+  hero_image_url?: string | null;
+  background_image_url?: string | null;
+  illustration_pack: string[];
+  color_palette: Record<string, string>;
+  icon_map: Record<string, string>;
+  decorations: Array<Record<string, unknown>>;
+  keywords: string[];
+  aliases: string[];
+  topics: PrimaryCurriculumTopic[];
+  is_active: boolean;
+  /** False when no lesson is published for the requested level. The picker
+   *  greys these out instead of letting a teacher choose one and get a 404. */
+  has_published_lesson: boolean;
+};
+
+export type PrimaryCurriculumLesson = {
+  id: string;
+  theme_id: string;
+  academic_year_id?: string | null;
+  topic_id?: string | null;
+  title?: string | null;
+  month?: number | null;
+  week?: number | null;
+  day?: number | null;
+  level: PrimaryLevel;
+  version: number;
+  status: "draft" | "published" | "archived";
+  objectives: string[];
+  vocabulary: string[];
+  assessment_questions: string[];
+  homework?: string | null;
+  parent_update?: string | null;
+  steps: PrimaryCurriculumStep[];
+};
+
+export type PrimaryStepFeedback = {
+  step_id: string;
+  lesson_id: string;
+  theme_id: string;
+  theme_name: string;
+  level: PrimaryLevel;
+  subject: string;
+  language: string;
+  step_type: PrimaryStepType;
+  position: number;
+  title: string;
+  resource_category?: string | null;
+  attempts: number;
+  completed_count: number;
+  partial_count: number;
+  skipped_count: number;
+  rescheduled_count: number;
+  planned_count: number;
+  resolved_attempts: number;
+  distinct_teachers: number;
+  /** Percent of resolved_attempts that were "skipped". null means no
+   *  resolved attempts exist yet — never render that as "0%". */
+  skip_rate: number | null;
+};
+
+export type PrimaryReflection = {
+  worked_well?: string | null;
+  needs_support?: string | null;
+  continue_tomorrow?: string | null;
+  /** Rendered by the UI since day one and written by nothing until now. */
+  prep_needed?: string | null;
+};
+
+export type PrimaryTeachingDay = {
+  id: string;
+  user_id: string;
+  date: string;
+  section_id?: string | null;
+  level: PrimaryLevel;
+  subject?: string | null;
+  language: string;
+  theme_id?: string | null;
+  topic_id?: string | null;
+  lesson_id?: string | null;
+  topic?: string | null;
+  skill?: string | null;
+  objectives: string[];
+  vocabulary: string[];
+  competencies: string[];
+  materials: string[];
+  assessment_questions: string[];
+  homework?: string | null;
+  parent_update?: string | null;
+  home_connection?: string | null;
+  teacher_notes?: string | null;
+  reflection_json?: PrimaryReflection | null;
+  status: "not_started" | "in_progress" | "completed";
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryTeachingDayUpdatePayload = Partial<
+  Pick<
+    PrimaryTeachingDay,
+    | "objectives" | "vocabulary" | "competencies" | "materials"
+    | "assessment_questions" | "homework" | "parent_update"
+    | "home_connection" | "teacher_notes" | "reflection_json" | "status"
+  >
+>;
+
+export type PrimaryPlannerActivityStatus =
+  | "planned" | "completed" | "partially completed" | "skipped" | "rescheduled";
+
+export type PrimaryPlannerActivity = {
+  id: string;
+  user_id: string;
+  teaching_day_id: string;
+  curriculum_step_id?: string | null;
+  date: string;
+  start_time?: string | null;
+  duration_minutes: number;
+  title: string;
+  activity_type: string;
+  context: Record<string, unknown>;
+  resource_ids: string[];
+  component_key?: string | null;
+  rescheduled_from_date?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status: PrimaryPlannerActivityStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryPlannerActivityCreatePayload = {
+  date: string;
+  start_time?: string | null;
+  duration_minutes?: number;
+  title: string;
+  activity_type: string;
+  context?: Record<string, unknown>;
+  resource_ids?: string[];
+  curriculum_step_id?: string | null;
+  component_key?: string | null;
+  rescheduled_from_date?: string | null;
+  notes?: string | null;
+  observation?: string | null;
+  status?: PrimaryPlannerActivityStatus;
+};
+
+// Mirrors backend PrimaryPlannerActivityUpdate exactly. That schema is
+// extra="forbid", so any field NOT listed here 422s the whole PATCH — notably
+// `date` and, until recently, `activity_type`. Keep the two in lockstep.
+export type PrimaryPlannerActivityUpdatePayload = Partial<
+  Pick<
+    PrimaryPlannerActivity,
+    | "start_time" | "duration_minutes" | "title" | "activity_type"
+    | "resource_ids" | "rescheduled_from_date" | "notes" | "observation"
+    | "status"
+  >
+> & {
+  /** Not a column — the backend merges this into the activity's `context`
+   *  JSONB, leaving level/subject/language in place. Omit to leave the
+   *  existing steps alone; [] clears them. */
+  instructions?: string[];
+};
+
+// Backend wire format for a teacher's saved Primary teaching context, as
+// returned inside PrimaryTodayRead.context. NOT the same type as the
+// client-cached `PrimaryTeachingContext` (see file-header note above) — kept
+// distinctly named so the two never collide.
+export type PrimaryTeachingContextRead = {
+  user_id: string;
+  level: PrimaryLevel;
+  subject?: string | null;
+  theme?: string | null;
+  theme_id?: string | null;
+  topic?: string | null;
+  topic_id?: string | null;
+  skill?: string | null;
+  language: string;
+  version: number;
+  /** Drives the cache reconciliation in lib/primary-teaching-context.tsx. */
+  updated_at: string;
+};
+
+export type PrimaryTodayRead = {
+  planner_activities: PrimaryPlannerActivity[];
+  day_record: PrimaryTeachingDay | null;
+  context: PrimaryTeachingContextRead | null;
+};
+
+// ─── Primary coverage (Spec C) ──────────────────────────────────────────────
+// Read-only derived shapes from GET /primary/coverage and
+// /primary/coverage/themes. Every `state` is computed server-side so the screen
+// and the PDF export cannot disagree about what "taught" means.
+
+export type PrimaryDayCoverage = {
+  date: string;
+  /** null means there is no primary_teaching_days row at all for this date. */
+  teaching_day_id: string | null;
+  level: PrimaryLevelKey | null;
+  subject: string | null;
+  language: string | null;
+  theme_id: string | null;
+  theme_name: string | null;
+  lesson_id: string | null;
+  /**
+   * The teacher-set value. Nothing in the backend ever writes it, so it reads
+   * "not_started" on a fully taught day — colour off `state`, not this.
+   */
+  day_status: "not_started" | "in_progress" | "completed" | null;
+  total: number;
+  planned: number;
+  completed: number;
+  partially_completed: number;
+  skipped: number;
+  rescheduled: number;
+  minutes_planned: number;
+  /** Only status === "completed". Partials are counted, never half-weighted. */
+  minutes_completed: number;
+  state: PrimaryCoverageDayState;
+};
+
+export type PrimaryCoverageTotals = {
+  days_in_range: number;
+  days_with_plan: number;
+  days_without_plan: number;
+  activities: number;
+  planned: number;
+  completed: number;
+  partially_completed: number;
+  skipped: number;
+  rescheduled: number;
+  minutes_planned: number;
+  minutes_completed: number;
+};
+
+export type PrimaryCoverageReport = {
+  start: string;
+  end: string;
+  /** Every date in the range, including the ones with nothing on them. */
+  days: PrimaryDayCoverage[];
+  totals: PrimaryCoverageTotals;
+};
+
+export type PrimaryThemeCoverage = {
+  theme_id: string;
+  theme_name: string;
+  subject: string;
+  language: string;
+  emoji: string | null;
+  level: PrimaryLevelKey;
+  lesson_id: string | null;
+  lesson_version: number | null;
+  authored: boolean;
+  steps_total: number;
+  steps_taught: number;
+  steps_partially_taught: number;
+  steps_planned_only: number;
+  steps_untouched: number;
+  completion_pct: number;
+  state: PrimaryThemeCoverageState;
+};
+
+export type PrimaryThemeCoverageReport = {
+  level: PrimaryLevelKey;
+  themes: PrimaryThemeCoverage[];
+  themes_total: number;
+  themes_authored: number;
+  /** > 0 means TeachPad has content missing, not that the teacher skipped it. */
+  themes_not_authored: number;
+  themes_complete: number;
+  themes_in_progress: number;
+  themes_not_started: number;
+  /** Authored themes only — the backlog never sits in the denominator. */
+  steps_total: number;
+  steps_taught: number;
+  completion_pct: number;
+};
+
+export type PrimaryTodayGeneratePayload = {
+  date: string;
+  level: PrimaryLevel;
+  subject: string;
+  theme_id: string;
+  topic_id?: string | null;
+  language?: string;
+  /** Clears the day's existing activities inside the same transaction. */
+  replace?: boolean;
+  /** Omitted means the section-less day — what every teacher gets today. */
+  section_id?: string | null;
+};
+
+export type PrimaryTodayCopyPayload = {
+  date: string;
+  /** The class to copy FROM. Null means the section-less day. */
+  from_section_id: string | null;
+  /** The class to copy INTO. Null means the section-less day. */
+  section_id: string | null;
+  replace?: boolean;
+};
+
+export type PrimaryActivityEntityType =
+  "resource" | "lesson_plan" | "planner_activity" | "ai_creation";
+export type PrimaryActivityAction =
+  "viewed" | "downloaded" | "created" | "edited" | "saved";
 
 export type PrimaryActivityEvent = {
   id: string;
-  userId: string;
-  entityType: PrimaryActivityEntityType;
-  entityId: string;
+  user_id: string;
+  entity_type: PrimaryActivityEntityType;
+  entity_id: string;
   action: PrimaryActivityAction;
-  createdAt: string;
-  clientEventId?: string;
+  client_event_id?: string | null;
+  created_at: string;
 };
 
 export type PrimaryActivityEventCreatePayload = {
@@ -2520,146 +3146,124 @@ export type PrimaryActivityEventCreatePayload = {
   client_event_id?: string;
 };
 
-export type PrimaryPlannerActivityStatus =
-  | "planned"
-  | "completed"
-  | "partially completed"
-  | "skipped"
-  | "rescheduled";
-
-export type PrimaryPlannerActivity = {
-  id: string;
-  userId: string;
-  date: string;
-  startTime?: string | null;
-  durationMinutes?: number | null;
-  title: string;
-  activityType: string;
-  context: PrimaryTeachingContext;
-  resourceIds: string[];
-  teachingKitId?: string | null;
-  assessmentId?: string | null;
-  componentKey?: string | null;
-  rescheduledFromDate?: string | null;
-  notes?: string | null;
-  observation?: string | null;
-  status: PrimaryPlannerActivityStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PrimaryPlannerActivityCreatePayload = {
-  date: string;
-  start_time?: string | null;
-  duration_minutes?: number | null;
-  title: string;
-  activity_type: string;
-  context: PrimaryTeachingContext;
-  resource_ids: string[];
-  teaching_kit_id?: string | null;
-  assessment_id?: string | null;
-  component_key?: string | null;
-  rescheduled_from_date?: string | null;
-  notes?: string | null;
-  observation?: string | null;
-  status?: PrimaryPlannerActivityStatus;
-};
-
-export type PrimaryAssessmentStatus = "draft" | "ready" | "completed_manually";
-
-export type PrimaryAssessmentContentQuestion = {
-  type: string;
-  prompt: string;
-};
-
-export type PrimaryAssessmentContent = {
-  instructions?: string;
-  questions?: PrimaryAssessmentContentQuestion[];
-  skills?: string[];
-  criteria?: string[];
-};
-
-export type PrimaryAssessment = {
-  id: string;
-  userId: string;
-  title: string;
-  assessmentType: string;
-  classLevel: string;
-  subject: string;
-  theme?: string | null;
-  language: string;
-  teachingKitId?: string | null;
-  sourceComponentKey?: string | null;
-  sourceObjectiveKey?: string | null;
-  contentJson: PrimaryAssessmentContent;
-  status: PrimaryAssessmentStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PrimaryAssessmentCreatePayload = {
-  title: string;
-  assessment_type: string;
-  class_level: string;
-  subject: string;
-  theme?: string | null;
-  language?: string;
-  teaching_kit_id?: string | null;
-  source_component_key?: string | null;
-  source_objective_key?: string | null;
-  content_json: PrimaryAssessmentContent;
-  status?: PrimaryAssessmentStatus;
-};
-
 export type SavedPrimaryResource = {
   id: string;
-  userId: string;
-  resourceId: string;
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  resource_id: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type SavedPrimaryResourceCreatePayload = {
   resource_id: string;
 };
 
-export type PrimaryResourceListResponse = {
-  items: PrimaryResource[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-};
+// ─── Primary roster + observations (Spec D) ─────────────────────────────────
+// snake_case, matching the backend wire format. `display_name` appears nowhere
+// on purpose: the column exists but is reserved for a future consent flow, and
+// no route returns it (see backend app/models/primary.py PrimaryStudent).
 
-export type PrimaryTeachingDay = {
+export type PrimarySection = {
   id: string;
-  userId: string;
-  date: string;
-  classLevel?: string | null;
-  subject?: string | null;
-  theme?: string | null;
-  topic?: string | null;
-  skill?: string | null;
-  language?: string | null;
-  teachingKitId?: string | null;
-  objectives: string[];
-  competencies: string[];
-  materials: string[];
-  homeConnection?: string | null;
-  teacherNotes?: string | null;
-  reflectionJson?: {
-    workedWell?: string;
-    needsSupport?: string;
-    continueTomorrow?: string;
-    prepNeeded?: string;
-  } | null;
-  status: "not_started" | "in_progress" | "completed";
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  name: string;
+  level: PrimaryLevel;
+  is_active: boolean;
+  /** Active children only — archived ones are excluded server-side. */
+  student_count: number;
+  created_at: string;
+  updated_at: string;
 };
 
-export type PrimaryTodayRead = {
-  planner_activities: PrimaryPlannerActivity[];
-  day_record: PrimaryTeachingDay | null;
-  context: PrimaryTeachingContext | null;
+export type PrimarySectionCreatePayload = {
+  name: string;
+  level: PrimaryLevel;
+};
+
+export type PrimarySectionUpdatePayload = Partial<{
+  name: string;
+  level: PrimaryLevel;
+  is_active: boolean;
+}>;
+
+export type PrimaryStudent = {
+  id: string;
+  user_id: string;
+  section_id: string;
+  /** A code, initials or nickname the teacher chose. Never a real name. */
+  code: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PrimaryStudentCreatePayload = {
+  section_id: string;
+  code: string;
+};
+
+// No section_id: the backend refuses to move a child between sections, because
+// it would break (section_id, code) uniqueness and strand their observations.
+export type PrimaryStudentUpdatePayload = Partial<{
+  code: string;
+  is_active: boolean;
+}>;
+
+export type PrimaryObservation = {
+  id: string;
+  user_id: string;
+  student_id: string;
+  teaching_day_id: string;
+  planner_activity_id?: string | null;
+  date: string;
+  skill?: string | null;
+  rating: ObservationRating;
+  note?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// Create-or-replace against the two partial unique indexes. No `date`: it is
+// copied from the teaching day server-side.
+export type PrimaryObservationUpsertPayload = {
+  student_id: string;
+  teaching_day_id: string;
+  planner_activity_id?: string | null;
+  skill?: string | null;
+  rating: ObservationRating;
+  note?: string | null;
+};
+
+export type PrimaryObservationUpdatePayload = Partial<{
+  skill: string | null;
+  rating: ObservationRating;
+  note: string | null;
+}>;
+
+export type PrimarySkillSummary = {
+  skill: string;
+  observations: number;
+  not_yet: number;
+  emerging: number;
+  secure: number;
+  latest_rating: ObservationRating;
+  /** First versus last rating in range — not an average. */
+  trend: ObservationTrend;
+};
+
+export type PrimaryStudentProfile = {
+  student: PrimaryStudent;
+  section_name: string;
+  start: string;
+  end: string;
+  observations_total: number;
+  days_observed: number;
+  activities_observed: number;
+  not_yet: number;
+  emerging: number;
+  secure: number;
+  secure_pct: number;
+  skills: PrimarySkillSummary[];
+  /** Chronological, oldest first. The profile renders it as a timeline. */
+  observations: PrimaryObservation[];
 };

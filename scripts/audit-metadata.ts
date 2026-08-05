@@ -49,7 +49,7 @@ function audit() {
 
   // 3. Subject aliases/mismatches
   const mismatches: string[] = [];
-  for (const s of catalogSubjects) {
+  for (const s of Array.from(catalogSubjects)) {
     if (!curatedSubjects.includes(s)) {
       mismatches.push(`Catalogue subject "${s}" is not in curated subjects.`);
     }
@@ -108,7 +108,7 @@ function audit() {
   }
 
   const themesWithInconsistentCasing: string[][] = [];
-  for (const [norm, list] of catalogThemeCasingCount.entries()) {
+  for (const [norm, list] of Array.from(catalogThemeCasingCount.entries())) {
     if (list.length > 1) {
       themesWithInconsistentCasing.push(list);
     }

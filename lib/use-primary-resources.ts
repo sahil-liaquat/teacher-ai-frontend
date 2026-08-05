@@ -88,7 +88,7 @@ export function usePrimaryResources(filters: UsePrimaryResourcesFilters) {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.hasMore ? allPages.length + 1 : undefined;
+      return lastPage.has_more ? allPages.length + 1 : undefined;
     },
     enabled: useBackend && !filters.isSavedView,
     staleTime: 30_000,

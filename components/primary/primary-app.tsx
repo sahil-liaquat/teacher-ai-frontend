@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, BookOpen, ChevronDown, ClipboardCheck, FileText,
   Search, Sparkles, BarChart3, NotebookPen, Puzzle, CircleHelp, Download, Eye, X, Pencil,
 } from "lucide-react";
-import { type PrimaryResource } from "@/lib/primary-resource-catalog";
+import { type PrimaryResource } from "@/lib/primary-resource-adapter";
 import { usePrimaryActivityHistory, useTrackActivity } from "@/lib/primary-activity";
 import { useSavedResourceIds, useToggleSavePrimaryResource } from "@/lib/primary-saved-resources";
 import { usePrimaryResources, USE_BACKEND_CATALOGUE } from "@/lib/use-primary-resources";
@@ -16,7 +16,7 @@ import { PRIMARY_LEVELS, PRIMARY_LANGUAGES, generatorHref, quickIdeaText, themeC
 import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { cn } from "@/lib/utils";
 
-export type PrimaryPage = "home" | "today" | "library" | "create" | "saved" | "settings";
+export type PrimaryPage = "home" | "today" | "library" | "create" | "saved" | "settings" | "coverage" | "roster";
 
 import PrimaryHomePage from "./pages/primary-home-page";
 import PrimaryTodayPage from "./pages/primary-today-page";
@@ -24,6 +24,8 @@ import PrimaryLibraryPage from "./pages/primary-library-page";
 import PrimaryCreatePage from "./pages/primary-create-page";
 import PrimarySavedPage from "./pages/primary-saved-page";
 import PrimarySettingsPage from "./pages/primary-settings-page";
+import PrimaryCoveragePage from "./pages/primary-coverage-page";
+import PrimaryRosterPage from "./pages/primary-roster-page";
 
 // Sidebar/topbar chrome for /primary/* comes from <AppShell> (components/app-shell.tsx),
 // which wraps every page via app/primary/layout.tsx — this component only owns page content.
@@ -34,6 +36,8 @@ const title: Record<PrimaryPage, [string, string]> = {
   create: ["Creative Studio ✨", "Design custom worksheets, stories, and class resources."],
   saved: ["Saved Content ❤️", "Your personal workspace of bookmarked files and generated kits."],
   settings: ["Settings ⚙️", "Configure your Primary Teaching context and preferences."],
+  coverage: ["Curriculum Coverage 📊", "Review textbook scope and classroom progress."],
+  roster: ["Class Roster 👥", "Manage students, classes and attendance profiles."],
 };
 
 export function PrimaryApp({ page }: { page: PrimaryPage }) {
@@ -43,19 +47,50 @@ export function PrimaryApp({ page }: { page: PrimaryPage }) {
 function PrimaryAppContent({ page }: { page: PrimaryPage }) {
   const [toast, setToast] = useState("");
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 2400); };
+
+  const subNavItems = [
+    { id: "home", label: "Dashboard", href: "/primary", emoji: "🏫" },
+    { id: "today", label: "Today's Plan", href: "/primary/today", emoji: "📅" },
+    { id: "library", label: "Library", emoji: "📚", href: "/primary/library" },
+    { id: "create", label: "Create", emoji: "✨", href: "/primary/create" },
+    { id: "saved", label: "Saved", emoji: "❤️", href: "/primary/saved" },
+    { id: "settings", label: "Settings", emoji: "⚙️", href: "/primary/settings" },
+  ];
+
   return <>
     <div className="primary-shell min-h-screen text-teachpad-ink">
     <main className="primary-main min-h-screen p-4 lg:p-7">
-      {page !== "home" && page !== "today" && (
-        <section className="primary-hero relative overflow-hidden px-1 pt-4 lg:px-2">
-          <Link href="/primary" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold shadow-sm ring-1 ring-[#eeeeff] hover:text-[#6e41f5]"><ArrowLeft className="h-4 w-4" />Back to Dashboard</Link>
-          <div className="relative z-10 mt-3 max-w-2xl">
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight lg:text-[38px]">{title[page][0]}</h1>
-            <p className="mt-2 text-sm font-medium text-[#29317c]">{title[page][1]}</p>
+      <header className="primary-top-nav mb-6 flex flex-col gap-4 border border-slate-200/50 bg-white/70 p-4 shadow-xs backdrop-blur-md rounded-2xl lg:flex-row lg:items-center lg:justify-between select-none">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#6e41f5] to-[#8d65ff] text-white shadow-md shadow-[#6e41f5]/20">
+            <Sparkles className="h-5 w-5" />
           </div>
-          <Image src="/assets/sidebar-mascot.png" alt="Elif, your teaching companion" width={310} height={510} className="primary-hero-elif pointer-events-none absolute right-12 top-[-42px] hidden h-[280px] w-auto object-contain lg:block" priority />
-        </section>
-      )}
+          <div>
+            <h1 className="text-sm font-black text-[#1a1c3d] tracking-tight">Primary Classroom OS</h1>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">NEP 2020 Guided System</p>
+          </div>
+        </div>
+        <nav className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+          {subNavItems.map((item) => {
+            const isActive = page === item.id;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition-all duration-200 whitespace-nowrap",
+                  isActive
+                    ? "bg-[#6e41f5] text-white shadow-md shadow-[#6e41f5]/20"
+                    : "text-[#5e6399] hover:bg-slate-100/70 hover:text-[#6e41f5]"
+                )}
+              >
+                <span className="text-sm">{item.emoji}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </header>
 
       {page === "home" && <PrimaryHomePage notify={notify} />}
       {page === "today" && <PrimaryTodayPage notify={notify} />}
@@ -63,6 +98,8 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
       {page === "create" && <PrimaryCreatePage AiStudio={AiStudio} notify={notify} />}
       {page === "saved" && <PrimarySavedPage Resources={Resources} notify={notify} />}
       {page === "settings" && <PrimarySettingsPage />}
+      {page === "coverage" && <PrimaryCoveragePage notify={notify} />}
+      {page === "roster" && <PrimaryRosterPage notify={notify} />}
     </main>
     {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#17206a] px-5 py-3 text-sm font-bold text-white shadow-xl">{toast}</div>}
     </div>
@@ -546,8 +583,8 @@ export function AiStudio({ notify }: { notify: (s: string) => void }) {
   const creationCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const event of events) {
-      if (event.entityType !== "ai_creation") continue;
-      const label = event.entityId.trim() || "AI Creation";
+      if (event.entity_type !== "ai_creation") continue;
+      const label = event.entity_id.trim() || "AI Creation";
       counts.set(label, (counts.get(label) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);

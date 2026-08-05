@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
   ChevronDown,
@@ -9,18 +11,23 @@ import {
   ChevronRight,
   ArrowRight,
   CheckCircle2,
+  Copy,
   XCircle,
   AlertTriangle,
   Loader2,
   Sparkles,
   RefreshCw,
 } from "lucide-react";
-import { backendApi, type PrimaryPlannerActivity } from "@/lib/api";
+import { backendApi } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
-import { assembleKit, KIT_SEQUENCE_TYPE_LABELS } from "@/lib/teaching-kit";
-import { PRIMARY_RESOURCES } from "@/lib/primary-resource-catalog";
-import ActivityDrawer from "./activity_drawer";
+import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
+import { getErrorCode, getErrorMessage } from "@/lib/errors";
+import { primaryTodayViewState } from "@/lib/primary-today-view-state";
+import { adaptApiResource } from "@/lib/primary-resource-adapter";
+import { useUpgradeModal } from "@/components/billing/upgrade-modal";
+import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 import { cn } from "@/lib/utils";
 
 const toLocalISODate = (date: Date) =>
@@ -34,6 +41,10 @@ const addDays = (date: Date, days: number) => {
   next.setDate(next.getDate() + days);
   return next;
 };
+
+// The section-less day has no id, so it needs a stand-in value to be selectable
+// in a <select> alongside real section ids.
+const NO_SECTION = "__no_section__";
 
 const ACTIVITY_TYPES_CONFIG: Record<
   string,
@@ -60,64 +71,57 @@ function getActivityConfig(type: string) {
   return ACTIVITY_TYPES_CONFIG.routine;
 }
 
-// Every generation creates a brand-new kit, so the backend's dedup (scoped to a single kit id)
-// never catches repeats across runs. Clear the day first so "Generate"/"Regenerate" replaces
-// the plan instead of piling more activities on top of it each time.
-async function clearPlanForDate(date: string) {
-  const workspace = await backendApi.getTodayWorkspace(date);
-  await Promise.all(workspace.planner_activities.map((activity) => backendApi.deletePlannerActivity(activity.id)));
-}
-
-// Assembles a kit from the teacher's current context and turns it into a day of planner activities.
-async function generatePlanForContext(context: PrimaryTeachingContext, date: string) {
-  const assembled = assembleKit(context);
-
-  const savedKit = await backendApi.createTeachingKit({
-    context,
-    title: assembled.title,
-    resources: assembled.resources,
-    content: assembled.content,
-    planner_activity_ids: [],
-    assessment_ids: [],
-  });
-
-  const activities = (assembled.content?.sequence ?? []).map((step, index) => {
-    const startH = 8 + Math.floor((index * 10) / 60);
-    const startM = (index * 10) % 60;
-    return {
-      date,
-      start_time: `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`,
-      duration_minutes: step.duration || 10,
-      title: step.title,
-      activity_type: KIT_SEQUENCE_TYPE_LABELS[step.type] || "Activity",
-      resource_ids: step.resourceIds || [],
-      notes: step.instructions.join("\n"),
-      status: "planned",
-    };
-  });
-
-  await backendApi.createPlannerActivitiesFromKit({ kit_id: savedKit.id, activities });
-  return activities.length;
-}
-
 export default function PrimaryTodayPage({ notify }: { notify: (s: string) => void }) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const { context, updateContext, isLoading: contextLoading } = usePrimaryTeachingContext();
+  const { openUpgrade } = useUpgradeModal();
 
-  const [selectedDate, setSelectedDate] = useState(() => toLocalISODate(new Date()));
-  const [selectedActivity, setSelectedActivity] = useState<PrimaryPlannerActivity | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") || toLocalISODate(new Date()));
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const attemptedRef = useRef<string | null>(null);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [setupSubmitting, setSetupSubmitting] = useState(false);
+  // "" = nothing picked yet; NO_SECTION = the section-less day.
+  const [copyFrom, setCopyFrom] = useState("");
+  const [copying, setCopying] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["primary-today-workspace", selectedDate],
-    queryFn: () => backendApi.getTodayWorkspace(selectedDate),
+  const { sectionId, setSectionId, hasChosen } = usePrimarySection();
+  const sections = useQuery({
+    queryKey: ["primary-sections", false],
+    queryFn: () => backendApi.primarySections(),
+  });
+
+  // A section that gets deleted (allowed once it has zero children/days)
+  // leaves its id stranded in localStorage. Once the sections list has
+  // loaded, if that id is no longer present, clear it — otherwise every
+  // subsequent request scoped to it 404s with no picker on screen to recover
+  // from (the picker only renders when there's at least one section).
+  useEffect(() => {
+    if (!sections.isSuccess) return;
+    if (sectionId && !sections.data.some((section) => section.id === sectionId)) {
+      setSectionId(null);
+    }
+  }, [sections.isSuccess, sections.data, sectionId, setSectionId]);
+
+  // A teacher who has built a roster expects to be planning for one of their
+  // classes. Landing on the section-less day instead gives them two places to
+  // plan with no sign which is which — they plan in one, open their real class,
+  // and find it empty. Default to the first class; `hasChosen` keeps this from
+  // overriding anyone who deliberately picked "All children".
+  useEffect(() => {
+    if (!sections.isSuccess || hasChosen || sectionId) return;
+    const first = sections.data.find((section) => section.is_active) ?? sections.data[0];
+    if (first) setSectionId(first.id, false);
+  }, [sections.isSuccess, sections.data, sectionId, hasChosen, setSectionId]);
+
+  const { data, isLoading, isError, isFetching, error, refetch } = useQuery({
+    queryKey: ["primary-today-workspace", selectedDate, sectionId],
+    queryFn: () => backendApi.getTodayWorkspace(selectedDate, sectionId ?? undefined),
   });
 
   const plannerActivities = data?.planner_activities ?? [];
   const dayRecord = data?.day_record ?? null;
-  const isToday = selectedDate === toLocalISODate(new Date());
 
   // Today's Plan selector — mirrors the Home page card so context can be changed here too.
   const [selLevel, setSelLevel] = useState<string>(context.level || "");
@@ -150,19 +154,97 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     []
   );
 
-  const runGenerate = async (overrideContext?: PrimaryTeachingContext, overrideDate?: string) => {
+  // The teacher's selected theme name resolved to its curriculum row. The
+  // server matches on theme_id, so the picker's display string is not enough.
+  const { data: themes = [] } = useQuery({
+    queryKey: ["primary-curriculum-themes", context.level, context.subject],
+    queryFn: () =>
+      backendApi.primaryCurriculumThemes({
+        level: PRIMARY_LEVEL_TO_API[context.level],
+        subject: context.subject ?? undefined,
+      }),
+    enabled: !!context.level && !!context.subject,
+  });
+
+  const selectedThemeId = useMemo(
+    () => themes.find((t) => t.name === context.theme)?.id ?? "",
+    [themes, context.theme]
+  );
+
+  const runGenerate = async (options: {
+    /** Context to generate for, when it differs from the saved one. */
+    context?: PrimaryTeachingContext;
+    date?: string;
+    /** A theme id already resolved by the caller — skips the name lookup below. */
+    themeId?: string;
+    topicId?: string;
+    replace?: boolean;
+  } = {}) => {
+    const { context: overrideContext, date: overrideDate, replace = false } = options;
     const ctx = overrideContext ?? context;
     const date = overrideDate ?? selectedDate;
+
+    // `themes`/`selectedThemeId` above are scoped to THIS render's
+    // `context.level`/`context.subject`. When called with an overrideContext
+    // (the quick-select "View full plan" path), `updateContext()` is async —
+    // React hasn't necessarily re-rendered with the new context yet, so those
+    // would still reflect the OLD level/subject. Looking a theme name up
+    // against the wrong subject's theme list can resolve to a real theme id
+    // for a DIFFERENT subject (the backend does not cross-validate
+    // payload.subject against the resolved theme's actual subject), silently
+    // generating a day with a mismatched subject/theme pairing. Fetch the
+    // theme list freshly scoped to the actual ctx being generated for instead
+    // of trusting render state — this is correct regardless of render timing.
+    // Same queryKey/queryFn shape as the useQuery above, so when ctx matches
+    // the current render it's just a cache hit, not an extra request.
+    let themeId = options.themeId ?? "";
+    if (!themeId) {
+      themeId = overrideContext
+        ? (
+            await queryClient.fetchQuery({
+              queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject],
+              queryFn: () =>
+                backendApi.primaryCurriculumThemes({
+                  level: PRIMARY_LEVEL_TO_API[ctx.level],
+                  subject: ctx.subject ?? undefined,
+                }),
+            })
+          ).find((t) => t.name === ctx.theme)?.id ?? ""
+        : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
+    }
+
+    const payload = buildGeneratePayload(ctx, themeId, date, replace, options.topicId);
+    // Nothing to generate from — either the context is incomplete, or its theme
+    // name has no curriculum row behind it. A teacher can't tell those apart
+    // from an error line, and the second one looks like a lie when the pickers
+    // above are visibly filled in. Open the setup modal and let them choose
+    // from themes that actually exist.
+    if (!payload) {
+      setGenerateError(null);
+      setSetupOpen(true);
+      return;
+    }
+    payload.section_id = sectionId;
+
     setGenerateError(null);
     setGenerating(true);
     try {
-      await clearPlanForDate(date);
-      const count = await generatePlanForContext(ctx, date);
-      notify(`Plan ready — ${count} activities added ✨`);
-      await queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", date] });
+      // One atomic server call. It resolves the published lesson, upserts the
+      // day, matches a printable per step and writes the activities in a single
+      // transaction — which is why regenerating no longer duplicates a day.
+      await backendApi.generatePrimaryToday(payload);
+      notify("Plan ready ✨");
+      await queryClient.invalidateQueries({
+        queryKey: ["primary-today-workspace", date],
+      });
     } catch (err) {
       console.error("Failed to generate plan:", err);
-      setGenerateError("We couldn't generate a plan. Try again or add an activity manually.");
+      if (getErrorCode(err) === "TRIAL_MANDATE_REQUIRED") {
+        setGenerating(false);
+        openUpgrade("You've used your free Primary day. Add a payment method to generate more — or try your other tools free.");
+        return;
+      }
+      setGenerateError(getErrorMessage(err, "We couldn't generate a plan. Try again or add an activity manually."));
     } finally {
       setGenerating(false);
     }
@@ -180,28 +262,76 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         topic: selTheme,
       };
       const todayDate = toLocalISODate(new Date());
-      // Mark this combination as already attempted before updateContext re-renders the page,
-      // so the auto-generate effect below doesn't race us with a second, concurrent generation.
-      attemptedRef.current = `${todayDate}|${resolvedContext.level}|${resolvedContext.subject}|${resolvedContext.theme}`;
-      await updateContext(resolvedContext);
+      const saved = await updateContext(resolvedContext);
+      if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
       setSelectedDate(todayDate);
-      await runGenerate(resolvedContext, todayDate);
+      await runGenerate({ context: resolvedContext, date: todayDate });
     } finally {
       setSavingContext(false);
     }
   };
 
-  // Arriving here from Home with an empty "today" builds the plan automatically,
-  // so the full details show right away without an extra click.
-  useEffect(() => {
-    if (contextLoading || isLoading || generating || !isToday) return;
-    if (plannerActivities.length > 0) return;
-    const key = `${selectedDate}|${context.level}|${context.subject}|${context.theme}`;
-    if (attemptedRef.current === key) return;
-    attemptedRef.current = key;
-    void runGenerate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contextLoading, isLoading, generating, isToday, plannerActivities.length, selectedDate, context.level, context.subject, context.theme]);
+  const handleSetupSubmit = async (setup: PrimaryPlanSetup) => {
+    setSetupSubmitting(true);
+    try {
+      const resolvedContext: PrimaryTeachingContext = {
+        ...context,
+        level: setup.level,
+        subject: setup.subject,
+        theme: setup.themeName,
+        themeId: setup.themeId,
+        topic: setup.topicName,
+        topicId: setup.topicId,
+        // Curriculum themes are authored per language, so generating a Hindi
+        // theme's day in English would narrate content the lesson isn't written
+        // in. Follow the theme, but only to a language the context can hold.
+        language: (PRIMARY_LANGUAGES as readonly string[]).includes(setup.language)
+          ? (setup.language as PrimaryTeachingContext["language"])
+          : context.language,
+      };
+      const saved = await updateContext(resolvedContext);
+      if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
+      setSetupOpen(false);
+      // The modal picked a real curriculum row, so hand its id straight to the
+      // generator rather than round-tripping through a name lookup.
+      await runGenerate({ context: resolvedContext, themeId: setup.themeId, topicId: setup.topicId });
+    } finally {
+      setSetupSubmitting(false);
+    }
+  };
+
+  // Every other group the same date could already be planned for. The backend
+  // is the authority on whether one actually has a plan — it 404s with a plain
+  // sentence — so this list doesn't try to pre-check each one.
+  const copySources = useMemo(() => {
+    const groups: Array<{ value: string; label: string }> = [
+      { value: NO_SECTION, label: "Not assigned to a class" },
+      ...(sections.data || []).map((section) => ({ value: section.id, label: section.name })),
+    ];
+    return groups.filter((group) => group.value !== (sectionId ?? NO_SECTION));
+  }, [sections.data, sectionId]);
+
+  const handleCopyDay = async () => {
+    if (!copyFrom) return;
+    setCopying(true);
+    setGenerateError(null);
+    try {
+      await backendApi.copyPrimaryToday({
+        date: selectedDate,
+        from_section_id: copyFrom === NO_SECTION ? null : copyFrom,
+        section_id: sectionId,
+      });
+      notify("Plan copied ✨");
+      await queryClient.invalidateQueries({
+        queryKey: ["primary-today-workspace", selectedDate],
+      });
+    } catch (err) {
+      console.error("Failed to copy plan:", err);
+      setGenerateError(getErrorMessage(err, "We couldn't copy that plan. Try generating one instead."));
+    } finally {
+      setCopying(false);
+    }
+  };
 
   const handlePrevDay = () => setSelectedDate(toLocalISODate(addDays(parseLocalISODate(selectedDate), -1)));
   const handleNextDay = () => setSelectedDate(toLocalISODate(addDays(parseLocalISODate(selectedDate), 1)));
@@ -217,20 +347,39 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     return plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 4);
   }, [dayRecord, plannerActivities]);
 
+  const materialIds = useMemo(
+    () => Array.from(new Set(plannerActivities.flatMap((activity) => activity.resource_ids))),
+    [plannerActivities]
+  );
+  const materialResourceQueries = useQueries({
+    queries: materialIds.map((id) => ({
+      queryKey: ["primary-resource", id],
+      queryFn: async () => {
+        try {
+          return adaptApiResource(await backendApi.primaryResource(id));
+        } catch {
+          return null;
+        }
+      },
+      enabled: !(dayRecord?.materials && dayRecord.materials.length > 0),
+      staleTime: 60_000,
+      retry: 0,
+    })),
+  });
   const materialsList = useMemo(() => {
     if (dayRecord?.materials && dayRecord.materials.length > 0) return dayRecord.materials;
-    return Array.from(new Set(plannerActivities.flatMap((activity) => activity.resourceIds)))
-      .map((id) => PRIMARY_RESOURCES.find((resource) => resource.id === id)?.title)
+    return materialResourceQueries
+      .map((q) => q.data?.title)
       .filter((title): title is string => Boolean(title))
       .slice(0, 4);
-  }, [dayRecord, plannerActivities]);
+  }, [dayRecord, materialResourceQueries]);
 
   const overview = useMemo(() => {
     const titles = plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 3);
     return titles.length > 0 ? `Today's plan includes ${titles.join(", ")}.` : "Generate a plan or add an activity to build today's schedule.";
   }, [plannerActivities]);
 
-  const totalDuration = useMemo(() => plannerActivities.reduce((sum, act) => sum + (act.durationMinutes || 0), 0), [plannerActivities]);
+  const totalDuration = useMemo(() => plannerActivities.reduce((sum, act) => sum + (act.duration_minutes || 0), 0), [plannerActivities]);
   const completedCount = useMemo(
     () => plannerActivities.filter((activity) => activity.status === "completed" || activity.status === "skipped").length,
     [plannerActivities]
@@ -242,26 +391,45 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   useEffect(() => {
     setReflection({
-      workedWell: dayRecord?.reflectionJson?.workedWell || "",
-      needsSupport: dayRecord?.reflectionJson?.needsSupport || "",
-      continueTomorrow: dayRecord?.reflectionJson?.continueTomorrow || "",
+      workedWell: dayRecord?.reflection_json?.worked_well || "",
+      needsSupport: dayRecord?.reflection_json?.needs_support || "",
+      continueTomorrow: dayRecord?.reflection_json?.continue_tomorrow || "",
     });
   }, [selectedDate, dayRecord]);
 
   const handleSaveReflection = async () => {
     setSavingReflection(true);
     try {
-      await backendApi.updateTodayDayRecord(selectedDate, { reflectionJson: reflection });
+      await backendApi.updateTodayDayRecord(
+        selectedDate,
+        {
+          reflection_json: {
+            worked_well: reflection.workedWell,
+            needs_support: reflection.needsSupport,
+            continue_tomorrow: reflection.continueTomorrow,
+          },
+        },
+        sectionId ?? undefined,
+      );
       notify("Daily reflection saved!");
       queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", selectedDate] });
-    } catch {
-      notify("Failed to save reflection.");
+    } catch (err) {
+      // The backend's own sentence matters here: the commonest failure is a
+      // 404 "There's no plan for that day yet", which tells the teacher exactly
+      // what to do — generate the day first.
+      notify(getErrorMessage(err, "Couldn't save your reflection. Please try again."));
     } finally {
       setSavingReflection(false);
     }
   };
 
-  const showLoading = contextLoading || isLoading;
+  const viewState = primaryTodayViewState({
+    contextLoading,
+    dayLoading: isLoading,
+    dayFailed: isError,
+    generating,
+    activityCount: plannerActivities.length,
+  });
 
   return (
     <div className="space-y-6">
@@ -361,6 +529,39 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
+      {/* A failed roster fetch used to be indistinguishable from "this teacher
+          has no classes": the picker vanished and they planned into the
+          section-less day without knowing their classes existed. */}
+      {sections.isError && (
+        <p className="mt-4 text-xs font-bold text-rose-600">
+          We couldn't load your classes, so this is the day that isn't assigned to one.{" "}
+          <button type="button" onClick={() => void sections.refetch()} className="underline hover:text-rose-800">
+            Retry
+          </button>
+        </p>
+      )}
+
+      {(sections.data || []).length > 0 && (
+        <label className="mt-4 block text-xs font-bold text-slate-600">
+          Group
+          <select
+            value={sectionId || ""}
+            onChange={(event) => setSectionId(event.target.value || null)}
+            className="mt-1 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          >
+            {/* NOT "All children" — this is its own day, a sibling of every
+                class, not a view across them. The old label read as a superset,
+                so picking a class looked like the plan had been deleted. */}
+            <option value="">Not assigned to a class</option>
+            {(sections.data || []).map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       {/* Date navigation strip */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 p-3 shadow-sm">
         <div className="flex items-center gap-1.5">
@@ -378,7 +579,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         <div className="flex items-center gap-2">
           {plannerActivities.length > 0 && (
             <button
-              onClick={() => void runGenerate()}
+              onClick={() => void runGenerate({ replace: true })}
               disabled={generating}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5b32d3] transition shadow-md shadow-violet-100 disabled:opacity-60"
             >
@@ -389,31 +590,99 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
-      {showLoading ? (
+      {/* Outside the state switch below, because a failed regenerate leaves the
+          existing plan on screen — the old placement (inside the empty-state
+          branch only) meant Regenerate could fail in total silence. */}
+      {generateError && viewState !== "generating" && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3">
+          <p className="text-xs font-bold text-rose-700">{generateError}</p>
+        </div>
+      )}
+
+      {viewState === "loading" ? (
         <div className="flex h-72 items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
         </div>
-      ) : generating ? (
+      ) : viewState === "generating" ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed border-indigo-200 bg-indigo-50/30 p-14 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           <p className="text-sm font-bold text-indigo-700">
             Building today's plan for {context.level} • {context.subject} • {context.theme}…
           </p>
         </div>
-      ) : plannerActivities.length === 0 ? (
+      ) : viewState === "error" ? (
+        <div className="rounded-[22px] border border-rose-200 bg-rose-50/40 p-10 text-center">
+          <p className="text-base font-extrabold text-rose-700">We couldn't load this day</p>
+          <p className="mt-1 text-sm font-semibold text-rose-600">
+            {getErrorMessage(error, "Check your connection and try again.")}
+          </p>
+          {/* Never offer Generate here. Whether this day is already planned is
+              exactly what we failed to find out, and generating blind either
+              409s or silently replaces a plan the teacher can't currently see. */}
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-60"
+          >
+            {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Try again
+          </button>
+        </div>
+      ) : viewState === "empty" ? (
         <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50/30 p-10 text-center">
           <p className="text-sm font-semibold text-slate-400">No activities planned for this day yet.</p>
-          {generateError && <p className="mt-2 text-xs font-bold text-rose-600">{generateError}</p>}
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
-              onClick={() => void runGenerate()}
+              onClick={() => setSetupOpen(true)}
               disabled={generating}
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white disabled:opacity-60"
             >
               <Sparkles className="h-3.5 w-3.5" /> Generate plan
             </button>
           </div>
+
+          {/* Copying costs nothing — it's a straight clone of a day already
+              generated, so a teacher with two sections on one theme doesn't
+              pay twice, and keeps the edits they made to the first one. */}
+          {copySources.length > 0 && (
+            <div className="mt-5 border-t border-slate-200/70 pt-4">
+              <p className="text-[11px] font-bold text-slate-400">
+                Already planned this day for another class?
+              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <div className="relative">
+                  <select
+                    value={copyFrom}
+                    onChange={(event) => setCopyFrom(event.target.value)}
+                    aria-label="Copy this day's plan from"
+                    className="appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-xs font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                  >
+                    <option value="">Copy from…</option>
+                    {copySources.map((group) => (
+                      <option key={group.value} value={group.value}>
+                        {group.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyDay()}
+                  disabled={!copyFrom || copying}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-black text-[#6e41f5] transition hover:bg-[#6e41f5]/5 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                  Copy here
+                </button>
+              </div>
+              <p className="mt-2 text-[10px] font-semibold text-slate-400">
+                Copies the plan only — reflections and each child&rsquo;s progress stay with that class.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -421,7 +690,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-[22px] border border-blue-100 bg-blue-50/20 p-5 shadow-sm">
               <span className="flex items-center gap-1.5 text-xs font-black text-blue-600">📖 Day Overview</span>
-              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{dayRecord?.theme || context.theme || "Today's learning"}</h4>
+              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{context.theme || "Today's learning"}</h4>
               <p className="mt-2 text-xs font-semibold text-slate-400 leading-normal">{overview}</p>
             </div>
 
@@ -470,7 +739,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
             <div className="relative space-y-2 border-l border-dashed border-slate-200 pl-5 sm:pl-7">
               {plannerActivities.map((act) => {
-                const config = getActivityConfig(act.activityType);
+                const config = getActivityConfig(act.activity_type);
                 return (
                   <div
                     key={act.id}
@@ -479,8 +748,8 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                     <span className={cn("absolute -left-[25px] top-6 h-2 w-2 rounded-full ring-4 ring-white shadow-xs", config.dotBg)} />
 
                     <div className="w-24 shrink-0">
-                      <span className="block text-xs font-black text-slate-800">{act.startTime ? act.startTime.slice(0, 5) : "—"}</span>
-                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.durationMinutes || 10} min</span>
+                      <span className="block text-xs font-black text-slate-800">{act.start_time ? act.start_time.slice(0, 5) : "—"}</span>
+                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.duration_minutes || 10} min</span>
                     </div>
 
                     <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -514,12 +783,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                           <XCircle className="h-3 w-3" /> Skipped
                         </span>
                       )}
-                      <button
-                        onClick={() => setSelectedActivity(act)}
+                      <Link
+                        href={`/primary/today/activity/${act.id}?date=${selectedDate}${sectionId ? `&section_id=${sectionId}` : ""}`}
                         className="rounded-xl border border-[#eeeeff] bg-white px-4 py-1.5 text-xs font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 transition shadow-xs"
                       >
                         View Activity
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 );
@@ -563,16 +832,16 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       )}
 
-      {selectedActivity && (
-        <ActivityDrawer
-          activity={selectedActivity}
-          onClose={() => {
-            setSelectedActivity(null);
-            void refetch();
-          }}
-          notify={notify}
-        />
-      )}
+      <PrimaryPlanSetupModal
+        open={setupOpen}
+        initialLevel={context.level || ""}
+        initialSubject={context.subject || ""}
+        initialTheme={context.theme || ""}
+        submitting={setupSubmitting}
+        onClose={() => setSetupOpen(false)}
+        onSubmit={(setup) => void handleSetupSubmit(setup)}
+      />
+
     </div>
   );
 }

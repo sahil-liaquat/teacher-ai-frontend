@@ -9,10 +9,8 @@ const LOCAL_CAP = 50;
 
 export const ACTIVITY_ENTITY_LABELS: Record<PrimaryActivityEntityType, string> = {
   resource: "Resource",
-  teaching_kit: "Teaching Kit",
   lesson_plan: "Lesson Plan",
   planner_activity: "Planner Activity",
-  assessment: "Assessment",
   ai_creation: "AI Creation",
 };
 
@@ -24,20 +22,17 @@ export const ACTIVITY_ACTION_LABELS: Record<PrimaryActivityAction, string> = {
   saved: "Added",
 };
 
-export function activityHref(event: Pick<PrimaryActivityEvent, "entityType" | "entityId">): string {
-  switch (event.entityType) {
-    case "teaching_kit":
-      return "/primary/teaching-kits";
+export function activityHref(event: Pick<PrimaryActivityEvent, "entity_type" | "entity_id">): string {
+  switch (event.entity_type) {
     case "lesson_plan":
       return "/primary/lesson-plan";
     case "planner_activity":
-    case "assessment":
       return "/primary/today";
     case "ai_creation":
       return "/primary/ai-studio";
     case "resource":
     default:
-      return `/primary/resource-library?search=${encodeURIComponent(event.entityId)}`;
+      return `/primary/resource-library?search=${encodeURIComponent(event.entity_id)}`;
   }
 }
 
@@ -71,7 +66,7 @@ function readLocalEvents(): PrimaryActivityEvent[] {
     const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((event) => event?.entityType && event?.entityId && event?.action) : [];
+    return Array.isArray(parsed) ? parsed.filter((event) => event?.entity_type && event?.entity_id && event?.action) : [];
   } catch {
     return [];
   }
@@ -87,7 +82,7 @@ function writeLocalEvents(events: PrimaryActivityEvent[]): void {
 
 function saveLocalEvent(event: PrimaryActivityEvent): void {
   const events = readLocalEvents();
-  const withoutDupes = events.filter((item) => !(item.entityType === event.entityType && item.entityId === event.entityId && item.action === event.action));
+  const withoutDupes = events.filter((item) => !(item.entity_type === event.entity_type && item.entity_id === event.entity_id && item.action === event.action));
   writeLocalEvents([event, ...withoutDupes]);
 }
 
@@ -98,12 +93,12 @@ export function useTrackActivity() {
       const clientEventId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substring(2));
       const fallback: PrimaryActivityEvent = {
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        userId: "local",
-        entityType,
-        entityId,
+        user_id: "local",
+        entity_type: entityType,
+        entity_id: entityId,
         action,
-        createdAt: new Date().toISOString(),
-        clientEventId,
+        created_at: new Date().toISOString(),
+        client_event_id: clientEventId,
       };
       void backendApi
         .createPrimaryActivityEvent({
@@ -141,48 +136,48 @@ export function usePrimaryActivityHistory(limit = 15): { events: PrimaryActivity
     const rawEvents = query.isSuccess ? query.data : [];
     const serverEvents: PrimaryActivityEvent[] = (rawEvents as any[]).map((e) => ({
       id: e.id,
-      userId: e.user_id || e.userId,
-      entityType: e.entity_type || e.entityType,
-      entityId: e.entity_id || e.entityId,
+      user_id: e.user_id,
+      entity_type: e.entity_type,
+      entity_id: e.entity_id,
       action: e.action,
-      createdAt: e.created_at || e.createdAt,
-      clientEventId: e.client_event_id || e.clientEventId,
+      created_at: e.created_at,
+      client_event_id: e.client_event_id,
     }));
     
     // 1. Deduplicate server events by clientEventId
     const seenServerClientEventIds = new Set<string>();
     const uniqueServerEvents: PrimaryActivityEvent[] = [];
     for (const event of serverEvents) {
-      if (event.clientEventId) {
-        if (seenServerClientEventIds.has(event.clientEventId)) {
+      if (event.client_event_id) {
+        if (seenServerClientEventIds.has(event.client_event_id)) {
           continue;
         }
-        seenServerClientEventIds.add(event.clientEventId);
+        seenServerClientEventIds.add(event.client_event_id);
       }
       uniqueServerEvents.push(event);
     }
 
     // 2. Filter local events
     const serverClientEventIds = new Set(
-      uniqueServerEvents.map((e) => e.clientEventId).filter((id): id is string => Boolean(id))
+      uniqueServerEvents.map((e) => e.client_event_id).filter((id): id is string => Boolean(id))
     );
 
     const localOnly = localEvents.filter((localEvent) => {
-      if (localEvent.clientEventId) {
+      if (localEvent.client_event_id) {
         // remove a local fallback only when its client_event_id matches a successfully stored server event
-        return !serverClientEventIds.has(localEvent.clientEventId);
+        return !serverClientEventIds.has(localEvent.client_event_id);
       }
       // retain compatibility for legacy events without client event IDs
       return !uniqueServerEvents.some(
         (se) =>
-          se.entityType === localEvent.entityType &&
-          se.entityId === localEvent.entityId &&
+          se.entity_type === localEvent.entity_type &&
+          se.entity_id === localEvent.entity_id &&
           se.action === localEvent.action
       );
     });
 
     return [...localOnly, ...uniqueServerEvents]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit);
   }, [localEvents, query.isSuccess, query.data, limit]);
 
