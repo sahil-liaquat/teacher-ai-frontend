@@ -195,6 +195,15 @@ export default function NewLessonPlanPage() {
       setSelected(draft.selected?.length ? draft.selected : defaultLessonComponents);
       setAbilityProfile(draft.abilityProfile || "mixed_ability");
       setClassSize(draft.classSize || "medium");
+    } else {
+      const durationParam = Number(searchParams.get("duration_minutes"));
+      if (Number.isFinite(durationParam) && durationParam >= 10 && durationParam <= 180) {
+        setDuration(durationParam);
+      }
+      const classSizeParam = searchParams.get("class_size");
+      if (classSizeParam && classSizeOptions.some((option) => option.value === classSizeParam)) {
+        setClassSize(classSizeParam as ClassSize);
+      }
     }
     setDraftReady(true);
   }, []);
@@ -471,6 +480,7 @@ export default function NewLessonPlanPage() {
       class_size: classSize,
       language,
       teaching_style: teachingStyle,
+      workspace: searchParams.get("workspace") === "primary" ? "primary" : undefined,
       use_school_format: false,
       format_type: "teachpad_standard"
     };

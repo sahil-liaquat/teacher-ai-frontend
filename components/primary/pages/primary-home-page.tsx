@@ -1,512 +1,423 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import { backendApi, CURRENT_USER_QUERY_KEY, type ApiUser } from "@/lib/api";
-import { learningAreaForSubject, themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
-import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
-import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
-import { adaptApiResource } from "@/lib/primary-resource-adapter";
-import { libraryPathForCatalogCategory } from "@/lib/primary-library-taxonomy";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Calendar,
-  ChevronRight,
-  ArrowRight,
-  Sparkles,
-  Download,
-  ChevronDown,
-  Loader2
+  ArrowRight, BookOpen, CalendarDays, ChevronRight, Clock3, Loader2,
+  RefreshCw, Settings2, Sparkles, Star, UsersRound,
 } from "lucide-react";
+import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser, type PrimaryPlannerActivity } from "@/lib/api";
+import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
+import { activityDisplayName, activityHref, timeAgo, usePrimaryActivityHistory } from "@/lib/primary-activity";
+import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVELS, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
+import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import { illustrationFor, primaryThemeVisuals } from "@/lib/primary-theme-engine";
+import { getErrorMessage } from "@/lib/errors";
+import { primaryStepImage } from "@/lib/primary-step-images";
+import { usePrimarySection } from "@/lib/use-primary-section";
+import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 
-// Journey items definition
-const JOURNEY = [
-  {
-    name: "Plan",
-    sub: "Prepare your lesson",
-    href: "/primary/today",
-    image: "/assets/primary/dashboard-plan.webp",
-    badgeBg: "bg-blue-50 text-blue-700",
-    arrowColor: "bg-blue-50 text-blue-600 hover:bg-blue-100",
-  },
-  {
-    name: "Today's plan",
-    sub: "See your schedule",
-    href: "/primary/today",
-    image: "/assets/primary/dashboard-teach.webp",
-    badgeBg: "bg-emerald-50 text-emerald-700",
-    arrowColor: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100",
-  },
-  {
-    name: "Practice",
-    sub: "Reinforce learning",
-    href: "/primary/library?category=printable-activities&type=worksheets",
-    image: "/assets/primary/dashboard-practice.webp",
-    badgeBg: "bg-amber-50 text-amber-700",
-    arrowColor: "bg-amber-50 text-amber-600 hover:bg-amber-100",
-  },
-  {
-    name: "Engage",
-    sub: "Hands-on activities",
-    href: "/primary/create?category=activities",
-    image: "/assets/primary/dashboard-engage.webp",
-    badgeBg: "bg-pink-50 text-pink-700",
-    arrowColor: "bg-pink-50 text-pink-600 hover:bg-pink-100",
-  },
-  {
-    name: "Sing & Move",
-    sub: "Rhymes & movement",
-    href: "/primary/create?category=movement",
-    image: "/assets/primary/dashboard-sing-move.webp",
-    badgeBg: "bg-violet-50 text-violet-700",
-    arrowColor: "bg-violet-50 text-violet-600 hover:bg-violet-100",
-  },
-];
+const activityEmoji: Record<string, string> = {
+  circle_time: "👋", warm_up: "👋", routine: "🌞", story: "📖", story_or_rhyme: "📖",
+  flashcards: "🃏", picture_talk: "🖼️", worksheet: "✏️", craft: "✂️",
+  classroom_activity: "🎨", movement: "🏃", song: "🎵", game: "🎲",
+  assessment: "✅", reflection: "✨", parent_note: "💌",
+};
 
-// Resolves a flat catalogue category (e.g. "Flashcards") to its place in the
-// Library's category/type navigation, falling back to the Library home if the
-// taxonomy ever falls out of sync with the catalogue.
-function quickAccessHref(catalogCategory: string): string {
-  const path = libraryPathForCatalogCategory(catalogCategory);
-  return path ? `/primary/library?category=${path.category}&type=${path.type}` : "/primary/library";
+const cardTints = ["#eef5ff", "#f6efff", "#fff8df", "#ecf9f1", "#fff0f5", "#fff7e7"];
+const resourceFallbacks = [
+  { label: "Flashcards", type: "flashcards", subtitle: "Picture cards" },
+  { label: "Story", type: "story", subtitle: "Read aloud" },
+  { label: "Song", type: "song", subtitle: "Sing together" },
+  { label: "Worksheet", type: "worksheet", subtitle: "Practice sheet" },
+  { label: "Craft", type: "craft", subtitle: "Creative activity" },
+  { label: "Assessment", type: "assessment", subtitle: "Quick check" },
+] as const;
+
+function toLocalISODate() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-// Quick-access categories are resolved against the resource catalogue at runtime.
-const QUICK_ACCESS = [
-  {
-    name: "Flashcards",
-    category: "Flashcards",
-    bg: "from-rose-50/60 to-red-100/20 hover:border-red-200",
-    emoji: "🍎",
-    iconBg: "bg-rose-50 text-rose-600 ring-rose-100",
-  },
-  {
-    name: "Picture Talk",
-    category: "Picture Talk Cards",
-    bg: "from-sky-50/60 to-blue-100/20 hover:border-blue-200",
-    emoji: "🌳",
-    iconBg: "bg-sky-50 text-sky-600 ring-sky-100",
-  },
-  {
-    name: "Worksheets",
-    category: "Worksheets",
-    bg: "from-indigo-50/60 to-purple-100/20 hover:border-purple-200",
-    emoji: "📝",
-    iconBg: "bg-indigo-50 text-indigo-600 ring-indigo-100",
-  },
-  {
-    name: "Activity",
-    category: "Calendar Activities",
-    bg: "from-amber-50/60 to-orange-100/20 hover:border-orange-200",
-    emoji: "✂️",
-    iconBg: "bg-amber-50 text-amber-600 ring-amber-100",
-  },
-  {
-    name: "Rhymes",
-    category: "Circle Time Prompts",
-    bg: "from-violet-50/60 to-purple-100/20 hover:border-purple-200",
-    emoji: "🎵",
-    iconBg: "bg-violet-50 text-violet-600 ring-violet-100",
-  },
-  {
-    name: "Manipulatives",
-    category: "Matching Activities",
-    bg: "from-emerald-50/60 to-teal-100/20 hover:border-teal-200",
-    emoji: "🧱",
-    iconBg: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-  },
-];
+function timeLabel(activity: PrimaryPlannerActivity, index: number) {
+  if (activity.start_time) return activity.start_time.slice(0, 5);
+  const base = 9 * 60 + index * 20;
+  const hour = Math.floor(base / 60);
+  return `${hour}:${String(base % 60).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
+}
 
-export default function PrimaryHomePage({ notify }: { notify: (s: string) => void }) {
-  const { context, updateContext } = usePrimaryTeachingContext();
-  const router = useRouter();
+function resourceForActivity(activity: PrimaryPlannerActivity, resources: Map<string, PrimaryResource>) {
+  for (const id of activity.resource_ids) {
+    const resource = resources.get(id);
+    if (resource) return resource;
+  }
+  return undefined;
+}
 
-  // Fetch current user info
-  const { data: currentUser } = useQuery<ApiUser>({
-    queryKey: CURRENT_USER_QUERY_KEY,
-    staleTime: Infinity,
+export default function PrimaryHomePage({ notify }: { notify: (message: string) => void }) {
+  const queryClient = useQueryClient();
+  const { context, isLoading: contextLoading, updateContext } = usePrimaryTeachingContext();
+  const { sectionId, setSectionId, hasChosen } = usePrimarySection();
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [setupSubmitting, setSetupSubmitting] = useState(false);
+  const [draftLevel, setDraftLevel] = useState<PrimaryTeachingContext["level"]>(context.level);
+  const [draftThemeId, setDraftThemeId] = useState("");
+  const [draftTopicId, setDraftTopicId] = useState("");
+  const today = useMemo(toLocalISODate, []);
+  const hasClassroom = Boolean(context.themeId && context.topicId);
+
+  const { data: currentUser } = useQuery<ApiUser>({ queryKey: CURRENT_USER_QUERY_KEY, queryFn: () => getCurrentUser(), staleTime: Infinity });
+  const teacherName = (currentUser?.full_name || currentUser?.name || "Teacher").split(" ")[0];
+  const sections = useQuery({
+    queryKey: ["primary-sections", false],
+    queryFn: () => backendApi.primarySections(),
   });
-
-  const teacherName = useMemo(() => {
-    if (!currentUser) return "Meena";
-    const name = currentUser.full_name || currentUser.name || "Meena";
-    return name.split(" ")[0];
-  }, [currentUser]);
-
-  const todayISOStr = useMemo(() => new Date().toISOString().split("T")[0], []);
-
-  const todayDateStr = useMemo(() => {
-    return new Date().toLocaleDateString("en-US", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }, []);
-
-  // Local selections — initialise from current context
-  const [selectedLevel, setSelectedLevel] = useState<string>(context.level || "");
-  const [selectedSubject, setSelectedSubject] = useState(context.subject || "");
-  const [selectedTheme, setSelectedTheme] = useState(context.theme || "");
-  const [savingContext, setSavingContext] = useState(false);
-
-  const todayQuery = useQuery({
-    queryKey: ["primary-today-workspace", todayISOStr],
-    queryFn: () => backendApi.getTodayWorkspace(todayISOStr),
-    retry: 1,
-  });
-  const todayActivities = todayQuery.data?.planner_activities ?? [];
 
   useEffect(() => {
-    setSelectedLevel(context.level || "");
-    setSelectedSubject(context.subject || "");
-    setSelectedTheme(context.theme || "");
-  }, [context.level, context.subject, context.theme]);
-
-  const subjectOptions = useMemo(() => {
-    if (!selectedLevel) return [];
-    return subjectsForClass(selectedLevel as any);
-  }, [selectedLevel]);
-
-  const themeOptions = useMemo(() => {
-    if (!selectedSubject) return [];
-    return themesForSubject(selectedSubject);
-  }, [selectedSubject]);
-
-  const handleLevelChange = (level: string) => {
-    setSelectedLevel(level);
-    setSelectedSubject("");
-    setSelectedTheme("");
-  };
-
-  const handleSubjectChange = (subject: string) => {
-    setSelectedSubject(subject);
-    setSelectedTheme("");
-  };
-
-  // A full plan can only be viewed once class, subject and theme are all chosen.
-  const canViewPlan = !!(selectedLevel && selectedSubject && selectedTheme);
-
-  const handleViewFullPlan = async () => {
-    if (!canViewPlan) return;
-    setSavingContext(true);
-    try {
-      const saved = await updateContext({
-        level: selectedLevel as PrimaryTeachingContext["level"],
-        subject: selectedSubject,
-        theme: selectedTheme,
-        topic: selectedTheme,
-      });
-      // Still navigate — the choice is live in memory and Today plans from it.
-      // But say so, because it won't survive a reload and the teacher would
-      // otherwise find their class silently reverted tomorrow.
-      if (!saved) notify("We couldn't save this class for next time, but you can plan with it now.");
-      router.push("/primary/today");
-    } finally {
-      setSavingContext(false);
+    if (!sections.isSuccess) return;
+    if (sectionId && !sections.data.some((section) => section.id === sectionId)) {
+      setSectionId(null);
     }
-  };
+  }, [sectionId, sections.data, sections.isSuccess, setSectionId]);
 
-  const learningArea = useMemo(() => learningAreaForSubject(selectedSubject || context.subject), [selectedSubject, context.subject]);
+  useEffect(() => {
+    if (!sections.isSuccess || hasChosen || sectionId) return;
+    const first = sections.data.find((section) => section.is_active) ?? sections.data[0];
+    if (first) setSectionId(first.id, false);
+  }, [hasChosen, sectionId, sections.data, sections.isSuccess, setSectionId]);
 
-  const isReady = !!(selectedLevel || context.level);
-  const isWeekend = useMemo(() => {
-    const day = new Date(`${todayISOStr}T12:00:00`).getDay();
-    return day === 0 || day === 6;
-  }, [todayISOStr]);
-  const quickAccessQueries = useQueries({
-    queries: QUICK_ACCESS.map((item) => ({
-      queryKey: ["primary-resources-quick-access", item.category, selectedLevel, selectedSubject, selectedTheme],
-      queryFn: () =>
-        backendApi.primaryResources({
-          category: item.category,
-          level: selectedLevel || undefined,
-          subject: selectedSubject || undefined,
-          theme: selectedTheme || undefined,
-          page_size: 1,
-        }),
-      staleTime: 30_000,
+  const themes = useQuery({
+    queryKey: ["primary-curriculum-themes", context.level, context.subject],
+    queryFn: () => backendApi.primaryCurriculumThemes({
+      level: PRIMARY_LEVEL_TO_API[context.level],
+      subject: context.subject || undefined,
+    }),
+    enabled: !contextLoading && !!context.level && !!context.subject,
+  });
+
+  const setupThemesQuery = useQuery({
+    queryKey: ["primary-curriculum-themes", "inline-setup", draftLevel],
+    queryFn: () => backendApi.primaryCurriculumThemes({ level: PRIMARY_LEVEL_TO_API[draftLevel] }),
+    enabled: !contextLoading && !hasClassroom && !!draftLevel,
+  });
+  const setupThemes = useMemo(
+    () => (setupThemesQuery.data ?? []).filter((theme) => (
+      theme.is_active
+      && theme.has_published_lesson
+      && theme.topics.some((topic) => topic.is_active && topic.has_published_lesson)
+    )),
+    [setupThemesQuery.data],
+  );
+  const selectedSetupTheme = setupThemes.find((theme) => theme.id === draftThemeId);
+  const setupTopics = (selectedSetupTheme?.topics ?? []).filter(
+    (topic) => topic.is_active && topic.has_published_lesson,
+  );
+  const selectedSetupTopic = setupTopics.find((topic) => topic.id === draftTopicId);
+
+  const activeTheme = useMemo(
+    () => hasClassroom
+      ? (themes.data ?? []).find((theme) => theme.id === context.themeId)
+        ?? (themes.data ?? []).find((theme) => theme.name === context.theme)
+        ?? null
+      : null,
+    [hasClassroom, themes.data, context.themeId, context.theme],
+  );
+  const activeTopic = activeTheme?.topics.find((topic) => topic.id === context.topicId)
+    ?? activeTheme?.topics.find((topic) => topic.name === context.topic)
+    ?? null;
+  const visuals = useMemo(() => primaryThemeVisuals(activeTheme), [activeTheme]);
+
+  const todayQuery = useQuery({
+    queryKey: ["primary-today-workspace", today, sectionId],
+    queryFn: () => backendApi.getTodayWorkspace(today, sectionId ?? undefined),
+    enabled: !contextLoading && hasClassroom,
+    retry: 1,
+  });
+  const day = todayQuery.data?.day_record;
+  const activities = todayQuery.data?.planner_activities ?? [];
+  const resourceIds = useMemo(
+    () => Array.from(new Set(activities.flatMap((activity) => activity.resource_ids))).slice(0, 12),
+    [activities],
+  );
+  const resourceQueries = useQueries({
+    queries: resourceIds.map((id) => ({
+      queryKey: ["primary-resource", id],
+      queryFn: async () => adaptApiResource(await backendApi.primaryResource(id)),
+      staleTime: 60_000,
+      retry: 0,
     })),
   });
-  const quickAccess = useMemo(
-    () =>
-      QUICK_ACCESS.map((item, index) => {
-        const data = quickAccessQueries[index]?.data;
-        const resources = (data?.items ?? []).map((entry) => adaptApiResource(entry));
-        return { ...item, resources, total: data?.total ?? 0 };
-      }),
-    [quickAccessQueries]
-  );
+  const resources = useMemo(() => {
+    const map = new Map<string, PrimaryResource>();
+    resourceQueries.forEach((query) => { if (query.data) map.set(query.data.id, query.data); });
+    return map;
+  }, [resourceQueries]);
+  const recommended = Array.from(resources.values()).slice(0, 6);
+  const { events: recentEvents } = usePrimaryActivityHistory(6);
 
-  const downloadResource = (item: typeof quickAccess[number]) => {
-    const resource = item.resources[0];
-    if (!resource) {
-      notify(`No ${item.name.toLowerCase()} match your current selections.`);
+  useEffect(() => {
+    if (!contextLoading && !hasClassroom) setDraftLevel(context.level);
+  }, [context.level, contextLoading, hasClassroom]);
+
+  async function handleSetupSubmit(setup: PrimaryPlanSetup) {
+    setSetupSubmitting(true);
+    const resolvedContext: PrimaryTeachingContext = {
+      ...context,
+      level: setup.level,
+      subject: setup.subject,
+      theme: setup.themeName,
+      themeId: setup.themeId,
+      topic: setup.topicName,
+      topicId: setup.topicId,
+      language: (PRIMARY_LANGUAGES as readonly string[]).includes(setup.language)
+        ? setup.language as PrimaryTeachingContext["language"]
+        : context.language,
+    };
+    try {
+      const saved = await updateContext(resolvedContext);
+      if (!saved) notify("Your classroom is ready, but the teaching context could not be saved for next time.");
+      const payload = buildGeneratePayload(resolvedContext, setup.themeId, today, true, setup.topicId);
+      if (!payload) throw new Error("The selected curriculum is incomplete.");
+      payload.section_id = sectionId;
+      await backendApi.generatePrimaryToday(payload);
+      setSetupOpen(false);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", today] }),
+        queryClient.invalidateQueries({ queryKey: ["primary-curriculum-themes"] }),
+      ]);
+      notify(`${setup.topicName} classroom is ready ✨`);
+    } catch (error) {
+      notify(getErrorMessage(error, "We couldn't prepare this classroom. Please try again."));
+    } finally {
+      setSetupSubmitting(false);
+    }
+  }
+
+  function openClassroomSetup() {
+    if (hasClassroom) {
+      setSetupOpen(true);
       return;
     }
-    const anchor = document.createElement("a");
-    anchor.href = resource.fileUrl;
-    anchor.download = resource.fileUrl.split("/").pop() || `${resource.title}.${resource.fileType}`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    notify(`Downloading ${resource.title}`);
-  };
+    document.getElementById("primary-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function handleInlineSetup() {
+    if (!selectedSetupTheme || !selectedSetupTopic || setupSubmitting) return;
+    void handleSetupSubmit({
+      level: draftLevel,
+      subject: selectedSetupTheme.subject,
+      themeId: selectedSetupTheme.id,
+      themeName: selectedSetupTheme.name,
+      topicId: selectedSetupTopic.id,
+      topicName: selectedSetupTopic.name,
+      language: selectedSetupTheme.language,
+    });
+  }
+
+  const objectives = (day?.objectives?.length ? day.objectives : activities.map((item) => item.title)).slice(0, 3);
+  const totalMinutes = activities.reduce((total, item) => total + item.duration_minutes, 0);
+  const dateLabel = new Date(`${today}T12:00:00`).toLocaleDateString("en-IN", {
+    weekday: "long", day: "numeric", month: "long",
+  });
 
   return (
-    <div className="space-y-7">
-      
-      {/* 1. Header Banner */}
-      <div className="relative overflow-hidden rounded-[24px] border border-white/60 bg-gradient-to-br from-indigo-50/60 via-purple-50/40 to-white px-6 py-8 shadow-sm ring-1 ring-purple-100/50 md:py-10">
-        <div className="relative z-10 max-w-xl space-y-1">
-          <p className="text-sm font-bold text-slate-500 md:text-base">
-            Good morning, {teacherName}! 👋
-          </p>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-[34px] md:leading-tight">
-            Let's make today amazing for our little learners! 🌈
-          </h2>
-          <p className="text-xs font-semibold text-slate-400 sm:text-sm pt-1">
-            {isWeekend
-              ? "It’s the weekend — plan ahead or take a well-earned break."
-              : todayActivities.length > 0
-                ? `Your plan has ${todayActivities.length} ${todayActivities.length === 1 ? "activity" : "activities"} ready for today.`
-                : "Choose a theme to prepare something wonderful for today."}
-          </p>
+    <div className="primary-theme-dashboard" style={visuals.style}>
+      <section
+        className="primary-theme-hero"
+        style={{
+          backgroundImage: visuals.heroImage
+            ? `linear-gradient(90deg, rgba(255,255,255,.94) 0%, rgba(255,255,255,.78) 34%, rgba(255,255,255,.08) 58%, rgba(255,255,255,0) 100%), url(${visuals.heroImage})`
+            : visuals.backgroundImage
+            ? `linear-gradient(90deg, rgba(255,255,255,.96), rgba(255,255,255,.15)), url(${visuals.backgroundImage})`
+            : `linear-gradient(115deg, ${visuals.surface}, #ffffff 52%, color-mix(in srgb, ${visuals.primary} 14%, white))`,
+        }}
+      >
+        <div className="relative z-10 max-w-xl">
+          <p className="text-sm font-extrabold text-slate-500">Good morning, {teacherName}! 👋</p>
+          <h1>Let&apos;s make today amazing!</h1>
+          <p>You&apos;re all set to create joyful learning experiences.</p>
+          <p className="primary-hero-summary">{dateLabel} <span /> {activities.length} activities · {totalMinutes} min</p>
         </div>
-        
-        {/* Sun, Cloud, and Mascot background elements */}
-        <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-6 lg:flex">
-          <div className="relative flex items-center justify-center">
-            <span className="absolute -left-12 -top-6 text-4xl animate-bounce duration-1000">☀️</span>
-            <span className="absolute -left-20 top-4 text-3xl opacity-80">☁️</span>
-          </div>
-          <Image 
-            src="/assets/sidebar-mascot.png" 
-            alt="Elif Mascot" 
-            width={180} 
-            height={280} 
-            className="h-[210px] w-auto object-contain"
-            priority 
-          />
-        </div>
-      </div>
+        {!visuals.heroImage && (
+          illustrationFor(visuals, 0) ? (
+            <img className="primary-theme-hero-art" src={illustrationFor(visuals, 0)} alt="" />
+          ) : (
+            <div className="primary-theme-hero-fallback" aria-hidden="true">{activeTheme?.emoji || "🌈"}</div>
+          )
+        )}
+      </section>
 
-      {/* 2. Today's Theme Selector Card */}
-      <div className="rounded-[22px] border border-white/70 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.04)] ring-1 ring-slate-100">
-        
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-indigo-100">
-              <Calendar className="h-4.5 w-4.5" />
+      <section id="primary-focus" className="primary-dashboard-section primary-focus-card">
+        <header><span className="section-icon"><Sparkles /></span><h2>Today&apos;s Focus</h2></header>
+        {!hasClassroom ? (
+          <div className="primary-focus-setup">
+            <div className="primary-focus-setup-copy">
+              <span>✨</span>
+              <div>
+                <h3>Prepare today&apos;s classroom</h3>
+                <p>Select a class, theme and topic. TeachPad will build the complete teaching sequence for you.</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">TODAY'S PLAN</p>
-              <p className="text-xs font-bold text-slate-400">{todayDateStr}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Selection dropdowns + CTA, all in one row */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-
-          {/* Class */}
-          <div className="flex-1 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Class</label>
-            <div className="relative">
-              <select
-                value={selectedLevel}
-                onChange={(e) => handleLevelChange(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition"
-              >
-                <option value="">Select class…</option>
-                {PRIMARY_LEVELS.map((lvl) => (
-                  <option key={lvl} value={lvl}>{lvl}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
-          </div>
-
-          {/* Subject */}
-          <div className="flex-1 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Subject</label>
-            <div className="relative">
-              <select
-                value={selectedSubject}
-                onChange={(e) => handleSubjectChange(e.target.value)}
-                disabled={subjectOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition disabled:opacity-50"
-              >
-                <option value="">{subjectOptions.length === 0 ? "Pick class first" : "Select subject…"}</option>
-                {subjectOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
-          </div>
-
-          {/* Theme */}
-          <div className="flex-1 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Theme / Topic</label>
-            <div className="relative">
-              <select
-                value={selectedTheme}
-                onChange={(e) => setSelectedTheme(e.target.value)}
-                disabled={themeOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition disabled:opacity-50"
-              >
-                <option value="">{themeOptions.length === 0 ? "Pick subject first" : "Select theme…"}</option>
-                {themeOptions.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
-          </div>
-
-          {/* CTA — same row as the inputs */}
-          <button
-            onClick={handleViewFullPlan}
-            disabled={!canViewPlan || savingContext}
-            title={canViewPlan ? undefined : "Select a class, subject and theme first"}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-violet-100 transition hover:bg-[#5b32d3] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {savingContext ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Opening…
-              </>
-            ) : (
-              <>
-                {todayActivities.length > 0 ? "Open today's plan" : "View full plan"} <ArrowRight className="h-3.5 w-3.5" />
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* 3. My Teaching Journey */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-slate-900">
-            My Teaching Journey ✨
-          </h3>
-          <Link 
-            href="/primary/settings" 
-            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-          >
-            Customize ✎
-          </Link>
-        </div>
-
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          {JOURNEY.map((item, idx) => (
-            <Link 
-              href={item.href} 
-              key={item.name} 
-              className="group relative flex flex-col overflow-hidden rounded-[20px] border border-white/80 bg-white shadow-md shadow-slate-100/50 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-100/20"
-            >
-              <div className="relative aspect-[1.15/1] w-full overflow-hidden bg-slate-50">
-                <Image 
-                  src={item.image} 
-                  alt={item.name} 
-                  fill 
-                  sizes="(min-width: 1280px) 16vw, (min-width: 768px) 30vw, 45vw" 
-                  className="object-cover transition duration-300 group-hover:scale-105" 
-                  onError={(event) => {
-                    event.currentTarget.src = "/assets/sidebar-mascot.png";
+            <div className="primary-focus-fields">
+              <label>
+                <span>Class</span>
+                <select
+                  value={draftLevel}
+                  onChange={(event) => {
+                    setDraftLevel(event.target.value as PrimaryTeachingContext["level"]);
+                    setDraftThemeId("");
+                    setDraftTopicId("");
                   }}
-                />
-              </div>
-              <div className="flex flex-col p-3 bg-white">
-                <div className="flex items-center justify-between gap-1">
-                  <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-black", item.badgeBg)}>
-                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white text-[8px]">{idx + 1}</span>
-                    {item.name}
-                  </span>
-                  <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-xs font-black shadow-sm ring-1 ring-slate-100 transition duration-300 group-hover:-translate-y-0.5", item.arrowColor)}>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-                <p className="mt-1 text-[10px] font-semibold text-slate-400">
-                  {item.sub}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. Quick Access - Resources for Today */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-slate-900">
-            Quick Access – Resources for Today
-          </h3>
-          <Link 
-            href="/primary/library" 
-            className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
-          >
-            View all <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-          {quickAccess.map((item) => (
-            <div
-              key={item.name} 
-              className={cn(
-                "group relative flex flex-col items-center rounded-[22px] border border-white/60 bg-gradient-to-br p-4 text-center shadow-sm shadow-slate-100/50 transition duration-300 hover:-translate-y-1 hover:shadow-md",
-                item.bg
-              )}
-              role="link"
-              tabIndex={0}
-              onClick={() => router.push(quickAccessHref(item.category))}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  router.push(quickAccessHref(item.category));
-                }
-              }}
-              aria-label={`Browse ${item.name}`}
-            >
-              {/* 3D Box for Emoji */}
-              <div className={cn(
-                "flex h-14 w-14 items-center justify-center rounded-[18px] text-2xl shadow-sm ring-1",
-                item.iconBg
-              )}>
-                {item.emoji}
-              </div>
-
-              <b className="mt-3 block text-xs font-black text-slate-800">
-                {item.name}
-              </b>
-              <span className="text-[10px] font-bold text-slate-400 mt-0.5">
-                {item.total} {item.total === 1 ? "resource" : "resources"}
-              </span>
-
-              {/* Download Icon Wrapper */}
+                >
+                  {PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Theme</span>
+                <select
+                  value={draftThemeId}
+                  onChange={(event) => {
+                    setDraftThemeId(event.target.value);
+                    setDraftTopicId("");
+                  }}
+                  disabled={setupThemesQuery.isFetching || setupThemes.length === 0}
+                >
+                  <option value="">{setupThemesQuery.isFetching ? "Loading themes…" : setupThemes.length ? "Select theme…" : "No published themes"}</option>
+                  {setupThemes.map((theme) => (
+                    <option key={theme.id} value={theme.id}>
+                      {theme.emoji ? `${theme.emoji} ` : ""}{theme.name} · {theme.subject}{theme.language !== "English" ? ` · ${theme.language}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Topic</span>
+                <select
+                  value={draftTopicId}
+                  onChange={(event) => setDraftTopicId(event.target.value)}
+                  disabled={!selectedSetupTheme || setupTopics.length === 0}
+                >
+                  <option value="">{selectedSetupTheme ? (setupTopics.length ? "Select topic…" : "No published topics") : "Select a theme first"}</option>
+                  {setupTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
+                </select>
+              </label>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  downloadResource(item);
-                }}
-                className="mt-3 flex h-7 w-7 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-100 transition hover:bg-slate-50 active:scale-95"
-                aria-label={`Download a ${item.name} resource`}
+                onClick={handleInlineSetup}
+                disabled={!selectedSetupTheme || !selectedSetupTopic || setupSubmitting}
               >
-                <Download className="h-3.5 w-3.5 text-slate-500" />
+                {setupSubmitting ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {setupSubmitting ? "Preparing…" : "Prepare classroom"}
               </button>
             </div>
+            {setupThemesQuery.isError && (
+              <p className="primary-focus-setup-error">{getErrorMessage(setupThemesQuery.error, "We couldn't load the curriculum. Please try again.")}</p>
+            )}
+          </div>
+        ) : (
+          <div className="primary-focus-grid">
+            <div>
+              <span className="eyebrow">Theme</span>
+              <h3>{activeTheme?.name || context.theme || "Choose a theme"}</h3>
+              <p className="mt-1 text-sm font-bold text-slate-500">{activeTopic?.name || context.topic || "Choose a topic"}</p>
+            </div>
+            <div className="primary-focus-illustration">
+              {illustrationFor(visuals, 1) ? <img src={illustrationFor(visuals, 1)} alt="" /> : <span>{activeTheme?.emoji || "📚"}</span>}
+            </div>
+            <div>
+              <span className="eyebrow">Today&apos;s objectives</span>
+              <div className="primary-objectives">
+                {objectives.length ? objectives.map((objective, index) => (
+                  <div key={`${objective}-${index}`}><b>{["●", "123", "Aa"][index] || "✓"}</b><span>{objective}</span></div>
+                )) : <p className="text-sm font-semibold text-slate-500">Today&apos;s objectives are being prepared.</p>}
+              </div>
+            </div>
+            <div className="primary-focus-context">
+              <div><UsersRound /><span><small>Class</small><b>{context.level}</b></span></div>
+              <div><BookOpen /><span><small>Subject</small><b>{context.subject}</b></span></div>
+              <button type="button" onClick={() => setSetupOpen(true)}>Change classroom <Settings2 /></button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="primary-dashboard-section">
+        <header>
+          <span className="section-icon"><CalendarDays /></span><h2>Today&apos;s Classroom Plan</h2>
+          <Link href="/primary/today">View full schedule <ArrowRight /></Link>
+        </header>
+        {todayQuery.isLoading ? (
+          <div className="primary-loading"><Loader2 className="animate-spin" /> Preparing today&apos;s classroom…</div>
+        ) : activities.length ? (
+          <div className="primary-plan-scroll">
+            {activities.slice(0, 8).map((activity, index) => {
+              const resource = resourceForActivity(activity, resources);
+              const stepArt = primaryStepImage(activity.activity_type);
+              return (
+                <Link key={activity.id} href={`/primary/today/activity/${activity.id}?date=${today}`} className="primary-plan-card" style={{ background: cardTints[index % cardTints.length] }}>
+                  <span className="primary-plan-dot" style={{ backgroundColor: cardTints[index % cardTints.length] }} />
+                  <p className="primary-plan-time"><Clock3 /> {timeLabel(activity, index)}</p>
+                  <h3>{activity.title}</h3>
+                  <div className="primary-plan-art">
+                    {stepArt ? <img src={stepArt} alt="" />
+                      : resource?.thumbnailUrl ? <img src={resource.thumbnailUrl} alt="" />
+                      : illustrationFor(visuals, index + 2) ? <img src={illustrationFor(visuals, index + 2)} alt="" />
+                      : <span>{activityEmoji[activity.activity_type] || "🎨"}</span>}
+                  </div>
+                  <footer><span><Clock3 /> {activity.duration_minutes} min</span><ChevronRight /></footer>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="primary-empty-plan">
+            <span>{activeTheme?.emoji || "✨"}</span>
+            <div><h3>Your guided classroom starts here</h3><p>Select a class, theme and topic. TeachPad will prepare the complete sequence automatically.</p></div>
+            <button type="button" onClick={openClassroomSetup}>Prepare classroom <Sparkles /></button>
+          </div>
+        )}
+      </section>
+
+      <section className="primary-dashboard-section">
+        <header><span className="section-icon"><Star /></span><h2>Today&apos;s Recommended Resources</h2><Link href="/primary/library">View all <ArrowRight /></Link></header>
+        <div className="primary-resource-grid">
+          {recommended.length ? recommended.map((resource, index) => (
+            <Link key={resource.id} href={`/primary/library?search=${encodeURIComponent(resource.title)}`}>
+              <div>{resource.thumbnailUrl ? <img src={resource.thumbnailUrl} alt="" /> : <span>{activityEmoji[activities[index]?.activity_type] || "📄"}</span>}</div>
+              <b>{resource.category}</b><small>{resource.title}</small>
+            </Link>
+          )) : null}
+          {resourceFallbacks.slice(0, Math.max(0, 6 - recommended.length)).map((fallback) => (
+            <button key={fallback.label} type="button" onClick={openClassroomSetup}>
+              <div><img src={primaryStepImage(fallback.type)} alt="" /></div>
+              <b>{fallback.label}</b><small>{fallback.subtitle}</small>
+            </button>
           ))}
         </div>
-      </div>
+      </section>
 
+      {recentEvents.length > 0 && (
+        <section className="primary-dashboard-section primary-recent">
+          <header><span className="section-icon"><RefreshCw /></span><h2>Recently Used</h2></header>
+          <div>{recentEvents.map((event) => (
+            <Link key={event.id} href={activityHref(event)}>
+              <span>{event.entity_type === "resource" ? "📄" : "✨"}</span>
+              <b>{activityDisplayName(event.entity_type, event.entity_id)}</b><small>{timeAgo(event.created_at)}</small>
+            </Link>
+          ))}</div>
+        </section>
+      )}
+
+      <PrimaryPlanSetupModal
+        open={setupOpen}
+        initialLevel={context.level}
+        initialSubject={context.subject}
+        initialTheme={context.theme || ""}
+        submitting={setupSubmitting}
+        onClose={() => setSetupOpen(false)}
+        onSubmit={(setup) => void handleSetupSubmit(setup)}
+      />
     </div>
   );
 }

@@ -13,6 +13,8 @@ export type PrimaryPlanSetup = {
   subject: string;
   themeId: string;
   themeName: string;
+  topicId?: string;
+  topicName: string;
   language: string;
 };
 
@@ -54,6 +56,7 @@ export default function PrimaryPlanSetupModal({
   const [level, setLevel] = useState(initialLevel);
   const [subject, setSubject] = useState(initialSubject);
   const [themeId, setThemeId] = useState("");
+  const [topicId, setTopicId] = useState("");
 
   // Re-seed from the teacher's saved context every time the modal opens, so
   // reopening after a cancel doesn't strand whatever was half-picked last time.
@@ -62,6 +65,7 @@ export default function PrimaryPlanSetupModal({
     setLevel(initialLevel);
     setSubject(initialSubject);
     setThemeId("");
+    setTopicId("");
   }, [open, initialLevel, initialSubject]);
 
   // Themes come from the curriculum API, not the static theme list, because
@@ -113,7 +117,9 @@ export default function PrimaryPlanSetupModal({
   if (!open) return null;
 
   const selectedTheme = themeOptions.find((theme) => theme.id === themeId);
-  const canSubmit = !!level && !!subject && !!selectedTheme && !submitting;
+  const topicOptions = (selectedTheme?.topics ?? []).filter((topic) => topic.is_active && topic.has_published_lesson);
+  const selectedTopic = topicOptions.find((topic) => topic.id === topicId);
+  const canSubmit = !!level && !!subject && !!selectedTheme && !!selectedTopic && !submitting;
 
   const handleSubmit = () => {
     if (!canSubmit || !selectedTheme) return;
@@ -122,6 +128,8 @@ export default function PrimaryPlanSetupModal({
       subject,
       themeId: selectedTheme.id,
       themeName: selectedTheme.name,
+      topicId: selectedTopic?.id,
+      topicName: selectedTopic?.name ?? selectedTheme.name,
       language: selectedTheme.language,
     });
   };
@@ -163,6 +171,7 @@ export default function PrimaryPlanSetupModal({
                 setLevel(event.target.value);
                 setSubject("");
                 setThemeId("");
+                setTopicId("");
               }}
               className={selectClass}
             >
@@ -181,6 +190,7 @@ export default function PrimaryPlanSetupModal({
               onChange={(event) => {
                 setSubject(event.target.value);
                 setThemeId("");
+                setTopicId("");
               }}
               disabled={subjectOptions.length === 0}
               className={selectClass}
@@ -197,7 +207,10 @@ export default function PrimaryPlanSetupModal({
           <Field label="Theme / Topic">
             <select
               value={themeId}
-              onChange={(event) => setThemeId(event.target.value)}
+              onChange={(event) => {
+                setThemeId(event.target.value);
+                setTopicId("");
+              }}
               disabled={themeOptions.length === 0}
               className={selectClass}
             >
@@ -208,6 +221,22 @@ export default function PrimaryPlanSetupModal({
                   {theme.name}
                   {showThemeLanguage ? ` · ${theme.language}` : ""}
                 </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Topic">
+            <select
+              value={topicId}
+              onChange={(event) => setTopicId(event.target.value)}
+              disabled={!selectedTheme || topicOptions.length === 0}
+              className={selectClass}
+            >
+              <option value="">
+                {!selectedTheme ? "Pick a theme first" : topicOptions.length === 0 ? "No topics published for this class" : "Select topic…"}
+              </option>
+              {topicOptions.map((topic) => (
+                <option key={topic.id} value={topic.id}>{topic.name}</option>
               ))}
             </select>
           </Field>

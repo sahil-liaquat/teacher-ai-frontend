@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,7 +18,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
-import { backendApi, type PrimaryPlannerActivity } from "@/lib/api";
+import { backendApi } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { usePrimarySection } from "@/lib/use-primary-section";
 import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
@@ -25,7 +27,6 @@ import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { primaryTodayViewState } from "@/lib/primary-today-view-state";
 import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
-import ActivityDrawer from "./activity_drawer";
 import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 import { cn } from "@/lib/utils";
 
@@ -72,11 +73,11 @@ function getActivityConfig(type: string) {
 
 export default function PrimaryTodayPage({ notify }: { notify: (s: string) => void }) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const { context, updateContext, isLoading: contextLoading } = usePrimaryTeachingContext();
   const { openUpgrade } = useUpgradeModal();
 
-  const [selectedDate, setSelectedDate] = useState(() => toLocalISODate(new Date()));
-  const [selectedActivity, setSelectedActivity] = useState<PrimaryPlannerActivity | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") || toLocalISODate(new Date()));
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -176,6 +177,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     date?: string;
     /** A theme id already resolved by the caller — skips the name lookup below. */
     themeId?: string;
+    topicId?: string;
     replace?: boolean;
   } = {}) => {
     const { context: overrideContext, date: overrideDate, replace = false } = options;
@@ -211,7 +213,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
     }
 
-    const payload = buildGeneratePayload(ctx, themeId, date, replace);
+    const payload = buildGeneratePayload(ctx, themeId, date, replace, options.topicId);
     // Nothing to generate from — either the context is incomplete, or its theme
     // name has no curriculum row behind it. A teacher can't tell those apart
     // from an error line, and the second one looks like a lie when the pickers
@@ -277,7 +279,9 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         level: setup.level,
         subject: setup.subject,
         theme: setup.themeName,
-        topic: setup.themeName,
+        themeId: setup.themeId,
+        topic: setup.topicName,
+        topicId: setup.topicId,
         // Curriculum themes are authored per language, so generating a Hindi
         // theme's day in English would narrate content the lesson isn't written
         // in. Follow the theme, but only to a language the context can hold.
@@ -290,7 +294,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       setSetupOpen(false);
       // The modal picked a real curriculum row, so hand its id straight to the
       // generator rather than round-tripping through a name lookup.
-      await runGenerate({ context: resolvedContext, themeId: setup.themeId });
+      await runGenerate({ context: resolvedContext, themeId: setup.themeId, topicId: setup.topicId });
     } finally {
       setSetupSubmitting(false);
     }
@@ -779,12 +783,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                           <XCircle className="h-3 w-3" /> Skipped
                         </span>
                       )}
-                      <button
-                        onClick={() => setSelectedActivity(act)}
+                      <Link
+                        href={`/primary/today/activity/${act.id}?date=${selectedDate}${sectionId ? `&section_id=${sectionId}` : ""}`}
                         className="rounded-xl border border-[#eeeeff] bg-white px-4 py-1.5 text-xs font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 transition shadow-xs"
                       >
                         View Activity
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 );
@@ -838,16 +842,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         onSubmit={(setup) => void handleSetupSubmit(setup)}
       />
 
-      {selectedActivity && (
-        <ActivityDrawer
-          activity={selectedActivity}
-          onClose={() => {
-            setSelectedActivity(null);
-            void refetch();
-          }}
-          notify={notify}
-        />
-      )}
     </div>
   );
 }

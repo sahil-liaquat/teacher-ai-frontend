@@ -257,3 +257,4 @@ export function formatMinutes(minutes: number): string {
   const rest = total % 60;
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
+

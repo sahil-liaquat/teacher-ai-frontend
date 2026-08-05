@@ -43,6 +43,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/billing", label: "Billing", icon: Ticket },
   { href: "/admin/usage", label: "Usage", icon: Coins },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
+  { href: "/admin/primary-curriculum", label: "Primary OS", icon: GraduationCap },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/primary-curriculum", label: "Primary Curriculum", icon: Sprout },
   { href: "/admin/workshops", label: "Workshops", icon: Calendar },

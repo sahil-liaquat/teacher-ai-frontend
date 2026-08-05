@@ -4,7 +4,9 @@ export type PrimaryTeachingContext = {
   level: "Nursery" | "LKG" | "UKG" | "Class 1" | "Class 2" | "Class 3" | "Class 4" | "Class 5";
   subject: string;
   theme?: string;
+  themeId?: string;
   topic?: string;
+  topicId?: string;
   skill?: string;
   language: "English" | "Hindi" | "Bilingual";
 };
@@ -82,7 +84,9 @@ export function sanitizeContext(input: Partial<PrimaryTeachingContext> | null | 
     level: raw.level ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.level,
     subject: raw.subject ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.subject,
     theme: raw.theme,
+    themeId: raw.themeId,
     topic: raw.topic,
+    topicId: raw.topicId,
     skill: raw.skill,
     language: raw.language ?? DEFAULT_PRIMARY_TEACHING_CONTEXT.language,
   };
@@ -93,6 +97,8 @@ export function sanitizeContext(input: Partial<PrimaryTeachingContext> | null | 
   const theme = base.theme?.trim();
   base.theme = theme || DEFAULT_PRIMARY_TEACHING_CONTEXT.theme;
   base.topic = base.topic?.trim() || base.theme;
+  if (!base.themeId?.trim()) delete base.themeId;
+  if (!base.topicId?.trim()) delete base.topicId;
   if (typeof base.skill === "string" && base.skill.trim()) {
     base.skill = base.skill.trim();
   } else {
@@ -198,7 +204,8 @@ export function buildGeneratePayload(
   context: PrimaryTeachingContext,
   themeId: string,
   date: string,
-  replace: boolean
+  replace: boolean,
+  topicId?: string,
 ): PrimaryTodayGeneratePayload | null {
   if (!themeId || !context.subject || !context.level) return null;
   return {
@@ -206,6 +213,7 @@ export function buildGeneratePayload(
     level: PRIMARY_LEVEL_TO_API[context.level],
     subject: context.subject,
     theme_id: themeId,
+    topic_id: topicId || context.topicId || undefined,
     language: context.language || "English",
     replace,
   };

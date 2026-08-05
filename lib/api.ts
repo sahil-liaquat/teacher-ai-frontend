@@ -12,6 +12,7 @@ import type {
 export type { PrimaryCoverageDayState, PrimaryLevelKey, PrimaryThemeCoverageState };
 
 import type { ObservationRating, ObservationTrend } from "./primary-roster";
+import type { PrimaryTeachingContext } from "./primary-context-helpers";
 
 // Re-exported so callers import every Primary wire type from one module. The
 // unions themselves live in lib/primary-roster.ts because that module must stay
@@ -30,6 +31,7 @@ export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 export function resolveUploadUrl(value?: string | null) {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/assets/") || value.startsWith("/landing/") || value.startsWith("/ai-tools/")) return value;
 
   const relativePath = value
     .replace(/^\/+/, "")
@@ -2101,9 +2103,9 @@ export const backendApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return apiFetch<PrimaryCurriculumTheme[]>(`/primary/curriculum/themes${suffix}`);
   },
-  primaryCurriculumLesson: (themeId: string, level: string) =>
+  primaryCurriculumLesson: (themeId: string, level: string, topicId?: string) =>
     apiFetch<PrimaryCurriculumLesson>(
-      `/primary/curriculum/lessons/${themeId}?level=${encodeURIComponent(level)}`
+      `/primary/curriculum/lessons/${themeId}?level=${encodeURIComponent(level)}${topicId ? `&topic_id=${encodeURIComponent(topicId)}` : ""}`
     ),
   generatePrimaryToday: (payload: PrimaryTodayGeneratePayload) =>
     apiFetch<PrimaryTeachingDay>("/primary/today/generate", {
@@ -2391,17 +2393,65 @@ export const backendApi = {
     apiFetch<PrimaryCurriculumTheme[]>(
       `/admin/primary/curriculum/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
     ),
+  adminPrimaryAcademicYears: () =>
+    apiFetch<PrimaryAcademicYear[]>("/admin/primary/academic-years"),
+  adminCreatePrimaryAcademicYear: (payload: Omit<PrimaryAcademicYear, "id">) =>
+    apiFetch<PrimaryAcademicYear>("/admin/primary/academic-years", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryAcademicYear: (id: string, payload: Partial<Omit<PrimaryAcademicYear, "id">>) =>
+    apiFetch<PrimaryAcademicYear>(`/admin/primary/academic-years/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
   adminCreatePrimaryTheme: (payload: {
-    name: string; subject: string; language?: string;
+    name: string; subject?: string; language?: string;
     description?: string | null; emoji?: string | null;
+    hero_image_url?: string | null; background_image_url?: string | null;
+    illustration_pack?: string[]; color_palette?: Record<string, string>;
+    icon_map?: Record<string, string>; decorations?: Array<Record<string, unknown>>;
+    keywords?: string[]; aliases?: string[];
   }) =>
     apiFetch<PrimaryCurriculumTheme>("/admin/primary/curriculum/themes", {
       method: "POST", body: JSON.stringify(payload),
     }),
+  adminUpdatePrimaryTheme: (id: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminUploadPrimaryHero: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiFetch<{ path: string }>("/admin/primary/media/hero", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  adminDuplicatePrimaryTheme: (id: string) =>
+    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/duplicate`, { method: "POST" }),
+  adminArchivePrimaryTheme: (id: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/themes/${id}`, { method: "DELETE" }),
+  adminDeletePrimaryTheme: (id: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/themes/${id}/permanent`, { method: "DELETE" }),
+  adminCreatePrimaryTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
+    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/themes/${themeId}/topics`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdatePrimaryTopic: (topicId: string, payload: Partial<PrimaryCurriculumTopic>) =>
+    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/topics/${topicId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminArchivePrimaryTopic: (topicId: string) =>
+    apiFetch<void>(`/admin/primary/curriculum/topics/${topicId}`, { method: "DELETE" }),
+  adminPrimaryLessons: (params: { theme_id?: string; level?: string; topic_id?: string } = {}) => {
+    const query = new URLSearchParams(params);
+    return apiFetch<PrimaryCurriculumLesson[]>(`/admin/primary/curriculum/lessons${query.size ? `?${query}` : ""}`);
+  },
   adminPrimaryLesson: (lessonId: string) =>
     apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
   adminCreatePrimaryLesson: (payload: {
-    theme_id: string; level: string; objectives: string[]; vocabulary: string[];
+    theme_id: string; topic_id?: string | null; academic_year_id?: string | null;
+    title?: string | null; month?: number | null; week?: number | null; day?: number | null;
+    level: string; objectives: string[]; vocabulary: string[];
     assessment_questions: string[]; homework?: string | null;
     parent_update?: string | null; steps: unknown[];
   }) =>
@@ -2434,6 +2484,50 @@ export const backendApi = {
       `/admin/primary/curriculum/feedback${suffix ? `?${suffix}` : ""}`
     );
   },
+  adminCloneAcademicYear: (yearId: string, payload: {
+    destination_year_id: string;
+    classes?: string[];
+    months?: number[];
+    include_drafts?: boolean;
+    include_published?: boolean;
+    include_resources?: boolean;
+  }) =>
+    apiFetch<{ cloned_count: number }>(`/admin/primary/academic-years/${yearId}/clone`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminResources: (params: {
+    search?: string; category?: string; subject?: string;
+    level?: string; theme?: string; language?: string;
+    page?: number; page_size?: number;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.category) query.set("category", params.category);
+    if (params.subject) query.set("subject", params.subject);
+    if (params.level) query.set("level", params.level);
+    if (params.theme) query.set("theme", params.theme);
+    if (params.language) query.set("language", params.language);
+    if (params.page) query.set("page", String(params.page));
+    if (params.page_size) query.set("page_size", String(params.page_size));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryResourceListResponse>(`/admin/primary/resources${suffix}`);
+  },
+  adminCreateResource: (payload: any) =>
+    apiFetch<PrimaryResource>("/admin/primary/resources", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdateResource: (id: string, payload: any) =>
+    apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminDeleteResource: (id: string) =>
+    apiFetch<void>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+  adminBulkCreateResources: (payload: { resources: any[] }) =>
+    apiFetch<{ added_count: number; skipped_count: number }>("/admin/primary/resources/bulk", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
@@ -2556,6 +2650,93 @@ export function onboardingCreateFirstHref(id: string): string {
   return tool ? tool.dashboardHref : "/dashboard";
 }
 
+// Teaching Kit content remains a client-side composition layer used by the
+// existing Primary generators. Keep these contracts alongside the server-led
+// curriculum types below so the refactor reuses those generators unchanged.
+export type KitComponent =
+  | "daily-plan" | "objectives" | "warm-up" | "explanation" | "story"
+  | "flashcards" | "picture-talk" | "classroom-activity" | "worksheet"
+  | "homework" | "assessment" | "parent-update";
+
+export type TeachingKitResource = {
+  id: string;
+  component: KitComponent;
+  title: string;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileType?: "pdf" | "png" | "jpg";
+  content?: string;
+  category?: string;
+};
+
+export type KitLearningObjective = {
+  id: string;
+  text: string;
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitSequenceItemType =
+  | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
+  | "classroom_activity" | "worksheet" | "assessment";
+
+export type KitSequenceItem = {
+  id: string;
+  type: KitSequenceItemType;
+  title: string;
+  instructions: string[];
+  duration: number;
+  objectiveIds: string[];
+  resourceIds: string[];
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitAssessmentBlock = {
+  type: "oral" | "worksheet" | "observation";
+  title: string;
+  questions: string[];
+  successCriteria: string[];
+  source?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type KitResourceItem = {
+  id: string;
+  title: string;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileType?: string;
+  category?: string;
+  instruction?: string;
+  usedFor: string[];
+};
+
+export type PrimaryTeachingKitContent = {
+  version: number;
+  learningObjectives: KitLearningObjective[];
+  vocabulary: string[];
+  sequence: KitSequenceItem[];
+  resources: KitResourceItem[];
+  assessment: KitAssessmentBlock;
+  homework: string;
+  parentUpdate: string;
+  homeworkSource?: "curated" | "template" | "resource" | "teacher-edited";
+  parentUpdateSource?: "curated" | "template" | "resource" | "teacher-edited";
+  objectivesSource?: "curated" | "template" | "resource" | "teacher-edited";
+};
+
+export type TeachingKit = {
+  id: string;
+  userId: string;
+  context: PrimaryTeachingContext;
+  title: string;
+  resources: TeachingKitResource[];
+  content?: PrimaryTeachingKitContent | null;
+  lessonPlanId?: string;
+  plannerActivityIds: string[];
+  assessmentIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 // TeachPad Primary. snake_case throughout, matching the backend's wire format
 // and every other type in this file. (Sahil's originals were camelCase on
 // responses and snake_case on payloads — the client sent one convention and
@@ -2575,7 +2756,31 @@ export type PrimaryLevel =
 
 export type PrimaryStepType =
   | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
-  | "classroom_activity" | "worksheet" | "assessment" | "movement" | "routine";
+  | "classroom_activity" | "worksheet" | "assessment" | "movement" | "routine"
+  | "circle_time" | "story" | "flashcards" | "craft" | "song" | "game"
+  | "reflection" | "parent_note";
+
+export type PrimaryAcademicYear = {
+  id: string;
+  name: string;
+  starts_on: string;
+  ends_on: string;
+  is_active: boolean;
+};
+
+export type PrimaryCurriculumTopic = {
+  id: string;
+  theme_id: string;
+  name: string;
+  description?: string | null;
+  position: number;
+  keywords: string[];
+  aliases: string[];
+  is_active: boolean;
+  has_published_lesson: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
 
 export type PrimaryResource = {
   id: string;
@@ -2591,6 +2796,7 @@ export type PrimaryResource = {
   languages: string[];
   skills: string[];
   difficulty?: "beginner" | "intermediate" | "advanced" | null;
+  is_active?: boolean;
 };
 
 export type PrimaryResourceListResponse = {
@@ -2610,6 +2816,7 @@ export type PrimaryCurriculumStep = {
   duration_minutes: number;
   objective_indexes: number[];
   resource_category?: string | null;
+  resource_ids?: string[] | null;
 };
 
 export type PrimaryCurriculumTheme = {
@@ -2619,6 +2826,15 @@ export type PrimaryCurriculumTheme = {
   subject: string;
   description?: string | null;
   emoji?: string | null;
+  hero_image_url?: string | null;
+  background_image_url?: string | null;
+  illustration_pack: string[];
+  color_palette: Record<string, string>;
+  icon_map: Record<string, string>;
+  decorations: Array<Record<string, unknown>>;
+  keywords: string[];
+  aliases: string[];
+  topics: PrimaryCurriculumTopic[];
   is_active: boolean;
   /** False when no lesson is published for the requested level. The picker
    *  greys these out instead of letting a teacher choose one and get a 404. */
@@ -2628,6 +2844,12 @@ export type PrimaryCurriculumTheme = {
 export type PrimaryCurriculumLesson = {
   id: string;
   theme_id: string;
+  academic_year_id?: string | null;
+  topic_id?: string | null;
+  title?: string | null;
+  month?: number | null;
+  week?: number | null;
+  day?: number | null;
   level: PrimaryLevel;
   version: number;
   status: "draft" | "published" | "archived";
@@ -2681,6 +2903,7 @@ export type PrimaryTeachingDay = {
   subject?: string | null;
   language: string;
   theme_id?: string | null;
+  topic_id?: string | null;
   lesson_id?: string | null;
   topic?: string | null;
   skill?: string | null;
@@ -2774,7 +2997,9 @@ export type PrimaryTeachingContextRead = {
   level: PrimaryLevel;
   subject?: string | null;
   theme?: string | null;
+  theme_id?: string | null;
   topic?: string | null;
+  topic_id?: string | null;
   skill?: string | null;
   language: string;
   version: number;
@@ -2882,6 +3107,7 @@ export type PrimaryTodayGeneratePayload = {
   level: PrimaryLevel;
   subject: string;
   theme_id: string;
+  topic_id?: string | null;
   language?: string;
   /** Clears the day's existing activities inside the same transaction. */
   replace?: boolean;

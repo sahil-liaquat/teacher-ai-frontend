@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { primaryStepImage } from "@/lib/primary-step-images";
 
 function titleCase(value: string) {
   return value
@@ -74,6 +75,11 @@ export function StepRows({
             <span className="mt-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-teachpad-blue">
               {index + 1}
             </span>
+            <img
+              src={primaryStepImage(step.step_type)}
+              alt=""
+              className="h-20 w-16 shrink-0 rounded-xl border border-slate-100 bg-slate-50 object-cover shadow-sm"
+            />
             <div className="grid flex-1 gap-3 sm:grid-cols-2">
               <label className="grid gap-1.5">
                 <span className="text-xs font-semibold text-gray-500">Step type</span>

@@ -13,6 +13,8 @@ export const RESOURCE_CATEGORIES = [
 export const STEP_TYPES = [
   "warm_up", "introduction", "story_or_rhyme", "picture_talk",
   "classroom_activity", "worksheet", "assessment", "movement", "routine",
+  "circle_time", "story", "flashcards", "craft", "song", "game",
+  "reflection", "parent_note",
 ] as const;
 
 /** The server rejects a gap in positions, so every mutation renumbers. */
@@ -33,7 +35,7 @@ export function moveStep(steps: StepDraft[], from: number, to: number): StepDraf
 export function createStepDraft(position: number): StepDraft {
   return {
     position,
-    step_type: "warm_up",
+    step_type: "circle_time",
     title: "",
     instructions: [],
     duration_minutes: 10,

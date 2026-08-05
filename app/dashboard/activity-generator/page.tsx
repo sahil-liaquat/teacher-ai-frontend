@@ -427,6 +427,7 @@ export default function ActivityGeneratorPage() {
         chapter_names: chapterNames,
         topic: topic.trim() || undefined,
         language,
+        workspace: searchParams.get("workspace") === "primary" ? "primary" : undefined,
         activity_type: activityType,
         duration_minutes: durationMinutes,
         group_size: groupSize,

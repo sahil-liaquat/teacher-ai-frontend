@@ -464,3 +464,4 @@ function cleanPdfText(value: unknown): string {
 function escapePdfText(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
+

@@ -16,3 +16,4 @@ export function skipSeverity(skipRate: number | null): SkipSeverity {
 export function formatSkipRate(skipRate: number | null): string {
   return skipRate === null ? "No data yet" : `${skipRate}% skipped`;
 }
+

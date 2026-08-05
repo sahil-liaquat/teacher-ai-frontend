@@ -143,8 +143,8 @@ export function usePrimaryActivityHistory(limit = 15): { events: PrimaryActivity
       created_at: e.created_at,
       client_event_id: e.client_event_id,
     }));
-
-    // 1. Deduplicate server events by client_event_id
+    
+    // 1. Deduplicate server events by clientEventId
     const seenServerClientEventIds = new Set<string>();
     const uniqueServerEvents: PrimaryActivityEvent[] = [];
     for (const event of serverEvents) {

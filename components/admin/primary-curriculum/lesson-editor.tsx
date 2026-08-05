@@ -1,23 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CopyPlus, PencilLine, Save, Send, Sparkles } from "lucide-react";
-import { backendApi, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
+import { AlertTriangle, CopyPlus, PencilLine, Plus, Save, Send, Sparkles } from "lucide-react";
+import { backendApi, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryCurriculumTopic, type PrimaryLevel } from "@/lib/api";
 import { parseLines, sanitizeStepsForSubmit, validateSteps, type StepDraft } from "@/lib/primary-authoring";
 import { AdminPanel, LoadingState, StatusPill } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/field";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
 import { StepRows } from "@/components/admin/primary-curriculum/step-rows";
-import { ADMIN_PRIMARY_THEMES_QUERY_KEY } from "@/components/admin/primary-curriculum/theme-list";
+import { ADMIN_PRIMARY_THEMES_QUERY_KEY, LEVEL_OPTIONS } from "@/components/admin/primary-curriculum/theme-list";
 
 type FormState = {
   lessonId: string | null;
   status: PrimaryCurriculumLesson["status"] | null;
   version: number | null;
+  title: string;
+  academicYearId: string;
+  month: string;
+  week: string;
+  day: string;
   objectives: string;
   vocabulary: string;
   assessmentQuestions: string;
@@ -30,6 +37,11 @@ const emptyForm: FormState = {
   lessonId: null,
   status: null,
   version: null,
+  title: "",
+  academicYearId: "",
+  month: "",
+  week: "",
+  day: "",
   objectives: "",
   vocabulary: "",
   assessmentQuestions: "",
@@ -43,6 +55,11 @@ function toFormState(lesson: PrimaryCurriculumLesson): FormState {
     lessonId: lesson.id,
     status: lesson.status,
     version: lesson.version,
+    title: lesson.title ?? "",
+    academicYearId: lesson.academic_year_id ?? "",
+    month: lesson.month?.toString() ?? "",
+    week: lesson.week?.toString() ?? "",
+    day: lesson.day?.toString() ?? "",
     objectives: lesson.objectives.join("\n"),
     vocabulary: lesson.vocabulary.join("\n"),
     assessmentQuestions: lesson.assessment_questions.join("\n"),
@@ -52,16 +69,15 @@ function toFormState(lesson: PrimaryCurriculumLesson): FormState {
   };
 }
 
-/**
- * The admin API has no "find the draft for this theme+level" lookup — only
- * lookup-by-lesson-id. So this editor can only ever discover a *published*
- * lesson for a theme+level (via the teacher-facing endpoint, which admins can
- * also call). A half-finished draft from an earlier session is not
- * recoverable from here; "Start authoring" / "New version" always creates a
- * fresh draft version rather than resuming one. Documented, not fixed — fixing
- * it means a new backend route, out of this task's scope.
- */
-export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; level: PrimaryLevel }) {
+export function LessonEditor({
+  theme,
+  level,
+  onTopicCreated,
+}: {
+  theme: PrimaryCurriculumTheme;
+  level: PrimaryLevel;
+  onTopicCreated: (topic: PrimaryCurriculumTopic) => void;
+}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -69,26 +85,43 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
   const [publishing, setPublishing] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [topicId, setTopicId] = useState(theme.topics.find((topic) => topic.is_active)?.id ?? "");
+  const [topicName, setTopicName] = useState("");
+  const [creatingTopic, setCreatingTopic] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState("");
 
-  const published = useQuery({
-    queryKey: ["admin-primary-lesson", theme.id, level],
-    queryFn: () => backendApi.primaryCurriculumLesson(theme.id, level),
-    retry: false,
+  const years = useQuery({ queryKey: ["admin-primary-academic-years"], queryFn: backendApi.adminPrimaryAcademicYears });
+
+  const lessons = useQuery({
+    queryKey: ["admin-primary-lessons", theme.id, level, topicId],
+    queryFn: () => backendApi.adminPrimaryLessons({ theme_id: theme.id, level, topic_id: topicId }),
+    enabled: !!topicId,
   });
 
-  const notFound = published.isError && (published.error as { status?: number })?.status === 404;
-  const otherError = published.isError && !notFound;
-
-  // The parent remounts this component (via a `key` on theme+level) whenever
-  // the selection changes, so `form` always starts fresh here — no reset
-  // effect needed for that. This effect only syncs in the published lesson
-  // once the query resolves.
   useEffect(() => {
-    if (published.data) setForm(toFormState(published.data));
-  }, [published.data]);
+    if (!lessons.data) return;
+    const newestFirst = [...lessons.data].sort((a, b) => b.version - a.version);
+    const selected = newestFirst.find((lesson) => lesson.id === selectedLessonId)
+      ?? newestFirst.find((lesson) => lesson.status === "draft")
+      ?? newestFirst.find((lesson) => lesson.status === "published")
+      ?? newestFirst[0];
+    if (selected) {
+      setSelectedLessonId(selected.id);
+      setForm(toFormState(selected));
+    } else {
+      setSelectedLessonId("");
+      setForm(emptyForm);
+    }
+  }, [lessons.data, selectedLessonId]);
+
+  useEffect(() => {
+    setForm(emptyForm);
+    setSelectedLessonId("");
+  }, [topicId]);
 
   const isDraft = form.status === "draft";
   const isPublished = form.status === "published";
+  const isArchived = form.status === "archived";
   const isEmpty = form.lessonId === null;
 
   // Computed on every render from current form state — not just at submit
@@ -96,6 +129,38 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
   // disabled state always agree with what's on screen.
   const stepErrors = validateSteps(form.steps);
   const hasStepErrors = stepErrors.length > 0;
+
+  async function createTopic(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = topicName.trim();
+    if (!name) return;
+    setCreatingTopic(true);
+    try {
+      const created = await backendApi.adminCreatePrimaryTopic(theme.id, {
+        name,
+        description: null,
+        position: theme.topics.length,
+        keywords: [],
+        aliases: [],
+        is_active: true,
+      });
+      onTopicCreated(created);
+      setTopicName("");
+      setTopicId(created.id);
+      await queryClient.invalidateQueries({ queryKey: [ADMIN_PRIMARY_THEMES_QUERY_KEY] });
+      toast({ title: "Topic created", description: `${created.name} is selected. You can start its class lesson now.` });
+    } catch (error) {
+      toast({ title: "Couldn't create topic", description: getErrorMessage(error, "Try again."), variant: "error" });
+    } finally {
+      setCreatingTopic(false);
+    }
+  }
+
+  function chooseLesson(lessonId: string) {
+    const lesson = (lessons.data ?? []).find((item) => item.id === lessonId);
+    setSelectedLessonId(lessonId);
+    if (lesson) setForm(toFormState(lesson));
+  }
 
   /**
    * Two independent try/catches, not one wrapped around both calls. If the
@@ -119,6 +184,11 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
     setSaving(true);
     try {
       const updated = await backendApi.adminUpdatePrimaryLesson(form.lessonId, {
+        title: form.title.trim() || null,
+        academic_year_id: form.academicYearId || null,
+        month: form.month ? Number(form.month) : null,
+        week: form.week ? Number(form.week) : null,
+        day: form.day ? Number(form.day) : null,
         objectives: parseLines(form.objectives),
         vocabulary: parseLines(form.vocabulary),
         assessment_questions: parseLines(form.assessmentQuestions),
@@ -155,6 +225,7 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
       }));
       const lesson = await backendApi.adminReplacePrimarySteps(form.lessonId, steps);
       setForm(toFormState(lesson));
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", theme.id, level, topicId] });
       return lesson;
     } catch (error) {
       throw Object.assign(
@@ -208,7 +279,7 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
       setForm(toFormState(lesson));
       toast({ title: "Lesson published", description: `Live for ${theme.name} at this level.` });
       queryClient.invalidateQueries({ queryKey: [ADMIN_PRIMARY_THEMES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ["admin-primary-lesson", theme.id, level] });
+      queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", theme.id, level, topicId] });
     } catch (error) {
       toast({
         title: "Couldn't publish",
@@ -227,6 +298,12 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
     try {
       const lesson = await backendApi.adminCreatePrimaryLesson({
         theme_id: theme.id,
+        topic_id: topicId,
+        academic_year_id: form.academicYearId || null,
+        title: form.title.trim() || null,
+        month: form.month ? Number(form.month) : null,
+        week: form.week ? Number(form.week) : null,
+        day: form.day ? Number(form.day) : null,
         level,
         objectives: [],
         vocabulary: [],
@@ -236,6 +313,8 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
         steps: [],
       });
       setForm(toFormState(lesson));
+      setSelectedLessonId(lesson.id);
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", theme.id, level, topicId] });
       toast({ title: "Draft started", description: "Fill in the lesson below, then save." });
     } catch (error) {
       toast({ title: "Couldn't start a draft", description: getErrorMessage(error, "Try again."), variant: "error" });
@@ -250,6 +329,8 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
     try {
       const lesson = await backendApi.adminDuplicatePrimaryLesson(form.lessonId);
       setForm(toFormState(lesson));
+      setSelectedLessonId(lesson.id);
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", theme.id, level, topicId] });
       toast({ title: "New draft version created", description: `Version ${lesson.version} — edit and publish when ready.` });
     } catch (error) {
       toast({ title: "Couldn't create a new version", description: getErrorMessage(error, "Try again."), variant: "error" });
@@ -258,45 +339,90 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
     }
   }
 
-  const readOnly = isPublished;
+  const readOnly = !isDraft;
 
   return (
     <AdminPanel
-      title={theme.name}
-      description={`${theme.subject} · ${theme.language}`}
+      title="2. Choose topic & author lesson"
+      description={`${theme.emoji || "🎨"} ${theme.name} · ${LEVEL_OPTIONS.find((item) => item.value === level)?.label ?? level}`}
       actions={
         form.status ? (
-          <StatusPill status={isPublished ? "success" : "info"}>
-            {isPublished ? `Published · v${form.version}` : `Draft · v${form.version}`}
+          <StatusPill status={isPublished ? "success" : isDraft ? "info" : "neutral"}>
+            {isPublished ? `Published · v${form.version}` : isDraft ? `Draft · v${form.version}` : `Archived · v${form.version}`}
           </StatusPill>
         ) : null
       }
     >
-      {published.isLoading ? <LoadingState label="Checking for a published lesson" /> : null}
+      <div className="mb-5 space-y-4 rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Topic">
+            <Select value={topicId} onChange={(event) => setTopicId(event.target.value)}>
+              <option value="">Select a topic</option>
+              {theme.topics.filter((topic) => topic.is_active).map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
+            </Select>
+          </Field>
+          <form onSubmit={createTopic}>
+            <Field label={theme.topics.some((topic) => topic.is_active) ? "Or create another topic" : "Create the first topic"}>
+              <div className="flex gap-2">
+                <Input
+                  value={topicName}
+                  onChange={(event) => setTopicName(event.target.value)}
+                  placeholder="e.g. Cow, Road Safety, Rainy Season"
+                />
+                <Button type="submit" variant="outline" disabled={!topicName.trim() || creatingTopic}>
+                  <Plus className="h-4 w-4" />
+                  {creatingTopic ? "Creating…" : "Add topic"}
+                </Button>
+              </div>
+            </Field>
+          </form>
+        </div>
+        <p className="text-xs text-gray-500">Each topic can have a completely different lesson for every class. New topics are available here immediately.</p>
+      </div>
+      {!topicId ? (
+        <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-5 py-8 text-center">
+          <Sparkles className="mx-auto h-6 w-6 text-amber-600" />
+          <h3 className="mt-2 text-sm font-bold text-amber-950">Choose or create a topic</h3>
+          <p className="mt-1 text-xs text-amber-800">The lesson editor will open as soon as a topic is selected.</p>
+        </div>
+      ) : null}
 
-      {otherError ? (
+      {lessons.isLoading ? <LoadingState label="Loading lesson versions" /> : null}
+
+      {lessons.isError ? (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {getErrorMessage(published.error, "Couldn't load this lesson.")}
+          {getErrorMessage(lessons.error, "Couldn't load this lesson.")}
         </p>
       ) : null}
 
-      {!published.isLoading && notFound && isEmpty ? (
+      {topicId && !lessons.isLoading && !lessons.isError && isEmpty ? (
         <div className="space-y-4">
           <p className="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-800">
-            {theme.name} has no published lesson for this level yet. Start authoring to create the first draft.
-            {" "}This screen can only find <em>published</em> lessons — if this theme+level was half-authored in an
-            earlier session and never published, that draft can&apos;t be found or resumed here, and starting again
-            creates a separate new draft rather than continuing it.
+            This topic has no lesson for {LEVEL_OPTIONS.find((item) => item.value === level)?.label ?? level} yet.
+            Start a draft, add the daily sequence, then publish it for teachers.
           </p>
-          <Button onClick={handleStartAuthoring} disabled={starting}>
+          <Button type="button" onClick={handleStartAuthoring} disabled={starting}>
             <Sparkles className="h-4 w-4" />
-            {starting ? "Starting..." : "Start authoring"}
+            {starting ? "Starting..." : "Start lesson draft"}
           </Button>
         </div>
       ) : null}
 
       {form.lessonId ? (
         <div className="space-y-5">
+          {(lessons.data ?? []).length > 1 ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <Field label="Version history">
+                <Select value={selectedLessonId} onChange={(event) => chooseLesson(event.target.value)}>
+                  {[...(lessons.data ?? [])].sort((a, b) => b.version - a.version).map((lesson) => (
+                    <option key={lesson.id} value={lesson.id}>
+                      Version {lesson.version} · {lesson.status === "published" ? "Published" : lesson.status === "draft" ? "Draft" : "Archived"}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          ) : null}
           {isPublished ? (
             <p className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
               This version is published and live for teachers. Editing it here would silently rewrite lesson content
@@ -304,6 +430,19 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
               draft copy you can edit and publish separately.
             </p>
           ) : null}
+          {isArchived ? (
+            <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              This is an older archived version. It is read-only, but you can create a new editable version from it.
+            </p>
+          ) : null}
+
+          <div className="grid gap-4 rounded-xl border border-gray-200 p-4 sm:grid-cols-5">
+            <Field label="Lesson title"><Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} disabled={readOnly} /></Field>
+            <Field label="Academic year"><Select value={form.academicYearId} onChange={(event) => setForm({ ...form, academicYearId: event.target.value })} disabled={readOnly}><option value="">Not assigned</option>{(years.data ?? []).filter((year) => year.is_active).map((year) => <option key={year.id} value={year.id}>{year.name}</option>)}</Select></Field>
+            <Field label="Month"><Input type="number" min={1} max={12} value={form.month} onChange={(event) => setForm({ ...form, month: event.target.value })} disabled={readOnly} /></Field>
+            <Field label="Week"><Input type="number" min={1} max={6} value={form.week} onChange={(event) => setForm({ ...form, week: event.target.value })} disabled={readOnly} /></Field>
+            <Field label="Day"><Input type="number" min={1} max={7} value={form.day} onChange={(event) => setForm({ ...form, day: event.target.value })} disabled={readOnly} /></Field>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Objectives (one per line)">
@@ -383,7 +522,7 @@ export function LessonEditor({ theme, level }: { theme: PrimaryCurriculumTheme; 
                 </Button>
               </>
             ) : null}
-            {isPublished ? (
+            {!isDraft ? (
               <Button variant="secondary" onClick={handleNewVersion} disabled={duplicating}>
                 <CopyPlus className="h-4 w-4" />
                 {duplicating ? "Creating..." : "New version"}

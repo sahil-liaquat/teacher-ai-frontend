@@ -402,6 +402,7 @@ export default function PresentationGeneratorPage() {
         audience: audienceFromClass(selectedClass.name),
         slide_count: slideCount,
         language,
+        workspace: searchParams.get("workspace") === "primary" ? "primary" : undefined,
         style,
         tone,
         detail_level: detailLevel as PresentationGeneratePayload["detail_level"],

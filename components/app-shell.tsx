@@ -43,10 +43,9 @@ type NavItem = {
   icon: ComponentType<{ className?: string }>;
 };
 
-// TeachPad Primary is behind a flag until its backend lands (see
-// docs/superpowers/specs/2026-08-02-primary-curriculum-and-planner-design.md).
-// Without it, no teacher sees the Primary nav item or the workspace switcher.
-export const PRIMARY_ENABLED = process.env.NEXT_PUBLIC_PRIMARY_ENABLED === "true";
+// Primary is a first-class workspace; access is controlled by authentication,
+// not by a build-time flag that can leave routes and navigation out of sync.
+export const PRIMARY_ENABLED = true;
 
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -78,15 +77,14 @@ const adminNav: NavItem[] = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
+  { href: "/admin/primary-curriculum", label: "Primary OS", icon: Sparkles },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/system", label: "System", icon: Shield }
 ];
 
 const primaryNav: NavItem[] = [
   { href: "/primary", label: "Home", icon: Home },
-  { href: "/primary/today", label: "Today", icon: Sun },
-  { href: "/primary/coverage", label: "Coverage", icon: CalendarCheck },
-  { href: "/primary/roster", label: "My Class", icon: Users },
+  { href: "/primary/today", label: "Today's Plan", icon: CalendarCheck },
   { href: "/primary/library", label: "Library", icon: BookOpen },
   { href: "/primary/create", label: "Create", icon: Sparkles },
   { href: "/primary/saved", label: "Saved", icon: Heart },
@@ -117,11 +115,23 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     retry: false,
     staleTime: Infinity
   });
-  const homeHref = admin ? "/admin" : role === "influencer" ? "/influencer" : "/dashboard";
-  const isHomeDashboard = pathname === homeHref;
   const isPrimaryDashboard = !admin && pathname.startsWith("/primary");
+  const homeHref = admin
+    ? "/admin"
+    : isPrimaryDashboard
+    ? "/primary"
+    : role === "influencer"
+    ? "/influencer"
+    : "/dashboard";
+  const isHomeDashboard = pathname === homeHref;
   const usesInfluencerWorkspace = role === "influencer" || currentUser?.role === "influencer";
-  const nav = admin ? adminNav : isPrimaryDashboard ? primaryNav : usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav;
+  const nav = admin
+    ? adminNav
+    : isPrimaryDashboard
+    ? primaryNav
+    : usesInfluencerWorkspace
+    ? influencerWorkspaceNav
+    : teacherNav;
   const showsWorkspaceHeader = isHomeDashboard || isPrimaryDashboard;
   const profileHref = "/dashboard/settings?section=account";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
@@ -319,7 +329,18 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
           {children}
         </div>
       </main>
-      {!admin && <MobileBottomNav nav={isPrimaryDashboard ? primaryNav : usesInfluencerWorkspace ? influencerWorkspaceNav : teacherNav} activePath={pathname} />}
+      {!admin && (
+        <MobileBottomNav
+          nav={
+            isPrimaryDashboard
+              ? primaryNav
+              : usesInfluencerWorkspace
+              ? influencerWorkspaceNav
+              : teacherNav
+          }
+          activePath={pathname}
+        />
+      )}
 
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
@@ -768,6 +789,7 @@ function Brand({ compact = false, href = "/dashboard" }: { compact?: boolean; hr
 
 function isActive(href: string, pathname: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/primary") return pathname === "/primary" || pathname.startsWith("/primary/");
   if (href === "/dashboard/classroom-tools") {
     return [
       "/dashboard/classroom-tools",

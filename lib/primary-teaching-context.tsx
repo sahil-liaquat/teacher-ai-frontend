@@ -83,6 +83,7 @@ function readCachedEnvelope(): StoredPrimaryContext {
 type PrimaryTeachingContextValue = {
   context: PrimaryTeachingContext;
   isLoading: boolean;
+  needsSetup: boolean;
   contextKey: string;
   syncStatus: "synced" | "syncing" | "unsynced";
   updateContext: (next: Partial<PrimaryTeachingContext>) => Promise<boolean>;
@@ -99,6 +100,7 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
   const [serverUpdatedAt, setServerUpdatedAt] = useState<string | undefined>(undefined);
   const [version, setVersion] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [needsSetup, setNeedsSetup] = useState(false);
 
   const latestVersionRef = useRef<number>(1);
   const syncRequestInProgress = useRef<boolean>(false);
@@ -120,7 +122,16 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
       // string ("Class 1") — convert on the way out or every save 422s.
       const saved = await apiFetch<{ updated_at: string } & PrimaryTeachingContext>("/primary/context", {
         method: "PUT",
-        body: JSON.stringify({ ...nextContext, level: PRIMARY_LEVEL_TO_API[nextContext.level] }),
+        body: JSON.stringify({
+          level: PRIMARY_LEVEL_TO_API[nextContext.level],
+          subject: nextContext.subject,
+          theme: nextContext.theme,
+          theme_id: nextContext.themeId,
+          topic: nextContext.topic,
+          topic_id: nextContext.topicId,
+          skill: nextContext.skill,
+          language: nextContext.language,
+        }),
         redirectOnUnauthorized: false,
       });
 
@@ -128,10 +139,16 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
         // ...and the response comes back with that same snake_case level, so
         // convert on the way in too or sanitizeContext silently rejects it
         // and resets the level to the default.
-        const clean = sanitizeContext({ ...saved, level: apiLevelToPrimaryLevel(saved.level) });
+        const clean = sanitizeContext({
+          ...saved,
+          level: apiLevelToPrimaryLevel(saved.level),
+          themeId: (saved as any).theme_id,
+          topicId: (saved as any).topic_id,
+        });
         const serverTime = serverTimestamp(saved.updated_at);
 
         setContext(clean);
+        setNeedsSetup(false);
         setSyncStatus("synced");
         setServerUpdatedAt(serverTime);
         setUpdatedAt(serverTime);
@@ -212,15 +229,23 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
 
     apiFetch<{ updated_at: string } & PrimaryTeachingContext | null>("/primary/context", { redirectOnUnauthorized: false })
       .then((saved) => {
-        if (cancelled || !saved) {
+        if (cancelled) return;
+        if (!saved) {
+          setNeedsSetup(true);
           setIsLoading(false);
           return;
         }
+        setNeedsSetup(false);
 
         const serverTime = serverTimestamp(saved.updated_at);
         const latestEnvelope = readCachedEnvelope();
         // Same snake_case-vs-Title-Case mismatch as persist()'s response above.
-        const resolvedContext: PrimaryTeachingContext = { ...saved, level: apiLevelToPrimaryLevel(saved.level) };
+        const resolvedContext: PrimaryTeachingContext = {
+          ...saved,
+          level: apiLevelToPrimaryLevel(saved.level),
+          themeId: (saved as any).theme_id,
+          topicId: (saved as any).topic_id,
+        };
         const { nextEnvelope, action } = reconcileServerContext(latestEnvelope, resolvedContext, serverTime);
 
         if (action === "overwrite_local") {
@@ -274,20 +299,25 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
           updated.subject = validSubjects[0];
         }
         if (next.theme === undefined) updated.theme = undefined;
+        if (next.themeId === undefined) updated.themeId = undefined;
         if (next.topic === undefined) updated.topic = undefined;
+        if (next.topicId === undefined) updated.topicId = undefined;
         if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 2. Subject changes
       if (next.subject && next.subject !== context.subject) {
         if (next.theme === undefined) updated.theme = undefined;
+        if (next.themeId === undefined) updated.themeId = undefined;
         if (next.topic === undefined) updated.topic = undefined;
+        if (next.topicId === undefined) updated.topicId = undefined;
         if (next.skill === undefined) updated.skill = undefined;
       }
 
       // 3. Theme changes
       if (next.theme && next.theme !== context.theme) {
-        updated.topic = next.theme;
+        if (next.topic === undefined) updated.topic = next.theme;
+        if (next.topicId === undefined) updated.topicId = undefined;
         updated.skill = undefined;
       }
 
@@ -360,13 +390,13 @@ export function PrimaryTeachingContextProvider({ children }: { children: React.R
   }, [context, syncStatus, version, serverUpdatedAt, persist]);
 
   const contextKey = useMemo(
-    () => `${context.level}|${context.subject}|${context.theme ?? ""}`,
-    [context.level, context.subject, context.theme]
+    () => `${context.level}|${context.subject}|${context.themeId ?? context.theme ?? ""}|${context.topicId ?? context.topic ?? ""}`,
+    [context.level, context.subject, context.themeId, context.theme, context.topicId, context.topic]
   );
 
   const value = useMemo<PrimaryTeachingContextValue>(
-    () => ({ context, isLoading, contextKey, syncStatus, updateContext, resetContext, retrySync }),
-    [context, isLoading, contextKey, syncStatus, updateContext, resetContext, retrySync]
+    () => ({ context, isLoading, needsSetup, contextKey, syncStatus, updateContext, resetContext, retrySync }),
+    [context, isLoading, needsSetup, contextKey, syncStatus, updateContext, resetContext, retrySync]
   );
 
   return <PrimaryContext.Provider value={value}>{children}</PrimaryContext.Provider>;

@@ -156,3 +156,4 @@ function formatShortDate(iso: string): string {
   const day = Number(parts[2]);
   return `${day} ${MONTH_ABBREVIATIONS[month - 1]} ${year}`;
 }
+

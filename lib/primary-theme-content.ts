@@ -1,4 +1,5 @@
 import type { PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import { PRIMARY_RESOURCES } from "./primary-resource-catalog.ts";
 
 export const PRIMARY_LEVELS = ["Nursery", "LKG", "UKG", "Class 1", "Class 2", "Class 3", "Class 4", "Class 5"] as const;
 export const PRIMARY_LANGUAGES = ["English", "Hindi", "Bilingual"] as const;
@@ -11,6 +12,7 @@ export type ThemeContent = {
   resources: string[];
   activities: string[];
   assessments: string[];
+  resourceImages?: string[];
 };
 
 const THEMES_BY_SUBJECT: Record<string, string[]> = {
@@ -35,12 +37,21 @@ const LEARNING_AREA_BY_SUBJECT: Record<string, string> = {
   "Physical Education": "Physical Development",
 };
 
+const MY_FAMILY_IMAGES = [
+  "/assets/primary/dashboard-my-family.webp",
+  "/assets/primary/dashboard-family-members.webp",
+  "/assets/primary/dashboard-my-family-house.webp",
+  "/assets/primary/dashboard-all-about-my-family.webp",
+  "/assets/primary/dashboard-family-story.webp",
+];
+
 const THEME_CONTENT: Record<string, ThemeContent> = {
   "My Family": {
     emoji: "👨‍👩‍👧‍👦",
     description: "Students will learn about family members, their roles, relationships and the importance of family.",
     keywords: ["family", "home", "house", "myself", "me", "baby"],
     resources: ["My Family", "Family Members", "My Family House", "All About My Family", "Family Story"],
+    resourceImages: MY_FAMILY_IMAGES,
     activities: ["Circle Time", "My Family — Introduction", "Teach & Explore", "Worksheet Time", "Craft Activity", "Wrap Up & Song"],
     assessments: ["My Family Quiz", "Family Members Worksheet", "Oral Assessment — Vocabulary", "Family Skills Checklist", "Exit Ticket — Family"],
   },
@@ -236,19 +247,16 @@ export function themeContent(theme: string | undefined, subject: string): ThemeC
 }
 
 export function generatorHref(path: string, context: PrimaryTeachingContext): string {
-  // Only these three params are ever read on the receiving side —
-  // getCompanionPrefillContext() (lib/companion-prefill.ts), shared by every
-  // "Generate X" page. `workspace` and the `primary_*` duplicates below used
-  // to be set here too. `workspace` IS read elsewhere (lib/workspace/routes.ts:
-  // returnTopicRoute/appendWorkspaceContext), but only acts when
-  // `workspace_topic` is also present, which this function never set — so
-  // removing it here is safe. The `primary_*` duplicates were never read by
-  // anything.
   const params = new URLSearchParams();
+  params.set("workspace", "primary");
   if (context.level) params.set("class", context.level);
   if (context.subject) params.set("subject", context.subject);
   const topic = context.theme || context.topic;
   if (topic) params.set("topic", topic);
+  if (context.level) params.set("primary_class", context.level);
+  if (context.subject) params.set("primary_subject", context.subject);
+  if (context.theme) params.set("primary_theme", context.theme);
+  params.set("primary_language", context.language);
   const query = params.toString();
   return query ? `${path}?${query}` : path;
 }
@@ -291,13 +299,25 @@ export function subjectsForClass(level: string): string[] {
 
 export function skillsForContext(level: string, subject: string, theme: string | undefined): string[] {
   if (!theme) return [];
-
-  // Standard skills fallback — per-resource skill matching now lives server-side.
-  if (subject === "English" || subject === "Hindi") {
-    return ["Reading", "Writing", "Speaking", "Listening", "Vocabulary", "Phonics"];
-  } else if (subject === "Maths") {
-    return ["Counting", "Problem Solving", "Logic", "Spatial Awareness"];
-  } else {
-    return ["Observation", "Cognitive Skills", "Creativity", "Fine Motor", "Gross Motor"];
+  
+  const matches = PRIMARY_RESOURCES.filter((r) => 
+    r.subjects.includes(subject) && 
+    r.themes.includes(theme) && 
+    r.levels.includes(level)
+  );
+  
+  const skills = new Set<string>();
+  matches.forEach((r) => r.skills.forEach((s) => skills.add(s)));
+  
+  if (skills.size === 0) {
+    // Return standard skills fallback
+    if (subject === "English" || subject === "Hindi") {
+      return ["Reading", "Writing", "Speaking", "Listening", "Vocabulary", "Phonics"];
+    } else if (subject === "Maths") {
+      return ["Counting", "Problem Solving", "Logic", "Spatial Awareness"];
+    } else {
+      return ["Observation", "Cognitive Skills", "Creativity", "Fine Motor", "Gross Motor"];
+    }
   }
+  return Array.from(skills);
 }

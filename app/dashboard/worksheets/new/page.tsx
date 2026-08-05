@@ -546,6 +546,7 @@ export default function NewWorksheetPage() {
           questionTypes.map(t => [questionTypeIdMap[t], questionTypeMarks[t] || defaultMarks[t]])
         ),
         language,
+        workspace: searchParams.get("workspace") === "primary" ? "primary" : undefined,
         difficulty_distribution: difficulty,
         question_mix: questionMix,
         competency_focus: competencyFocus,

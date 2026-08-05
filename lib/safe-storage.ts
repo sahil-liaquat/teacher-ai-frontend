@@ -43,3 +43,4 @@ export function removeStoredItem(key: string): void {
     // Nothing to report — the item is unreachable either way.
   }
 }
+

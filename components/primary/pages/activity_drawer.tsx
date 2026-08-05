@@ -35,7 +35,6 @@ interface ActivityDrawerProps {
   onClose: () => void;
   notify: (s: string) => void;
 }
-
 export default function ActivityDrawer({ activity, onClose, notify }: ActivityDrawerProps) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);

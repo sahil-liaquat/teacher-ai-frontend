@@ -1,0 +1,13 @@
+=== Primary Resources Catalog Validation ===
+Catalogue record count: 861
+Physical file count under public/primary-resources: 861
+Duplicate resource IDs: None
+Duplicate file URLs: None
+Catalogue entries with missing files: 0
+Physical files not referenced by the catalogue: 0
+
+=== Discrepancy analysis (861 vs 862) ===
+Catalog contains: 861 entries.
+Catalog entries with fileUrl: 861
+Catalog entries without fileUrl: 0
+Unique fileUrl references in catalog (decoded): 861
