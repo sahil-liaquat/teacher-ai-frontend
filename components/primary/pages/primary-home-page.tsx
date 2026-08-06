@@ -63,6 +63,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   const [setupSubmitting, setSetupSubmitting] = useState(false);
   const [draftLevel, setDraftLevel] = useState<PrimaryTeachingContext["level"]>(context.level);
   const [draftThemeId, setDraftThemeId] = useState("");
+  const [draftSubtheme, setDraftSubtheme] = useState("");
   const [draftTopicId, setDraftTopicId] = useState("");
   const today = useMemo(toLocalISODate, []);
   const hasClassroom = Boolean(context.themeId && context.topicId);
@@ -88,10 +89,11 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   }, [hasChosen, sectionId, sections.data, sections.isSuccess, setSectionId]);
 
   const themes = useQuery({
-    queryKey: ["primary-curriculum-themes", context.level, context.subject],
+    queryKey: ["primary-curriculum-themes", context.level, context.subject, context.language],
     queryFn: () => backendApi.primaryCurriculumThemes({
       level: PRIMARY_LEVEL_TO_API[context.level],
       subject: context.subject || undefined,
+      language: context.language || undefined,
     }),
     enabled: !contextLoading && !!context.level && !!context.subject,
   });
@@ -110,8 +112,15 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
     [setupThemesQuery.data],
   );
   const selectedSetupTheme = setupThemes.find((theme) => theme.id === draftThemeId);
+  const setupSubthemes = useMemo(() => {
+    const set = new Set<string>();
+    for (const topic of selectedSetupTheme?.topics ?? []) {
+      if (topic.is_active && topic.has_published_lesson && topic.subtheme) set.add(topic.subtheme);
+    }
+    return Array.from(set);
+  }, [selectedSetupTheme]);
   const setupTopics = (selectedSetupTheme?.topics ?? []).filter(
-    (topic) => topic.is_active && topic.has_published_lesson,
+    (topic) => topic.is_active && topic.has_published_lesson && (draftSubtheme === "" || topic.subtheme === draftSubtheme),
   );
   const selectedSetupTopic = setupTopics.find((topic) => topic.id === draftTopicId);
 
@@ -143,7 +152,13 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   const resourceQueries = useQueries({
     queries: resourceIds.map((id) => ({
       queryKey: ["primary-resource", id],
-      queryFn: async () => adaptApiResource(await backendApi.primaryResource(id)),
+      queryFn: async () => {
+        try {
+          return await adaptApiResource(await backendApi.primaryResource(id));
+        } catch {
+          return null;
+        }
+      },
       staleTime: 60_000,
       retry: 0,
     })),
@@ -267,6 +282,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                   onChange={(event) => {
                     setDraftLevel(event.target.value as PrimaryTeachingContext["level"]);
                     setDraftThemeId("");
+                    setDraftSubtheme("");
                     setDraftTopicId("");
                   }}
                 >
@@ -279,6 +295,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                   value={draftThemeId}
                   onChange={(event) => {
                     setDraftThemeId(event.target.value);
+                    setDraftSubtheme("");
                     setDraftTopicId("");
                   }}
                   disabled={setupThemesQuery.isFetching || setupThemes.length === 0}
@@ -292,13 +309,27 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                 </select>
               </label>
               <label>
+                <span>Subtheme</span>
+                <select
+                  value={draftSubtheme}
+                  onChange={(event) => {
+                    setDraftSubtheme(event.target.value);
+                    setDraftTopicId("");
+                  }}
+                  disabled={!selectedSetupTheme}
+                >
+                  <option value="">All subthemes</option>
+                  {setupSubthemes.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </label>
+              <label>
                 <span>Topic</span>
                 <select
                   value={draftTopicId}
                   onChange={(event) => setDraftTopicId(event.target.value)}
                   disabled={!selectedSetupTheme || setupTopics.length === 0}
                 >
-                  <option value="">{selectedSetupTheme ? (setupTopics.length ? "Select topic…" : "No published topics") : "Select a theme first"}</option>
+                  <option value="">{selectedSetupTheme ? (draftSubtheme && setupTopics.length === 0 ? "No topics in this subtheme" : setupTopics.length ? "Select topic…" : "No published topics") : "Select a theme first"}</option>
                   {setupTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
                 </select>
               </label>
@@ -321,12 +352,21 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
               <span className="eyebrow">Theme</span>
               <h3>{activeTheme?.name || context.theme || "Choose a theme"}</h3>
               <p className="mt-1 text-sm font-bold text-slate-500">{activeTopic?.name || context.topic || "Choose a topic"}</p>
+              {activeTopic?.subtheme && (
+                <p className="mt-0.5 text-xs font-bold text-[#6e41f5]">Sub Theme: {activeTopic.subtheme}</p>
+              )}
             </div>
             <div className="primary-focus-illustration">
               {illustrationFor(visuals, 1) ? <img src={illustrationFor(visuals, 1)} alt="" /> : <span>{activeTheme?.emoji || "📚"}</span>}
             </div>
             <div>
-              <span className="eyebrow">Today&apos;s objectives</span>
+              <span className="eyebrow">Today&apos;s focus</span>
+              {day?.daily_focus ? (
+                <p className="mt-1 rounded-lg bg-indigo-50/70 px-2.5 py-1.5 text-xs font-bold text-indigo-700">
+                  {day.daily_focus}
+                </p>
+              ) : null}
+              <span className="eyebrow mt-2">Today&apos;s objectives</span>
               <div className="primary-objectives">
                 {objectives.length ? objectives.map((objective, index) => (
                   <div key={`${objective}-${index}`}><b>{["●", "123", "Aa"][index] || "✓"}</b><span>{objective}</span></div>

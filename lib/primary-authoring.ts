@@ -15,6 +15,8 @@ export const STEP_TYPES = [
   "classroom_activity", "worksheet", "assessment", "movement", "routine",
   "circle_time", "story", "flashcards", "craft", "song", "game",
   "reflection", "parent_note",
+  "arrival_routine", "free_play", "story_rhyme_picture_talk",
+  "concept_exploration", "classroom_activity_game", "practice",
 ] as const;
 
 /** The server rejects a gap in positions, so every mutation renumbers. */
@@ -41,6 +43,11 @@ export function createStepDraft(position: number): StepDraft {
     duration_minutes: 10,
     objective_indexes: [],
     resource_category: null,
+    child_action: [],
+    observation_point: null,
+    transition: null,
+    required_resource_ids: [],
+    optional_resource_ids: [],
   };
 }
 
@@ -63,6 +70,9 @@ export function sanitizeStepsForSubmit(steps: StepDraft[]): StepDraft[] {
       ...step,
       title: step.title.trim(),
       instructions: step.instructions.map((line) => line.trim()).filter(Boolean),
+      child_action: (step.child_action || []).map((line) => line.trim()).filter(Boolean),
+      observation_point: step.observation_point?.trim() || null,
+      transition: step.transition?.trim() || null,
     }))
   );
 }

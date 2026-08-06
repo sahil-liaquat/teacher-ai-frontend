@@ -5,7 +5,11 @@ import { adaptApiResource } from "./primary-resource-adapter";
 import { PRIMARY_RESOURCES, type PrimaryResource } from "./primary-resource-catalog";
 import { themeContent } from "./primary-theme-content";
 
-export const USE_BACKEND_CATALOGUE = process.env.NEXT_PUBLIC_USE_BACKEND_CATALOGUE === "true";
+// The admin-authored catalog (Step 3 in the admin flow) is the source of truth
+// for teachers. It was gated behind an env flag while the backend catalogue
+// landed; now that resources are managed in the admin panel it is the default
+// and the flag only serves as an emergency kill-switch back to the static list.
+export const USE_BACKEND_CATALOGUE = process.env.NEXT_PUBLIC_USE_BACKEND_CATALOGUE !== "false";
 
 export type UsePrimaryResourcesFilters = {
   search?: string;

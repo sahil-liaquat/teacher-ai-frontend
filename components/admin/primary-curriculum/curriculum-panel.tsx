@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Sparkles, Check, Edit2, Play, Plus, ArrowUp, ArrowDown, 
-  Trash2, AlertTriangle, HelpCircle, Archive, Copy, MoreVertical, X 
+  Trash2, AlertTriangle, HelpCircle, Archive, Copy, MoreVertical, X, ChevronDown 
 } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import type { PrimaryCurriculumTheme, PrimaryCurriculumLesson, PrimaryAcademicYear } from "@/lib/api";
@@ -28,6 +28,46 @@ const MONTH_OPTIONS = [
   { value: 5, label: "May" }
 ];
 
+const STEPS_TEMPLATES: Record<string, any[]> = {
+  "Standard Routine": [
+    { position: 0, step_type: "routine", title: "Arrival & Greeting", instructions: ["Welcome children warmly as they arrive.", "Help them store bags and settle in."], duration_minutes: 10, objective_indexes: [0] },
+    { position: 1, step_type: "circle_time", title: "Circle Time discussion", instructions: ["Gather children in a circle.", "Take attendance and discuss theme keywords."], duration_minutes: 10, objective_indexes: [0] },
+    { position: 2, step_type: "classroom_activity", title: "Exploratory Sensory Activity", instructions: ["Guide children through sensory stations."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 3, step_type: "routine", title: "Cleanup & Dismissal", instructions: ["Pack bag and cleanup the classroom.", "Sing goodbye song."], duration_minutes: 10, objective_indexes: [0] }
+  ],
+  "Story and Activity Day": [
+    { position: 0, step_type: "warm_up", title: "Warm-up Song", instructions: ["Perform an interactive movement song to activate body."], duration_minutes: 10, objective_indexes: [0] },
+    { position: 1, step_type: "story", title: "Theme Story Telling", instructions: ["Read story aloud using picture cards.", "Ask reflective questions about characters."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 2, step_type: "classroom_activity", title: "Sensory Roleplay Activity", instructions: ["Divide children in pairs.", "Act out scenes from the story."], duration_minutes: 25, objective_indexes: [0] },
+    { position: 3, step_type: "routine", title: "Goodbye song", instructions: ["Recap story lessons.", "Sing goodbye song."], duration_minutes: 10, objective_indexes: [0] }
+  ],
+  "Worksheet-focused Day": [
+    { position: 0, step_type: "warm_up", title: "Warm-up Recall", instructions: ["Review vocabulary matching from previous lesson."], duration_minutes: 10, objective_indexes: [0] },
+    { position: 1, step_type: "introduction", title: "Concept Introduction", instructions: ["Draw concepts on the board.", "Demonstrate tracing strokes."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 2, step_type: "worksheet", title: "Printable Worksheet", instructions: ["Hand out worksheets.", "Support individual tracing work."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 3, step_type: "routine", title: "Class cleanup", duration_minutes: 15, instructions: ["Gather materials.", "Rate achievements."] }
+  ],
+  "Assessment and Recap Day": [
+    { position: 0, step_type: "circle_time", title: "Weekly review", instructions: ["Ask volunteers to define theme keywords."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 1, step_type: "assessment", title: "Individual Checkpoint", instructions: ["Conduct quick 1-on-1 assessment worksheets.", "Mark observations record."], duration_minutes: 25, objective_indexes: [0] },
+    { position: 2, step_type: "reflection", title: "Reflective goodbye", instructions: ["Sing matching goodbye song."], duration_minutes: 10, objective_indexes: [0] }
+  ],
+  "JKSCERT Full Day": [
+    { position: 0, step_type: "circle_time", title: "Circle Time (Welcome, prayer, calendar, conversation, rhyme)", instructions: ["Welcome children and open with a short prayer.", "Mark the calendar and date together.", "Discuss theme keywords and let volunteers share."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 1, step_type: "free_play", title: "Free Play / Learning Corners", instructions: ["Let children explore learning corners freely.", "Observe and note each child's choices."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 2, step_type: "classroom_activity", title: "Theme Activity / Numeracy", instructions: ["Run the day's theme-based numeracy activity.", "Support children at different levels."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 3, step_type: "routine", title: "Snack", instructions: ["Wash hands before snack.", "Supervise snack time and table manners."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 4, step_type: "movement", title: "Music & Movement", instructions: ["Sing theme rhymes and follow with movement.", "Encourage participation and expression."], duration_minutes: 15, objective_indexes: [0] },
+    { position: 5, step_type: "story", title: "Story Time / Emergent Literacy", instructions: ["Read aloud from the theme storybook.", "Ask questions about characters and sequence."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 6, step_type: "craft", title: "Art & Craft", instructions: ["Guide children through the theme craft activity.", "Display finished work on the wall."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 7, step_type: "practice", title: "Independent Learning Corners", instructions: ["Children practise skills independently at stations.", "Circulate and support where needed."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 8, step_type: "routine", title: "Lunch", instructions: ["Wash hands before lunch.", "Supervise lunch and tidy up afterwards."], duration_minutes: 30, objective_indexes: [0] },
+    { position: 9, step_type: "movement", title: "Outdoor Play", instructions: ["Supervise outdoor free play.", "Encourage sharing and safe play."], duration_minutes: 20, objective_indexes: [0] },
+    { position: 10, step_type: "reflection", title: "Goodbye Circle / Reflection", instructions: ["Recap the day's learning with children.", "Sing the goodbye song and share the parent update."], duration_minutes: 10, objective_indexes: [0] }
+  ],
+  "Blank Day": []
+};
+
 export function CurriculumPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,6 +77,7 @@ export function CurriculumPanel() {
   const [selectedYearId, setSelectedYearId] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>(LEVEL_OPTIONS[0].value);
   const [selectedMonth, setSelectedMonth] = useState<number>(8); // Default August
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(""); // "" = all themes
   const [previewMode, setPreviewMode] = useState<boolean>(false);
 
   // Curriculum map states
@@ -45,10 +86,15 @@ export function CurriculumPanel() {
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState<boolean>(false);
   const [templateSlot, setTemplateSlot] = useState<{ week: number; day: number } | null>(null);
+  const [templateDailyFocus, setTemplateDailyFocus] = useState<string>("");
+  const [templateSlotRange, setTemplateSlotRange] = useState<{ week: number | null } | null>(null);
+  const [monthMenuOpen, setMonthMenuOpen] = useState<boolean>(false);
   
   // Dialog confirmation states
   const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState<boolean>(false);
+  const [batchArchiveRange, setBatchArchiveRange] = useState<{ week: number | null } | null>(null);
+  const [replaceRangeConfirm, setReplaceRangeConfirm] = useState<{ templateName: string; range: { week: number | null }; occupiedCount: number } | null>(null);
 
   // Fetch Academic Years
   useEffect(() => {
@@ -75,11 +121,24 @@ export function CurriculumPanel() {
     enabled: !!selectedLevel,
   });
 
-  // Group lessons by Month -> Week -> Day
-  const filteredLessons = lessons.filter(l => l.month === selectedMonth && l.status !== "archived");
+  // Group lessons by Month -> Week -> Day (optionally scoped to the month's theme)
+  const filteredLessons = lessons.filter(l => l.month === selectedMonth && l.status !== "archived")
+    .filter(l => !selectedThemeId || l.theme_id === selectedThemeId);
+  const selectedTheme = themes.find(t => t.id === selectedThemeId) || null;
+
+  // Month overview stats
+  const totalSlots = 25;
+  const filledCount = filteredLessons.length;
+  const emptyCount = totalSlots - filledCount;
+  const publishedCount = filteredLessons.filter(l => l.status === "published").length;
+  const draftCount = filteredLessons.filter(l => l.status === "draft").length;
+  const missingResourceCount = filteredLessons.filter(l => l.steps?.some(s => s.resource_category && (!s.resource_ids || s.resource_ids.length === 0))).length;
   
   // Find selected lesson
   const selectedLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0] || null;
+  const selectedTopic = selectedLesson
+    ? themes.flatMap(t => t.topics).find(tp => tp.id === selectedLesson.topic_id) || null
+    : null;
 
   // Sync selectedLessonId
   useEffect(() => {
@@ -112,39 +171,20 @@ export function CurriculumPanel() {
   };
 
   const handleCreateFromTemplate = async (templateName: string) => {
-    if (!templateSlot || !selectedYearId) return;
+    if (!selectedYearId) return;
     setIsTemplateDrawerOpen(false);
 
-    // Default template configurations
-    const stepsTemplates: Record<string, any[]> = {
-      "Standard Routine": [
-        { position: 0, step_type: "routine", title: "Arrival & Greeting", instructions: ["Welcome children warmly as they arrive.", "Help them store bags and settle in."], duration_minutes: 10, objective_indexes: [0] },
-        { position: 1, step_type: "circle_time", title: "Circle Time discussion", instructions: ["Gather children in a circle.", "Take attendance and discuss theme keywords."], duration_minutes: 10, objective_indexes: [0] },
-        { position: 2, step_type: "classroom_activity", title: "Exploratory Sensory Activity", instructions: ["Guide children through sensory stations."], duration_minutes: 20, objective_indexes: [0] },
-        { position: 3, step_type: "routine", title: "Cleanup & Dismissal", instructions: ["Pack bag and cleanup the classroom.", "Sing goodbye song."], duration_minutes: 10, objective_indexes: [0] }
-      ],
-      "Story and Activity Day": [
-        { position: 0, step_type: "warm_up", title: "Warm-up Song", instructions: ["Perform an interactive movement song to activate body."], duration_minutes: 10, objective_indexes: [0] },
-        { position: 1, step_type: "story", title: "Theme Story Telling", instructions: ["Read story aloud using picture cards.", "Ask reflective questions about characters."], duration_minutes: 20, objective_indexes: [0] },
-        { position: 2, step_type: "classroom_activity", title: "Sensory Roleplay Activity", instructions: ["Divide children in pairs.", "Act out scenes from the story."], duration_minutes: 25, objective_indexes: [0] },
-        { position: 3, step_type: "routine", title: "Goodbye song", instructions: ["Recap story lessons.", "Sing goodbye song."], duration_minutes: 10, objective_indexes: [0] }
-      ],
-      "Worksheet-focused Day": [
-        { position: 0, step_type: "warm_up", title: "Warm-up Recall", instructions: ["Review vocabulary matching from previous lesson."], duration_minutes: 10, objective_indexes: [0] },
-        { position: 1, step_type: "introduction", title: "Concept Introduction", instructions: ["Draw concepts on the board.", "Demonstrate tracing strokes."], duration_minutes: 15, objective_indexes: [0] },
-        { position: 2, step_type: "worksheet", title: "Printable Worksheet", instructions: ["Hand out worksheets.", "Support individual tracing work."], duration_minutes: 20, objective_indexes: [0] },
-        { position: 3, step_type: "routine", title: "Class cleanup", duration_minutes: 15, instructions: ["Gather materials.", "Rate achievements."] }
-      ],
-      "Assessment and Recap Day": [
-        { position: 0, step_type: "circle_time", title: "Weekly review", instructions: ["Ask volunteers to define theme keywords."], duration_minutes: 15, objective_indexes: [0] },
-        { position: 1, step_type: "assessment", title: "Individual Checkpoint", instructions: ["Conduct quick 1-on-1 assessment worksheets.", "Mark observations record."], duration_minutes: 25, objective_indexes: [0] },
-        { position: 2, step_type: "reflection", title: "Reflective goodbye", instructions: ["Sing matching goodbye song."], duration_minutes: 10, objective_indexes: [0] }
-      ],
-      "Blank Day": []
-    };
+    // Batch mode (week or month): delegate to the range handler.
+    if (templateSlotRange) {
+      setTemplateSlot(null);
+      await handleBatchCreateFromTemplate(templateName);
+      return;
+    }
 
-    const firstTheme = themes[0] || null;
-    const templateSteps = stepsTemplates[templateName] || [];
+    if (!templateSlot) return;
+
+    const themeId = selectedThemeId || themes[0]?.id || "";
+    const templateSteps = STEPS_TEMPLATES[templateName] || [];
 
     try {
       const created = await backendApi.adminCreatePrimaryLesson({
@@ -153,8 +193,9 @@ export function CurriculumPanel() {
         month: selectedMonth,
         week: templateSlot.week,
         day: templateSlot.day,
-        theme_id: firstTheme ? firstTheme.id : "",
+        theme_id: themeId,
         title: `Day ${templateSlot.day} - ${templateName}`,
+        daily_focus: templateDailyFocus.trim() || null,
         objectives: ["Introduce key theme vocabulary"],
         vocabulary: ["cow", "farm"],
         assessment_questions: ["Can you name the animal?"],
@@ -162,10 +203,163 @@ export function CurriculumPanel() {
       });
       await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
       toast({ title: "Day added", description: "Created from template successfully." });
+      setTemplateSlot(null);
+      setTemplateDailyFocus("");
       setEditingLessonId(created.id);
       setIsEditorOpen(true);
     } catch (err: any) {
       toast({ title: "Failed to create day", description: err.message, variant: "error" });
+    }
+  };
+
+  const handleBatchCreateFromTemplate = async (templateName: string) => {
+    if (!templateSlotRange || !selectedYearId) return;
+    const range = templateSlotRange;
+
+    const weeks = range.week !== null ? [range.week] : [1, 2, 3, 4, 5];
+    const days = [1, 2, 3, 4, 5];
+    const allSlots = weeks.flatMap((week) => days.map((day) => ({ week, day })));
+
+    // Identify empty vs occupied slots in the target week or month
+    const occupiedSlots = allSlots.filter((slot) => filteredLessons.some(l => l.week === slot.week && l.day === slot.day));
+    const emptySlots = allSlots.filter((slot) => !occupiedSlots.includes(slot));
+
+    if (emptySlots.length === 0) {
+      setTemplateSlotRange(null);
+      setReplaceRangeConfirm({ templateName, range, occupiedCount: occupiedSlots.length });
+      return;
+    }
+
+    const themeId = selectedThemeId || themes[0]?.id || "";
+    const templateSteps = STEPS_TEMPLATES[templateName] || [];
+
+    try {
+      await Promise.all(emptySlots.map((slot) =>
+        backendApi.adminCreatePrimaryLesson({
+          academic_year_id: selectedYearId,
+          level: selectedLevel,
+          month: selectedMonth,
+          week: slot.week,
+          day: slot.day,
+          theme_id: themeId,
+          title: `Day ${slot.day} - ${templateName}`,
+          objectives: ["Introduce key theme vocabulary"],
+          vocabulary: ["cow", "farm"],
+          assessment_questions: ["Can you name the animal?"],
+          steps: templateSteps
+        })
+      ));
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+      toast({
+        title: "Days added",
+        description: occupiedSlots.length > 0
+          ? `Prefilled ${emptySlots.length} empty slot(s) with "${templateName}". ${occupiedSlots.length} occupied slot(s) left untouched.`
+          : `Prefilled ${emptySlots.length} empty slot(s) with "${templateName}".`
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to create days", description: err.message, variant: "error" });
+    }
+    setTemplateSlotRange(null);
+  };
+
+  const handleReplaceRangeWithTemplate = async () => {
+    if (!replaceRangeConfirm || !selectedYearId) return;
+    const { templateName, range, occupiedCount } = replaceRangeConfirm;
+    setReplaceRangeConfirm(null);
+
+    const weeks = range.week !== null ? [range.week] : [1, 2, 3, 4, 5];
+    const days = [1, 2, 3, 4, 5];
+    const targets = filteredLessons.filter((l) => weeks.includes(l.week ?? 0) && days.includes(l.day ?? 0));
+    const allSlots = weeks.flatMap((week) => days.map((day) => ({ week, day })));
+
+    const themeId = selectedThemeId || themes[0]?.id || "";
+    const templateSteps = STEPS_TEMPLATES[templateName] || [];
+
+    try {
+      await Promise.all(targets.map((l) => backendApi.adminUpdatePrimaryLesson(l.id, { status: "archived" })));
+      await Promise.all(allSlots.map((slot) =>
+        backendApi.adminCreatePrimaryLesson({
+          academic_year_id: selectedYearId,
+          level: selectedLevel,
+          month: selectedMonth,
+          week: slot.week,
+          day: slot.day,
+          theme_id: themeId,
+          title: `Day ${slot.day} - ${templateName}`,
+          objectives: ["Introduce key theme vocabulary"],
+          vocabulary: ["cow", "farm"],
+          assessment_questions: ["Can you name the animal?"],
+          steps: templateSteps
+        })
+      ));
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+      toast({
+        title: "Range replaced",
+        description: `Archived ${targets.length} existing lesson(s) and recreated ${allSlots.length} slot(s) with "${templateName}".`
+      });
+      setSelectedLessonId(null);
+    } catch (err: any) {
+      toast({ title: "Failed to replace range", description: err.message, variant: "error" });
+    }
+  };
+
+  const handleBatchPublish = async (range: { week: number | null }) => {
+    const draftLessons = filteredLessons.filter((l) => {
+      if (range.week !== null) return l.week === range.week;
+      return true;
+    }).filter(l => l.status === "draft");
+
+    // The backend refuses to publish lessons with no steps.
+    const publishable = draftLessons.filter(l => l.steps && l.steps.length > 0);
+    const skipped = draftLessons.length - publishable.length;
+
+    if (publishable.length === 0) {
+      toast({
+        title: "Nothing to publish",
+        description: skipped > 0
+          ? "No draft lessons with classroom activities in this range."
+          : "No draft lessons in this range.",
+        variant: "error"
+      });
+      return;
+    }
+
+    try {
+      await Promise.all(publishable.map(l => backendApi.adminPublishPrimaryLesson(l.id)));
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+      toast({
+        title: "Published lessons",
+        description: skipped > 0
+          ? `Published ${publishable.length} lesson(s). Skipped ${skipped} with no activities.`
+          : `Published ${publishable.length} lesson(s).`
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to publish", description: err.message, variant: "error" });
+    }
+  };
+
+  const handleBatchArchive = async () => {
+    if (!batchArchiveRange) return;
+    const range = batchArchiveRange;
+    setBatchArchiveRange(null);
+
+    const targetLessons = filteredLessons.filter((l) => {
+      if (range.week !== null) return l.week === range.week;
+      return true;
+    });
+
+    if (targetLessons.length === 0) {
+      toast({ title: "Nothing to archive", description: "No lessons in this range.", variant: "error" });
+      return;
+    }
+
+    try {
+      await Promise.all(targetLessons.map(l => backendApi.adminUpdatePrimaryLesson(l.id, { status: "archived" })));
+      await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+      toast({ title: "Lessons archived", description: `Archived ${targetLessons.length} lesson(s).` });
+      setSelectedLessonId(null);
+    } catch (err: any) {
+      toast({ title: "Failed to archive", description: err.message, variant: "error" });
     }
   };
 
@@ -215,6 +409,8 @@ export function CurriculumPanel() {
         <button 
           onClick={() => {
             setTemplateSlot({ week, day });
+            setTemplateSlotRange(null);
+            setTemplateDailyFocus("");
             setIsTemplateDrawerOpen(true);
           }}
           className="flex items-center gap-1.5 text-xs text-slate-400 font-bold hover:text-blue-500 transition-colors"
@@ -229,12 +425,15 @@ export function CurriculumPanel() {
 
     let dotColor = "bg-slate-300";
     let statusLabel = "Draft";
+    let pillClass = "bg-amber-50 text-amber-600 border-amber-100";
     if (lesson.status === "published") {
       dotColor = "bg-emerald-500";
       statusLabel = "Published";
+      pillClass = "bg-emerald-50 text-emerald-600 border-emerald-100";
     } else if (hasMissingResource) {
       dotColor = "bg-rose-500";
       statusLabel = "Missing Resource";
+      pillClass = "bg-rose-50 text-rose-600 border-rose-100";
     } else if (lesson.status === "draft") {
       dotColor = "bg-amber-500";
       statusLabel = "Draft";
@@ -243,26 +442,37 @@ export function CurriculumPanel() {
     const isActive = selectedLessonId === lesson.id;
 
     return (
-      <div className="flex items-center justify-between w-full">
+      <div className="flex items-center justify-between w-full gap-2">
         <button 
           onClick={() => setSelectedLessonId(lesson.id)}
           className={`flex items-center gap-2 text-left truncate flex-1 ${isActive ? "text-blue-600 font-extrabold" : "text-slate-700 font-medium"}`}
         >
-          <span className={`h-3 w-3 rounded-full ${dotColor}`} />
-          <span className="truncate text-xs">{lesson.title || `Day ${day} Lesson`}</span>
+          <span className={`h-3 w-3 rounded-full shrink-0 ${dotColor}`} />
+          <span className="min-w-0">
+            <span className="block truncate text-xs">{lesson.title || `Day ${day} Lesson`}</span>
+            {lesson.daily_focus ? (
+              <span className="block truncate text-[9px] font-medium text-slate-400">{lesson.daily_focus}</span>
+            ) : null}
+          </span>
         </button>
-        <div className="flex items-center gap-1">
+        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${pillClass}`}>
+          {statusLabel}
+        </span>
+        <span className="shrink-0 text-[10px] font-bold text-slate-400">{(lesson.steps || []).length} steps</span>
+        <div className="flex items-center gap-0.5 shrink-0">
           <button 
             disabled={day === 1} 
             onClick={() => handleMoveDay(lesson, "up")}
-            className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+            className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+            title="Move to previous day"
           >
             <ArrowUp className="h-3.5 w-3.5" />
           </button>
           <button 
             disabled={day === 5} 
             onClick={() => handleMoveDay(lesson, "down")}
-            className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+            className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+            title="Move to next day"
           >
             <ArrowDown className="h-3.5 w-3.5" />
           </button>
@@ -312,9 +522,69 @@ export function CurriculumPanel() {
               ))}
             </select>
           </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Theme</span>
+            <select
+              value={selectedThemeId}
+              onChange={(e) => setSelectedThemeId(e.target.value)}
+              className="bg-transparent text-sm font-bold text-slate-800 border border-slate-200 rounded-xl px-2.5 py-1 focus:outline-none"
+            >
+              <option value="">All themes</option>
+              {themes.map((t) => (
+                <option key={t.id} value={t.id}>{t.emoji ? `${t.emoji} ` : ""}{t.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMonthMenuOpen(!monthMenuOpen)}
+              className="rounded-xl font-bold text-xs"
+            >
+              <ChevronDown className={`h-3.5 w-3.5 mr-1 transition-transform ${monthMenuOpen ? "rotate-180" : ""}`} />
+              Month Actions
+            </Button>
+            {monthMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg z-20 animate-in fade-in duration-150">
+                <button
+                  onClick={() => {
+                    setMonthMenuOpen(false);
+                    setTemplateSlot(null);
+                    setTemplateSlotRange({ week: null });
+                    setIsTemplateDrawerOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 text-left"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+                  Quick-Fill Month
+                </button>
+                <button
+                  onClick={() => {
+                    setMonthMenuOpen(false);
+                    handleBatchPublish({ week: null });
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 text-left"
+                >
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  Publish Month
+                </button>
+                <button
+                  onClick={() => {
+                    setMonthMenuOpen(false);
+                    setBatchArchiveRange({ week: null });
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 text-left"
+                >
+                  <Archive className="h-3.5 w-3.5 text-rose-500" />
+                  Archive Month
+                </button>
+              </div>
+            )}
+          </div>
           <Button
             variant={previewMode ? "default" : "ghost"}
             size="sm"
@@ -325,6 +595,44 @@ export function CurriculumPanel() {
             {previewMode ? "Exit Teacher View" : "Preview Month"}
           </Button>
         </div>
+      </div>
+
+      {/* Monthly theme banner */}
+      {selectedTheme ? (
+        <div className="relative overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+          {selectedTheme.hero_image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={selectedTheme.hero_image_url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : null}
+          <div className="relative bg-gradient-to-r from-slate-900/85 via-slate-900/60 to-slate-900/20 px-5 py-4">
+            <span className="text-[10px] font-black uppercase tracking-widest text-blue-300">Theme · {MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label}</span>
+            <h2 className="mt-0.5 text-lg font-black text-white">
+              {selectedTheme.emoji ? `${selectedTheme.emoji} ` : ""}{selectedTheme.name}
+            </h2>
+            <p className="text-xs text-slate-300">Monthly theme with its header image — lessons created here inherit it.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Month overview stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { label: "Empty Slots", value: emptyCount, tone: "text-slate-500 bg-slate-50 border-slate-200", hint: "Click any slot to add a day" },
+          { label: "Drafts", value: draftCount, tone: "text-amber-600 bg-amber-50 border-amber-100", hint: "Ready to publish" },
+          { label: "Published", value: publishedCount, tone: "text-emerald-600 bg-emerald-50 border-emerald-100", hint: "Live for teachers" },
+          { label: "Missing Resources", value: missingResourceCount, tone: "text-rose-600 bg-rose-50 border-rose-100", hint: "Attach printables" },
+          { label: "Filled Total", value: filledCount, tone: "text-blue-600 bg-blue-50 border-blue-100", hint: "Of 25 slots" }
+        ].map((stat) => (
+          <div key={stat.label} className={`rounded-2xl border px-4 py-3 ${stat.tone}`}>
+            <div className="text-2xl font-black">{stat.value}</div>
+            <div className="text-[10px] font-black uppercase tracking-wider">{stat.label}</div>
+            <div className="mt-0.5 text-[10px] opacity-70">{stat.hint}</div>
+          </div>
+        ))}
       </div>
 
       {previewMode ? (
@@ -365,14 +673,67 @@ export function CurriculumPanel() {
         <div className="grid gap-6 md:grid-cols-12 xl:items-start">
           {/* Left Column: Curriculum Map */}
           <div className="md:col-span-7 xl:col-span-8 border border-slate-100 bg-white p-5 rounded-2xl shadow-sm space-y-4">
-            <h2 className="text-md font-extrabold text-slate-800">
-              Curriculum Map ({MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label})
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-md font-extrabold text-slate-800">
+                Curriculum Map ({MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label})
+              </h2>
+              {emptyCount > 0 && (
+                <button
+                  onClick={() => {
+                    setTemplateSlot(null);
+                    setTemplateSlotRange({ week: null });
+                    setIsTemplateDrawerOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition-colors"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Quick-Fill {emptyCount} empty slot{emptyCount === 1 ? "" : "s"}
+                </button>
+              )}
+            </div>
+
+            {filledCount === 0 && (
+              <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-xs leading-relaxed text-slate-600">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                <p>
+                  <strong className="text-slate-800">This month is empty.</strong> Use <strong>Month Actions → Quick-Fill Month</strong> (top
+                  right) to prefill all 25 slots with a routine template, or click any <strong>Empty Slot</strong> below to add a single day.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-4">
               {[1, 2, 3, 4, 5].map((weekNum) => (
                 <div key={weekNum} className="border border-slate-100 rounded-xl p-3.5 space-y-3 bg-slate-50/50">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Week {weekNum}</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Week {weekNum}</h3>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                      <button
+                        onClick={() => {
+                          setTemplateSlot(null);
+                          setTemplateSlotRange({ week: weekNum });
+                          setIsTemplateDrawerOpen(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        Quick-Fill
+                      </button>
+                      <span className="text-slate-300">·</span>
+                      <button
+                        onClick={() => handleBatchPublish({ week: weekNum })}
+                        className="text-emerald-600 hover:text-emerald-700 hover:underline"
+                      >
+                        Publish All
+                      </button>
+                      <span className="text-slate-300">·</span>
+                      <button
+                        onClick={() => setBatchArchiveRange({ week: weekNum })}
+                        className="text-rose-500 hover:text-rose-600 hover:underline"
+                      >
+                        Archive All
+                      </button>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     {[1, 2, 3, 4, 5].map((dayNum) => {
                       const lesson = filteredLessons.find(l => l.week === weekNum && l.day === dayNum);
@@ -407,7 +768,15 @@ export function CurriculumPanel() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400 font-bold">Topic</span>
-                    <span className="text-slate-800 font-bold">{themes.flatMap(t => t.topics).find(tp => tp.id === selectedLesson.topic_id)?.name || "None"}</span>
+                    <span className="text-slate-800 font-bold">{selectedTopic?.name || "None"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-bold">Sub Theme</span>
+                    <span className="text-slate-800 font-bold">{selectedTopic?.subtheme || "—"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-bold">Today's Focus</span>
+                    <span className="text-right text-slate-800 font-bold">{selectedLesson.daily_focus || "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400 font-bold">Total Duration</span>
@@ -495,20 +864,39 @@ export function CurriculumPanel() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800">Add Teaching Day</h3>
+              <h3 className="text-lg font-bold text-slate-800">
+                {templateSlotRange
+                  ? (templateSlotRange.week !== null ? `Quick-Fill Week ${templateSlotRange.week}` : "Quick-Fill Month")
+                  : "Add Teaching Day"}
+              </h3>
               <button onClick={() => setIsTemplateDrawerOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-              Select a lesson template to prefill the classroom activities and objectives for this slot:
+              {templateSlotRange
+                ? "Select a lesson template. Every empty slot in the target range will be created and prefilled with it:"
+                : "Select a lesson template to prefill the classroom activities and objectives for this slot:"}
             </p>
+            {!templateSlotRange && (
+              <div className="mt-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Today's Focus (optional)</label>
+                <input
+                  type="text"
+                  value={templateDailyFocus}
+                  onChange={(e) => setTemplateDailyFocus(e.target.value)}
+                  placeholder="e.g. Recognise and name farm animals"
+                  className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
             <div className="mt-4 space-y-2">
               {[
                 { name: "Standard Routine", desc: "Prefilled Arrival, Circle Time, Sensory Activity, Cleanup." },
                 { name: "Story and Activity Day", desc: "Warm-up, Theme Storytelling, Roleplay Activity." },
                 { name: "Worksheet-focused Day", desc: "Introduction, Worksheet Practice, Color/Trace." },
                 { name: "Assessment and Recap Day", desc: "Checkpoint Worksheets, reflection discussions." },
+                { name: "JKSCERT Full Day", desc: "JKSCERT routine — Circle Time, Free Play, Theme/Numeracy, Snack, Music, Story, Art & Craft, Lunch, Outdoor Play." },
                 { name: "Blank Day", desc: "Start with an empty classroom steps editor." }
               ].map((tpl) => (
                 <button
@@ -536,6 +924,42 @@ export function CurriculumPanel() {
             <div className="mt-6 flex justify-end gap-2.5">
               <Button variant="outline" onClick={() => setArchiveConfirmOpen(false)} className="rounded-xl border font-bold">Cancel</Button>
               <Button onClick={handleArchiveDay} className="rounded-xl font-bold text-white bg-rose-500 hover:bg-rose-600">Archive Day</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Archive Confirmation Modal */}
+      {batchArchiveRange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-800">
+              {batchArchiveRange.week !== null ? `Archive Week ${batchArchiveRange.week}?` : "Archive Entire Month?"}
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-500 mt-2">
+              Are you sure you want to archive all {batchArchiveRange.week !== null ? `lessons in Week ${batchArchiveRange.week}` : "lessons in this month"}? This will remove them from the active map, but preserve their historical records for previous school years.
+            </p>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <Button variant="outline" onClick={() => setBatchArchiveRange(null)} className="rounded-xl border font-bold">Cancel</Button>
+              <Button onClick={handleBatchArchive} className="rounded-xl font-bold text-white bg-rose-500 hover:bg-rose-600">Archive All</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Replace Range Confirmation Modal */}
+      {replaceRangeConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-800">
+              Replace {replaceRangeConfirm.occupiedCount} lesson{replaceRangeConfirm.occupiedCount === 1 ? "" : "s"} with "{replaceRangeConfirm.templateName}"?
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-500 mt-2">
+              Every slot in this {replaceRangeConfirm.range.week !== null ? `week (Week ${replaceRangeConfirm.range.week})` : "month"} already has a lesson. To apply the new template, the existing lesson{replaceRangeConfirm.occupiedCount === 1 ? " is" : "s are"} archived (kept in history for previous school years) and the range is recreated with "{replaceRangeConfirm.templateName}".
+            </p>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <Button variant="outline" onClick={() => setReplaceRangeConfirm(null)} className="rounded-xl border font-bold">Cancel</Button>
+              <Button onClick={handleReplaceRangeWithTemplate} className="rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700">Replace All</Button>
             </div>
           </div>
         </div>

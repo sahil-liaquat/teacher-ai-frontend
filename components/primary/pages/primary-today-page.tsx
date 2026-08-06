@@ -157,11 +157,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   // The teacher's selected theme name resolved to its curriculum row. The
   // server matches on theme_id, so the picker's display string is not enough.
   const { data: themes = [] } = useQuery({
-    queryKey: ["primary-curriculum-themes", context.level, context.subject],
+    queryKey: ["primary-curriculum-themes", context.level, context.subject, context.language],
     queryFn: () =>
       backendApi.primaryCurriculumThemes({
         level: PRIMARY_LEVEL_TO_API[context.level],
         subject: context.subject ?? undefined,
+        language: context.language ?? undefined,
       }),
     enabled: !!context.level && !!context.subject,
   });
@@ -169,6 +170,17 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const selectedThemeId = useMemo(
     () => themes.find((t) => t.name === context.theme)?.id ?? "",
     [themes, context.theme]
+  );
+
+  // The theme the DAY actually pins (vs. whatever the context currently says)
+  // — drives the hero/emoji/colour presentation on the Day Overview card.
+  const dayTheme = useMemo(
+    () => (dayRecord?.theme_id ? themes.find((t) => t.id === dayRecord.theme_id) ?? null : null),
+    [themes, dayRecord?.theme_id],
+  );
+  const dayTopic = useMemo(
+    () => (dayTheme ? dayTheme.topics.find((t) => t.id === dayRecord?.topic_id) ?? null : null),
+    [dayTheme, dayRecord?.topic_id],
   );
 
   const runGenerate = async (options: {
@@ -202,11 +214,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       themeId = overrideContext
         ? (
             await queryClient.fetchQuery({
-              queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject],
+              queryKey: ["primary-curriculum-themes", ctx.level, ctx.subject, ctx.language],
               queryFn: () =>
                 backendApi.primaryCurriculumThemes({
                   level: PRIMARY_LEVEL_TO_API[ctx.level],
                   subject: ctx.subject ?? undefined,
+                  language: ctx.language ?? undefined,
                 }),
             })
           ).find((t) => t.name === ctx.theme)?.id ?? ""
@@ -690,13 +703,48 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-[22px] border border-blue-100 bg-blue-50/20 p-5 shadow-sm">
               <span className="flex items-center gap-1.5 text-xs font-black text-blue-600">📖 Day Overview</span>
-              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{context.theme || "Today's learning"}</h4>
+              {dayTheme?.hero_image_url ? (
+                <div className="relative mt-3 h-20 overflow-hidden rounded-xl">
+                  <img
+                    src={dayTheme.hero_image_url}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent" />
+                  <span className="absolute bottom-1.5 left-2.5 text-xs font-black text-white drop-shadow">
+                    {dayTheme.emoji ? `${dayTheme.emoji} ` : ""}{dayTheme.name}
+                  </span>
+                </div>
+              ) : null}
+              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{dayTheme?.name || context.theme || "Today's learning"}</h4>
+              {dayTopic?.subtheme && (
+                <p className="mt-1 text-xs font-bold text-blue-600">
+                  Sub Theme: {dayTopic.subtheme}
+                </p>
+              )}
+              {dayRecord?.daily_focus && (
+                <div className="mt-2 rounded-lg bg-indigo-50/50 border border-indigo-100/50 px-3 py-1.5 text-xs font-bold text-indigo-700">
+                  Daily Focus: {dayRecord.daily_focus}
+                </div>
+              )}
               <p className="mt-2 text-xs font-semibold text-slate-400 leading-normal">{overview}</p>
             </div>
 
             <div className="rounded-[22px] border border-amber-100 bg-amber-50/10 p-5 shadow-sm">
-              <span className="flex items-center gap-1.5 text-xs font-black text-amber-700">🎯 Learning Objectives</span>
-              <div className="mt-3 space-y-2">
+              <span className="flex items-center gap-1.5 text-xs font-black text-amber-700">🎯 Outcomes & Objectives</span>
+              {dayRecord?.learning_outcomes && dayRecord.learning_outcomes.length > 0 && (
+                <div className="mt-3 space-y-2 border-b border-amber-100/50 pb-3 mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">Expected Outcomes</p>
+                  {dayRecord.learning_outcomes.map((lo: any, i: number) => (
+                    <div key={lo.id || i} className="flex items-start gap-2 text-xs font-bold text-slate-900">
+                      <span className="text-amber-500 mt-0.5">★</span>
+                      <span>{lo.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">Lesson Objectives</p>
                 {objectivesList.map((obj, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs font-semibold text-slate-700">
                     <span className="text-emerald-600 mt-0.5">✓</span>

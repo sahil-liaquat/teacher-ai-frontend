@@ -4,8 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { backendApi } from "@/lib/api";
 import {
-  ArrowLeft, ArrowRight, BookOpen, ChevronDown, ClipboardCheck, FileText,
+  ArrowRight, BookOpen, ChevronDown, ClipboardCheck, FileText,
   Search, Sparkles, BarChart3, NotebookPen, Puzzle, CircleHelp, Download, Eye, X, Pencil,
 } from "lucide-react";
 import { type PrimaryResource } from "@/lib/primary-resource-adapter";
@@ -14,6 +16,7 @@ import { useSavedResourceIds, useToggleSavePrimaryResource } from "@/lib/primary
 import { usePrimaryResources, USE_BACKEND_CATALOGUE } from "@/lib/use-primary-resources";
 import { PRIMARY_LEVELS, PRIMARY_LANGUAGES, generatorHref, quickIdeaText, themeContent, themesForSubject, subjectsForClass, skillsForContext, type QuickIdeaKind } from "@/lib/primary-theme-content";
 import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
+import { PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { cn } from "@/lib/utils";
 
 export type PrimaryPage = "home" | "today" | "library" | "create" | "saved" | "settings" | "coverage" | "roster";
@@ -126,6 +129,18 @@ export function TopicBar({ action = "Change Topic", href, notify }: { action?: s
     return skillsForContext(draft.level, draft.subject, draft.theme);
   }, [draft.level, draft.subject, draft.theme]);
 
+  // Curriculum rows behind the picker's display names — used to keep
+  // themeId/topicId in the saved context in sync with what was picked.
+  const themesQuery = useQuery({
+    queryKey: ["primary-curriculum-themes", draft.level, draft.subject, draft.language],
+    queryFn: () => backendApi.primaryCurriculumThemes({
+      level: PRIMARY_LEVEL_TO_API[draft.level],
+      subject: draft.subject || undefined,
+      language: draft.language || undefined,
+    }),
+    enabled: !!draft.level && !!draft.subject,
+  });
+
   const onLevelChange = (level: string) => {
     const validSubjects = subjectsForClass(level);
     const subject = validSubjects.includes(draft.subject) ? draft.subject : validSubjects[0];
@@ -164,11 +179,18 @@ export function TopicBar({ action = "Change Topic", href, notify }: { action?: s
 
   const save = async () => {
     setSaving(true);
+    // The context keeps ids so generation and theme visuals work even when
+    // the picker changed names — resolve the picked theme/topic to their
+    // curriculum rows (if they exist) so `themeId`/`topicId` stay correct.
+    const themeRow = themesQuery.data?.find((t) => t.name === (draft.theme || context.theme)) ?? null;
+    const topicRow = themeRow?.topics.find((t) => t.name === (draft.topic || draft.theme || context.topic)) ?? null;
     const synced = await updateContext({
       level: draft.level,
       subject: draft.subject.trim() || context.subject,
       theme: draft.theme || context.theme,
+      themeId: themeRow?.id ?? context.themeId,
       topic: draft.topic || draft.theme || context.topic,
+      topicId: topicRow?.id ?? context.topicId,
       skill: draft.skill || undefined,
       language: draft.language,
     });
@@ -212,7 +234,6 @@ export function Resources({
   const { context, updateContext } = usePrimaryTeachingContext();
   const router = useRouter();
   const track = useTrackActivity();
-  const content = useMemo(() => themeContent(context.theme, context.subject), [context.theme, context.subject]);
   const searchParams = useSearchParams();
   const isSavedView = isSavedDefault || searchParams.get("view") === "saved";
   const initialCategory = RESOURCE_TABS.find((category) => resourceCategorySlug(category) === resourceCategory) ?? "All Resources";
@@ -570,7 +591,7 @@ export function AiStudio({ notify }: { notify: (s: string) => void }) {
   const track = useTrackActivity();
   const content = useMemo(() => themeContent(context.theme, context.subject), [context.theme, context.subject]);
   const { events } = usePrimaryActivityHistory(100);
-  const options = [["Generate Lesson Plan", "Create detailed, NEP 2020 aligned lesson plans.", ClipboardCheck, generatorHref("/dashboard/lesson-plans/new", context)], ["Generate Worksheet", "Create engaging worksheets in seconds.", Pencil, generatorHref("/dashboard/worksheets/new", context)], ["Generate Quiz", "Create interactive quizzes and assessments.", CircleHelp, "/primary/assessment"], ["Generate Activity", "Fun classroom activities for every learning objective.", Puzzle, "/dashboard/activity-generator"], ["Generate Teaching Notes", "Quick notes, key points and teaching tips.", NotebookPen, "/dashboard/notes-generator"], ["Generate Presentation", "Beautiful slides for your lessons in seconds.", BarChart3, "/dashboard/presentation-generator"], ["Generate Story", "Engaging stories with morals and illustrations.", BookOpen, "/dashboard/activity-generator"], ["Generate Classroom Games", "Interactive games for active learning.", Sparkles, "/dashboard/activity-generator"]] as const;
+  const options = [["Generate Lesson Plan", "Create detailed, NEP 2020 aligned lesson plans.", ClipboardCheck, generatorHref("/dashboard/lesson-plans/new", context)], ["Generate Worksheet", "Create engaging worksheets in seconds.", Pencil, generatorHref("/dashboard/worksheets/new", context)], ["Generate Activity", "Fun classroom activities for every learning objective.", Puzzle, "/dashboard/activity-generator"], ["Generate Teaching Notes", "Quick notes, key points and teaching tips.", NotebookPen, "/dashboard/notes-generator"], ["Generate Presentation", "Beautiful slides for your lessons in seconds.", BarChart3, "/dashboard/presentation-generator"], ["Generate Story", "Engaging stories with morals and illustrations.", BookOpen, "/dashboard/activity-generator"], ["Generate Classroom Games", "Interactive games for active learning.", Sparkles, "/dashboard/activity-generator"]] as const;
   const ideas = [
     ["warmup", "🎵", "Suggest a warm-up"],
     ["activity", "🧩", "Suggest a classroom activity"],

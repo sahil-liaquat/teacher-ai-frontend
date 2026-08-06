@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
 const STEP_TYPE_OPTIONS = [
+  { value: "routine", label: "Routine" },
+  { value: "classroom_activity", label: "Classroom Activity" },
   { value: "circle_time", label: "Circle Time" },
   { value: "story", label: "Story" },
   { value: "flashcards", label: "Flashcards" },
@@ -38,6 +40,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
   
   // Lesson form states
   const [title, setTitle] = useState<string>("");
+  const [dailyFocus, setDailyFocus] = useState<string>("");
   const [themeId, setThemeId] = useState<string>("");
   const [topicId, setTopicId] = useState<string>("");
   const [dayNumber, setDayNumber] = useState<number>(1);
@@ -81,6 +84,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
     backendApi.adminPrimaryLesson(lessonId)
       .then((data) => {
         setTitle(data.title || "");
+        setDailyFocus(data.daily_focus || "");
         setThemeId(data.theme_id || "");
         setTopicId(data.topic_id || "");
         setDayNumber(data.day || 1);
@@ -133,10 +137,10 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
       try {
         await backendApi.adminUpdatePrimaryLesson(lessonId, {
           title,
+          daily_focus: dailyFocus,
           theme_id: themeId,
           topic_id: topicId || null,
           day: dayNumber,
-          language,
           objectives,
           vocabulary,
           homework,
@@ -165,7 +169,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
 
     return () => clearTimeout(timer);
   }, [
-    title, themeId, topicId, dayNumber, language, 
+    title, dailyFocus, themeId, topicId, dayNumber, language, 
     objectives, vocabulary, homework, parentUpdate, 
     assessmentQuestions, steps, lessonId
   ]);
@@ -290,9 +294,9 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
       toast({ title: "Cannot publish", description: errors[0], variant: "error" });
       return;
     }
-    
+
     try {
-      await backendApi.adminUpdatePrimaryLesson(lessonId, { status: "published" });
+      await backendApi.adminPublishPrimaryLesson(lessonId);
       toast({ title: "Published Day", description: "Successfully published curriculum map updates." });
       onClose();
     } catch (err: any) {
@@ -366,6 +370,18 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
             <div className="border border-slate-100 bg-white p-6 rounded-2xl shadow-xs space-y-5">
               <h3 className="text-sm font-extrabold text-slate-800 border-b pb-2">Step 1: Day Details</h3>
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5 sm:col-span-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Today's Focus</label>
+                  <input
+                    type="text"
+                    value={dailyFocus}
+                    onChange={(e) => setDailyFocus(e.target.value)}
+                    placeholder="e.g. Recognise and name farm animals and their sounds"
+                    className="border border-blue-200 bg-blue-50/40 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:bg-white"
+                  />
+                  <span className="text-[10px] text-slate-400">The daily topic teachers see on the classroom dashboard, below the week's sub-theme.</span>
+                </div>
+
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase">Day Title</label>
                   <input
@@ -410,12 +426,13 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase">Language</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase">Language (from theme)</label>
                   <input
                     type="text"
                     value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    disabled
+                    title="Language is set on the theme in Step 1"
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500 focus:outline-none"
                   />
                 </div>
 
@@ -842,6 +859,12 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
                 <div className="border-b border-slate-800 pb-4">
                   <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Today's Classroom Plan</div>
                   <h2 className="text-lg font-bold mt-1">{title || "Untitled Lesson"}</h2>
+                  {dailyFocus ? (
+                    <p className="text-xs text-slate-300 mt-1.5">
+                      <span className="text-blue-400 font-black uppercase tracking-wider text-[10px]">Today's Focus: </span>
+                      {dailyFocus}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">

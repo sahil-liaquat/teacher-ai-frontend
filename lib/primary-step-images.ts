@@ -25,6 +25,12 @@ export const PRIMARY_STEP_IMAGES: Record<PrimaryStepType, string> = {
   game: `${STEP_IMAGE_ROOT}/game.webp`,
   reflection: `${STEP_IMAGE_ROOT}/reflection.webp`,
   parent_note: `${STEP_IMAGE_ROOT}/parent-note.webp`,
+  arrival_routine: `${STEP_IMAGE_ROOT}/routine.webp`,
+  free_play: `${STEP_IMAGE_ROOT}/game.webp`,
+  story_rhyme_picture_talk: `${STEP_IMAGE_ROOT}/story-or-rhyme.webp`,
+  concept_exploration: `${STEP_IMAGE_ROOT}/introduction.webp`,
+  classroom_activity_game: `${STEP_IMAGE_ROOT}/classroom-activity.webp`,
+  practice: `${STEP_IMAGE_ROOT}/worksheet.webp`,
 };
 
 export function primaryStepImage(stepType?: string | null): string | undefined {

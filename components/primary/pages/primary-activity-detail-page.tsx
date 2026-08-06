@@ -67,6 +67,12 @@ const STEP_PRESENTATION: Record<string, StepPresentation> = {
   game: { label: "Game", emoji: "🎲", subtitle: "Practise through playful turn-taking and teamwork.", learningArea: "Social Learning", gradient: "from-sky-50 via-white to-indigo-50", numberTone: "bg-sky-100 text-sky-700" },
   reflection: { label: "Reflection", emoji: "💛", subtitle: "Pause, remember and celebrate today’s learning.", learningArea: "Metacognition", gradient: "from-emerald-50 via-white to-teal-50", numberTone: "bg-emerald-100 text-emerald-700" },
   parent_note: { label: "Parent Note", emoji: "💌", subtitle: "Share today’s learning and a simple home connection.", learningArea: "Family Partnership", gradient: "from-amber-50 via-white to-orange-50", numberTone: "bg-amber-100 text-amber-700" },
+  arrival_routine: { label: "Arrival and Routine", emoji: "🎒", subtitle: "Welcome learners and establish a smooth start to the day.", learningArea: "Routine & Independence", gradient: "from-sky-50 via-white to-cyan-50", numberTone: "bg-sky-100 text-sky-700" },
+  free_play: { label: "Free Play", emoji: "🧸", subtitle: "Encourage self-directed exploration and social interactions.", learningArea: "Social Development", gradient: "from-violet-50 via-white to-fuchsia-50", numberTone: "bg-violet-100 text-violet-700" },
+  story_rhyme_picture_talk: { label: "Story, Rhyme or Picture Talk", emoji: "🗣️", subtitle: "Language development, listening skills, and critical thinking.", learningArea: "Communication & Language", gradient: "from-amber-50 via-white to-orange-50", numberTone: "bg-amber-100 text-amber-700" },
+  concept_exploration: { label: "Concept Exploration", emoji: "🔍", subtitle: "Explore today's core focus with concrete objects or discussion.", learningArea: "Concept Discovery", gradient: "from-emerald-50 via-white to-teal-50", numberTone: "bg-emerald-100 text-emerald-700" },
+  classroom_activity_game: { label: "Classroom Activity or Game", emoji: "🧩", subtitle: "Active, collaborative learning through play and creation.", learningArea: "Collaboration & Application", gradient: "from-pink-50 via-white to-rose-50", numberTone: "bg-pink-100 text-pink-700" },
+  practice: { label: "Practice", emoji: "✏️", subtitle: "Reinforce literacy, numeracy or creative skills.", learningArea: "Early Practice", gradient: "from-teal-50 via-white to-emerald-50", numberTone: "bg-teal-100 text-teal-700" },
 };
 
 const DEFAULT_PRESENTATION: StepPresentation = {
@@ -175,8 +181,25 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   const previousActivity = currentIndex > 0 ? dayActivities[currentIndex - 1] : undefined;
   const nextActivity = currentIndex >= 0 ? dayActivities[currentIndex + 1] : undefined;
 
+  const requiredIds = useMemo(() => {
+    return Array.isArray(activity?.context?.required_resource_ids)
+      ? activity.context.required_resource_ids
+      : activity?.resource_ids || [];
+  }, [activity]);
+
+  const optionalIds = useMemo(() => {
+    return Array.isArray(activity?.context?.optional_resource_ids)
+      ? activity.context.optional_resource_ids
+      : [];
+  }, [activity]);
+
+  const allResourceIds = useMemo(() => {
+    const set = new Set([...requiredIds, ...optionalIds]);
+    return Array.from(set);
+  }, [requiredIds, optionalIds]);
+
   const linkedResourceQueries = useQueries({
-    queries: resourceIds.map((id) => ({
+    queries: allResourceIds.map((id) => ({
       queryKey: ["primary-resource", id],
       queryFn: async () => {
         try {
@@ -189,10 +212,29 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
       retry: 0,
     })),
   });
-  const linkedResources = useMemo(
-    () => linkedResourceQueries.map((query) => query.data).filter((item): item is PrimaryResource => Boolean(item)),
-    [linkedResourceQueries],
-  );
+
+  const resourceMap = useMemo(() => {
+    const map = new Map<string, PrimaryResource>();
+    linkedResourceQueries.forEach((q) => {
+      if (q.data) map.set(q.data.id, q.data);
+    });
+    return map;
+  }, [linkedResourceQueries]);
+
+  const requiredResources = useMemo(() => {
+    return requiredIds.map((id) => resourceMap.get(id)).filter((r): r is PrimaryResource => Boolean(r));
+  }, [requiredIds, resourceMap]);
+
+  const optionalResources = useMemo(() => {
+    return optionalIds.map((id) => resourceMap.get(id)).filter((r): r is PrimaryResource => Boolean(r));
+  }, [optionalIds, resourceMap]);
+
+  const missingResourceCount = useMemo(() => {
+    if (linkedResourceQueries.some((q) => q.isPending)) return 0;
+    const missing = allResourceIds.filter((id) => !resourceMap.has(id));
+    return missing.length;
+  }, [allResourceIds, resourceMap, linkedResourceQueries]);
+
   const contextSubject = activity ? contextString(activity, "subject", "") : "";
   const resourceCandidatesQuery = useQuery({
     queryKey: ["primary-resources-candidates", contextSubject],
@@ -393,19 +435,118 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
             </form>
           ) : (
             <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-              <header className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Teach this step</p><h2 className="mt-1 text-xl font-black">Activity guide</h2></div><button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#e8e7fb] bg-[#faf9ff] px-3 py-2 text-xs font-black text-[#5731d8]"><Edit3 className="h-4 w-4" /> Edit</button></header>
+              <header className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Teach this step</p><h2 className="mt-1 text-xl font-black">Activity guide (Teacher Speech)</h2></div><button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#e8e7fb] bg-[#faf9ff] px-3 py-2 text-xs font-black text-[#5731d8]"><Edit3 className="h-4 w-4" /> Edit</button></header>
               {instructions.length ? <ol className="mt-5 grid gap-3 sm:grid-cols-2">{instructions.map((line, index) => <li key={`${line}-${index}`} className="flex min-h-[94px] gap-3 rounded-2xl border border-[#ecebf7] bg-gradient-to-br from-white to-[#faf9ff] p-4"><span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black", presentation.numberTone)}>{index + 1}</span><div><b className="text-sm text-[#171747]">{index === 0 ? "Let’s begin" : `Step ${index + 1}`}</b><p className="mt-1 text-xs font-medium leading-5 text-[#596083]">{line}</p></div></li>)}</ol> : <button onClick={() => setEditing(true)} className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-5 text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-xl shadow-sm">✍️</span><span><b className="block text-sm">Add teaching instructions</b><small className="mt-1 block font-semibold text-slate-500">Write the sequence once; it will be ready each time this activity opens.</small></span></button>}
+            </section>
+          )}
+
+          {activity.context.child_action && activity.context.child_action.length > 0 && (
+            <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+              <header className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">Child Action</p>
+                  <h2 className="mt-1 text-xl font-black">What children do</h2>
+                </div>
+              </header>
+              <ul className="mt-5 list-disc pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
+                {activity.context.child_action.map((act: string, idx: number) => (
+                  <li key={idx}>{act}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {activity.context.transition && (
+            <section className="rounded-[24px] border border-violet-100 bg-violet-50/10 p-5 shadow-sm sm:p-6">
+              <header className="flex items-center gap-2">
+                <span className="text-xl">🔄</span>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-700">Transition Guidance</p>
+                  <h2 className="text-sm font-black text-violet-900 mt-0.5">Moving to the next block</h2>
+                </div>
+              </header>
+              <p className="mt-3 text-xs font-semibold text-[#4f5680] leading-normal">{activity.context.transition}</p>
             </section>
           )}
 
           <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
             <header><p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Ready to use</p><h2 className="mt-1 text-xl font-black">Learning resources</h2></header>
-            {linkedResources.length ? <div className="mt-5 grid gap-3 sm:grid-cols-2">{linkedResources.map((resource, index) => <article key={resource.id} className={cn("overflow-hidden rounded-2xl border border-[#e8e7fb] bg-[#fafcff]", index === 0 && "sm:col-span-2")}><div className="flex items-center gap-4 p-4">{resource.thumbnailUrl ? <img src={resource.thumbnailUrl} alt="" className={cn("rounded-xl object-cover", index === 0 ? "h-24 w-32" : "h-16 w-20")} /> : <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-[#f1edff] text-3xl">{resourceEmoji(resource)}</span>}<div className="min-w-0 flex-1"><small className="font-black uppercase tracking-wider text-[#6e41f5]">{resource.category}</small><h3 className="mt-1 truncate text-sm font-black">{resource.title}</h3><p className="mt-1 text-xs font-semibold text-slate-400">{resource.fileType || "Classroom resource"}</p><div className="mt-3 flex gap-2"><a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6e41f5] px-3 py-1.5 text-[11px] font-black text-white"><ExternalLink className="h-3.5 w-3.5" /> Open</a><a href={resource.fileUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#4b3e8d]"><Download className="h-3.5 w-3.5" /> Download</a></div></div></div></article>)}</div> : <div className="mt-5 rounded-2xl border border-dashed border-[#d8d3ef] bg-[#faf9ff] p-6 text-center"><span className="text-3xl">📚</span><h3 className="mt-2 text-sm font-black">No resources attached yet</h3><p className="mt-1 text-xs font-semibold text-slate-500">Edit the activity to link items from the Primary resource catalogue.</p><button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#6e41f5] shadow-sm ring-1 ring-[#e8e7fb]">Choose resources</button></div>}
+            {missingResourceCount > 0 && (
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
+                {missingResourceCount} linked resource{missingResourceCount > 1 ? "s" : ""} {missingResourceCount > 1 ? "were" : "was"} removed from the catalog — ask your admin to re-link it in the curriculum.
+              </p>
+            )}
+            {requiredResources.length || optionalResources.length ? (
+              <div className="mt-5 space-y-6">
+                {requiredResources.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-rose-500 mb-3 flex items-center gap-1.5">📌 Required Materials</h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {requiredResources.map((resource, index) => (
+                        <article key={resource.id} className="overflow-hidden rounded-2xl border border-rose-100 bg-rose-50/5 p-4 flex items-center gap-4">
+                          {resource.thumbnailUrl ? (
+                            <img src={resource.thumbnailUrl} alt="" className="h-16 w-20 rounded-xl object-cover shrink-0" />
+                          ) : (
+                            <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-rose-50 text-3xl">{resourceEmoji(resource)}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <small className="font-black uppercase tracking-wider text-rose-600">{resource.category}</small>
+                            <h4 className="mt-0.5 truncate text-sm font-black">{resource.title}</h4>
+                            <div className="mt-2 flex gap-2">
+                              <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6e41f5] px-3 py-1.5 text-[11px] font-black text-white"><ExternalLink className="h-3.5 w-3.5" /> Open</a>
+                              <a href={resource.fileUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#4b3e8d]"><Download className="h-3.5 w-3.5" /> Download</a>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {optionalResources.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">🧩 Optional / Extension Resources</h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {optionalResources.map((resource) => (
+                        <article key={resource.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/20 p-4 flex items-center gap-4">
+                          {resource.thumbnailUrl ? (
+                            <img src={resource.thumbnailUrl} alt="" className="h-16 w-20 rounded-xl object-cover shrink-0" />
+                          ) : (
+                            <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-slate-100 text-3xl">{resourceEmoji(resource)}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <small className="font-black uppercase tracking-wider text-slate-600">{resource.category}</small>
+                            <h4 className="mt-0.5 truncate text-sm font-black">{resource.title}</h4>
+                            <div className="mt-2 flex gap-2">
+                              <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6e41f5] px-3 py-1.5 text-[11px] font-black text-white"><ExternalLink className="h-3.5 w-3.5" /> Open</a>
+                              <a href={resource.fileUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#4b3e8d]"><Download className="h-3.5 w-3.5" /> Download</a>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-2xl border border-dashed border-[#d8d3ef] bg-[#faf9ff] p-6 text-center">
+                <span className="text-3xl">📚</span>
+                <h3 className="mt-2 text-sm font-black">No resources attached yet</h3>
+                <p className="mt-1 text-xs font-semibold text-slate-500">Edit the activity to link items from the Primary resource catalogue.</p>
+                <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#6e41f5] shadow-sm ring-1 ring-[#e8e7fb]">Choose resources</button>
+              </div>
+            )}
           </section>
 
           {sectionId && (students.data || []).length > 0 && <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6"><header className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><UsersRound className="h-5 w-5" /></span><div><h2 className="text-lg font-black">How did each child do?</h2><p className="text-xs font-semibold text-slate-400">Tap a rating to capture progress for this activity.</p></div></header><ul className="mt-5 grid gap-2 sm:grid-cols-2">{(students.data || []).map((student: PrimaryStudent) => <li key={student.id} className="rounded-xl border border-[#ecebf7] p-3"><b className="text-xs">{student.code}</b><div className="mt-2 flex flex-wrap gap-1.5">{OBSERVATION_RATINGS.map((rating) => { const active = ratingByStudent[student.id] === rating; const tone = ratingTone(rating); return <button key={rating} type="button" disabled={rateChild.isPending} onClick={() => rateChild.mutate({ studentId: student.id, rating })} className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold", active ? `${tone.chip} ${tone.text}` : "border-[#e8e7fb] bg-white text-[#596083]")}>{RATING_LABELS[rating]}</button>; })}</div></li>)}</ul></section>}
 
           <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+            {activity.context.observation_point && (
+              <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
+                <span className="flex items-center gap-1.5 text-xs font-black text-amber-800">🧐 Observation Focus</span>
+                <p className="mt-1 text-xs font-semibold text-slate-700 leading-normal">{activity.context.observation_point}</p>
+              </div>
+            )}
             <div className="grid gap-4 md:grid-cols-2"><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#6e41f5]" /> Classroom observations</span><textarea value={observation} onChange={(event) => { setObservation(event.target.value); localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What did you notice about learning?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Teacher notes</span><textarea value={notes} onChange={(event) => { setNotes(event.target.value); localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What should you remember for next time?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label></div><button onClick={saveNotes} disabled={savingNotes} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-2.5 text-xs font-black text-white disabled:opacity-50"><Save className="h-4 w-4" />{savingNotes ? "Saving…" : "Save notes & observations"}</button>
           </section>
 

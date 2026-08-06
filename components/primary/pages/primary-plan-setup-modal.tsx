@@ -54,8 +54,8 @@ export default function PrimaryPlanSetupModal({
   onSubmit,
 }: Props) {
   const [level, setLevel] = useState(initialLevel);
-  const [subject, setSubject] = useState(initialSubject);
   const [themeId, setThemeId] = useState("");
+  const [subtheme, setSubtheme] = useState("");
   const [topicId, setTopicId] = useState("");
 
   // Re-seed from the teacher's saved context every time the modal opens, so
@@ -63,10 +63,10 @@ export default function PrimaryPlanSetupModal({
   useEffect(() => {
     if (!open) return;
     setLevel(initialLevel);
-    setSubject(initialSubject);
     setThemeId("");
+    setSubtheme("");
     setTopicId("");
-  }, [open, initialLevel, initialSubject]);
+  }, [open, initialLevel]);
 
   // Themes come from the curriculum API, not the static theme list, because
   // generation matches on theme_id. A name picked off the static list that has
@@ -80,52 +80,57 @@ export default function PrimaryPlanSetupModal({
     enabled: open && !!level,
   });
 
-  // Only themes with an authored lesson at this level can produce a day.
+  // Only themes with an authored, published lesson at this level can produce a
+  // day — and only ones whose topics are published too, or the Topic select
+  // would dead-end after picking the theme.
   const teachable = useMemo(
-    () => (themesQuery.data ?? []).filter((theme) => theme.has_published_lesson),
+    () => (themesQuery.data ?? []).filter((theme) => (
+      theme.has_published_lesson
+      && theme.topics.some((topic) => topic.is_active && topic.has_published_lesson)
+    )),
     [themesQuery.data]
   );
 
-  const subjectOptions = useMemo(
-    () => Array.from(new Set(teachable.map((theme) => theme.subject))).sort(),
+  const themeOptions = useMemo(
+    () => teachable,
     [teachable]
   );
 
-  const themeOptions = useMemo(
-    () => teachable.filter((theme) => theme.subject === subject),
-    [teachable, subject]
-  );
-
   // Theme names are unique per (name, language, subject), so the same name can
-  // appear twice in one subject. Only spell the language out when it disambiguates.
+  // appear twice. Spell the subject out, and the language only when it
+  // disambiguates.
   const showThemeLanguage = useMemo(
     () => new Set(themeOptions.map((theme) => theme.language)).size > 1,
     [themeOptions]
   );
 
-  // Keep the pre-filled subject/theme only while they are still real options.
-  useEffect(() => {
-    if (subject && subjectOptions.length > 0 && !subjectOptions.includes(subject)) setSubject("");
-  }, [subject, subjectOptions]);
-
+  // Keep the pre-filled theme only while it is still a real option.
   useEffect(() => {
     if (themeId) return;
     const match = themeOptions.find((theme) => theme.name === initialTheme);
     if (match) setThemeId(match.id);
   }, [themeId, themeOptions, initialTheme]);
 
-  if (!open) return null;
-
   const selectedTheme = themeOptions.find((theme) => theme.id === themeId);
-  const topicOptions = (selectedTheme?.topics ?? []).filter((topic) => topic.is_active && topic.has_published_lesson);
+  const subthemeOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const topic of selectedTheme?.topics ?? []) {
+      if (topic.is_active && topic.has_published_lesson && topic.subtheme) set.add(topic.subtheme);
+    }
+    return Array.from(set);
+  }, [selectedTheme]);
+  const topicOptions = (selectedTheme?.topics ?? [])
+    .filter((topic) => topic.is_active && topic.has_published_lesson && (subtheme === "" || topic.subtheme === subtheme));
   const selectedTopic = topicOptions.find((topic) => topic.id === topicId);
-  const canSubmit = !!level && !!subject && !!selectedTheme && !!selectedTopic && !submitting;
+  const canSubmit = !!level && !!selectedTheme && !!selectedTopic && !submitting;
+
+  if (!open) return null;
 
   const handleSubmit = () => {
     if (!canSubmit || !selectedTheme) return;
     onSubmit({
       level: level as PrimaryTeachingContext["level"],
-      subject,
+      subject: selectedTheme.subject,
       themeId: selectedTheme.id,
       themeName: selectedTheme.name,
       topicId: selectedTopic?.id,
@@ -169,8 +174,8 @@ export default function PrimaryPlanSetupModal({
               value={level}
               onChange={(event) => {
                 setLevel(event.target.value);
-                setSubject("");
                 setThemeId("");
+                setSubtheme("");
                 setTopicId("");
               }}
               className={selectClass}
@@ -184,43 +189,41 @@ export default function PrimaryPlanSetupModal({
             </select>
           </Field>
 
-          <Field label="Subject">
-            <select
-              value={subject}
-              onChange={(event) => {
-                setSubject(event.target.value);
-                setThemeId("");
-                setTopicId("");
-              }}
-              disabled={subjectOptions.length === 0}
-              className={selectClass}
-            >
-              <option value="">{subjectOptions.length === 0 ? "Pick a class first" : "Select subject…"}</option>
-              {subjectOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Theme / Topic">
+          <Field label="Theme">
             <select
               value={themeId}
               onChange={(event) => {
                 setThemeId(event.target.value);
+                setSubtheme("");
                 setTopicId("");
               }}
               disabled={themeOptions.length === 0}
               className={selectClass}
             >
-              <option value="">{themeOptions.length === 0 ? "Pick a subject first" : "Select theme…"}</option>
+              <option value="">{themeOptions.length === 0 ? "No themes available for this class" : "Select theme…"}</option>
               {themeOptions.map((theme) => (
                 <option key={theme.id} value={theme.id}>
                   {theme.emoji ? `${theme.emoji} ` : ""}
-                  {theme.name}
+                  {theme.name} · {theme.subject}
                   {showThemeLanguage ? ` · ${theme.language}` : ""}
                 </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Subtheme">
+            <select
+              value={subtheme}
+              onChange={(event) => {
+                setSubtheme(event.target.value);
+                setTopicId("");
+              }}
+              disabled={!selectedTheme}
+              className={selectClass}
+            >
+              <option value="">All subthemes</option>
+              {subthemeOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </Field>
@@ -233,7 +236,7 @@ export default function PrimaryPlanSetupModal({
               className={selectClass}
             >
               <option value="">
-                {!selectedTheme ? "Pick a theme first" : topicOptions.length === 0 ? "No topics published for this class" : "Select topic…"}
+                {!selectedTheme ? "Pick a theme first" : subtheme && topicOptions.length === 0 ? "No topics in this subtheme" : topicOptions.length === 0 ? "No topics published for this class" : "Select topic…"}
               </option>
               {topicOptions.map((topic) => (
                 <option key={topic.id} value={topic.id}>{topic.name}</option>

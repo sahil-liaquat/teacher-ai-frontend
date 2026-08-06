@@ -50,10 +50,10 @@ export function AdminPanel({
   return (
     <section id={id} className={cn("overflow-hidden rounded-[18px] border border-white/70 bg-white/86 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm", className)}>
       {(title || description || actions) && (
-        <div className="flex flex-col gap-3 border-b border-white/70 bg-gradient-to-br from-[#f8fbff] to-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
+        <div className="flex flex-col gap-3 border-b border-white/70 bg-gradient-to-br from-[#f8fbff] to-white px-6 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1 sm:min-w-fit">
             {title && <h2 className="text-base font-bold text-[#071b49]">{title}</h2>}
-            {description && <p className="mt-0.5 text-sm font-medium text-slate-500">{description}</p>}
+            {description && <p className="mt-0.5 text-sm font-medium leading-snug text-slate-500">{description}</p>}
           </div>
           {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
         </div>

@@ -2450,7 +2450,8 @@ export const backendApi = {
     apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
   adminCreatePrimaryLesson: (payload: {
     theme_id: string; topic_id?: string | null; academic_year_id?: string | null;
-    title?: string | null; month?: number | null; week?: number | null; day?: number | null;
+    title?: string | null; daily_focus?: string | null;
+    month?: number | null; week?: number | null; day?: number | null;
     level: string; objectives: string[]; vocabulary: string[];
     assessment_questions: string[]; homework?: string | null;
     parent_update?: string | null; steps: unknown[];
@@ -2758,7 +2759,9 @@ export type PrimaryStepType =
   | "warm_up" | "introduction" | "story_or_rhyme" | "picture_talk"
   | "classroom_activity" | "worksheet" | "assessment" | "movement" | "routine"
   | "circle_time" | "story" | "flashcards" | "craft" | "song" | "game"
-  | "reflection" | "parent_note";
+  | "reflection" | "parent_note"
+  | "arrival_routine" | "free_play" | "story_rhyme_picture_talk"
+  | "concept_exploration" | "classroom_activity_game" | "practice";
 
 export type PrimaryAcademicYear = {
   id: string;
@@ -2772,6 +2775,7 @@ export type PrimaryCurriculumTopic = {
   id: string;
   theme_id: string;
   name: string;
+  subtheme?: string | null;
   description?: string | null;
   position: number;
   keywords: string[];
@@ -2797,6 +2801,12 @@ export type PrimaryResource = {
   skills: string[];
   difficulty?: "beginner" | "intermediate" | "advanced" | null;
   is_active?: boolean;
+  learning_outcome_id?: string | null;
+  suitable_block?: string | null;
+  is_digital: boolean;
+  offline_alternative_id?: string | null;
+  parent_resource_id?: string | null;
+  variant_type?: string | null;
 };
 
 export type PrimaryResourceListResponse = {
@@ -2817,11 +2827,17 @@ export type PrimaryCurriculumStep = {
   objective_indexes: number[];
   resource_category?: string | null;
   resource_ids?: string[] | null;
+  child_action?: string[] | null;
+  observation_point?: string | null;
+  transition?: string | null;
+  required_resource_ids?: string[] | null;
+  optional_resource_ids?: string[] | null;
 };
 
 export type PrimaryCurriculumTheme = {
   id: string;
   name: string;
+  subtheme?: string | null;
   language: string;
   subject: string;
   description?: string | null;
@@ -2841,12 +2857,23 @@ export type PrimaryCurriculumTheme = {
   has_published_lesson: boolean;
 };
 
+export type PrimaryLearningOutcome = {
+  id: string;
+  text: string;
+  level: string;
+  subject: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type PrimaryCurriculumLesson = {
   id: string;
   theme_id: string;
   academic_year_id?: string | null;
   topic_id?: string | null;
   title?: string | null;
+  daily_focus?: string | null;
   month?: number | null;
   week?: number | null;
   day?: number | null;
@@ -2859,6 +2886,7 @@ export type PrimaryCurriculumLesson = {
   homework?: string | null;
   parent_update?: string | null;
   steps: PrimaryCurriculumStep[];
+  learning_outcomes?: PrimaryLearningOutcome[];
 };
 
 export type PrimaryStepFeedback = {
@@ -2917,6 +2945,8 @@ export type PrimaryTeachingDay = {
   home_connection?: string | null;
   teacher_notes?: string | null;
   reflection_json?: PrimaryReflection | null;
+  daily_focus?: string | null;
+  learning_outcomes?: PrimaryLearningOutcome[] | null;
   status: "not_started" | "in_progress" | "completed";
   created_at: string;
   updated_at: string;
@@ -2934,6 +2964,21 @@ export type PrimaryTeachingDayUpdatePayload = Partial<
 export type PrimaryPlannerActivityStatus =
   | "planned" | "completed" | "partially completed" | "skipped" | "rescheduled";
 
+export type PrimaryPlannerActivityContext = {
+  level?: string;
+  subject?: string;
+  language?: string;
+  theme_id?: string;
+  topic_id?: string | null;
+  instructions?: string[];
+  child_action?: string[] | null;
+  observation_point?: string | null;
+  transition?: string | null;
+  required_resource_ids?: string[] | null;
+  optional_resource_ids?: string[] | null;
+  [key: string]: unknown;
+};
+
 export type PrimaryPlannerActivity = {
   id: string;
   user_id: string;
@@ -2944,7 +2989,7 @@ export type PrimaryPlannerActivity = {
   duration_minutes: number;
   title: string;
   activity_type: string;
-  context: Record<string, unknown>;
+  context: PrimaryPlannerActivityContext;
   resource_ids: string[];
   component_key?: string | null;
   rescheduled_from_date?: string | null;
