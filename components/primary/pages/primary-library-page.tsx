@@ -65,8 +65,21 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "creative-corner": "/assets/primary/library/cat_creative_corner.jpg",
   "classroom-activities": "/assets/primary/library/cat_classroom_activities.jpg",
   "skill-based-worksheets": "/assets/primary/library/cat_skill_based.jpg",
-  "classroom-resources": "/landing/ai-books-3d.png",
-  "assessment-parent-communication": "/landing/checklist-3d.png",
+  "classroom-resources": "/assets/primary/library/cat_classroom_resources.jpg",
+  "assessment-parent-communication": "/assets/primary/library/cat_assessment.jpg",
+  "parent-communication": "/assets/primary/library/cat_parent_communication.jpg",
+};
+
+// Pastel background colours matching each category's illustration panel
+const CATEGORY_BG: Record<string, string> = {
+  "teaching-resources":              "#e8e0f8", // lavender
+  "printable-activities":            "#fdf6e3", // cream
+  "creative-corner":                 "#fce4ec", // rose pink
+  "classroom-activities":            "#fef9e4", // warm yellow
+  "skill-based-worksheets":          "#e8f5f0", // mint green
+  "classroom-resources":             "#fef3d8", // golden yellow
+  "assessment-parent-communication": "#e3f0fc", // sky blue
+  "parent-communication":            "#fce4ec", // rose pink
 };
 
 // Mock Flashcard Sets
@@ -459,33 +472,37 @@ export default function PrimaryLibraryPage({
               {LIBRARY_CATEGORIES.map((cat) => {
                 const isSelected = cat.slug === activeCategorySlug;
                 const imgPath = CATEGORY_IMAGES[cat.slug] || "/landing/backpack-globe.png";
+                const bgColor = CATEGORY_BG[cat.slug] || "#f0f4ff";
                 return (
                   <button
                     key={cat.slug}
                     onClick={() => handleCategoryChange(cat.slug)}
-                    className={cn(
-                      "flex w-36 h-40 flex-col items-center justify-between rounded-[24px] border p-4.5 text-center transition-all duration-300 ease-out snap-start shrink-0 group active:scale-95",
-                      isSelected
-                        ? "border-blue-600 bg-white shadow-[0_10px_25px_rgba(37,99,235,0.12)] ring-4 ring-blue-500/10 scale-105"
-                        : "border-slate-100 bg-white hover:border-blue-300 hover:shadow-[0_8px_20px_rgba(37,99,235,0.05)] hover:-translate-y-0.5"
-                    )}
+                    className="flex flex-col items-center gap-2.5 snap-start shrink-0 group active:scale-95 transition-all duration-300 ease-out"
                   >
-                    {/* 3D Clipart Image Container */}
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-50/40 p-1 group-hover:bg-blue-50/20 transition-colors duration-300">
+                    {/* Card — pastel bg + image fills it completely, just like the source illustration panels */}
+                    <div
+                      className={cn(
+                        "w-[7.5rem] h-[6.5rem] rounded-[22px] overflow-hidden transition-all duration-300",
+                        isSelected
+                          ? "shadow-[0_12px_28px_rgba(37,99,235,0.22)] ring-[3px] ring-blue-500 scale-105"
+                          : "shadow-[0_4px_14px_rgba(0,0,0,0.07)] hover:shadow-[0_10px_24px_rgba(37,99,235,0.13)] hover:-translate-y-1"
+                      )}
+                      style={{ backgroundColor: bgColor }}
+                    >
                       <img
                         src={imgPath}
                         alt={cat.name}
-                        className="h-18 w-18 object-contain filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.06)] group-hover:scale-115 group-hover:-rotate-3 transition-all duration-300 ease-out"
+                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
                       />
                     </div>
-                    
-                    {/* Category Label */}
-                    <b className={cn(
-                      "text-[10px] font-black leading-snug tracking-tight break-words max-w-full text-center px-0.5 mt-auto transition-colors duration-300",
-                      isSelected ? "text-[#2563eb]" : "text-[#12346b] group-hover:text-blue-500"
+
+                    {/* Label — below the card */}
+                    <span className={cn(
+                      "text-[10px] font-black leading-snug tracking-tight text-center max-w-[7.5rem] transition-colors duration-300",
+                      isSelected ? "text-blue-600" : "text-[#12346b] group-hover:text-blue-500"
                     )}>
                       {cat.name}
-                    </b>
+                    </span>
                   </button>
                 );
               })}

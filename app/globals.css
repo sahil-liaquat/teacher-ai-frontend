@@ -84,10 +84,13 @@
   outline-offset: 2px !important;
 }
 
-/* Auth fields use the rounded focus treatment on their containing element. */
-.auth-form-input:focus-visible {
+/* Auth fields and select elements should not show the default focus outline. */
+.auth-form-input:focus-visible,
+select:focus-visible,
+select:focus {
   outline: none !important;
   outline-offset: 0 !important;
+  box-shadow: none !important;
 }
 
 html {

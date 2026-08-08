@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronsRight,
   CheckSquare,
   ClipboardList,
   Clock3,
@@ -55,32 +56,451 @@ type StepPresentation = {
   learningArea: string;
   gradient: string;
   numberTone: string;
+  accentText: string;
+  accentBg: string;
+  accentBorder: string;
+  focusBorder: string;
+  focusRing: string;
+  buttonBg: string;
+  hoverBorder: string;
 };
 
 const STEP_PRESENTATION: Record<string, StepPresentation> = {
-  warm_up: { label: "Warm Up", emoji: "☀️", subtitle: "Welcome every learner and get minds and bodies ready.", learningArea: "Classroom Readiness", gradient: "from-sky-50 via-white to-cyan-50", numberTone: "bg-sky-100 text-sky-700" },
-  introduction: { label: "Introduction", emoji: "💡", subtitle: "Introduce today’s idea with simple, joyful conversation.", learningArea: "Concept Building", gradient: "from-emerald-50 via-white to-teal-50", numberTone: "bg-emerald-100 text-emerald-700" },
-  story_or_rhyme: { label: "Story or Rhyme", emoji: "📖", subtitle: "Build language and imagination through listening together.", learningArea: "Communication", gradient: "from-amber-50 via-white to-orange-50", numberTone: "bg-amber-100 text-amber-700" },
-  picture_talk: { label: "Picture Talk", emoji: "🖼️", subtitle: "Look closely, notice details and share ideas together.", learningArea: "Observation & Language", gradient: "from-pink-50 via-white to-rose-50", numberTone: "bg-pink-100 text-pink-700" },
-  classroom_activity: { label: "Classroom Activity", emoji: "🎨", subtitle: "Learn together through a guided hands-on experience.", learningArea: "Experiential Learning", gradient: "from-violet-50 via-white to-fuchsia-50", numberTone: "bg-violet-100 text-violet-700" },
-  worksheet: { label: "Worksheet", emoji: "📝", subtitle: "Practise today’s learning with clear, focused tasks.", learningArea: "Early Literacy & Practice", gradient: "from-emerald-50 via-white to-lime-50", numberTone: "bg-emerald-100 text-emerald-700" },
-  assessment: { label: "Assessment", emoji: "✅", subtitle: "Check understanding gently and celebrate progress.", learningArea: "Learning Check", gradient: "from-amber-50 via-white to-yellow-50", numberTone: "bg-amber-100 text-amber-700" },
-  movement: { label: "Movement", emoji: "🏃", subtitle: "Move, stretch and learn through active play.", learningArea: "Physical Development", gradient: "from-sky-50 via-white to-blue-50", numberTone: "bg-sky-100 text-sky-700" },
-  routine: { label: "Routine", emoji: "🕐", subtitle: "Build confidence through a familiar classroom rhythm.", learningArea: "Independence & Wellbeing", gradient: "from-emerald-50 via-white to-cyan-50", numberTone: "bg-emerald-100 text-emerald-700" },
-  circle_time: { label: "Circle Time", emoji: "🌞", subtitle: "Start with connection, conversation and joy.", learningArea: "Communication", gradient: "from-orange-50 via-white to-amber-50", numberTone: "bg-orange-100 text-orange-700" },
-  story: { label: "Story Time", emoji: "📖", subtitle: "Listen to a story and learn together.", learningArea: "Communication", gradient: "from-violet-50 via-white to-blue-50", numberTone: "bg-violet-100 text-violet-700" },
-  flashcards: { label: "Flashcards", emoji: "🃏", subtitle: "See it, say it and remember it together.", learningArea: "Vocabulary & Recall", gradient: "from-blue-50 via-white to-indigo-50", numberTone: "bg-blue-100 text-blue-700" },
-  craft: { label: "Craft Activity", emoji: "✂️", subtitle: "Get creative and build something meaningful.", learningArea: "Fine Motor Skills", gradient: "from-pink-50 via-white to-orange-50", numberTone: "bg-pink-100 text-pink-700" },
-  song: { label: "Song & Movement", emoji: "🎵", subtitle: "Sing, move and have fun together.", learningArea: "Physical Development", gradient: "from-fuchsia-50 via-white to-violet-50", numberTone: "bg-fuchsia-100 text-fuchsia-700" },
-  game: { label: "Game", emoji: "🎲", subtitle: "Practise through playful turn-taking and teamwork.", learningArea: "Social Learning", gradient: "from-sky-50 via-white to-indigo-50", numberTone: "bg-sky-100 text-sky-700" },
-  reflection: { label: "Reflection", emoji: "💛", subtitle: "Pause, remember and celebrate today’s learning.", learningArea: "Metacognition", gradient: "from-emerald-50 via-white to-teal-50", numberTone: "bg-emerald-100 text-emerald-700" },
-  parent_note: { label: "Parent Note", emoji: "💌", subtitle: "Share today’s learning and a simple home connection.", learningArea: "Family Partnership", gradient: "from-amber-50 via-white to-orange-50", numberTone: "bg-amber-100 text-amber-700" },
-  arrival_routine: { label: "Arrival and Routine", emoji: "🎒", subtitle: "Welcome learners and establish a smooth start to the day.", learningArea: "Routine & Independence", gradient: "from-sky-50 via-white to-cyan-50", numberTone: "bg-sky-100 text-sky-700" },
-  free_play: { label: "Free Play", emoji: "🧸", subtitle: "Encourage self-directed exploration and social interactions.", learningArea: "Social Development", gradient: "from-violet-50 via-white to-fuchsia-50", numberTone: "bg-violet-100 text-violet-700" },
-  story_rhyme_picture_talk: { label: "Story, Rhyme or Picture Talk", emoji: "🗣️", subtitle: "Language development, listening skills, and critical thinking.", learningArea: "Communication & Language", gradient: "from-amber-50 via-white to-orange-50", numberTone: "bg-amber-100 text-amber-700" },
-  concept_exploration: { label: "Concept Exploration", emoji: "🔍", subtitle: "Explore today's core focus with concrete objects or discussion.", learningArea: "Concept Discovery", gradient: "from-emerald-50 via-white to-teal-50", numberTone: "bg-emerald-100 text-emerald-700" },
-  classroom_activity_game: { label: "Classroom Activity or Game", emoji: "🧩", subtitle: "Active, collaborative learning through play and creation.", learningArea: "Collaboration & Application", gradient: "from-pink-50 via-white to-rose-50", numberTone: "bg-pink-100 text-pink-700" },
-  practice: { label: "Practice", emoji: "✏️", subtitle: "Reinforce literacy, numeracy or creative skills.", learningArea: "Early Practice", gradient: "from-teal-50 via-white to-emerald-50", numberTone: "bg-teal-100 text-teal-700" },
+  warm_up: { 
+    label: "Warm Up", 
+    emoji: "☀️", 
+    subtitle: "Welcome every learner and get minds and bodies ready.", 
+    learningArea: "Classroom Readiness", 
+    gradient: "from-purple-50 via-white to-violet-50", 
+    numberTone: "bg-purple-100 text-purple-700",
+    accentText: "text-purple-600",
+    accentBg: "bg-purple-50",
+    accentBorder: "border-purple-100",
+    focusBorder: "focus:border-purple-500",
+    focusRing: "focus:ring-purple-500/15",
+    buttonBg: "bg-purple-600 hover:bg-purple-700 hover:shadow-purple-600/20",
+    hoverBorder: "hover:border-purple-500/30"
+  },
+  introduction: { 
+    label: "Introduction", 
+    emoji: "💡", 
+    subtitle: "Introduce today’s idea with simple, joyful conversation.", 
+    learningArea: "Concept Building", 
+    gradient: "from-blue-50 via-white to-cyan-50", 
+    numberTone: "bg-blue-100 text-blue-700",
+    accentText: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    focusBorder: "focus:border-blue-500",
+    focusRing: "focus:ring-blue-500/15",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/20",
+    hoverBorder: "hover:border-blue-500/30"
+  },
+  story_or_rhyme: { 
+    label: "Story or Rhyme", 
+    emoji: "📖", 
+    subtitle: "Build language and imagination through listening together.", 
+    learningArea: "Communication", 
+    gradient: "from-amber-50 via-white to-yellow-50", 
+    numberTone: "bg-amber-100 text-amber-700",
+    accentText: "text-amber-700",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-100",
+    focusBorder: "focus:border-amber-500",
+    focusRing: "focus:ring-amber-500/15",
+    buttonBg: "bg-amber-600 hover:bg-amber-700 hover:shadow-amber-600/20",
+    hoverBorder: "hover:border-amber-500/30"
+  },
+  picture_talk: { 
+    label: "Picture Talk", 
+    emoji: "🖼️", 
+    subtitle: "Look closely, notice details and share ideas together.", 
+    learningArea: "Observation & Language", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  classroom_activity: { 
+    label: "Classroom Activity", 
+    emoji: "🎨", 
+    subtitle: "Learn together through a guided hands-on experience.", 
+    learningArea: "Experiential Learning", 
+    gradient: "from-pink-50 via-white to-rose-50", 
+    numberTone: "bg-pink-100 text-pink-700",
+    accentText: "text-pink-600",
+    accentBg: "bg-pink-50",
+    accentBorder: "border-pink-100",
+    focusBorder: "focus:border-pink-500",
+    focusRing: "focus:ring-pink-500/15",
+    buttonBg: "bg-pink-600 hover:bg-pink-700 hover:shadow-pink-600/20",
+    hoverBorder: "hover:border-pink-500/30"
+  },
+  worksheet: { 
+    label: "Worksheet", 
+    emoji: "📝", 
+    subtitle: "Practise today’s learning with clear, focused tasks.", 
+    learningArea: "Early Literacy & Practice", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  assessment: { 
+    label: "Assessment", 
+    emoji: "✅", 
+    subtitle: "Check understanding gently and celebrate progress.", 
+    learningArea: "Learning Check", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  movement: { 
+    label: "Movement", 
+    emoji: "🏃", 
+    subtitle: "Move, stretch and learn through active play.", 
+    learningArea: "Physical Development", 
+    gradient: "from-emerald-50 via-white to-green-50", 
+    numberTone: "bg-emerald-100 text-emerald-700",
+    accentText: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-100",
+    focusBorder: "focus:border-emerald-500",
+    focusRing: "focus:ring-emerald-500/15",
+    buttonBg: "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-600/20",
+    hoverBorder: "hover:border-emerald-500/30"
+  },
+  routine: { 
+    label: "Routine", 
+    emoji: "🕐", 
+    subtitle: "Build confidence through a familiar classroom rhythm.", 
+    learningArea: "Independence & Wellbeing", 
+    gradient: "from-orange-50 via-white to-amber-50", 
+    numberTone: "bg-orange-100 text-orange-700",
+    accentText: "text-orange-600",
+    accentBg: "bg-orange-50",
+    accentBorder: "border-orange-100",
+    focusBorder: "focus:border-orange-500",
+    focusRing: "focus:ring-orange-500/15",
+    buttonBg: "bg-orange-600 hover:bg-orange-700 hover:shadow-orange-600/20",
+    hoverBorder: "hover:border-orange-500/30"
+  },
+  circle_time: { 
+    label: "Circle Time", 
+    emoji: "🌞", 
+    subtitle: "Start with connection, conversation and joy.", 
+    learningArea: "Communication", 
+    gradient: "from-purple-50 via-white to-violet-50", 
+    numberTone: "bg-purple-100 text-purple-700",
+    accentText: "text-purple-600",
+    accentBg: "bg-purple-50",
+    accentBorder: "border-purple-100",
+    focusBorder: "focus:border-purple-500",
+    focusRing: "focus:ring-purple-500/15",
+    buttonBg: "bg-purple-600 hover:bg-purple-700 hover:shadow-purple-600/20",
+    hoverBorder: "hover:border-purple-500/30"
+  },
+  story: { 
+    label: "Story Time", 
+    emoji: "📖", 
+    subtitle: "Listen to a story and learn together.", 
+    learningArea: "Communication", 
+    gradient: "from-amber-50 via-white to-yellow-50", 
+    numberTone: "bg-amber-100 text-amber-700",
+    accentText: "text-amber-700",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-100",
+    focusBorder: "focus:border-amber-500",
+    focusRing: "focus:ring-amber-500/15",
+    buttonBg: "bg-amber-600 hover:bg-amber-700 hover:shadow-amber-600/20",
+    hoverBorder: "hover:border-amber-500/30"
+  },
+  flashcards: { 
+    label: "Flashcards", 
+    emoji: "🃏", 
+    subtitle: "See it, say it and remember it together.", 
+    learningArea: "Vocabulary & Recall", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  craft: { 
+    label: "Craft Activity", 
+    emoji: "✂️", 
+    subtitle: "Get creative and build something meaningful.", 
+    learningArea: "Fine Motor Skills", 
+    gradient: "from-pink-50 via-white to-rose-50", 
+    numberTone: "bg-pink-100 text-pink-700",
+    accentText: "text-pink-600",
+    accentBg: "bg-pink-50",
+    accentBorder: "border-pink-100",
+    focusBorder: "focus:border-pink-500",
+    focusRing: "focus:ring-pink-500/15",
+    buttonBg: "bg-pink-600 hover:bg-pink-700 hover:shadow-pink-600/20",
+    hoverBorder: "hover:border-pink-500/30"
+  },
+  song: { 
+    label: "Song & Movement", 
+    emoji: "🎵", 
+    subtitle: "Sing, move and have fun together.", 
+    learningArea: "Physical Development", 
+    gradient: "from-purple-50 via-white to-violet-50", 
+    numberTone: "bg-purple-100 text-purple-700",
+    accentText: "text-purple-600",
+    accentBg: "bg-purple-50",
+    accentBorder: "border-purple-100",
+    focusBorder: "focus:border-purple-500",
+    focusRing: "focus:ring-purple-500/15",
+    buttonBg: "bg-purple-600 hover:bg-purple-700 hover:shadow-purple-600/20",
+    hoverBorder: "hover:border-purple-500/30"
+  },
+  game: { 
+    label: "Game", 
+    emoji: "🎲", 
+    subtitle: "Practise through playful turn-taking and teamwork.", 
+    learningArea: "Social Learning", 
+    gradient: "from-emerald-50 via-white to-green-50", 
+    numberTone: "bg-emerald-100 text-emerald-700",
+    accentText: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-100",
+    focusBorder: "focus:border-emerald-500",
+    focusRing: "focus:ring-emerald-500/15",
+    buttonBg: "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-600/20",
+    hoverBorder: "hover:border-emerald-500/30"
+  },
+  reflection: { 
+    label: "Reflection", 
+    emoji: "💛", 
+    subtitle: "Pause, remember and celebrate today’s learning.", 
+    learningArea: "Metacognition", 
+    gradient: "from-blue-50 via-white to-indigo-50", 
+    numberTone: "bg-blue-100 text-blue-700",
+    accentText: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    focusBorder: "focus:border-blue-500",
+    focusRing: "focus:ring-blue-500/15",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/20",
+    hoverBorder: "hover:border-blue-500/30"
+  },
+  parent_note: { 
+    label: "Parent Note", 
+    emoji: "💌", 
+    subtitle: "Share today’s learning and a simple home connection.", 
+    learningArea: "Family Partnership", 
+    gradient: "from-blue-50 via-white to-indigo-50", 
+    numberTone: "bg-blue-100 text-blue-700",
+    accentText: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    focusBorder: "focus:border-blue-500",
+    focusRing: "focus:ring-blue-500/15",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/20",
+    hoverBorder: "hover:border-blue-500/30"
+  },
+  arrival_routine: { 
+    label: "Arrival and Routine", 
+    emoji: "🎒", 
+    subtitle: "Welcome learners and establish a smooth start to the day.", 
+    learningArea: "Routine & Independence", 
+    gradient: "from-purple-50 via-white to-violet-50", 
+    numberTone: "bg-purple-100 text-purple-700",
+    accentText: "text-purple-600",
+    accentBg: "bg-purple-50",
+    accentBorder: "border-purple-100",
+    focusBorder: "focus:border-purple-500",
+    focusRing: "focus:ring-purple-500/15",
+    buttonBg: "bg-purple-600 hover:bg-purple-700 hover:shadow-purple-600/20",
+    hoverBorder: "hover:border-purple-500/30"
+  },
+  free_play: { 
+    label: "Free Play", 
+    emoji: "🧸", 
+    subtitle: "Encourage self-directed exploration and social interactions.", 
+    learningArea: "Social Development", 
+    gradient: "from-emerald-50 via-white to-green-50", 
+    numberTone: "bg-emerald-100 text-emerald-700",
+    accentText: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-100",
+    focusBorder: "focus:border-emerald-500",
+    focusRing: "focus:ring-emerald-500/15",
+    buttonBg: "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-600/20",
+    hoverBorder: "hover:border-emerald-500/30"
+  },
+  story_rhyme_picture_talk: { 
+    label: "Story, Rhyme or Picture Talk", 
+    emoji: "🗣️", 
+    subtitle: "Language development, listening skills, and critical thinking.", 
+    learningArea: "Communication & Language", 
+    gradient: "from-amber-50 via-white to-yellow-50", 
+    numberTone: "bg-amber-100 text-amber-700",
+    accentText: "text-amber-700",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-100",
+    focusBorder: "focus:border-amber-500",
+    focusRing: "focus:ring-amber-500/15",
+    buttonBg: "bg-amber-600 hover:bg-amber-700 hover:shadow-amber-600/20",
+    hoverBorder: "hover:border-amber-500/30"
+  },
+  concept_exploration: { 
+    label: "Concept Exploration", 
+    emoji: "🔍", 
+    subtitle: "Explore today's core focus with concrete objects or discussion.", 
+    learningArea: "Concept Discovery", 
+    gradient: "from-blue-50 via-white to-cyan-50", 
+    numberTone: "bg-blue-100 text-blue-700",
+    accentText: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    focusBorder: "focus:border-blue-500",
+    focusRing: "focus:ring-blue-500/15",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/20",
+    hoverBorder: "hover:border-blue-500/30"
+  },
+  classroom_activity_game: { 
+    label: "Classroom Activity or Game", 
+    emoji: "🧩", 
+    subtitle: "Active, collaborative learning through play and creation.", 
+    learningArea: "Collaboration & Application", 
+    gradient: "from-pink-50 via-white to-rose-50", 
+    numberTone: "bg-pink-100 text-pink-700",
+    accentText: "text-pink-600",
+    accentBg: "bg-pink-50",
+    accentBorder: "border-pink-100",
+    focusBorder: "focus:border-pink-500",
+    focusRing: "focus:ring-pink-500/15",
+    buttonBg: "bg-pink-600 hover:bg-pink-700 hover:shadow-pink-600/20",
+    hoverBorder: "hover:border-pink-500/30"
+  },
+  practice: { 
+    label: "Practice", 
+    emoji: "✏️", 
+    subtitle: "Reinforce literacy, numeracy or creative skills.", 
+    learningArea: "Early Practice", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  numeracy_time: { 
+    label: "Numeracy Time", 
+    emoji: "🔢", 
+    subtitle: "Reinforce numeracy concepts with practice.", 
+    learningArea: "Numeracy", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  literacy_time: { 
+    label: "Literacy Time", 
+    emoji: "🔤", 
+    subtitle: "Reinforce reading and writing with practice.", 
+    learningArea: "Literacy", 
+    gradient: "from-teal-50 via-white to-emerald-50", 
+    numberTone: "bg-teal-100 text-teal-700",
+    accentText: "text-teal-600",
+    accentBg: "bg-teal-50",
+    accentBorder: "border-teal-100",
+    focusBorder: "focus:border-teal-500",
+    focusRing: "focus:ring-teal-500/15",
+    buttonBg: "bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/20",
+    hoverBorder: "hover:border-teal-500/30"
+  },
+  meal_time: { 
+    label: "Meal Time", 
+    emoji: "🍲", 
+    subtitle: "Enjoy a healthy meal and practice good manners.", 
+    learningArea: "Wellbeing & Hygiene", 
+    gradient: "from-orange-50 via-white to-amber-50", 
+    numberTone: "bg-orange-100 text-orange-700",
+    accentText: "text-orange-600",
+    accentBg: "bg-orange-50",
+    accentBorder: "border-orange-100",
+    focusBorder: "focus:border-orange-500",
+    focusRing: "focus:ring-orange-500/15",
+    buttonBg: "bg-orange-600 hover:bg-orange-700 hover:shadow-orange-600/20",
+    hoverBorder: "hover:border-orange-500/30"
+  },
+  creative_time: { 
+    label: "Creative Time", 
+    emoji: "🎨", 
+    subtitle: "Express creativity and experiment with crafts.", 
+    learningArea: "Art & Self Expression", 
+    gradient: "from-pink-50 via-white to-rose-50", 
+    numberTone: "bg-pink-100 text-pink-700",
+    accentText: "text-pink-600",
+    accentBg: "bg-pink-50",
+    accentBorder: "border-pink-100",
+    focusBorder: "focus:border-pink-500",
+    focusRing: "focus:ring-pink-500/15",
+    buttonBg: "bg-pink-600 hover:bg-pink-700 hover:shadow-pink-600/20",
+    hoverBorder: "hover:border-pink-500/30"
+  },
+  outdoor_play: { 
+    label: "Outdoor Play", 
+    emoji: "🛝", 
+    subtitle: "Play outdoors and coordinate body movements.", 
+    learningArea: "Physical Development", 
+    gradient: "from-emerald-50 via-white to-green-50", 
+    numberTone: "bg-emerald-100 text-emerald-700",
+    accentText: "text-emerald-600",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-100",
+    focusBorder: "focus:border-emerald-500",
+    focusRing: "focus:ring-emerald-500/15",
+    buttonBg: "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-600/20",
+    hoverBorder: "hover:border-emerald-500/30"
+  },
+  goodbye: { 
+    label: "Goodbye Circle", 
+    emoji: "👋", 
+    subtitle: "Conclude the day, reflect on learning, and prepare for home.", 
+    learningArea: "Social & Emotional Well-being", 
+    gradient: "from-blue-50 via-white to-indigo-50", 
+    numberTone: "bg-blue-100 text-blue-700",
+    accentText: "text-blue-600",
+    accentBg: "bg-blue-50",
+    accentBorder: "border-blue-100",
+    focusBorder: "focus:border-blue-500",
+    focusRing: "focus:ring-blue-500/15",
+    buttonBg: "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/20",
+    hoverBorder: "hover:border-blue-500/30"
+  },
 };
 
 const DEFAULT_PRESENTATION: StepPresentation = {
@@ -90,6 +510,13 @@ const DEFAULT_PRESENTATION: StepPresentation = {
   learningArea: "Holistic Development",
   gradient: "from-violet-50 via-white to-blue-50",
   numberTone: "bg-violet-100 text-violet-700",
+  accentText: "text-violet-600",
+  accentBg: "bg-violet-50",
+  accentBorder: "border-violet-100",
+  focusBorder: "focus:border-violet-500",
+  focusRing: "focus:ring-violet-500/15",
+  buttonBg: "bg-violet-600 hover:bg-violet-700 hover:shadow-violet-600/20",
+  hoverBorder: "hover:border-violet-500/30"
 };
 
 function presentationFor(type: string) {
@@ -119,6 +546,7 @@ function contextString(activity: PrimaryPlannerActivity, key: string, fallback =
 }
 
 function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlannerActivity; resourceMap: Map<string, PrimaryResource> }) {
+  const presentation = presentationFor(activity.activity_type);
   const rawDetails = activity.context.details;
   const details = rawDetails && typeof rawDetails === "object" ? (rawDetails as Record<string, unknown>) : undefined;
 
@@ -180,7 +608,7 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
   }, [details, activity.activity_type, resourceMap]);
 
   const filledFields = details
-    ? fields.filter((field) => {
+     ? fields.filter((field) => {
         const value = details[field.key];
         if (value === null || value === undefined) return false;
         if (Array.isArray(value)) return value.length > 0;
@@ -191,12 +619,12 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
   if (filledFields.length === 0) return null;
 
   const fieldLabel = (field: StepDetailField) => (
-    <small className="font-black uppercase tracking-wider text-[#5731d8]">{field.label}</small>
+    <small className={cn("font-black uppercase tracking-wider", presentation.accentText)}>{field.label}</small>
   );
 
   const textNode = (field: StepDetailField, value: string) => (
     /^https?:\/\//.test(value) ? (
-      <a href={value} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#6e41f5] underline underline-offset-2 break-all">{value}</a>
+      <a href={value} target="_blank" rel="noreferrer" className={cn("text-xs font-bold underline underline-offset-2 break-all", presentation.accentText)}>{value}</a>
     ) : (
       <p className="text-xs font-semibold leading-5 text-[#4f5680] whitespace-pre-line">{value}</p>
     )
@@ -205,7 +633,7 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
   return (
     <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
       <header>
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Block Details</p>
+        <p className={cn("text-[10px] font-black uppercase tracking-[0.14em]", presentation.accentText)}>Block Details</p>
         <h2 className="mt-1 text-xl font-black">What was planned for this block</h2>
       </header>
       <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -233,17 +661,17 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
                     const resource = resourceMap.get(id);
                     if (!resource) return <div key={id} className="rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-700">A linked printable was removed from the catalog — ask your admin to re-link it.</div>;
                     return (
-                      <div key={id} className="flex items-center gap-3 rounded-xl border border-[#ecebf7] bg-[#faf9ff] p-3">
+                      <div key={id} className={cn("flex items-center gap-3 rounded-xl border border-[#ecebf7] p-3 bg-opacity-30", presentation.accentBg)}>
                         {resource.thumbnailUrl ? (
                           <img src={resource.thumbnailUrl} alt="" className="h-12 w-16 shrink-0 rounded-lg object-cover" />
                         ) : (
                           <span className="grid h-12 w-16 shrink-0 place-items-center rounded-lg bg-white text-2xl shadow-sm">{resourceEmoji(resource)}</span>
                         )}
                         <div className="min-w-0 flex-1">
-                          <small className="font-black uppercase tracking-wider text-[#6e41f5]">{resource.category}</small>
+                          <small className={cn("font-black uppercase tracking-wider", presentation.accentText)}>{resource.category}</small>
                           <h4 className="truncate text-xs font-black">{resource.title}</h4>
                         </div>
-                        <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-[#6e41f5] px-2.5 py-1.5 text-[10px] font-black text-white"><ExternalLink className="h-3 w-3" /> Open</a>
+                        <a href={resource.fileUrl} target="_blank" rel="noreferrer" className={cn("inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-black text-white transition", presentation.buttonBg)}><ExternalLink className="h-3 w-3" /> Open</a>
                       </div>
                     );
                   })}
@@ -259,7 +687,7 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
                 {fieldLabel(field)}
                 <div className="mt-2 flex flex-wrap gap-2">
                   {items.map((item, index) => (
-                    <span key={`${item}-${index}`} className="rounded-full border border-[#e8e7fb] bg-[#faf9ff] px-3 py-1.5 text-[11px] font-bold text-[#4b3e8d]">{item}</span>
+                    <span key={`${item}-${index}`} className={cn("rounded-full border px-3 py-1.5 text-[11px] font-bold transition", presentation.accentBorder, presentation.accentBg, presentation.accentText)}>{item}</span>
                   ))}
                 </div>
               </div>
@@ -526,6 +954,13 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
       await backendApi.updatePlannerActivity(activity.id, { status });
       await refreshActivity();
       notify(`Activity marked as ${status}`);
+      if (status === "skipped") {
+        if (nextActivity) {
+          router.push(activityUrl(nextActivity, sectionId));
+        } else {
+          router.push(`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`);
+        }
+      }
     } catch (error) {
       notify(getErrorMessage(error, "Could not update the activity status."));
     } finally {
@@ -567,10 +1002,10 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   };
 
   if (activityQuery.isLoading) {
-    return <div className="grid min-h-[70vh] place-items-center"><div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-5 text-sm font-bold text-[#29317c] shadow-sm"><Loader2 className="h-5 w-5 animate-spin text-[#6e41f5]" /> Preparing the activity…</div></div>;
+    return <div className="grid min-h-[70vh] place-items-center"><div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-5 text-sm font-bold text-[#29317c] shadow-sm"><Loader2 className="h-5 w-5 animate-spin text-blue-500" /> Preparing the activity…</div></div>;
   }
   if (!activity || activityQuery.isError) {
-    return <div className="mx-auto max-w-xl py-20 text-center"><div className="rounded-3xl border border-rose-100 bg-white p-8 shadow-sm"><h1 className="text-2xl font-black text-[#171747]">Activity not found</h1><p className="mt-2 text-sm text-slate-500">This activity may have been removed or is no longer available.</p><Link href="/primary/today" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-3 text-sm font-bold text-white"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link></div></div>;
+    return <div className="mx-auto max-w-xl py-20 text-center"><div className="rounded-3xl border border-rose-100 bg-white p-8 shadow-sm"><h1 className="text-2xl font-black text-[#171747]">Activity not found</h1><p className="mt-2 text-sm text-slate-500">This activity may have been removed or is no longer available.</p><Link href="/primary/today" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-bold text-white"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link></div></div>;
   }
 
   const presentation = presentationFor(activity.activity_type);
@@ -589,28 +1024,50 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
     <div className="primary-shell min-h-screen text-[#171747]">
       <main className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 lg:px-7">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-[#6e41f5]/30 hover:text-[#6e41f5]"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link>
-          <div className="inline-flex max-w-full items-center gap-2 truncate rounded-full bg-[#f5f1ff] px-4 py-2 text-xs font-extrabold text-[#5731d8]"><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{level} • {subject} • {theme}</span></div>
+          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-blue-500/30 hover:text-blue-500"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              disabled={savingStatus}
+              onClick={() => updateStatus("skipped")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-slate-500 shadow-sm transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-50"
+            >
+              <ChevronsRight className="h-3.5 w-3.5" /> Skip Activity
+            </button>
+            <div className="inline-flex max-w-full items-center gap-2 truncate rounded-full bg-blue-50 px-4 py-2 text-xs font-extrabold text-blue-500"><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{level} • {subject} • {theme}</span></div>
+          </div>
         </div>
 
-        <section className={cn("relative overflow-hidden rounded-[28px] border border-[#e9e8f7] bg-gradient-to-r shadow-sm", presentation.gradient)}>
-          <div className="relative z-10 p-5 sm:p-8 sm:max-w-[62%]">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl sm:text-3xl shrink-0" aria-hidden="true">{presentation.emoji}</span>
+        <section className={cn("relative overflow-hidden rounded-[20px] border border-[#e9e8f7] bg-gradient-to-r shadow-xs", presentation.gradient)}>
+          <div className="relative z-10 p-4 sm:p-5 sm:max-w-[68%]">
+            <div className="flex items-start gap-2.5">
+              <span className="text-xl sm:text-2xl shrink-0" aria-hidden="true">{presentation.emoji}</span>
               <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#6e41f5]">{presentation.label}</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-[#11143e] sm:text-3xl lg:text-4xl leading-tight">{activity.title}</h1>
+                <p className={cn("text-[10px] font-black uppercase tracking-[0.14em]", presentation.accentText)}>{presentation.label}</p>
+                <h1 className="mt-0.5 text-lg font-black tracking-tight text-[#11143e] sm:text-xl lg:text-2xl leading-tight">{activity.title}</h1>
               </div>
             </div>
-            <p className="mt-3 text-sm font-semibold text-[#4f5680] line-clamp-2 sm:line-clamp-none">{presentation.subtitle}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><Clock3 className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Duration</small>{activity.duration_minutes || 10} min</span></span>
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><CalendarDays className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Time</small>{formattedTime(activity)}</span></span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><BookOpen className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Topic</small>{topic}</span></span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><GraduationCap className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Learning area</small>{presentation.learningArea}</span></span>
+            <p className="mt-2 text-xs font-semibold text-[#4f5680] line-clamp-2 sm:line-clamp-none">{presentation.subtitle}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+                <Clock3 className={cn("h-3.5 w-3.5", presentation.accentText)} />
+                <span>{activity.duration_minutes || 10} min</span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+                <CalendarDays className={cn("h-3.5 w-3.5", presentation.accentText)} />
+                <span>{formattedTime(activity)}</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+                <BookOpen className={cn("h-3.5 w-3.5", presentation.accentText)} />
+                <span className="truncate max-w-[120px]">{topic}</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+                <GraduationCap className={cn("h-3.5 w-3.5", presentation.accentText)} />
+                <span className="truncate max-w-[150px]">{presentation.learningArea}</span>
+              </span>
             </div>
           </div>
-          {stepArt && <div className="hidden sm:block absolute inset-y-0 right-0 w-[40%]"><div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/20 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover" /></div>}
+          {stepArt && <div className="hidden sm:block absolute inset-y-0 right-0 w-[32%]"><div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/20 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover object-top" /></div>}
         </section>
 
         <div className="mt-5">
@@ -619,21 +1076,21 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
               <form onSubmit={saveMetadata} className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
                 <div className="mb-5 flex items-center justify-between"><div><h2 className="text-lg font-black">Edit activity</h2><p className="text-xs font-semibold text-slate-400">Changes update this planned classroom step.</p></div><button type="button" onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold">Cancel</button></div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Activity title<input value={title} onChange={(event) => setTitle(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-[#6e41f5]" /></label>
-                  <label className="text-xs font-black text-slate-600">Start time<input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                  <label className="text-xs font-black text-slate-600">Duration (minutes)<input type="number" min={1} max={120} value={duration} onChange={(event) => setDuration(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Step type<input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Instructions <span className="font-semibold text-slate-400">— one step per line</span><textarea value={instructionsText} onChange={(event) => setInstructionsText(event.target.value)} rows={6} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none focus:border-[#6e41f5]" /></label>
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Activity title<input value={title} onChange={(event) => setTitle(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500" /></label>
+                  <label className="text-xs font-black text-slate-600">Start time<input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" /></label>
+                  <label className="text-xs font-black text-slate-600">Duration (minutes)<input type="number" min={1} max={120} value={duration} onChange={(event) => setDuration(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" /></label>
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Step type<input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500" /></label>
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Instructions <span className="font-semibold text-slate-400">— one step per line</span><textarea value={instructionsText} onChange={(event) => setInstructionsText(event.target.value)} rows={6} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none focus:border-blue-500" /></label>
                 </div>
-                <fieldset className="mt-4"><legend className="text-xs font-black text-slate-600">Linked resources</legend><div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">{resourceCandidates.map((resource) => { const selected = resourceIds.includes(resource.id); return <button type="button" key={resource.id} onClick={() => setResourceIds((current) => selected ? current.filter((id) => id !== resource.id) : [...current, resource.id])} className={cn("rounded-full border px-3 py-1.5 text-[11px] font-bold", selected ? "border-[#6e41f5] bg-[#6e41f5] text-white" : "border-[#e8e7fb] bg-[#f8f6ff] text-[#4b3e8d]")}>{selected ? "✓ " : ""}{resource.title}</button>; })}</div></fieldset>
-                <button disabled={savingMetadata} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50"><Save className="h-4 w-4" />{savingMetadata ? "Saving…" : "Save activity"}</button>
+                <fieldset className="mt-4"><legend className="text-xs font-black text-slate-600">Linked resources</legend><div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">{resourceCandidates.map((resource) => { const selected = resourceIds.includes(resource.id); return <button type="button" key={resource.id} onClick={() => setResourceIds((current) => selected ? current.filter((id) => id !== resource.id) : [...current, resource.id])} className={cn("rounded-full border px-3 py-1.5 text-[11px] font-bold transition", selected ? "border-transparent bg-blue-500 text-white" : "border-[#e8e7fb] bg-white text-blue-500 hover:bg-[#faf9ff]")}>{selected ? "✓ " : ""}{resource.title}</button>; })}</div></fieldset>
+                <button disabled={savingMetadata} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-xs font-black text-white shadow-md hover:bg-blue-600 disabled:opacity-50 transition duration-150"><Save className="h-4 w-4" />{savingMetadata ? "Saving…" : "Save activity"}</button>
               </form>
               <BlockDetailsSection activity={activity} resourceMap={resourceMap} />
               {activity.context.child_action && activity.context.child_action.length > 0 && (
                 <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
                   <header className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">Child Action</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">Child Action</p>
                       <h2 className="mt-1 text-xl font-black">What children do</h2>
                     </div>
                   </header>
@@ -645,12 +1102,12 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                 </section>
               )}
               {activity.context.transition && (
-                <section className="rounded-[24px] border border-violet-100 bg-violet-50/10 p-5 shadow-sm sm:p-6">
+                <section className="rounded-[24px] border border-amber-100 bg-amber-50/20 p-5 shadow-sm sm:p-6">
                   <header className="flex items-center gap-2">
                     <span className="text-xl">🔄</span>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-700">Transition Guidance</p>
-                      <h2 className="text-sm font-black text-violet-900 mt-0.5">Moving to the next block</h2>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">Transition Guidance</p>
+                      <h2 className="text-sm font-black text-amber-900 mt-0.5">Moving to the next block</h2>
                     </div>
                   </header>
                   <p className="mt-3 text-xs font-semibold text-[#4f5680] leading-normal">{activity.context.transition}</p>
@@ -658,23 +1115,59 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
               )}
 
               {sectionId && (students.data || []).length > 0 && <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6"><header className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><UsersRound className="h-5 w-5" /></span><div><h2 className="text-lg font-black">How did each child do?</h2><p className="text-xs font-semibold text-slate-400">Tap a rating to capture progress for this activity.</p></div></header><ul className="mt-5 grid gap-2 sm:grid-cols-2">{(students.data || []).map((student: PrimaryStudent) => <li key={student.id} className="rounded-xl border border-[#ecebf7] p-3"><b className="text-xs">{student.code}</b><div className="mt-2 flex flex-wrap gap-1.5">{OBSERVATION_RATINGS.map((rating) => { const active = ratingByStudent[student.id] === rating; const tone = ratingTone(rating); return <button key={rating} type="button" disabled={rateChild.isPending} onClick={() => rateChild.mutate({ studentId: student.id, rating })} className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold", active ? `${tone.chip} ${tone.text}` : "border-[#e8e7fb] bg-white text-[#596083]")}>{RATING_LABELS[rating]}</button>; })}</div></li>)}</ul></section>}
-              <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-                {activity.context.observation_point && (
-                  <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
-                    <span className="flex items-center gap-1.5 text-xs font-black text-amber-800">🧐 Observation Focus</span>
-                    <p className="mt-1 text-xs font-semibold text-slate-700 leading-normal">{activity.context.observation_point}</p>
+              {!nextActivity && (
+                <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+                  {activity.context.observation_point && (
+                    <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
+                      <span className="flex items-center gap-1.5 text-xs font-black text-amber-800">🧐 Observation Focus</span>
+                      <p className="mt-1 text-xs font-semibold text-slate-700 leading-normal">{activity.context.observation_point}</p>
+                    </div>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="text-xs font-black text-slate-700">
+                      <span className="mb-2 flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-rose-500" /> Classroom observations
+                      </span>
+                      <textarea
+                        value={observation}
+                        onChange={(event) => {
+                          setObservation(event.target.value);
+                          localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
+                        }}
+                        rows={5}
+                        placeholder="What did you notice about learning?"
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                      />
+                    </label>
+                    <label className="text-xs font-black text-slate-700">
+                      <span className="mb-2 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-amber-500" /> Teacher notes
+                      </span>
+                      <textarea
+                        value={notes}
+                        onChange={(event) => {
+                          setNotes(event.target.value);
+                          localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
+                        }}
+                        rows={5}
+                        placeholder="What should you remember for next time?"
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                      />
+                    </label>
                   </div>
-                )}
-                <div className="grid gap-4 md:grid-cols-2"><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#6e41f5]" /> Classroom observations</span><textarea value={observation} onChange={(event) => { setObservation(event.target.value); localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What did you notice about learning?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Teacher notes</span><textarea value={notes} onChange={(event) => { setNotes(event.target.value); localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What should you remember for next time?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label></div><button onClick={saveNotes} disabled={savingNotes} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-2.5 text-xs font-black text-white disabled:opacity-50"><Save className="h-4 w-4" />{savingNotes ? "Saving…" : "Save notes & observations"}</button>
-              </section>
+                  <button onClick={saveNotes} disabled={savingNotes} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-2.5 text-xs font-black text-white shadow-md hover:bg-[#111136] transition duration-150 disabled:opacity-50">
+                    <Save className="h-4 w-4" /> {savingNotes ? "Saving…" : "Save notes & observations"}
+                  </button>
+                </section>
+              )}
               <div className="grid gap-4 sm:grid-cols-2 w-full mt-4">
                 {/* Previous Activity */}
                 {previousActivity ? (
                   <Link
                     href={activityUrl(previousActivity, sectionId)}
-                    className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-[#faf9ff]/60 hover:bg-[#f5f1ff]/50 hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                    className="group flex items-center gap-4 p-4 rounded-2xl border border-[#e8e7fb] bg-white hover:bg-[#faf9ff] hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-sm transition duration-200"
                   >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-[#6e41f5] group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition duration-200">
                       <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -698,26 +1191,29 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                 {nextActivity ? (
                   <Link
                     href={activityUrl(nextActivity, sectionId)}
-                    className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-[#6e41f5] hover:bg-[#5731d8] text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#6e41f5]/20 transition duration-200"
+                    className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 hover:-translate-y-1 hover:shadow-sm transition duration-200"
                   >
                     <div className="min-w-0 flex-1">
-                      <small className="block text-[9px] font-black uppercase tracking-wider text-white/70">Next activity</small>
-                      <h4 className="text-sm font-black truncate mt-0.5">{nextActivity.title}</h4>
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+                      <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{nextActivity.title}</h4>
                     </div>
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 group-hover:bg-white/20 transition duration-200">
-                      <ArrowRight className="h-5 w-5 text-white transition duration-200 group-hover:translate-x-0.5" />
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+                      <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
                     </span>
                   </Link>
                 ) : (
-                  <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                  <Link
+                    href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`}
+                    className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 transition duration-200"
+                  >
                     <div className="min-w-0 flex-1">
-                      <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Next activity</small>
-                      <h4 className="text-sm font-bold italic truncate mt-0.5">End of today's plan</h4>
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+                      <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">End of today&apos;s plan · Return Home</h4>
                     </div>
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
-                      <ArrowRight className="h-5 w-5 opacity-40" />
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+                      <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
                     </span>
-                  </div>
+                  </Link>
                 )}
               </div>
             </div>
@@ -727,21 +1223,21 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                 <section className="rounded-[24px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
                   <header className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Teach this step</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-500">Teach this step</p>
                       <h2 className="mt-1 text-xl font-black text-[#171747]">Activity guide <span className="text-slate-400 font-semibold text-sm">(Teacher Speech)</span></h2>
                     </div>
-                    <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#e8e7fb] bg-white px-3 py-2 text-xs font-black text-[#5731d8] shadow-sm hover:bg-[#faf9ff] transition duration-155">
+                    <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#ecebf7] bg-white px-3 py-2 text-xs font-black text-blue-500 shadow-xs hover:bg-blue-50/30 transition duration-155">
                       <Edit3 className="h-4 w-4" /> Edit
                     </button>
                   </header>
 
-                  <div className="relative mt-6 pl-12 space-y-6">
-                    <div className="absolute left-[23px] top-6 bottom-6 w-[2px] bg-[#e8e7fb] border-l border-dashed border-[#d2cbfa]" />
+                  <div className="relative mt-6 pl-10 sm:pl-12 space-y-6">
+                    <div className="absolute left-[18px] sm:left-[23px] top-6 bottom-6 w-[2px] bg-[#e8e7fb] border-l border-dashed border-slate-200" />
                     
                     {instructions.length > 0 ? (
                       instructions.map((text, index) => (
-                        <div key={index} className="relative flex items-center justify-between gap-4 rounded-2xl border border-[#ecebf7] bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:shadow transition duration-200">
-                          <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-[#6e41f5] text-xs font-black text-white border-4 border-[#fbfbfe] shadow-sm">
+                        <div key={index} className="relative flex items-center justify-between gap-4 rounded-2xl border border-[#ecebf7] bg-white p-4 shadow-xs hover:border-blue-500/30 hover:shadow-sm transition duration-200">
+                          <div className="absolute left-[-36px] sm:left-[-40px] top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full text-xs font-black text-white border-4 border-[#fbfbfe] shadow-xs transition duration-150 bg-blue-500">
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -754,7 +1250,7 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                         <span className="text-3xl mb-2">📋</span>
                         <p className="text-sm font-black text-[#171747]">No steps added yet</p>
                         <p className="text-xs text-slate-400 mt-1">Edit this activity to add teaching steps.</p>
-                        <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#6e41f5] shadow-sm ring-1 ring-[#e8e7fb]">
+                        <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-blue-500 shadow-sm ring-1 ring-[#e8e7fb]">
                           Add steps
                         </button>
                       </div>
@@ -762,50 +1258,52 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                   </div>
                 </section>
 
-                <section className="rounded-[24px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
-                  <header className="flex items-center gap-2.5">
-                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
-                      <ClipboardList className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Classroom observations &amp; Teacher notes</p>
-                      <h2 className="text-sm font-black text-[#171747]">Write observations &amp; notes</h2>
+                {!nextActivity && (
+                  <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+                    <header className="flex items-center gap-2.5">
+                      <span className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black shadow-xs bg-[#fff1f2] text-rose-500">
+                        <ClipboardList className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Classroom observations &amp; Teacher notes</p>
+                        <h2 className="text-sm font-black text-[#171747]">Write observations &amp; notes</h2>
+                      </div>
+                    </header>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                        <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-rose-500" /> Classroom observations</span>
+                        <textarea
+                          value={observation}
+                          onChange={(event) => {
+                            setObservation(event.target.value);
+                            localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
+                          }}
+                          rows={4}
+                          placeholder="What did you notice about learning?"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                        />
+                      </label>
+                      <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                        <span className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> Teacher notes</span>
+                        <textarea
+                          value={notes}
+                          onChange={(event) => {
+                            setNotes(event.target.value);
+                            localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
+                          }}
+                          rows={4}
+                          placeholder="What should you remember for next time?"
+                          className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                        />
+                      </label>
                     </div>
-                  </header>
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
-                      <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-[#6e41f5]" /> Classroom observations</span>
-                      <textarea
-                        value={observation}
-                        onChange={(event) => {
-                          setObservation(event.target.value);
-                          localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
-                        }}
-                        rows={4}
-                        placeholder="What did you notice about learning?"
-                        className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition duration-150 resize-none"
-                      />
-                    </label>
-                    <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
-                      <span className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> Teacher notes</span>
-                      <textarea
-                        value={notes}
-                        onChange={(event) => {
-                          setNotes(event.target.value);
-                          localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
-                        }}
-                        rows={4}
-                        placeholder="What should you remember for next time?"
-                        className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition duration-150 resize-none"
-                      />
-                    </label>
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <button onClick={saveNotes} disabled={savingNotes} className="inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-3 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 hover:bg-[#5731d8] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:translate-y-0">
-                      <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save notes & observations"}
-                    </button>
-                  </div>
-                </section>
+                    <div className="mt-3 flex justify-end">
+                      <button onClick={saveNotes} disabled={savingNotes} className="inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-3 text-xs font-black text-white shadow-xs hover:bg-[#111136] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:translate-y-0">
+                        <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save notes & observations"}
+                      </button>
+                    </div>
+                  </section>
+                )}
               </div>
 
               <div className="lg:col-span-5 space-y-5">
@@ -826,12 +1324,12 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                   return (
                     <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
                       <header className="flex items-center gap-2.5 mb-4">
-                        <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] text-xs font-black shadow-sm">Aa</span>
+                        <span className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black shadow-xs bg-sky-50 text-sky-600">Aa</span>
                         <h2 className="text-sm font-black text-[#171747]">Vocabulary List</h2>
                       </header>
                       <div className="flex flex-wrap gap-1.5">
                         {vocab.map((word, idx) => (
-                          <span key={idx} className="rounded-full border border-[#ecebf7] bg-white px-3 py-1.5 text-[11px] font-bold text-[#6e41f5] hover:border-[#6e41f5]/40 hover:bg-[#fbfbfe] transition duration-150 cursor-default">{word}</span>
+                          <span key={idx} className="rounded-full border border-sky-100 bg-sky-50/30 px-3 py-1.5 text-[11px] font-bold transition duration-150 cursor-default hover:bg-sky-50/80 text-sky-700">{word}</span>
                         ))}
                       </div>
                     </section>
@@ -846,9 +1344,9 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                   {previousActivity ? (
                     <Link
                       href={activityUrl(previousActivity, sectionId)}
-                      className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-[#faf9ff]/60 hover:bg-[#f5f1ff]/50 hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                      className="group flex items-center gap-4 p-4 rounded-2xl border border-[#e8e7fb] bg-white hover:bg-[#faf9ff] hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-sm transition duration-200"
                     >
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-[#6e41f5] group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition duration-200">
                         <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -872,26 +1370,29 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                   {nextActivity ? (
                     <Link
                       href={activityUrl(nextActivity, sectionId)}
-                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-[#6e41f5] hover:bg-[#5731d8] text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#6e41f5]/20 transition duration-200"
+                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 hover:-translate-y-1 hover:shadow-sm transition duration-200"
                     >
                       <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-white/70">Next activity</small>
-                        <h4 className="text-sm font-black truncate mt-0.5">{nextActivity.title}</h4>
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{nextActivity.title}</h4>
                       </div>
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 group-hover:bg-white/20 transition duration-200">
-                        <ArrowRight className="h-5 w-5 text-white transition duration-200 group-hover:translate-x-0.5" />
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+                        <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
                       </span>
                     </Link>
                   ) : (
-                    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                    <Link
+                      href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`}
+                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 transition duration-200"
+                    >
                       <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Next activity</small>
-                        <h4 className="text-sm font-bold italic truncate mt-0.5">End of today's plan</h4>
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">End of today&apos;s plan · Return Home</h4>
                       </div>
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
-                        <ArrowRight className="h-5 w-5 opacity-40" />
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+                        <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
                       </span>
-                    </div>
+                    </Link>
                   )}
                 </div>
               </div>

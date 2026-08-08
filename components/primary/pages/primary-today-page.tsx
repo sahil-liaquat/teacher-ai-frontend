@@ -50,16 +50,163 @@ const NO_SECTION = "__no_section__";
 
 const ACTIVITY_TYPES_CONFIG: Record<
   string,
-  { label: string; dotBg: string; iconBg: string; badgeBg: string; badgeText: string; badgeBorder: string; emoji: string }
+  {
+    label: string;
+    dotBg: string;
+    iconBg: string;
+    badgeBg: string;
+    badgeText: string;
+    badgeBorder: string;
+    emoji: string;
+    cardBg: string;
+    cardBorder: string;
+  }
 > = {
-  routine: { label: "Routine", dotBg: "bg-emerald-500", iconBg: "bg-emerald-50 border border-emerald-100/50", badgeBg: "bg-emerald-50/50", badgeText: "text-emerald-700", badgeBorder: "border-emerald-200/50", emoji: "🎒" },
-  rhyme: { label: "Rhyme", dotBg: "bg-blue-500", iconBg: "bg-blue-50 border border-blue-100/50", badgeBg: "bg-blue-50/50", badgeText: "text-blue-700", badgeBorder: "border-blue-200/50", emoji: "🎵" },
-  "core activity": { label: "Core Activity", dotBg: "bg-amber-500", iconBg: "bg-amber-50 border border-amber-100/50", badgeBg: "bg-amber-50/50", badgeText: "text-amber-700", badgeBorder: "border-amber-200/50", emoji: "🍎" },
-  movement: { label: "Movement", dotBg: "bg-violet-500", iconBg: "bg-violet-50 border border-violet-100/50", badgeBg: "bg-violet-50/50", badgeText: "text-violet-700", badgeBorder: "border-violet-200/50", emoji: "🏃" },
-  practice: { label: "Practice", dotBg: "bg-emerald-500", iconBg: "bg-emerald-50 border border-emerald-100/50", badgeBg: "bg-emerald-50/50", badgeText: "text-emerald-700", badgeBorder: "border-emerald-200/50", emoji: "✏️" },
-  story: { label: "Story", dotBg: "bg-pink-500", iconBg: "bg-pink-50 border border-pink-100/50", badgeBg: "bg-pink-50/50", badgeText: "text-pink-700", badgeBorder: "border-pink-200/50", emoji: "📖" },
-  reflection: { label: "Reflection", dotBg: "bg-indigo-500", iconBg: "bg-indigo-50 border border-indigo-100/50", badgeBg: "bg-indigo-50/50", badgeText: "text-indigo-700", badgeBorder: "border-indigo-200/50", emoji: "✨" },
+  routine: {
+    label: "Routine",
+    dotBg: "bg-[#059669]",
+    iconBg: "bg-[#dcfce7] text-[#047857]",
+    badgeBg: "bg-[#dcfce7]",
+    badgeText: "text-[#047857]",
+    badgeBorder: "border-[#b4e6c4]",
+    cardBg: "bg-[#fafcf9]",
+    cardBorder: "border-[#e2f0e8] hover:border-[#c5e2d1] hover:bg-[#f5faf3]",
+    emoji: "🎒",
+  },
+  rhyme: {
+    label: "Rhyme",
+    dotBg: "bg-[#2563eb]",
+    iconBg: "bg-[#dbeafe] text-[#1d4ed8]",
+    badgeBg: "bg-[#dbeafe]",
+    badgeText: "text-[#1d4ed8]",
+    badgeBorder: "border-[#a3c9ff]",
+    cardBg: "bg-[#f6f9fe]",
+    cardBorder: "border-[#dae7fc] hover:border-[#bcccf9] hover:bg-[#f0f5fc]",
+    emoji: "🎵",
+  },
+  "core activity": {
+    label: "Core Activity",
+    dotBg: "bg-[#d97706]",
+    iconBg: "bg-[#fef0cd] text-[#b45309]",
+    badgeBg: "bg-[#fef0cd]",
+    badgeText: "text-[#b45309]",
+    badgeBorder: "border-[#f9da8d]",
+    cardBg: "bg-[#fdfaf3]",
+    cardBorder: "border-[#f5e6c4] hover:border-[#ebd29a] hover:bg-[#fcf7ec]",
+    emoji: "🍎",
+  },
+  movement: {
+    label: "Movement",
+    dotBg: "bg-[#7c3aed]",
+    iconBg: "bg-[#ede9fe] text-[#6d28d9]",
+    badgeBg: "bg-[#ede9fe]",
+    badgeText: "text-[#6d28d9]",
+    badgeBorder: "border-[#cbbeff]",
+    cardBg: "bg-[#faf8fd]",
+    cardBorder: "border-[#ebdfff] hover:border-[#dbcafe] hover:bg-[#f7f3fc]",
+    emoji: "🏃",
+  },
+  practice: {
+    label: "Practice",
+    dotBg: "bg-[#0d9488]",
+    iconBg: "bg-[#ccfbf1] text-[#0f766e]",
+    badgeBg: "bg-[#ccfbf1]",
+    badgeText: "text-[#0f766e]",
+    badgeBorder: "border-[#9be6df]",
+    cardBg: "bg-[#f5f9fa]",
+    cardBorder: "border-[#d5ecf0] hover:border-[#b8dee4] hover:bg-[#edf5f7]",
+    emoji: "✏️",
+  },
+  story: {
+    label: "Story",
+    dotBg: "bg-[#db2777]",
+    iconBg: "bg-[#fce7f3] text-[#be185d]",
+    badgeBg: "bg-[#fce7f3]",
+    badgeText: "text-[#be185d]",
+    badgeBorder: "border-[#ffb7d5]",
+    cardBg: "bg-[#fcf7fb]",
+    cardBorder: "border-[#fbe0f0] hover:border-[#f8c5e3] hover:bg-[#faf0f7]",
+    emoji: "📖",
+  },
+  reflection: {
+    label: "Reflection",
+    dotBg: "bg-[#4f46e5]",
+    iconBg: "bg-[#e0e7ff] text-[#4338ca]",
+    badgeBg: "bg-[#e0e7ff]",
+    badgeText: "text-[#4338ca]",
+    badgeBorder: "border-[#c7d2fe]",
+    cardBg: "bg-[#f8f9ff]",
+    cardBorder: "border-[#e0e3ff] hover:border-[#c5ccff] hover:bg-[#f2f4ff]",
+    emoji: "✨",
+  },
 };
+
+const TIMELINE_THEMES = [
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#f97316]/40",
+    dotBg: "bg-orange-500",
+    badgeText: "text-orange-600",
+    badgeBg: "bg-orange-50",
+    badgeBorder: "border-orange-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#8b5cf6]/40",
+    dotBg: "bg-purple-500",
+    badgeText: "text-purple-600",
+    badgeBg: "bg-purple-50",
+    badgeBorder: "border-purple-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#10b981]/40",
+    dotBg: "bg-emerald-500",
+    badgeText: "text-emerald-600",
+    badgeBg: "bg-emerald-50",
+    badgeBorder: "border-emerald-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#f43f5e]/40",
+    dotBg: "bg-rose-500",
+    badgeText: "text-rose-600",
+    badgeBg: "bg-rose-50",
+    badgeBorder: "border-rose-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#3b82f6]/40",
+    dotBg: "bg-blue-500",
+    badgeText: "text-blue-600",
+    badgeBg: "bg-blue-50",
+    badgeBorder: "border-blue-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#d946ef]/40",
+    dotBg: "bg-fuchsia-500",
+    badgeText: "text-fuchsia-600",
+    badgeBg: "bg-fuchsia-50",
+    badgeBorder: "border-fuchsia-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#d97706]/40",
+    dotBg: "bg-amber-500",
+    badgeText: "text-amber-700",
+    badgeBg: "bg-amber-50",
+    badgeBorder: "border-amber-200",
+  },
+  {
+    cardBg: "bg-white",
+    cardBorder: "border-[#ecebf7] hover:border-[#14b8a6]/40",
+    dotBg: "bg-teal-500",
+    badgeText: "text-teal-600",
+    badgeBg: "bg-teal-50",
+    badgeBorder: "border-teal-200",
+  },
+];
 
 function getActivityConfig(type: string) {
   const clean = type.toLowerCase();
@@ -145,6 +292,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   });
   const pickerThemes = useMemo(() => {
     const fromCurriculum = pickerThemesQuery.data ?? [];
+    if (!selTheme) return fromCurriculum;
     // Keep the currently selected theme visible even when it isn't in the
     // curriculum list for the picked class/subject (e.g. mid-switch).
     return fromCurriculum.some((t) => t.name === selTheme)
@@ -469,98 +617,103 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       </div>
 
       {/* Today's Plan Selector Card */}
-      <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-[#6e41f5]/15">
-              <Calendar className="h-4.5 w-4.5" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5]">TODAY'S PLAN</p>
-              <p className="text-xs font-bold text-slate-400">{todayDateStr}</p>
-            </div>
+      <div className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        {/* Left: Title and Date Section */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-[#6e41f5]/15">
+            <Calendar className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5] leading-none">Today&apos;s Plan</p>
+            <p className="text-[11px] font-bold text-slate-400 mt-1">{todayDateStr}</p>
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Class</label>
-            <div className="relative">
+        {/* Middle: Grid of Selectors */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 flex-1">
+          {/* Class */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Class</span>
               <select
                 value={selLevel}
                 onChange={(e) => handleLevelChange(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition"
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none"
               >
-                <option value="">Select class…</option>
+                <option value="">Select...</option>
                 {PRIMARY_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>{lvl}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Theme</label>
-            <div className="relative">
+          {/* Theme */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Theme</span>
               <select
                 value={selTheme}
                 onChange={(e) => handleThemeChange(e.target.value)}
                 disabled={pickerThemes.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none disabled:opacity-50"
               >
-                <option value="">{pickerThemes.length === 0 ? "Pick subject first" : "Select theme…"}</option>
+                <option value="">{pickerThemes.length === 0 ? "Select theme…" : "Select theme…"}</option>
                 {pickerThemes.map((t) => (
                   <option key={t.name} value={t.name}>{t.name}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Sub Theme</label>
-            <div className="relative">
+          {/* Sub Theme */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Subtheme</span>
               <select
                 value={selSubtheme}
                 onChange={(e) => handleSubthemeChange(e.target.value)}
                 disabled={subthemeOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none disabled:opacity-50"
               >
                 <option value="">{subthemeOptions.length === 0 ? "All subthemes" : "Select sub theme…"}</option>
                 {subthemeOptions.map((subtheme) => (
                   <option key={subtheme} value={subtheme}>{subtheme}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Topic</label>
-            <div className="relative">
+          {/* Topic */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Topic</span>
               <select
                 value={selTopicId}
                 onChange={(e) => setSelTopicId(e.target.value)}
                 disabled={topicOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none disabled:opacity-50"
               >
-                <option value="">{!selTheme ? "Pick theme first" : selSubtheme && topicOptions.length === 0 ? "No topics in this subtheme" : topicOptions.length === 0 ? "No published topics" : "Select topic…"}</option>
+                <option value="">{!selTheme ? "Pick theme first" : selSubtheme && topicOptions.length === 0 ? "No topics" : topicOptions.length === 0 ? "No topics" : "Select topic…"}</option>
                 {topicOptions.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end">
+        {/* Right: View Button */}
+        <div className="shrink-0 xl:self-center flex justify-end">
           <button
             onClick={() => void handleViewFullPlan()}
             disabled={!canViewPlan || savingContext}
             title={canViewPlan ? undefined : "Select a class, theme and topic first"}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 transition hover:bg-[#5731d8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full xl:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-4.5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 transition hover:bg-[#5731d8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {savingContext ? (
               <>
@@ -585,33 +738,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </p>
       )}
 
-      {/* Date navigation strip */}
-      <div className="flex items-center justify-between bg-white rounded-2xl border border-[#e8e7fb] px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-1">
-          <button onClick={handlePrevDay} className="rounded-xl p-2 text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer" aria-label="Previous day">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button onClick={handleGoToToday} className="rounded-xl px-3 py-2 text-xs font-black text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer">
-            📅 Today
-          </button>
-          <button onClick={handleNextDay} className="rounded-xl p-2 text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer" aria-label="Next day">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <b className="text-sm font-black text-[#171747]">📅 {formattedDate}</b>
-        <div className="flex items-center gap-2">
-          {plannerActivities.length > 0 && (
-            <button
-              onClick={() => void runGenerate({ replace: true })}
-              disabled={generating}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:opacity-60 cursor-pointer"
-            >
-              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              Regenerate
-            </button>
-          )}
-        </div>
-      </div>
 
       {generateError && viewState !== "generating" && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
@@ -720,37 +846,38 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
             </div>
 
             <div className="relative space-y-3 border-l-2 border-dashed border-[#e8e7fb] pl-8 ml-3">
-              {plannerActivities.map((act) => {
+              {plannerActivities.map((act, index) => {
                 const config = getActivityConfig(act.activity_type);
                 const stepImg = primaryStepImage(act.activity_type);
+                const theme = TIMELINE_THEMES[index % TIMELINE_THEMES.length];
                 return (
                   <div
                     key={act.id}
-                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#ecebf7] bg-white px-4 py-3 shadow-sm hover:border-[#6e41f5]/30 hover:shadow-md transition duration-200"
+                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#ecebf7] bg-white px-4 py-3.5 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
                   >
                     {/* Timeline dot */}
-                    <span className={cn("absolute -left-[41px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full ring-[3px] ring-white shadow-sm", config.dotBg)} />
+                    <span className={cn("absolute -left-[41px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full ring-[4px] ring-white shadow-md transition-transform duration-200 group-hover:scale-110", theme.dotBg)} />
 
                     {/* Time column */}
                     <div className="w-20 shrink-0">
-                      <span className="block text-xs font-black text-[#171747] whitespace-nowrap">{format12h(act.start_time)}</span>
-                      <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.duration_minutes || 10} min</span>
+                      <span className={cn("block text-xs font-black whitespace-nowrap", theme.badgeText)}>{format12h(act.start_time)}</span>
+                      <span className="block text-[10px] text-slate-500 font-bold mt-0.5">{act.duration_minutes || 10} min</span>
                     </div>
 
                     {/* Step image + title */}
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 shadow-sm">
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white bg-white shadow-sm flex items-center justify-center">
                         {stepImg ? (
                           <img src={stepImg} alt={config.label} className="h-full w-full object-cover" />
                         ) : (
-                          <div className={cn("h-full w-full flex items-center justify-center text-xl", config.iconBg)}>
+                          <div className={cn("h-full w-full flex items-center justify-center text-xl rounded-lg", theme.badgeBg, theme.badgeText)}>
                             {config.emoji}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className={cn("text-sm font-black truncate", config.badgeText)}>{act.title}</h4>
-                        <p className="text-[11px] text-slate-400 font-medium leading-normal line-clamp-1 mt-0.5">
+                        <h4 className="text-sm font-black text-[#171747] truncate transition">{act.title}</h4>
+                        <p className="text-[11px] text-slate-500 font-medium leading-normal line-clamp-1 mt-0.5">
                           {act.notes || config.label}
                         </p>
                       </div>
@@ -758,7 +885,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
                     {/* Right side: badge + status + view button */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn("hidden sm:inline-flex rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider", config.badgeBg, config.badgeText, config.badgeBorder)}>
+                      <span className={cn("hidden sm:inline-flex rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider", theme.badgeBg, theme.badgeText, theme.badgeBorder)}>
                         {config.label}
                       </span>
 

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowRight, CalendarDays, ChevronRight, Clock3, Loader2,
+  ArrowRight, CalendarDays, ChevronRight, Clock, Loader2,
   RefreshCw, Settings2, Sparkles, Star, UsersRound,
+  Users, Blocks, Puzzle, Utensils, Music, BookOpen, Palette, Pencil
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser, type PrimaryPlannerActivity } from "@/lib/api";
 import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
 import { activityDisplayName, activityHref, timeAgo, usePrimaryActivityHistory } from "@/lib/primary-activity";
@@ -24,6 +26,108 @@ const activityEmoji: Record<string, string> = {
   classroom_activity: "🎨", movement: "🏃", song: "🎵", game: "🎲",
   assessment: "✅", reflection: "✨", parent_note: "💌",
 };
+
+const CARD_THEMES = [
+  {
+    bg: "bg-[#fdfaf3] border-[#f5e6c4] hover:border-[#ebd29a] hover:bg-[#fcf7ec]",
+    timeBg: "bg-[#fef0cd] text-[#b45309]",
+    iconBg: "bg-[#fef0cd] text-[#b45309]",
+    chevronBg: "bg-[#fef0cd] text-[#b45309]",
+    icon: "Users",
+  },
+  {
+    bg: "bg-[#faf8fd] border-[#ebdfff] hover:border-[#dbcafe] hover:bg-[#f7f3fc]",
+    timeBg: "bg-[#ede9fe] text-[#6d28d9]",
+    iconBg: "bg-[#ede9fe] text-[#6d28d9]",
+    chevronBg: "bg-[#ede9fe] text-[#6d28d9]",
+    icon: "Blocks",
+  },
+  {
+    bg: "bg-[#fafcf9] border-[#e2f0e8] hover:border-[#c5e2d1] hover:bg-[#f5faf3]",
+    timeBg: "bg-[#dcfce7] text-[#047857]",
+    iconBg: "bg-[#dcfce7] text-[#047857]",
+    chevronBg: "bg-[#dcfce7] text-[#047857]",
+    icon: "Puzzle",
+  },
+  {
+    bg: "bg-[#fdf8f5] border-[#f9dfd5] hover:border-[#f4c8b8] hover:bg-[#fcf4ef]",
+    timeBg: "bg-[#fee2e2] text-[#b91c1c]",
+    iconBg: "bg-[#fee2e2] text-[#b91c1c]",
+    chevronBg: "bg-[#fee2e2] text-[#b91c1c]",
+    icon: "Utensils",
+  },
+  {
+    bg: "bg-[#f6f9fe] border-[#dae7fc] hover:border-[#bcccf9] hover:bg-[#f0f5fc]",
+    timeBg: "bg-[#dbeafe] text-[#1d4ed8]",
+    iconBg: "bg-[#dbeafe] text-[#1d4ed8]",
+    chevronBg: "bg-[#dbeafe] text-[#1d4ed8]",
+    icon: "Music",
+  },
+  {
+    bg: "bg-[#fcf7fb] border-[#fbe0f0] hover:border-[#f8c5e3] hover:bg-[#faf0f7]",
+    timeBg: "bg-[#fce7f3] text-[#be185d]",
+    iconBg: "bg-[#fce7f3] text-[#be185d]",
+    chevronBg: "bg-[#fce7f3] text-[#be185d]",
+    icon: "BookOpen",
+  },
+  {
+    bg: "bg-[#fefbf4] border-[#fceec9] hover:border-[#f9dfa0] hover:bg-[#fdf8e9]",
+    timeBg: "bg-[#fef9c3] text-[#a16207]",
+    iconBg: "bg-[#fef9c3] text-[#a16207]",
+    chevronBg: "bg-[#fef9c3] text-[#a16207]",
+    icon: "Palette",
+  },
+  {
+    bg: "bg-[#f5f9fa] border-[#d5ecf0] hover:border-[#b8dee4] hover:bg-[#edf5f7]",
+    timeBg: "bg-[#ccfbf1] text-[#0f766e]",
+    iconBg: "bg-[#ccfbf1] text-[#0f766e]",
+    chevronBg: "bg-[#ccfbf1] text-[#0f766e]",
+    icon: "Pencil",
+  },
+];
+
+function getCardIcon(iconName: string) {
+  switch (iconName) {
+    case "Users": return Users;
+    case "Blocks": return Blocks;
+    case "Puzzle": return Puzzle;
+    case "Utensils": return Utensils;
+    case "Music": return Music;
+    case "BookOpen": return BookOpen;
+    case "Palette": return Palette;
+    case "Pencil": return Pencil;
+    default: return Users;
+  }
+}
+
+function getActivityTheme(activityType?: string | null) {
+  const type = activityType || "";
+  if (type === "circle_time" || type === "arrival_routine") {
+    return CARD_THEMES[1]; // Purple (matches purple background of circle-time.webp)
+  }
+  if (type === "free_play" || type === "game" || type === "outdoor_play") {
+    return CARD_THEMES[2]; // Green (matches green background of game.webp)
+  }
+  if (type === "story" || type === "story_or_rhyme" || type === "story_rhyme_picture_talk") {
+    return CARD_THEMES[6]; // Yellow (matches yellow background of story.webp)
+  }
+  if (type === "concept_exploration" || type === "introduction") {
+    return CARD_THEMES[4]; // Blue (matches blue background of introduction.webp)
+  }
+  if (type === "meal_time" || type === "routine") {
+    return CARD_THEMES[3]; // Peach (matches peach background of routine.webp)
+  }
+  if (type === "craft" || type === "classroom_activity" || type === "classroom_activity_game" || type === "creative_time") {
+    return CARD_THEMES[5]; // Pink (matches pink background of craft.webp)
+  }
+  if (type === "practice" || type === "worksheet" || type === "numeracy_time" || type === "literacy_time" || type === "assessment") {
+    return CARD_THEMES[7]; // Teal (matches teal background of worksheet.webp)
+  }
+  if (type === "movement") {
+    return CARD_THEMES[2]; // Green / playground
+  }
+  return CARD_THEMES[0]; // Fallback to Amber
+}
 
 const cardTints = ["#eef5ff", "#f6efff", "#fff8df", "#ecf9f1", "#fff0f5", "#fff7e7"];
 const resourceFallbacks = [
@@ -239,24 +343,36 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   return (
     <div className="space-y-6 p-4 sm:p-6" style={{ ...visuals.style, color: "var(--primary-theme-text)" }}>
       <section
-        className="relative overflow-hidden rounded-[32px] border border-[#e8e7fb] p-6 sm:p-8 min-h-[180px] flex flex-col justify-center shadow-sm"
+        className="relative overflow-hidden rounded-[32px] border border-[#e8e7fb] p-6 sm:p-8 min-h-[180px] flex flex-col justify-center shadow-sm transition-all duration-300"
         style={{
-          background: visuals.heroImage
-            ? `linear-gradient(90deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.82) 40%, rgba(255,255,255,.1) 70%, rgba(255,255,255,0) 100%), url(${visuals.heroImage}) center right/cover no-repeat`
+          backgroundColor: visuals.surface || "#ffffff",
+          backgroundImage: visuals.heroImage
+            ? `linear-gradient(90deg, ${visuals.surface || "#ffffff"} 0%, ${visuals.surface || "#ffffff"} 35%, transparent 75%), url(${visuals.heroImage})`
             : visuals.backgroundImage
-            ? `linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.3) 100%), url(${visuals.backgroundImage}) center right/cover no-repeat`
-            : `linear-gradient(135deg, ${visuals.surface || "#f5f3ff"} 0%, #ffffff 50%, color-mix(in srgb, ${visuals.primary || "#6e41f5"} 8%, white) 100%)`,
+            ? `linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.3) 100%), url(${visuals.backgroundImage})`
+            : `linear-gradient(135deg, ${visuals.surface || "#f5f3ff"} 0%, #ffffff 50%, color-mix(in srgb, ${visuals.primary || "#1677ff"} 8%, white) 100%)`,
+          backgroundPosition: visuals.heroImage
+            ? "center, right center"
+            : visuals.backgroundImage
+            ? "center, center right"
+            : "center",
+          backgroundSize: visuals.heroImage
+            ? "100% 100%, contain"
+            : visuals.backgroundImage
+            ? "100% 100%, cover"
+            : "100% 100%",
+          backgroundRepeat: "no-repeat",
         }}
       >
         <div className="relative z-10 max-w-xl">
-          <p className="text-xs font-black uppercase tracking-widest text-[#6e41f5]">Good morning, {teacherName}! 👋</p>
+          <p className="text-xs font-black uppercase tracking-widest text-blue-500">Good morning, {teacherName}! 👋</p>
           <h1 className="mt-2 text-2xl sm:text-3.5xl font-black tracking-tight text-[#171747]">Let&apos;s make today amazing!</h1>
           <p className="mt-1 text-sm font-semibold text-[#4f5680]">You&apos;re all set to create joyful learning experiences.</p>
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/95 bg-white/80 px-3.5 py-1.5 text-[10px] font-black text-[#596083] shadow-sm backdrop-blur-sm">
             <span>{dateLabel}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6e41f5]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             <span>{activities.length} activities</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#6e41f5]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             <span>{totalMinutes} min</span>
           </div>
         </div>
@@ -269,10 +385,10 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
         )}
       </section>
 
-      <section id="primary-focus" className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-        <header className="flex items-center justify-between gap-4 mb-5">
+      <section id="primary-focus" className="rounded-[28px] border border-[#e8e7fb] bg-white p-4 sm:p-5 shadow-sm">
+        <header className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-500 shadow-sm">
               <Sparkles className="h-4 w-4" />
             </span>
             <h2 className="text-sm font-black text-[#171747]">Today&apos;s Focus</h2>
@@ -281,7 +397,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
             <button 
               type="button" 
               onClick={() => setSetupOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-3.5 py-1.5 text-xs font-black text-[#6e41f5] hover:bg-[#faf9ff] transition cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-3.5 py-1.5 text-xs font-black text-blue-500 hover:bg-blue-50/50 transition cursor-pointer shadow-sm"
             >
               <Settings2 className="h-4 w-4" /> Change classroom
             </button>
@@ -309,7 +425,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftSubtheme("");
                     setDraftTopicId("");
                   }}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
                 >
                   {PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
                 </select>
@@ -325,7 +441,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftTopicId("");
                   }}
                   disabled={setupThemesQuery.isFetching || setupThemes.length === 0}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
                 >
                   <option value="">{setupThemesQuery.isFetching ? "Loading themes…" : setupThemes.length ? "Select theme…" : "No published themes"}</option>
                   {setupThemes.map((theme) => (
@@ -345,7 +461,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftTopicId("");
                   }}
                   disabled={!selectedSetupTheme}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
                 >
                   <option value="">All subthemes</option>
                   {setupSubthemes.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -358,7 +474,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                   value={draftTopicId}
                   onChange={(event) => setDraftTopicId(event.target.value)}
                   disabled={!selectedSetupTheme || setupTopics.length === 0}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
                 >
                   <option value="">{selectedSetupTheme ? (draftSubtheme && setupTopics.length === 0 ? "No topics in this subtheme" : setupTopics.length ? "Select topic…" : "No published topics") : "Select theme first"}</option>
                   {setupTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
@@ -369,7 +485,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                 type="button"
                 onClick={handleInlineSetup}
                 disabled={!selectedSetupTheme || !selectedSetupTopic || setupSubmitting}
-                className="w-full inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 hover:bg-[#5731d8] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 cursor-pointer"
+                className="w-full inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-blue-500 px-5 text-xs font-black text-white shadow-md shadow-blue-500/20 hover:bg-blue-600 hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 cursor-pointer"
               >
                 {setupSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {setupSubmitting ? "Preparing…" : "Prepare classroom"}
@@ -380,37 +496,38 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
             )}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-12 items-start">
-            {/* Left side focus block */}
-            <div className="md:col-span-7 space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="grid h-16 w-16 place-items-center rounded-2xl bg-[#faf9ff] border border-[#e8e7fb] text-4xl shadow-sm">{activeTheme?.emoji || "📚"}</span>
-                <div>
-                  <small className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5]">{activeTopic?.subtheme || "Theme Theme"}</small>
-                  <h3 className="text-xl font-black text-[#171747]">{activeTheme?.name || context.theme || "Curriculum Theme"}</h3>
-                  <p className="text-xs font-bold text-slate-400 mt-0.5">{activeTopic?.name || context.topic}</p>
+          <div className="grid gap-5 md:grid-cols-12 items-center">
+            {/* Left side focus block - merged emoji, theme titles and daily focus text to occupy less vertical space */}
+            <div className="md:col-span-7 flex items-center gap-3.5 min-w-0">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#faf9ff] border border-[#e8e7fb] text-2xl shadow-xs">{activeTheme?.emoji || "📚"}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-blue-500">{activeTopic?.subtheme || "Theme Theme"}</span>
+                  <span className="text-slate-300 text-xs">•</span>
+                  <span className="text-[10px] font-bold text-slate-400">{activeTheme?.name || context.theme}</span>
                 </div>
-              </div>
-              
-              <div className="rounded-2xl border border-violet-100 bg-[#faf9ff]/50 p-4">
-                <small className="text-[9px] font-black uppercase tracking-wider text-violet-700">Today&apos;s focus</small>
-                <p className="mt-1 text-xs font-semibold text-[#4f5680] leading-relaxed">{day?.daily_focus || "Today's focus is being prepared."}</p>
+                <h3 className="text-sm font-black text-[#171747] truncate mt-0.5">{activeTopic?.name || context.topic}</h3>
+                
+                <p className="text-[11px] font-semibold text-slate-500 leading-normal line-clamp-2 mt-1">
+                  <span className="text-blue-500 font-black mr-1">Today&apos;s focus:</span>
+                  {day?.daily_focus || "Today's focus is being prepared."}
+                </p>
               </div>
             </div>
 
-            {/* Right side: Today's objectives in 3 vertical box rows */}
-            <div className="md:col-span-5 space-y-3 md:border-l border-slate-100 md:pl-6">
-              <small className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Today&apos;s objectives</small>
-              {objectives.length ? objectives.map((objective, index) => (
-                <div key={`${objective}-${index}`} className="flex items-center gap-3 rounded-xl border border-[#ecebf7] bg-[#fbfbfe] p-3 shadow-sm hover:border-[#6e41f5]/25 transition duration-150">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white border border-[#ecebf7] text-[#6e41f5] text-xs font-black shadow-xs">
-                    {["●", "★", "✓"][index] || "✓"}
-                  </span>
-                  <span className="text-xs font-semibold text-[#263252] leading-snug">{objective}</span>
-                </div>
-              )) : (
-                <p className="text-xs font-semibold text-slate-400 italic">Objectives are being prepared.</p>
-              )}
+            {/* Right side: Today's objectives in a super compact vertical list */}
+            <div className="md:col-span-5 md:border-l border-slate-100 md:pl-5 space-y-1.5">
+              <small className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Today&apos;s objectives</small>
+              <div className="space-y-1">
+                {objectives.length ? objectives.map((objective, index) => (
+                  <div key={`${objective}-${index}`} className="flex items-start gap-1.5 text-[11px] font-semibold text-[#263252] leading-tight">
+                    <span className="text-blue-500 shrink-0 mt-0.5">{["●", "★", "✓"][index] || "✓"}</span>
+                    <span className="line-clamp-1 hover:line-clamp-none transition-all duration-300 cursor-default">{objective}</span>
+                  </div>
+                )) : (
+                  <p className="text-[10px] font-semibold text-slate-400 italic">Objectives are being prepared.</p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -420,56 +537,63 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
       <section className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
         <header className="flex items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-500 shadow-sm">
               <CalendarDays className="h-4 w-4" />
             </span>
             <h2 className="text-sm font-black text-[#171747]">Today&apos;s Classroom Plan</h2>
           </div>
-          <Link href="/primary/today" className="inline-flex items-center gap-1 text-xs font-black text-[#6e41f5] hover:text-[#5731d8] transition">
+          <Link href="/primary/today" className="inline-flex items-center gap-1 text-xs font-black text-blue-500 hover:text-blue-600 transition">
             View full schedule <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </header>
         
         {todayQuery.isLoading ? (
-          <div className="flex items-center justify-center p-12 text-xs font-bold text-slate-400 gap-2"><Loader2 className="h-4 w-4 animate-spin text-[#6e41f5]" /> Preparing today&apos;s plan…</div>
+          <div className="flex items-center justify-center p-12 text-xs font-bold text-slate-400 gap-2"><Loader2 className="h-4 w-4 animate-spin text-blue-500" /> Preparing today&apos;s plan…</div>
         ) : activities.length ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {activities.slice(0, 8).map((activity, index) => {
               const resource = resourceForActivity(activity, resources);
               const stepArt = primaryStepImage(activity.activity_type);
-              const bgTone = cardTints[index % cardTints.length];
+              const theme = getActivityTheme(activity.activity_type);
               return (
-                <Link 
-                  key={activity.id} 
-                  href={`/primary/today/activity/${activity.id}?date=${today}`} 
-                  className="group relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                <Link
+                  key={activity.id}
+                  href={`/primary/today/activity/${activity.id}?date=${today}`}
+                  className={cn(
+                    "group relative flex flex-col justify-between rounded-[20px] border p-3 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer",
+                    theme.bg
+                  )}
                 >
                   <div>
-                    <div className="flex items-center justify-between">
-                      <p className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400"><Clock3 className="h-3 w-3 text-slate-400" /> {timeLabel(activity, index)}</p>
-                      <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: bgTone }} />
+                    {/* Header Row: Duration Pill and Chevron Icon */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wide", theme.timeBg)}>
+                        <Clock className="h-3 w-3 shrink-0 stroke-[2.5]" />
+                        <span>{activity.duration_minutes} min</span>
+                      </div>
+                      <div className={cn("grid h-6 w-6 place-items-center rounded-full shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95", theme.chevronBg)}>
+                        <ChevronRight className="h-3.5 w-3.5 stroke-[3]" />
+                      </div>
                     </div>
-                    <h3 className="mt-2 text-sm font-black text-[#171747] leading-tight group-hover:text-[#6e41f5] transition line-clamp-2 min-h-[40px]">{activity.title}</h3>
+
+                    {/* Title */}
+                    <h3 className="text-xs font-black text-[#171747] leading-tight truncate mb-2 group-hover:text-blue-500 transition">
+                      {activity.title}
+                    </h3>
                   </div>
 
-                  <div className="my-4 aspect-[4/3] rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                  {/* Image */}
+                  <div className="aspect-[3/2] rounded-[14px] flex items-center justify-center overflow-hidden">
                     {stepArt ? (
-                      <img src={stepArt} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                      <img src={stepArt} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
                     ) : resource?.thumbnailUrl ? (
-                      <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                      <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
                     ) : illustrationFor(visuals, index + 2) ? (
-                      <img src={illustrationFor(visuals, index + 2)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                      <img src={illustrationFor(visuals, index + 2)} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
                     ) : (
-                      <span className="text-4xl filter drop-shadow-sm group-hover:scale-110 transition duration-200">{activityEmoji[activity.activity_type] || "🎨"}</span>
+                      <span className="text-3xl filter drop-shadow-sm group-hover:scale-108 transition duration-250">{activityEmoji[activity.activity_type] || "🎨"}</span>
                     )}
                   </div>
-
-                  <footer className="flex items-center justify-between mt-1 pt-2 border-t border-slate-50">
-                    <span className="text-[10px] font-bold text-slate-500">{activity.duration_minutes} min</span>
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-[#faf9ff] border border-slate-100 text-[#6e41f5] shadow-xs group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </footer>
                 </Link>
               );
             })}
@@ -482,7 +606,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
             <button 
               type="button" 
               onClick={openClassroomSetup}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] hover:-translate-y-0.5 shadow-md shadow-[#6e41f5]/15 transition duration-150 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-5 py-2.5 text-xs font-black text-white hover:bg-blue-600 hover:-translate-y-0.5 shadow-md shadow-blue-500/15 transition duration-150 cursor-pointer"
             >
               Prepare classroom <Sparkles className="h-3.5 w-3.5" />
             </button>
@@ -513,34 +637,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
         </div>
       </section>
 
-      {/* Recently Used */}
-      {recentEvents.length > 0 && (
-        <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-          <header className="flex items-center gap-2.5 mb-4">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
-              <RefreshCw className="h-4 w-4" />
-            </span>
-            <h2 className="text-sm font-black text-[#171747]">Recently Used</h2>
-          </header>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-            {recentEvents.map((event) => (
-              <Link 
-                key={event.id} 
-                href={activityHref(event)}
-                className="flex items-center gap-3 shrink-0 min-w-[200px] border border-slate-100 bg-[#fbfbfe] rounded-2xl p-3 hover:border-[#6e41f5]/30 transition duration-155"
-              >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-100 text-2xl shadow-xs">
-                  {event.entity_type === "resource" ? "📄" : "✨"}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h4 className="truncate text-xs font-black text-[#171747]">{activityDisplayName(event.entity_type, event.entity_id)}</h4>
-                  <small className="block text-[10px] font-semibold text-slate-400 mt-0.5">{timeAgo(event.created_at)}</small>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+
 
       <PrimaryPlanSetupModal
         open={setupOpen}
