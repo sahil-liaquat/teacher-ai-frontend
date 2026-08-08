@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Clock3, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock3, Sparkles } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { useBilling } from "@/lib/use-billing";
@@ -35,7 +35,7 @@ export function TrialStatusPill({ placement = "content" }: { placement?: "conten
   if (pathname?.startsWith("/dashboard/billing")) return null;
   if (isLoading || isError || !data) return null;
 
-  const { status, is_pro, days_left, gift, paid_starts_at } = data;
+  const { status, is_pro, days_left, gift, paid_starts_at, past_due } = data;
   const days = days_left ?? 0;
   const hasUpgraded = Boolean(paid_starts_at);
 
@@ -45,8 +45,24 @@ export function TrialStatusPill({ placement = "content" }: { placement?: "conten
   let Icon: ComponentType<{ className?: string }> = Sparkles;
   let label = "";
   let cta = "Upgrade";
+  let href = "/dashboard/billing";
+  let external = false;
 
-  if (status === "trialing" && !hasUpgraded) {
+  // A failed payment is checked FIRST and never falls through to the trial
+  // wording below. This is a subscriber whose bank balance was short, not a
+  // trialist — telling them "your trial has ended" is both wrong and insulting.
+  if (past_due) {
+    Icon = AlertTriangle;
+    tone = past_due.in_grace ? "warn" : "danger";
+    label = past_due.in_grace
+      ? `Payment failed · ${plural(Math.max(days, 1), "day")} to fix`
+      : "Payment failed · access paused";
+    cta = "Pay now";
+    if (past_due.invoice_url) {
+      href = past_due.invoice_url;
+      external = true;
+    }
+  } else if (status === "trialing" && !hasUpgraded) {
     Icon = Sparkles;
     if (days_left != null && days_left <= 2) {
       tone = "warn";
@@ -68,7 +84,8 @@ export function TrialStatusPill({ placement = "content" }: { placement?: "conten
   return (
     <div className={cn(placement === "content" && "mb-4 flex justify-end")}>
       <Link
-        href="/dashboard/billing"
+        href={href}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         aria-label={`${label}. ${cta}.`}
         className={cn(
           "group inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-sm backdrop-blur-sm transition-all hover:-translate-y-px hover:shadow-md",
