@@ -9,9 +9,9 @@ const redirects: Record<string, string> = {
   "printable-activities": "/primary/library",
   "worksheet-library": "/primary/library",
   "classroom-resources": "/primary/library",
-  "ai-studio": "/primary/create",
-  "classroom-activities": "/primary/create",
-  "creative-corner": "/primary/create",
+  "ai-studio": "/primary",
+  "classroom-activities": "/primary/library",
+  "creative-corner": "/primary/library",
   "lesson-plan": "/primary/today",
 };
 

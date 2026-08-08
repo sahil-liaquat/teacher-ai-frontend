@@ -56,6 +56,10 @@ export function ResourcePanel() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ResourceForm>(emptyForm);
 
+  // Upload-from-device state (Cloudinary-backed)
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+
   // Theme names for the form's theme picker
   const { data: themes = [] } = useQuery({
     queryKey: ["admin-primary-themes"],
@@ -114,11 +118,37 @@ export function ResourcePanel() {
       toast({ title: "Resource added", description: `"${form.title.trim()}" is now in the catalog.` });
       setIsSingleOpen(false);
       setForm(emptyForm);
+      setUploadFile(null);
       queryClient.invalidateQueries({ queryKey: ["admin-primary-resources"] });
     } catch (err: any) {
       toast({ title: "Failed to create resource", description: err.message, variant: "error" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUploadFile = async () => {
+    if (!uploadFile) return;
+    setIsUploadingFile(true);
+    try {
+      const uploaded = await backendApi.adminUploadPrimaryResource(
+        uploadFile,
+        form.category,
+        form.title.trim() || undefined,
+      );
+      setForm((prev) => ({
+        ...prev,
+        id: prev.id.trim() || uploaded.id,
+        title: prev.title.trim() || uploadFile.name.replace(/\.[^.]+$/, ""),
+        fileUrl: uploaded.file_url,
+        fileType: uploaded.file_type || prev.fileType,
+      }));
+      setUploadFile(null);
+      toast({ title: "Uploaded to Cloudinary", description: "Link filled in below — set ID, classes and themes, then Add Resource." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "error" });
+    } finally {
+      setIsUploadingFile(false);
     }
   };
 
@@ -325,10 +355,39 @@ export function ResourcePanel() {
                 <h3 className="text-sm font-black text-slate-800">Add Resource</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">The file URL is shared with teachers when a step matches this resource.</p>
               </div>
-              <button type="button" onClick={() => setIsSingleOpen(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <button type="button" onClick={() => { setIsSingleOpen(false); setUploadFile(null); }} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
 
             <div className="grid gap-3">
+              {/* Upload from device (Cloudinary) */}
+              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-blue-600" />
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-wide">Upload from device (Cloudinary)</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="flex-1 min-w-0 text-[10px] text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[10px] file:font-black file:text-blue-600 file:shadow-sm file:cursor-pointer"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={isUploadingFile || !uploadFile}
+                    onClick={handleUploadFile}
+                    className="rounded-xl font-bold text-[11px] shrink-0 border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    {isUploadingFile ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    {isUploadingFile ? "Uploading…" : "Upload"}
+                  </Button>
+                </div>
+                <p className="text-[9px] text-slate-400 font-semibold leading-relaxed">
+                  Uploads to Cloudinary and fills the File URL / Title / File Type below. Then set the ID, classes and themes and click Add Resource.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase">Unique ID</label>
@@ -411,7 +470,7 @@ export function ResourcePanel() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button type="button" variant="ghost" onClick={() => setIsSingleOpen(false)} className="rounded-xl font-bold">Cancel</Button>
+              <Button type="button" variant="ghost" onClick={() => { setIsSingleOpen(false); setUploadFile(null); }} className="rounded-xl font-bold">Cancel</Button>
               <Button type="submit" variant="default" disabled={saving} className="rounded-xl font-bold">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {saving ? "Adding..." : "Add Resource"}

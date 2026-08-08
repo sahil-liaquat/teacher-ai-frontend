@@ -19,13 +19,11 @@ import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type Primary
 import { PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { cn } from "@/lib/utils";
 
-export type PrimaryPage = "home" | "today" | "library" | "create" | "saved" | "settings" | "coverage" | "roster";
+export type PrimaryPage = "home" | "today" | "library" | "settings" | "coverage" | "roster";
 
 import PrimaryHomePage from "./pages/primary-home-page";
 import PrimaryTodayPage from "./pages/primary-today-page";
 import PrimaryLibraryPage from "./pages/primary-library-page";
-import PrimaryCreatePage from "./pages/primary-create-page";
-import PrimarySavedPage from "./pages/primary-saved-page";
 import PrimarySettingsPage from "./pages/primary-settings-page";
 import PrimaryCoveragePage from "./pages/primary-coverage-page";
 import PrimaryRosterPage from "./pages/primary-roster-page";
@@ -36,8 +34,6 @@ const title: Record<PrimaryPage, [string, string]> = {
   home: ["Let’s make today wonderful! 💜", "Plan, teach and inspire young minds with NEP 2020 aligned resources."],
   today: ["Today’s Schedule ☀️", "Track your daily teaching plan and activities."],
   library: ["Resource Library 📚", "Explore and search educational activities and worksheets."],
-  create: ["Creative Studio ✨", "Design custom worksheets, stories, and class resources."],
-  saved: ["Saved Content ❤️", "Your personal workspace of bookmarked files and generated kits."],
   settings: ["Settings ⚙️", "Configure your Primary Teaching context and preferences."],
   coverage: ["Curriculum Coverage 📊", "Review textbook scope and classroom progress."],
   roster: ["Class Roster 👥", "Manage students, classes and attendance profiles."],
@@ -51,55 +47,12 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
   const [toast, setToast] = useState("");
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 2400); };
 
-  const subNavItems = [
-    { id: "home", label: "Dashboard", href: "/primary", emoji: "🏫" },
-    { id: "today", label: "Today's Plan", href: "/primary/today", emoji: "📅" },
-    { id: "library", label: "Library", emoji: "📚", href: "/primary/library" },
-    { id: "create", label: "Create", emoji: "✨", href: "/primary/create" },
-    { id: "saved", label: "Saved", emoji: "❤️", href: "/primary/saved" },
-    { id: "settings", label: "Settings", emoji: "⚙️", href: "/primary/settings" },
-  ];
-
   return <>
     <div className="primary-shell min-h-screen text-teachpad-ink">
     <main className="primary-main min-h-screen p-4 lg:p-7">
-      <header className="primary-top-nav mb-6 flex flex-col gap-4 border border-slate-200/50 bg-white/70 p-4 shadow-xs backdrop-blur-md rounded-2xl lg:flex-row lg:items-center lg:justify-between select-none">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#6e41f5] to-[#8d65ff] text-white shadow-md shadow-[#6e41f5]/20">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-sm font-black text-[#1a1c3d] tracking-tight">Primary Classroom OS</h1>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">NEP 2020 Guided System</p>
-          </div>
-        </div>
-        <nav className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-          {subNavItems.map((item) => {
-            const isActive = page === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition-all duration-200 whitespace-nowrap",
-                  isActive
-                    ? "bg-[#6e41f5] text-white shadow-md shadow-[#6e41f5]/20"
-                    : "text-[#5e6399] hover:bg-slate-100/70 hover:text-[#6e41f5]"
-                )}
-              >
-                <span className="text-sm">{item.emoji}</span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </header>
-
       {page === "home" && <PrimaryHomePage notify={notify} />}
       {page === "today" && <PrimaryTodayPage notify={notify} />}
       {page === "library" && <PrimaryLibraryPage Resources={Resources} notify={notify} />}
-      {page === "create" && <PrimaryCreatePage AiStudio={AiStudio} notify={notify} />}
-      {page === "saved" && <PrimarySavedPage Resources={Resources} notify={notify} />}
       {page === "settings" && <PrimarySettingsPage />}
       {page === "coverage" && <PrimaryCoveragePage notify={notify} />}
       {page === "roster" && <PrimaryRosterPage notify={notify} />}
@@ -199,14 +152,114 @@ export function TopicBar({ action = "Change Topic", href, notify }: { action?: s
     notify?.(synced ? "Teaching context saved — all Primary pages updated" : "Teaching context saved on this device — sign in to sync it");
   };
 
-  const buttonClass = "rounded-xl border border-blue-100 bg-white px-5 py-3 text-sm font-bold text-[#3b82f6]";
-  const selectClass = "mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900";
+  const buttonClass = "rounded-xl border border-[#e8e7fb] bg-white px-5 py-3 text-xs font-black text-[#6e41f5] hover:bg-[#faf9ff] transition cursor-pointer shadow-xs";
+  const selectClass = "mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none";
   
-  return <div className="primary-card mt-7 p-5">{editing ? <form onSubmit={(event) => { event.preventDefault(); void save(); }} className="grid gap-3 md:grid-cols-5 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] md:items-end"><label className="text-xs font-bold text-slate-600">Class<select value={draft.level} onChange={(event) => onLevelChange(event.target.value)} className={selectClass}>{PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Learning Area<select value={draft.subject} onChange={(event) => onSubjectChange(event.target.value)} className={selectClass}>{subjectsForClass(draft.level).map((subject: string) => <option key={subject} value={subject}>{subject}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Theme<select value={draft.theme ?? ""} onChange={(event) => onThemeChange(event.target.value)} className={selectClass}>{themeOptions.map((theme) => <option key={theme} value={theme}>{theme}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Focus Skill<select value={draft.skill ?? ""} onChange={(event) => setDraft({ ...draft, skill: event.target.value || undefined })} className={selectClass}><option value="">All Skills</option>{skillOptions.map((skill: string) => <option key={skill} value={skill}>{skill}</option>)}</select></label><label className="text-xs font-bold text-slate-600">Language<select value={draft.language} onChange={(event) => setDraft({ ...draft, language: event.target.value as PrimaryTeachingContext["language"] })} className={selectClass}>{PRIMARY_LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}</select></label><div className="flex gap-2"><button type="submit" disabled={saving} className="rounded-xl bg-[#3b82f6] px-4 py-2 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60">{saving ? "Saving…" : "Save"}</button><button type="button" disabled={saving} onClick={() => { setDraft(context); setEditing(false); }} className="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 disabled:opacity-60">Cancel</button></div></form> : <div className="grid gap-4 md:grid-cols-5 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] md:items-center"><Topic icon="🎓" label="Class" value={context.level} onClick={() => setEditing(true)} /><Topic icon="📖" label="Learning Area" value={context.subject} onClick={() => setEditing(true)} /><Topic icon="🌿" label="Theme" value={context.theme ?? "—"} onClick={() => setEditing(true)} /><Topic icon="🎯" label="Focus Skill" value={context.skill ?? "All Skills"} onClick={() => setEditing(true)} /><Topic icon="🌐" label="Language" value={context.language} onClick={() => setEditing(true)} /><div className="flex flex-wrap items-center gap-2">{syncStatus === "syncing" && <span className="text-xs font-semibold text-slate-500 animate-pulse mr-2">Saving</span>}{syncStatus === "synced" && <span className="text-xs font-semibold text-emerald-600 mr-2">Saved</span>}{syncStatus === "unsynced" && <span className="text-xs font-semibold text-rose-600 mr-2">Not synced — <button type="button" onClick={() => void retrySync()} className="underline font-bold hover:text-rose-800">Retry</button></span>}<button type="button" onClick={() => setEditing(true)} className={buttonClass}>Change context <span aria-hidden="true">✎</span></button>{href && <Link href={href} className={buttonClass}>{action} <ArrowRight className="inline h-4 w-4" /></Link>}</div></div>}</div>;
+  return (
+    <div className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] mt-7 p-5 shadow-xs">
+      {editing ? (
+        <form
+          onSubmit={(event) => { event.preventDefault(); void save(); }}
+          className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-end"
+        >
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+            Class
+            <select value={draft.level} onChange={(event) => onLevelChange(event.target.value)} className={selectClass}>
+              {PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+            Learning Area
+            <select value={draft.subject} onChange={(event) => onSubjectChange(event.target.value)} className={selectClass}>
+              {subjectsForClass(draft.level).map((subject: string) => <option key={subject} value={subject}>{subject}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+            Theme
+            <select value={draft.theme ?? ""} onChange={(event) => onThemeChange(event.target.value)} className={selectClass}>
+              {themeOptions.map((theme) => <option key={theme} value={theme}>{theme}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+            Focus Skill
+            <select value={draft.skill ?? ""} onChange={(event) => setDraft({ ...draft, skill: event.target.value || undefined })} className={selectClass}>
+              <option value="">All Skills</option>
+              {skillOptions.map((skill: string) => <option key={skill} value={skill}>{skill}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+            Language
+            <select value={draft.language} onChange={(event) => setDraft({ ...draft, language: event.target.value as PrimaryTeachingContext["language"] })} className={selectClass}>
+              {PRIMARY_LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}
+            </select>
+          </label>
+          <div className="flex gap-2">
+            <button type="submit" disabled={saving} className="rounded-xl bg-[#6e41f5] px-4 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:cursor-wait disabled:opacity-60 cursor-pointer">
+              {saving ? "Saving…" : "Save"}
+            </button>
+            <button type="button" disabled={saving} onClick={() => { setDraft(context); setEditing(false); }} className="rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs font-black text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-center">
+          <Topic icon="🎓" label="Class" value={context.level} onClick={() => setEditing(true)} />
+          <Topic icon="📖" label="Learning Area" value={context.subject} onClick={() => setEditing(true)} />
+          <Topic icon="🌿" label="Theme" value={context.theme ?? "—"} onClick={() => setEditing(true)} />
+          <Topic icon="🎯" label="Focus Skill" value={context.skill ?? "All Skills"} onClick={() => setEditing(true)} />
+          <Topic icon="🌐" label="Language" value={context.language} onClick={() => setEditing(true)} />
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full border-t xl:border-t-0 border-slate-100 pt-3 xl:pt-0">
+            <div className="flex items-center gap-2">
+              {syncStatus === "syncing" && <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 animate-pulse">Saving…</span>}
+              {syncStatus === "synced" && <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Saved ✓</span>}
+              {syncStatus === "unsynced" && (
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-600">
+                  Not synced · <button type="button" onClick={() => void retrySync()} className="underline hover:text-rose-800 cursor-pointer">Retry</button>
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <button type="button" onClick={() => setEditing(true)} className={buttonClass}>
+                Change context <span aria-hidden="true">✎</span>
+              </button>
+              {href && (
+                <Link href={href} className="rounded-xl bg-[#6e41f5] px-5 py-3 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 inline-flex items-center gap-1">
+                  {action} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 function Topic({ icon, label, value, onClick }: { icon: string; label: string; value: string; onClick?: () => void }) {
-  const content = <><span className="text-3xl">{icon}</span><span className="min-w-0 text-left"><small className="block text-[11px] text-[#5c6399]">{label}</small><b className="block truncate">{value}</b></span>{onClick && <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-[#633df4]" />}</>;
-  return onClick ? <button type="button" onClick={onClick} className="flex min-w-0 items-center gap-3 border-r border-[#eceaff] pr-3 text-left transition hover:text-[#633df4] last:border-0" aria-label={`Change ${label}`}>{content}</button> : <div className="flex min-w-0 items-center gap-3 border-r border-[#eceaff] pr-3 last:border-0">{content}</div>;
+  const content = (
+    <>
+      <span className="text-3xl shrink-0">{icon}</span>
+      <span className="min-w-0 text-left flex-1">
+        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</small>
+        <b className="block truncate text-xs font-black text-[#171747] mt-0.5">{value}</b>
+      </span>
+      {onClick && <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-[#6e41f5] group-hover:translate-y-0.5 transition" />}
+    </>
+  );
+  return onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs hover:border-[#6e41f5]/30 hover:bg-[#faf9ff]/20 transition text-left w-full cursor-pointer"
+      aria-label={`Change ${label}`}
+    >
+      {content}
+    </button>
+  ) : (
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs w-full">
+      {content}
+    </div>
+  );
 }
 function PrimaryTabs({ labels, active, onChange }: { labels: string[]; active?: string; onChange?: (label: string) => void }) { const [internalActive, setInternalActive] = useState(labels[0]); const current = active ?? internalActive; return <div className="primary-card mt-5 flex gap-2 overflow-x-auto p-2" role="tablist">{labels.map((label) => <button key={label} onClick={() => { setInternalActive(label); onChange?.(label); }} role="tab" aria-selected={current === label} className={cn("whitespace-nowrap rounded-xl px-4 py-3 text-xs font-bold", current === label ? "bg-blue-50 text-[#2563eb] shadow-sm" : "text-slate-600")}>{label}</button>)}</div> }
 function SectionCard({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) { return <section className={cn("primary-card p-5", className)}>{title && <h2 className="mb-4 text-lg font-extrabold">{title}</h2>}{children}</section> }
@@ -586,33 +639,3 @@ export function Resources({
   );
 }
 
-export function AiStudio({ notify }: { notify: (s: string) => void }) {
-  const { context } = usePrimaryTeachingContext();
-  const track = useTrackActivity();
-  const content = useMemo(() => themeContent(context.theme, context.subject), [context.theme, context.subject]);
-  const { events } = usePrimaryActivityHistory(100);
-  const options = [["Generate Lesson Plan", "Create detailed, NEP 2020 aligned lesson plans.", ClipboardCheck, generatorHref("/dashboard/lesson-plans/new", context)], ["Generate Worksheet", "Create engaging worksheets in seconds.", Pencil, generatorHref("/dashboard/worksheets/new", context)], ["Generate Activity", "Fun classroom activities for every learning objective.", Puzzle, "/dashboard/activity-generator"], ["Generate Teaching Notes", "Quick notes, key points and teaching tips.", NotebookPen, "/dashboard/notes-generator"], ["Generate Presentation", "Beautiful slides for your lessons in seconds.", BarChart3, "/dashboard/presentation-generator"], ["Generate Story", "Engaging stories with morals and illustrations.", BookOpen, "/dashboard/activity-generator"], ["Generate Classroom Games", "Interactive games for active learning.", Sparkles, "/dashboard/activity-generator"]] as const;
-  const ideas = [
-    ["warmup", "🎵", "Suggest a warm-up"],
-    ["activity", "🧩", "Suggest a classroom activity"],
-    ["oral", "🗣️", "Suggest an oral assessment"],
-    ["homework", "✏️", "Suggest homework"],
-    ["movement", "🏃", "Suggest a movement break"],
-  ] as const;
-  const [selectedIdea, setSelectedIdea] = useState<string>("");
-  const [reply, setReply] = useState("");
-  const creationCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const event of events) {
-      if (event.entity_type !== "ai_creation") continue;
-      const label = event.entity_id.trim() || "AI Creation";
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  }, [events]);
-  const runIdea = (kind: string) => {
-    setSelectedIdea(kind);
-    setReply(quickIdeaText(kind as QuickIdeaKind, content, context));
-  };
-  return <div className="mt-9 space-y-5"><SectionCard title="Choose what you want to create ✨"><p className="-mt-3 mb-4 rounded-xl bg-white px-4 py-3 text-xs font-bold text-[#633df4] ring-1 ring-[#eeeaff]">Creating for: 🎓 {context.level} · 📖 {context.subject} · 🌿 {context.theme} · 🌐 {context.language}</p><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{options.map(([name, description, Icon, href]) => <Link key={name} href={href} onClick={() => track("ai_creation", name, "created")} className="primary-tool-card p-5 text-center"><span className="relative z-10 mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-[#eef6ff] text-[#3b82f6] shadow-[0_14px_30px_rgba(59,130,246,.24),inset_0_1px_0_rgba(255,255,255,.92)] ring-1 ring-blue-100"><Icon className="h-8 w-8" /></span><b className="relative z-10 mt-4 block text-sm text-slate-900">{name}</b><p className="relative z-10 mt-2 text-[11px] leading-4 text-slate-600">{description}</p><ArrowRight className="relative z-10 mx-auto mt-3 h-5 w-5 text-[#3b82f6]" /></Link>)}</div></SectionCard><section className="rounded-2xl bg-gradient-to-r from-[#eff6ff] to-white p-5"><b className="text-lg">Quick Teaching Ideas 💡</b><p className="mt-1 text-xs">Based on your selected class and theme</p><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{ideas.map(([kind, emoji, label]) => <button key={kind} onClick={() => runIdea(kind)} className={cn("rounded-xl px-3 py-2.5 text-xs font-bold transition", selectedIdea === kind ? "bg-[#1677ff] text-white shadow-md" : "bg-white text-[#3b82f6] ring-1 ring-blue-100 hover:bg-[#f0f7ff]")}>{emoji} {label}</button>)}</div>{reply && <p role="status" className="mt-3 whitespace-pre-line rounded-xl bg-white/80 p-3 text-xs leading-5 text-[#303777]">{reply}</p>}</section></div>;
-}

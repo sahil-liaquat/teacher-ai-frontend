@@ -143,29 +143,40 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
     Boolean(selectedSectionId) && isValidStudentCode(newStudentCode) && !createStudent.isPending;
 
   return (
-    <div className="mt-4 space-y-5">
-      <section className="primary-card p-5">
-        <p className="text-xs font-medium leading-5 text-[#454c86]">
-          Children are identified by a code, initials or nickname that you choose — TeachPad never
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="pb-5 border-b border-[#e8e7fb]">
+        <h2 className="text-3xl font-black tracking-tight text-[#171747]">Classroom Roster</h2>
+        <p className="text-xs font-semibold text-[#596083] mt-1">
+          Manage your classes, student codes, and profiles safely and privately.
+        </p>
+      </div>
+
+      {/* Privacy Note */}
+      <div className="rounded-2xl border border-[#e8e7fb] bg-[#fbfbfe] p-4 shadow-sm">
+        <p className="text-xs font-bold leading-relaxed text-[#596083]">
+          🛡️ Children are identified by a code, initials or nickname that you choose — TeachPad never
           stores a child&rsquo;s real name, date of birth or photo. Only you can see this roster.
         </p>
-      </section>
+      </div>
 
-      <section className="primary-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-extrabold">Your classes</h2>
-          <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+      {/* Classes Section */}
+      <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-50 pb-4 mb-5">
+          <h2 className="text-base font-black text-[#171747]">Your Classes</h2>
+          <label className="flex items-center gap-2 text-xs font-black text-[#596083] cursor-pointer">
             <input
               type="checkbox"
               checked={showArchived}
               onChange={(event) => setShowArchived(event.target.checked)}
+              className="rounded text-[#6e41f5] focus:ring-[#6e41f5] cursor-pointer"
             />
             Show archived
           </label>
         </div>
 
         <form
-          className="mt-4 grid gap-2 sm:grid-cols-[2fr_1fr_auto]"
+          className="grid gap-3 sm:grid-cols-[2fr_1fr_auto]"
           onSubmit={(event) => {
             event.preventDefault();
             if (canAddSection) createSection.mutate();
@@ -177,24 +188,27 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
             placeholder="Class name, e.g. Nursery A"
             aria-label="Class name"
             maxLength={120}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+            className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none"
           />
-          <select
-            value={newSectionLevel}
-            onChange={(event) => setNewSectionLevel(event.target.value as PrimaryLevel)}
-            aria-label="Class level"
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
-          >
-            {PRIMARY_LEVEL_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {levelLabel(key)}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={newSectionLevel}
+              onChange={(event) => setNewSectionLevel(event.target.value as PrimaryLevel)}
+              aria-label="Class level"
+              className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none"
+            >
+              {PRIMARY_LEVEL_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {levelLabel(key)}
+                </option>
+              ))}
+            </select>
+            <Plus className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 rotate-45" />
+          </div>
           <button
             type="submit"
             disabled={!canAddSection}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
             {createSection.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Add class
@@ -202,32 +216,32 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
         </form>
 
         {sections.isLoading ? (
-          <p className="mt-4 text-sm font-medium text-[#454c86]">Loading your classes…</p>
+          <p className="mt-5 text-xs font-bold text-[#596083]">Loading your classes…</p>
         ) : sections.isError ? (
-          <div className="mt-4 rounded-2xl bg-[#f7f4ff] p-6 text-center">
-            <p className="text-sm font-extrabold text-[#2f377e]">Couldn&rsquo;t load your classes</p>
+          <div className="mt-5 rounded-2xl bg-[#faf9ff] border border-[#cfc8ef] p-6 text-center">
+            <p className="text-xs font-bold text-[#6e41f5]">Couldn&rsquo;t load your classes</p>
             <button
               type="button"
               onClick={() => void sections.refetch()}
-              className="mt-3 rounded-xl bg-[#1677ff] px-4 py-2 text-xs font-bold text-white"
+              className="mt-3 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5731d8] transition cursor-pointer"
             >
               Try again
             </button>
           </div>
         ) : (sections.data || []).length === 0 ? (
-          <p className="mt-4 rounded-2xl bg-[#f7f4ff] p-6 text-center text-sm font-medium text-[#454c86]">
+          <p className="mt-5 rounded-2xl border border-dashed border-[#ecebf7] bg-[#faf9ff]/45 p-6 text-center text-xs font-bold text-slate-400">
             No classes yet. Add one above to start your roster.
           </p>
         ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(sections.data || []).map((section) => (
               <li key={section.id}>
                 <div
                   className={cn(
-                    "flex h-full flex-col rounded-2xl border p-4 transition",
+                    "flex h-full flex-col justify-between rounded-2xl border p-4 shadow-sm transition duration-150",
                     section.id === selectedSectionId
-                      ? "border-[#1677ff] bg-blue-50"
-                      : "border-[#e8e7fb] bg-white hover:border-[#bca5ff]",
+                      ? "border-[#6e41f5] bg-[#faf9ff]"
+                      : "border-[#ecebf7] bg-white hover:border-[#6e41f5]/25 hover:bg-[#faf9ff]/10",
                     !section.is_active && "opacity-60",
                   )}
                 >
@@ -235,30 +249,30 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
                     type="button"
                     onClick={() => setSelectedSectionId(section.id)}
                     aria-pressed={section.id === selectedSectionId}
-                    className="text-left"
+                    className="text-left cursor-pointer"
                   >
-                    <b className="block text-sm text-slate-900">{section.name}</b>
-                    <span className="mt-0.5 block text-[11px] font-bold text-[#454c86]">
+                    <b className="block text-sm font-black text-[#171747]">{section.name}</b>
+                    <span className="mt-1 block text-[10px] font-bold text-[#6e41f5] uppercase tracking-wider">
                       {levelLabel(section.level)} · {section.student_count}{" "}
                       {section.student_count === 1 ? "child" : "children"}
                       {section.is_active ? "" : " · archived"}
                     </span>
                   </button>
-                  <div className="mt-3 flex flex-wrap items-center gap-3 pt-2">
+                  <div className="mt-4 flex flex-wrap items-center gap-4 pt-3 border-t border-slate-100/75">
                     <button
                       type="button"
                       onClick={() => archiveSection.mutate(section)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#454c86] hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-black text-[#596083] hover:text-[#6e41f5] transition cursor-pointer"
                     >
-                      {section.is_active ? <Archive className="h-3 w-3" /> : <Undo2 className="h-3 w-3" />}
+                      {section.is_active ? <Archive className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
                       {section.is_active ? "Archive" : "Restore"}
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteSection.mutate(section)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-black text-rose-600 hover:text-rose-700 transition cursor-pointer ml-auto"
                     >
-                      <Trash2 className="h-3 w-3" /> Delete
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
                   </div>
                 </div>
@@ -268,14 +282,15 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
         )}
       </section>
 
+      {/* Children Section */}
       {selectedSection && (
-        <section className="primary-card p-5">
-          <h2 className="text-lg font-extrabold">
-            Children in {selectedSection.name}
+        <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+          <h2 className="text-base font-black text-[#171747] border-b border-slate-50 pb-4 mb-5">
+            Children in <span className="text-[#6e41f5]">{selectedSection.name}</span>
           </h2>
 
           <form
-            className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]"
+            className="grid gap-3 sm:grid-cols-[1fr_auto]"
             onSubmit={(event) => {
               event.preventDefault();
               if (canAddStudent) createStudent.mutate();
@@ -287,12 +302,12 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
               placeholder="Code, initials or nickname, e.g. A01"
               aria-label="Child code"
               maxLength={40}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none"
             />
             <button
               type="submit"
               disabled={!canAddStudent}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1677ff] px-4 py-2 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               {createStudent.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Add child
@@ -300,60 +315,60 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
           </form>
 
           {students.isLoading ? (
-            <p className="mt-4 text-sm font-medium text-[#454c86]">Loading children…</p>
+            <p className="mt-5 text-xs font-bold text-[#596083]">Loading children…</p>
           ) : students.isError ? (
-            <div className="mt-4 rounded-2xl bg-[#f7f4ff] p-6 text-center">
-              <p className="text-sm font-extrabold text-[#2f377e]">Couldn&rsquo;t load this class</p>
+            <div className="mt-5 rounded-2xl bg-[#faf9ff] border border-[#cfc8ef] p-6 text-center">
+              <p className="text-xs font-bold text-[#6e41f5]">Couldn&rsquo;t load this class</p>
               <button
                 type="button"
                 onClick={() => void students.refetch()}
-                className="mt-3 rounded-xl bg-[#1677ff] px-4 py-2 text-xs font-bold text-white"
+                className="mt-3 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5731d8] transition cursor-pointer"
               >
                 Try again
               </button>
             </div>
           ) : (students.data || []).length === 0 ? (
-            <p className="mt-4 rounded-2xl bg-[#f7f4ff] p-6 text-center text-sm font-medium text-[#454c86]">
+            <p className="mt-5 rounded-2xl border border-dashed border-[#ecebf7] bg-[#faf9ff]/45 p-6 text-center text-xs font-bold text-slate-400">
               No children in this class yet.
             </p>
           ) : (
-            <ul className="mt-4 divide-y divide-[#eceaff]">
+            <ul className="mt-5 divide-y divide-[#eceaff]">
               {(students.data || []).map((student) => (
                 <li
                   key={student.id}
                   className={cn(
-                    "flex flex-wrap items-center gap-3 py-3",
+                    "flex flex-wrap items-center gap-3 py-3.5 hover:bg-[#faf9ff]/30 px-2 rounded-xl transition duration-150",
                     !student.is_active && "opacity-60",
                   )}
                 >
-                  <b className="text-sm text-slate-900">{student.code}</b>
+                  <b className="text-sm font-black text-[#171747]">{student.code}</b>
                   {!student.is_active && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                    <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
                       Archived
                     </span>
                   )}
-                  <div className="ml-auto flex flex-wrap items-center gap-3">
+                  <div className="ml-auto flex flex-wrap items-center gap-4">
                     <button
                       type="button"
                       onClick={() => setProfileStudent(student)}
-                      className="text-[11px] font-bold text-[#1677ff] hover:underline"
+                      className="text-xs font-black text-[#6e41f5] hover:text-[#5731d8] transition cursor-pointer"
                     >
-                      View profile
+                      View Profile
                     </button>
                     <button
                       type="button"
                       onClick={() => archiveStudent.mutate(student)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#454c86] hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-black text-[#596083] hover:text-[#6e41f5] transition cursor-pointer"
                     >
-                      {student.is_active ? <Archive className="h-3 w-3" /> : <Undo2 className="h-3 w-3" />}
+                      {student.is_active ? <Archive className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
                       {student.is_active ? "Archive" : "Restore"}
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteStudent.mutate(student)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-black text-rose-600 hover:text-rose-700 transition cursor-pointer"
                     >
-                      <Trash2 className="h-3 w-3" /> Remove
+                      <Trash2 className="h-3.5 w-3.5" /> Remove
                     </button>
                   </div>
                 </li>
@@ -372,4 +387,3 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
     </div>
   );
 }
-

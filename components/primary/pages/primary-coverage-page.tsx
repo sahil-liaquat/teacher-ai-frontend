@@ -174,11 +174,15 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
   const totals = coverage.data?.totals;
 
   return (
-    <div className="mt-4 space-y-5">
-      {/* Scoped to this component so these print rules only exist in the DOM
-          while the coverage page is mounted — see the comment on
-          .primary-coverage-print in primary.css for why they can't live in
-          that (globally-imported) stylesheet. */}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="pb-5 border-b border-[#e8e7fb]">
+        <h2 className="text-3xl font-black tracking-tight text-[#171747]">Curriculum Coverage</h2>
+        <p className="text-xs font-semibold text-[#596083] mt-1">
+          Review curriculum completion records, stats, and milestones.
+        </p>
+      </div>
+
       <style>{`
         @media print {
           body * {
@@ -232,17 +236,17 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
         }
       `}</style>
 
-      {/* ── controls ─────────────────────────────────────────────────── */}
-      <section className="flex flex-wrap items-center gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff]">
-        <div className="inline-flex rounded-full bg-[#f4f4ff] p-1">
+      {/* Controls Strip */}
+      <section className="flex flex-wrap items-center gap-4 rounded-[24px] border border-[#e8e7fb] bg-white p-4 shadow-sm">
+        <div className="inline-flex rounded-full bg-[#f4f4ff] p-1 border border-slate-100">
           {(["week", "month", "themes"] as CoverageTab[]).map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => selectTab(value)}
               className={cn(
-                "rounded-full px-4 py-2 text-xs font-black capitalize transition",
-                tab === value ? "bg-white text-[#6e41f5] shadow-sm" : "text-[#5a5f8f]",
+                "rounded-full px-4 py-2 text-xs font-black capitalize transition cursor-pointer",
+                tab === value ? "bg-white text-[#6e41f5] shadow-sm" : "text-[#5a5f8f] hover:text-[#6e41f5]",
               )}
             >
               {value}
@@ -256,25 +260,25 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               type="button"
               aria-label="Previous"
               onClick={() => step(-1)}
-              className="grid h-9 w-9 place-items-center rounded-full bg-white ring-1 ring-[#eeeeff] hover:text-[#6e41f5]"
+              className="grid h-9 w-9 place-items-center rounded-full bg-white border border-[#e8e7fb] hover:border-[#6e41f5] hover:text-[#6e41f5] shadow-sm transition cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="min-w-[170px] text-center text-sm font-black text-[#17206a]">
+            <span className="min-w-[170px] text-center text-xs font-black text-[#171747]">
               {rangeLabel}
             </span>
             <button
               type="button"
               aria-label="Next"
               onClick={() => step(1)}
-              className="grid h-9 w-9 place-items-center rounded-full bg-white ring-1 ring-[#eeeeff] hover:text-[#6e41f5]"
+              className="grid h-9 w-9 place-items-center rounded-full bg-white border border-[#e8e7fb] hover:border-[#6e41f5] hover:text-[#6e41f5] shadow-sm transition cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={() => setAnchor(toLocalISODate(new Date()))}
-              className="rounded-full bg-[#f4f4ff] px-3 py-2 text-[11px] font-black text-[#5a5f8f]"
+              className="rounded-full bg-[#f4f4ff] px-4 py-2 text-[11px] font-black text-[#5a5f8f] hover:text-[#6e41f5] transition cursor-pointer"
             >
               {rangeMode === "month" ? "This month" : "This week"}
             </button>
@@ -287,7 +291,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               aria-label="Level"
               value={activeLevel}
               onChange={(event) => setLevelOverride(event.target.value as PrimaryLevelKey)}
-              className="h-9 rounded-full bg-[#f4f4ff] px-4 text-xs font-black text-[#17206a]"
+              className="h-9 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-[#171747]"
             >
               {PRIMARY_LEVEL_KEYS.map((key) => (
                 <option key={key} value={key}>{levelLabel(key)}</option>
@@ -297,7 +301,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               aria-label="Subject"
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              className="h-9 rounded-full bg-[#f4f4ff] px-4 text-xs font-black text-[#17206a]"
+              className="h-9 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-[#171747]"
             >
               <option value="">All subjects</option>
               {subjectOptions.map((value) => (
@@ -311,7 +315,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
           type="button"
           onClick={handleExport}
           disabled={loading || failed}
-          className="ml-auto inline-flex h-9 items-center gap-2 rounded-full bg-[#6e41f5] px-4 text-xs font-black text-white disabled:opacity-50"
+          className="ml-auto inline-flex h-9 items-center gap-2 rounded-full bg-[#6e41f5] px-4 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:opacity-50 cursor-pointer"
         >
           <Download className="h-3.5 w-3.5" />
           Export PDF
@@ -319,20 +323,20 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
       </section>
 
       {loading && (
-        <div className="flex items-center gap-2 rounded-3xl bg-white p-6 text-sm font-bold text-[#5a5f8f] shadow-sm ring-1 ring-[#eeeeff]">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading your coverage…
+        <div className="flex items-center gap-2.5 rounded-[24px] border border-[#e8e7fb] bg-white p-6 text-xs font-bold text-[#596083] shadow-sm">
+          <Loader2 className="h-4 w-4 animate-spin text-[#6e41f5]" /> Loading your coverage…
         </div>
       )}
 
       {failed && !loading && (
-        <div className="rounded-3xl bg-rose-50 p-6 text-sm font-bold text-rose-700 ring-1 ring-rose-200">
+        <div className="rounded-[24px] bg-rose-50 border border-rose-100 p-6 text-xs font-bold text-rose-700">
           {getErrorMessage(coverage.error || themes.error, "Could not load coverage. Try again.")}
         </div>
       )}
 
-      {/* ── summary strip ────────────────────────────────────────────── */}
+      {/* Summary Cards */}
       {!loading && !failed && totals && tab !== "themes" && (
-        <section className="grid gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff] sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Days with a plan" value={`${totals.days_with_plan} of ${totals.days_in_range}`} />
           <Stat label="Activities completed" value={`${totals.completed} of ${totals.activities}`} />
           <Stat label="Skipped or moved" value={`${totals.skipped + totals.rescheduled}`} />
@@ -343,9 +347,9 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
         </section>
       )}
 
-      {/* ── week ─────────────────────────────────────────────────────── */}
+      {/* Week View */}
       {!loading && !failed && tab === "week" && (
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {weekDates.map((iso) => (
             <WeekCard
               key={iso}
@@ -358,12 +362,12 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
         </section>
       )}
 
-      {/* ── month ────────────────────────────────────────────────────── */}
+      {/* Month View */}
       {!loading && !failed && tab === "month" && (
-        <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff]">
-          <div className="grid grid-cols-7 gap-2 pb-2">
+        <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+          <div className="grid grid-cols-7 gap-2 pb-3 border-b border-[#ecebf7] mb-4">
             {WEEKDAY_HEADINGS.map((heading) => (
-              <div key={heading} className="text-center text-[10px] font-black uppercase text-[#9aa0c8]">
+              <div key={heading} className="text-center text-[10px] font-black uppercase text-slate-400">
                 {heading}
               </div>
             ))}
@@ -381,31 +385,31 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
         </section>
       )}
 
-      {/* ── themes ───────────────────────────────────────────────────── */}
+      {/* Themes View */}
       {!loading && !failed && tab === "themes" && themes.data && (
-        <section className="space-y-3">
+        <section className="space-y-4">
           {themes.data.themes_authored === 0 && (
-            <div className="rounded-3xl bg-amber-50 p-5 text-sm font-bold text-amber-800 ring-1 ring-amber-200">
+            <div className="rounded-[24px] bg-amber-50 border border-amber-200 p-5 text-xs font-bold text-amber-800">
               No lessons have been authored for <strong>{levelLabel(activeLevel)}</strong> yet.
               This is a gap in TeachPad&apos;s curriculum, not in your teaching.
             </div>
           )}
 
-          <div className="grid gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff] sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Themes" value={`${themes.data.themes_total}`} />
             <Stat label="With a lesson" value={`${themes.data.themes_authored}`} />
             <Stat label="Completed" value={`${themes.data.themes_complete}`} />
             <Stat label="Steps taught" value={`${themes.data.steps_taught} of ${themes.data.steps_total}`} />
           </div>
 
-          <p className="px-1 text-[11px] font-bold text-[#9aa0c8]">
+          <p className="px-1 text-[10px] font-bold text-[#9aa0c8]">
             All time, at {levelLabel(activeLevel)}. When a lesson is republished it becomes a new
             version with new steps, so coverage for that theme starts again from zero.
           </p>
 
-          <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#eeeeff]">
+          <div className="overflow-hidden rounded-[28px] border border-[#e8e7fb] bg-white shadow-sm divide-y divide-[#ecebf7]">
             {visibleThemes.length === 0 && (
-              <p className="p-6 text-sm font-bold text-[#5a5f8f]">No themes to show yet.</p>
+              <p className="p-6 text-xs font-bold text-[#5a5f8f]">No themes to show yet.</p>
             )}
             {visibleThemes.map((theme) => (
               <ThemeRow key={`${theme.theme_id}-${theme.subject}`} theme={theme} />
@@ -414,7 +418,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
         </section>
       )}
 
-      {/* ── print-only rendition, for the window.print() fallback ─────── */}
+      {/* Print-Only Layout */}
       {coverage.data && themes.data && (
         <div className="primary-coverage-print">
           <h1>Teaching Coverage Report</h1>
@@ -476,9 +480,9 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[#f8f8ff] px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-wide text-[#9aa0c8]">{label}</p>
-      <p className="mt-1 text-lg font-black text-[#17206a]">{value}</p>
+    <div className="rounded-2xl border border-[#e8e7fb] bg-white px-5 py-4 shadow-sm hover:border-[#6e41f5]/25 transition duration-150">
+      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-1 text-lg font-black text-[#171747]">{value}</p>
     </div>
   );
 }
@@ -497,60 +501,59 @@ function WeekCard({
   const state = day?.state || "no_plan";
   const tone = dayStateTone(state);
   return (
-    <article className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#eeeeff]">
-      <header className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-black text-[#17206a]">{formatDayLabel(iso)}</p>
-          <p className="mt-0.5 text-[11px] font-bold text-[#5a5f8f]">
-            {day?.theme_name || "No theme"}
-          </p>
-        </div>
-        <span
-          className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-black",
-            tone.chip,
-            tone.text,
-          )}
-        >
-          <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
-          {DAY_STATE_LABELS[state]}
-        </span>
-      </header>
-
-      {day && day.total > 0 && (
-        <p className="mt-2 text-[11px] font-bold text-[#9aa0c8]">
-          {day.completed}/{day.total} done · {formatMinutes(day.minutes_completed)} of{" "}
-          {formatMinutes(day.minutes_planned)}
-        </p>
-      )}
-
-      <div className="mt-3 space-y-1.5">
-        {loadingActivities && (
-          <p className="text-[11px] font-bold text-[#9aa0c8]">Loading activities…</p>
-        )}
-        {!loadingActivities && activities.length === 0 && (
-          <p className="text-[11px] font-bold text-[#9aa0c8]">
-            {state === "no_plan" ? "Nothing was planned for this day." : "No activities on this day."}
-          </p>
-        )}
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-start gap-2 rounded-xl bg-[#f8f8ff] px-3 py-2">
-            <span className="w-11 shrink-0 text-[10px] font-black text-[#9aa0c8]">
-              {(activity.start_time || "").slice(0, 5) || "--:--"}
-            </span>
-            <span className="flex-1 text-[11px] font-bold text-[#17206a]">
-              {activity.title}
-              {/* An ad-hoc activity has no curriculum step, so it counts here but
-                  is invisible to the theme rollup. Say so rather than hide it. */}
-              {!activity.curriculum_step_id && (
-                <span className="ml-1 text-[10px] font-black text-[#9aa0c8]">· Added by you</span>
-              )}
-            </span>
-            <span className="shrink-0 text-[10px] font-black capitalize text-[#5a5f8f]">
-              {activity.status}
-            </span>
+    <article className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:shadow transition duration-200 flex flex-col justify-between">
+      <div>
+        <header className="flex items-start justify-between gap-2 border-b border-slate-50 pb-2 mb-3">
+          <div>
+            <p className="text-xs font-black text-[#171747]">{formatDayLabel(iso)}</p>
+            <p className="mt-0.5 text-[10px] font-bold text-slate-400 truncate max-w-[130px]">
+              {day?.theme_name || "No theme"}
+            </p>
           </div>
-        ))}
+          <span
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+              tone.chip,
+              tone.text,
+            )}
+          >
+            <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
+            {DAY_STATE_LABELS[state]}
+          </span>
+        </header>
+
+        {day && day.total > 0 && (
+          <p className="text-[10px] font-bold text-slate-400 mb-2">
+            {day.completed}/{day.total} done · {formatMinutes(day.minutes_completed)} of {formatMinutes(day.minutes_planned)}
+          </p>
+        )}
+
+        <div className="space-y-1.5">
+          {loadingActivities && (
+            <p className="text-[10px] font-bold text-slate-400">Loading activities…</p>
+          )}
+          {!loadingActivities && activities.length === 0 && (
+            <p className="text-[10px] font-bold text-slate-400 italic">
+              {state === "no_plan" ? "Nothing was planned." : "No activities."}
+            </p>
+          )}
+          {activities.slice(0, 4).map((activity) => (
+            <div key={activity.id} className="flex items-start gap-2 rounded-lg bg-[#faf9ff] border border-slate-100/50 p-2">
+              <span className="w-10 shrink-0 text-[9px] font-black text-slate-400">
+                {(activity.start_time || "").slice(0, 5) || "--:--"}
+              </span>
+              <span className="flex-1 text-[10px] font-bold text-[#171747] truncate">
+                {activity.title}
+                {!activity.curriculum_step_id && (
+                  <span className="ml-1 text-[8px] font-black text-slate-400">· Custom</span>
+                )}
+              </span>
+            </div>
+          ))}
+          {activities.length > 4 && (
+            <p className="text-[9px] font-black text-[#6e41f5] text-right">+ {activities.length - 4} more activities</p>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -563,23 +566,23 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
     <div
       title={`${formatShortDate(iso)} — ${DAY_STATE_LABELS[state]}`}
       className={cn(
-        "min-h-[74px] rounded-2xl border p-2",
+        "min-h-[74px] rounded-2xl border p-2 flex flex-col justify-between transition hover:border-[#6e41f5]/25",
         inMonth ? tone.chip : "border-transparent bg-transparent",
       )}
     >
       <div className="flex items-center justify-between">
-        <span className={cn("text-[11px] font-black", inMonth ? "text-[#17206a]" : "text-[#d5d7ea]")}>
+        <span className={cn("text-[11px] font-black", inMonth ? "text-[#171747]" : "text-[#d5d7ea]")}>
           {parseLocalISODate(iso).getDate()}
         </span>
         {inMonth && <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />}
       </div>
       {inMonth && day && day.total > 0 && (
-        <>
-          <p className={cn("mt-1 text-[10px] font-black", tone.text)}>
+        <div className="mt-1">
+          <p className={cn("text-[10px] font-black leading-none", tone.text)}>
             {day.completed}/{day.total}
           </p>
-          <p className="mt-0.5 truncate text-[9px] font-bold text-[#9aa0c8]">{day.theme_name || ""}</p>
-        </>
+          <p className="mt-1 truncate text-[8px] font-bold text-slate-400 leading-none">{day.theme_name || ""}</p>
+        </div>
       )}
     </div>
   );
@@ -588,35 +591,33 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
 function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
   const tone = themeStateTone(theme.state);
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-[#f2f2fb] px-4 py-3 last:border-0">
+    <div className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-[#faf9ff]/45 transition duration-150">
       <div className="min-w-[190px] flex-1">
-        <p className="text-sm font-black text-[#17206a]">
+        <p className="text-sm font-black text-[#171747]">
           {theme.emoji ? `${theme.emoji} ` : ""}
           {theme.theme_name}
         </p>
-        <p className="text-[11px] font-bold text-[#9aa0c8]">{theme.subject}</p>
+        <p className="text-[10px] font-black text-[#6e41f5] uppercase tracking-wider mt-0.5">{theme.subject}</p>
       </div>
 
-      <div className="min-w-[140px] flex-1">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-[#f2f2fb]">
+      <div className="min-w-[140px] flex-1 max-w-[240px]">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-50">
           <div
-            className={cn("h-full rounded-full", tone.dot)}
+            className={cn("h-full rounded-full transition-all duration-300", tone.dot)}
             style={{ width: `${theme.authored ? theme.completion_pct : 0}%` }}
           />
         </div>
       </div>
 
-      {/* An unauthored theme shows a dash, never 0% — TeachPad's gap must not
-          read as the teacher's. */}
-      <span className="w-20 shrink-0 text-right text-xs font-black text-[#17206a]">
+      <span className="w-20 shrink-0 text-right text-xs font-black text-[#171747]">
         {theme.authored ? `${theme.steps_taught}/${theme.steps_total}` : "—"}
       </span>
-      <span className="w-12 shrink-0 text-right text-xs font-black text-[#5a5f8f]">
+      <span className="w-12 shrink-0 text-right text-xs font-black text-[#6e41f5]">
         {theme.authored ? `${theme.completion_pct}%` : "—"}
       </span>
       <span
         className={cn(
-          "w-[160px] shrink-0 rounded-full border px-2 py-1 text-center text-[10px] font-black",
+          "w-[140px] shrink-0 rounded-full border px-2 py-0.5 text-center text-[9px] font-black uppercase tracking-wider",
           tone.chip,
           tone.text,
         )}

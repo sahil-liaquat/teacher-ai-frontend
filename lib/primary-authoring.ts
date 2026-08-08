@@ -17,6 +17,8 @@ export const STEP_TYPES = [
   "reflection", "parent_note",
   "arrival_routine", "free_play", "story_rhyme_picture_talk",
   "concept_exploration", "classroom_activity_game", "practice",
+  "numeracy_time", "meal_time", "creative_time", "literacy_time",
+  "outdoor_play", "goodbye",
 ] as const;
 
 /** The server rejects a gap in positions, so every mutation renumbers. */
@@ -48,6 +50,7 @@ export function createStepDraft(position: number): StepDraft {
     transition: null,
     required_resource_ids: [],
     optional_resource_ids: [],
+    details: {},
   };
 }
 

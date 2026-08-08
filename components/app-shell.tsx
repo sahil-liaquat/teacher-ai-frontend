@@ -45,11 +45,11 @@ type NavItem = {
 
 // Primary is a first-class workspace; access is controlled by authentication,
 // not by a build-time flag that can leave routes and navigation out of sync.
+// Workspace switching happens only through the top WorkspaceSwitcher.
 export const PRIMARY_ENABLED = true;
 
 const teacherNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
-  ...(PRIMARY_ENABLED ? [{ href: "/primary", label: "Primary", icon: Sparkles }] : []),
   { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft },
   { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
   { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
@@ -86,8 +86,6 @@ const primaryNav: NavItem[] = [
   { href: "/primary", label: "Home", icon: Home },
   { href: "/primary/today", label: "Today's Plan", icon: CalendarCheck },
   { href: "/primary/library", label: "Library", icon: BookOpen },
-  { href: "/primary/create", label: "Create", icon: Sparkles },
-  { href: "/primary/saved", label: "Saved", icon: Heart },
   { href: "/primary/settings", label: "Settings", icon: Settings }
 ];
 
@@ -461,10 +459,7 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
         >
           <span
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
-              active
-                ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
-                : "group-hover:bg-blue-50"
+              "flex h-10 w-10 items-center justify-center transition-all duration-300"
             )}
           >
             <Icon
@@ -497,8 +492,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       )}
     >
       <span className={cn(
-        "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8",
-        active ? "bg-blue-100" : "bg-teachpad-tag",
+        "grid h-10 w-10 place-items-center transition-colors duration-200 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8",
         colorClass
       )}>
         <Icon className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
@@ -590,8 +584,7 @@ function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
       )}
     >
       <span className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200",
-        active ? "bg-blue-100" : "bg-transparent"
+        "flex h-9 w-9 items-center justify-center transition-all duration-200"
       )}>
         <Icon className={cn(
           "h-5 w-5 transition-colors duration-200",
@@ -599,7 +592,7 @@ function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
         )} />
       </span>
       <span className={cn(
-        "text-[10px] font-semibold transition-colors duration-200 truncate max-w-full",
+        "text-[10px] font-semibold transition-colors duration-200",
         active ? "text-gray-900" : "text-gray-500"
       )}>
         {item.label}
@@ -756,10 +749,7 @@ function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; acti
       )}
     >
       <span className={cn(
-        "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
-        active
-          ? "bg-white shadow-[0_4px_12px_rgba(59,130,246,0.12)]"
-          : "",
+        "grid h-9 w-9 place-items-center transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
         colorClass
       )}>
         <Icon className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
@@ -789,7 +779,7 @@ function Brand({ compact = false, href = "/dashboard" }: { compact?: boolean; hr
 
 function isActive(href: string, pathname: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
-  if (href === "/primary") return pathname === "/primary" || pathname.startsWith("/primary/");
+  if (href === "/primary") return pathname === "/primary";
   if (href === "/dashboard/classroom-tools") {
     return [
       "/dashboard/classroom-tools",

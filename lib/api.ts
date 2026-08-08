@@ -2426,6 +2426,16 @@ export const backendApi = {
       body: formData,
     });
   },
+  adminUploadPrimaryResource: (file: File, category: string, title?: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", category);
+    if (title) formData.append("title", title);
+    return apiFetch<PrimaryResource>("/admin/primary/resources/upload", {
+      method: "POST",
+      body: formData,
+    });
+  },
   adminDuplicatePrimaryTheme: (id: string) =>
     apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/duplicate`, { method: "POST" }),
   adminArchivePrimaryTheme: (id: string) =>
@@ -2761,7 +2771,9 @@ export type PrimaryStepType =
   | "circle_time" | "story" | "flashcards" | "craft" | "song" | "game"
   | "reflection" | "parent_note"
   | "arrival_routine" | "free_play" | "story_rhyme_picture_talk"
-  | "concept_exploration" | "classroom_activity_game" | "practice";
+  | "concept_exploration" | "classroom_activity_game" | "practice"
+  | "numeracy_time" | "meal_time" | "creative_time" | "literacy_time"
+  | "outdoor_play" | "goodbye";
 
 export type PrimaryAcademicYear = {
   id: string;
@@ -2832,6 +2844,7 @@ export type PrimaryCurriculumStep = {
   transition?: string | null;
   required_resource_ids?: string[] | null;
   optional_resource_ids?: string[] | null;
+  details?: Record<string, unknown>;
 };
 
 export type PrimaryCurriculumTheme = {

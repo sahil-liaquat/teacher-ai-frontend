@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
   ChevronDown,
@@ -17,15 +17,17 @@ import {
   Loader2,
   Sparkles,
   RefreshCw,
+  Eye,
+  Save,
 } from "lucide-react";
+import { primaryStepImage } from "@/lib/primary-step-images";
 import { backendApi } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { usePrimarySection } from "@/lib/use-primary-section";
-import { themesForSubject, subjectsForClass, PRIMARY_LEVELS } from "@/lib/primary-theme-content";
+import { PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { primaryTodayViewState } from "@/lib/primary-today-view-state";
-import { adaptApiResource } from "@/lib/primary-resource-adapter";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 import { cn } from "@/lib/utils";
@@ -123,30 +125,65 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const plannerActivities = data?.planner_activities ?? [];
   const dayRecord = data?.day_record ?? null;
 
-  // Today's Plan selector — mirrors the Home page card so context can be changed here too.
+  // Today's Plan editable summary — Class, Theme, Sub Theme and Topic pickers,
+  // driven by the published curriculum so subtheme/topic resolve to real rows.
   const [selLevel, setSelLevel] = useState<string>(context.level || "");
-  const [selSubject, setSelSubject] = useState(context.subject || "");
   const [selTheme, setSelTheme] = useState(context.theme || "");
+  const [selSubtheme, setSelSubtheme] = useState("");
+  const [selTopicId, setSelTopicId] = useState("");
   const [savingContext, setSavingContext] = useState(false);
 
-  useEffect(() => {
-    setSelLevel(context.level || "");
-    setSelSubject(context.subject || "");
-    setSelTheme(context.theme || "");
-  }, [context.level, context.subject, context.theme]);
-
-  const subjectOptions = useMemo(() => (selLevel ? subjectsForClass(selLevel as any) : []), [selLevel]);
-  const themeOptions = useMemo(() => (selSubject ? themesForSubject(selSubject) : []), [selSubject]);
-  const canViewPlan = !!(selLevel && selSubject && selTheme);
+  const pickerThemesQuery = useQuery({
+    queryKey: ["primary-curriculum-themes", selLevel, context.subject, context.language],
+    queryFn: () =>
+      backendApi.primaryCurriculumThemes({
+        level: PRIMARY_LEVEL_TO_API[selLevel as keyof typeof PRIMARY_LEVEL_TO_API],
+        subject: context.subject || undefined,
+        language: context.language ?? undefined,
+      }),
+    enabled: !!selLevel && !!context.subject,
+  });
+  const pickerThemes = useMemo(() => {
+    const fromCurriculum = pickerThemesQuery.data ?? [];
+    // Keep the currently selected theme visible even when it isn't in the
+    // curriculum list for the picked class/subject (e.g. mid-switch).
+    return fromCurriculum.some((t) => t.name === selTheme)
+      ? fromCurriculum
+      : [{ name: selTheme, topics: [] } as { name: string; topics: Array<{ id: string; name: string; subtheme: string | null; is_active: boolean; has_published_lesson: boolean }> }, ...fromCurriculum];
+  }, [pickerThemesQuery.data, selTheme]);
+  const selectedPickerTheme = useMemo(
+    () => pickerThemes.find((t) => t.name === selTheme) ?? null,
+    [pickerThemes, selTheme]
+  );
+  const subthemeOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const topic of selectedPickerTheme?.topics ?? []) {
+      if (topic.is_active && topic.has_published_lesson && topic.subtheme) set.add(topic.subtheme);
+    }
+    return Array.from(set);
+  }, [selectedPickerTheme]);
+  const topicOptions = useMemo(
+    () => (selectedPickerTheme?.topics ?? []).filter(
+      (t) => t.is_active && t.has_published_lesson && (selSubtheme === "" || t.subtheme === selSubtheme)
+    ),
+    [selectedPickerTheme, selSubtheme]
+  );
+  const canViewPlan = !!(selLevel && context.subject && selTheme && selTopicId);
 
   const handleLevelChange = (level: string) => {
     setSelLevel(level);
-    setSelSubject("");
     setSelTheme("");
+    setSelSubtheme("");
+    setSelTopicId("");
   };
-  const handleSubjectChange = (subject: string) => {
-    setSelSubject(subject);
-    setSelTheme("");
+  const handleThemeChange = (theme: string) => {
+    setSelTheme(theme);
+    setSelSubtheme("");
+    setSelTopicId("");
+  };
+  const handleSubthemeChange = (subtheme: string) => {
+    setSelSubtheme(subtheme);
+    setSelTopicId("");
   };
 
   const todayDateStr = useMemo(
@@ -170,17 +207,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const selectedThemeId = useMemo(
     () => themes.find((t) => t.name === context.theme)?.id ?? "",
     [themes, context.theme]
-  );
-
-  // The theme the DAY actually pins (vs. whatever the context currently says)
-  // — drives the hero/emoji/colour presentation on the Day Overview card.
-  const dayTheme = useMemo(
-    () => (dayRecord?.theme_id ? themes.find((t) => t.id === dayRecord.theme_id) ?? null : null),
-    [themes, dayRecord?.theme_id],
-  );
-  const dayTopic = useMemo(
-    () => (dayTheme ? dayTheme.topics.find((t) => t.id === dayRecord?.topic_id) ?? null : null),
-    [dayTheme, dayRecord?.topic_id],
   );
 
   const runGenerate = async (options: {
@@ -265,20 +291,24 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   const handleViewFullPlan = async () => {
     if (!canViewPlan) return;
+    const themeRow = pickerThemesQuery.data?.find((t) => t.name === selTheme) ?? null;
+    const topicRow = themeRow?.topics.find((t) => t.id === selTopicId) ?? null;
+    const resolvedContext: PrimaryTeachingContext = {
+      ...context,
+      level: selLevel as PrimaryTeachingContext["level"],
+      subject: context.subject,
+      theme: selTheme,
+      themeId: themeRow?.id,
+      topic: topicRow?.name ?? selTheme,
+      topicId: topicRow?.id,
+    };
     setSavingContext(true);
     try {
-      const resolvedContext: PrimaryTeachingContext = {
-        ...context,
-        level: selLevel as PrimaryTeachingContext["level"],
-        subject: selSubject,
-        theme: selTheme,
-        topic: selTheme,
-      };
       const todayDate = toLocalISODate(new Date());
       const saved = await updateContext(resolvedContext);
       if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
       setSelectedDate(todayDate);
-      await runGenerate({ context: resolvedContext, date: todayDate });
+      await runGenerate({ context: resolvedContext, date: todayDate, themeId: themeRow?.id, topicId: topicRow?.id });
     } finally {
       setSavingContext(false);
     }
@@ -355,43 +385,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     [selectedDate]
   );
 
-  const objectivesList = useMemo(() => {
-    if (dayRecord?.objectives && dayRecord.objectives.length > 0) return dayRecord.objectives;
-    return plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 4);
-  }, [dayRecord, plannerActivities]);
-
-  const materialIds = useMemo(
-    () => Array.from(new Set(plannerActivities.flatMap((activity) => activity.resource_ids))),
-    [plannerActivities]
-  );
-  const materialResourceQueries = useQueries({
-    queries: materialIds.map((id) => ({
-      queryKey: ["primary-resource", id],
-      queryFn: async () => {
-        try {
-          return adaptApiResource(await backendApi.primaryResource(id));
-        } catch {
-          return null;
-        }
-      },
-      enabled: !(dayRecord?.materials && dayRecord.materials.length > 0),
-      staleTime: 60_000,
-      retry: 0,
-    })),
-  });
-  const materialsList = useMemo(() => {
-    if (dayRecord?.materials && dayRecord.materials.length > 0) return dayRecord.materials;
-    return materialResourceQueries
-      .map((q) => q.data?.title)
-      .filter((title): title is string => Boolean(title))
-      .slice(0, 4);
-  }, [dayRecord, materialResourceQueries]);
-
-  const overview = useMemo(() => {
-    const titles = plannerActivities.map((activity) => activity.title).filter(Boolean).slice(0, 3);
-    return titles.length > 0 ? `Today's plan includes ${titles.join(", ")}.` : "Generate a plan or add an activity to build today's schedule.";
-  }, [plannerActivities]);
-
   const totalDuration = useMemo(() => plannerActivities.reduce((sum, act) => sum + (act.duration_minutes || 0), 0), [plannerActivities]);
   const completedCount = useMemo(
     () => plannerActivities.filter((activity) => activity.status === "completed" || activity.status === "skipped").length,
@@ -444,38 +437,59 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     activityCount: plannerActivities.length,
   });
 
+  // Format time as 12-hour AM/PM
+  const format12h = (timeStr?: string | null) => {
+    if (!timeStr) return "—";
+    const [h, m] = timeStr.slice(0, 5).split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${String(hour).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-slate-100 pb-5">
-        <h2 className="text-[28px] font-black tracking-tight text-[#1e1e4f]">Today's Plan</h2>
-        <p className="text-[13px] font-semibold text-slate-400 mt-1">
-          Your daily teaching plan at a glance. Stay prepared, teach with confidence! 🌟
-        </p>
+      <div className="relative pb-5 border-b border-[#e8e7fb] overflow-hidden">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-[#171747]">Today's Plan ☀️</h2>
+            <p className="text-xs font-semibold text-[#596083] mt-1">
+              Your daily teaching plan at a glance. Stay prepared, teach with confidence! 🌟
+            </p>
+          </div>
+          {/* Decorative illustration */}
+          <div className="hidden sm:flex items-end gap-1 shrink-0 select-none pointer-events-none" aria-hidden>
+            <span className="text-4xl">🌳</span>
+            <span className="text-5xl">🏠</span>
+            <span className="text-3xl">👦</span>
+            <span className="text-3xl">👧</span>
+            <span className="text-3xl">🌸</span>
+          </div>
+        </div>
       </div>
 
-      {/* Today's Plan selector card — same as Home */}
-      <div className="rounded-[22px] border border-white/70 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.04)] ring-1 ring-slate-100">
-        <div className="flex items-center justify-between mb-4">
+      {/* Today's Plan Selector Card */}
+      <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-indigo-100">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-[#6e41f5]/15">
               <Calendar className="h-4.5 w-4.5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">TODAY'S PLAN</p>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5]">TODAY'S PLAN</p>
               <p className="text-xs font-bold text-slate-400">{todayDateStr}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-1">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-1">
             <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Class</label>
             <div className="relative">
               <select
                 value={selLevel}
                 onChange={(e) => handleLevelChange(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition"
+                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition"
               >
                 <option value="">Select class…</option>
                 {PRIMARY_LEVELS.map((lvl) => (
@@ -486,47 +500,67 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
             </div>
           </div>
 
-          <div className="flex-1 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Subject</label>
-            <div className="relative">
-              <select
-                value={selSubject}
-                onChange={(e) => handleSubjectChange(e.target.value)}
-                disabled={subjectOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition disabled:opacity-50"
-              >
-                <option value="">{subjectOptions.length === 0 ? "Pick class first" : "Select subject…"}</option>
-                {subjectOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-1">
-            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Theme / Topic</label>
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Theme</label>
             <div className="relative">
               <select
                 value={selTheme}
-                onChange={(e) => setSelTheme(e.target.value)}
-                disabled={themeOptions.length === 0}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 pr-8 text-sm font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition disabled:opacity-50"
+                onChange={(e) => handleThemeChange(e.target.value)}
+                disabled={pickerThemes.length === 0}
+                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
               >
-                <option value="">{themeOptions.length === 0 ? "Pick subject first" : "Select theme…"}</option>
-                {themeOptions.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                <option value="">{pickerThemes.length === 0 ? "Pick subject first" : "Select theme…"}</option>
+                {pickerThemes.map((t) => (
+                  <option key={t.name} value={t.name}>{t.name}</option>
                 ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             </div>
           </div>
 
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Sub Theme</label>
+            <div className="relative">
+              <select
+                value={selSubtheme}
+                onChange={(e) => handleSubthemeChange(e.target.value)}
+                disabled={subthemeOptions.length === 0}
+                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
+              >
+                <option value="">{subthemeOptions.length === 0 ? "All subthemes" : "Select sub theme…"}</option>
+                {subthemeOptions.map((subtheme) => (
+                  <option key={subtheme} value={subtheme}>{subtheme}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Topic</label>
+            <div className="relative">
+              <select
+                value={selTopicId}
+                onChange={(e) => setSelTopicId(e.target.value)}
+                disabled={topicOptions.length === 0}
+                className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none transition disabled:opacity-50"
+              >
+                <option value="">{!selTheme ? "Pick theme first" : selSubtheme && topicOptions.length === 0 ? "No topics in this subtheme" : topicOptions.length === 0 ? "No published topics" : "Select topic…"}</option>
+                {topicOptions.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end">
           <button
             onClick={() => void handleViewFullPlan()}
             disabled={!canViewPlan || savingContext}
-            title={canViewPlan ? undefined : "Select a class, subject and theme first"}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-violet-100 transition hover:bg-[#5b32d3] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={canViewPlan ? undefined : "Select a class, theme and topic first"}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 transition hover:bg-[#5731d8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {savingContext ? (
               <>
@@ -542,9 +576,6 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
-      {/* A failed roster fetch used to be indistinguishable from "this teacher
-          has no classes": the picker vanished and they planned into the
-          section-less day without knowing their classes existed. */}
       {sections.isError && (
         <p className="mt-4 text-xs font-bold text-rose-600">
           We couldn't load your classes, so this is the day that isn't assigned to one.{" "}
@@ -554,123 +585,93 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </p>
       )}
 
-      {(sections.data || []).length > 0 && (
-        <label className="mt-4 block text-xs font-bold text-slate-600">
-          Group
-          <select
-            value={sectionId || ""}
-            onChange={(event) => setSectionId(event.target.value || null)}
-            className="mt-1 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
-          >
-            {/* NOT "All children" — this is its own day, a sibling of every
-                class, not a view across them. The old label read as a superset,
-                so picking a class looked like the plan had been deleted. */}
-            <option value="">Not assigned to a class</option>
-            {(sections.data || []).map((section) => (
-              <option key={section.id} value={section.id}>
-                {section.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
       {/* Date navigation strip */}
-      <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 p-3 shadow-sm">
-        <div className="flex items-center gap-1.5">
-          <button onClick={handlePrevDay} className="rounded-xl p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 shadow-sm transition" aria-label="Previous day">
+      <div className="flex items-center justify-between bg-white rounded-2xl border border-[#e8e7fb] px-4 py-3 shadow-sm">
+        <div className="flex items-center gap-1">
+          <button onClick={handlePrevDay} className="rounded-xl p-2 text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer" aria-label="Previous day">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={handleGoToToday} className="rounded-xl px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm transition">
-            Today
+          <button onClick={handleGoToToday} className="rounded-xl px-3 py-2 text-xs font-black text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer">
+            📅 Today
           </button>
-          <button onClick={handleNextDay} className="rounded-xl p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 shadow-sm transition" aria-label="Next day">
+          <button onClick={handleNextDay} className="rounded-xl p-2 text-[#596083] hover:bg-slate-50 border border-slate-200 shadow-sm transition cursor-pointer" aria-label="Next day">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        <b className="text-sm font-black text-slate-800">{formattedDate}</b>
+        <b className="text-sm font-black text-[#171747]">📅 {formattedDate}</b>
         <div className="flex items-center gap-2">
           {plannerActivities.length > 0 && (
             <button
               onClick={() => void runGenerate({ replace: true })}
               disabled={generating}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white hover:bg-[#5b32d3] transition shadow-md shadow-violet-100 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:opacity-60 cursor-pointer"
             >
-              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
               Regenerate
             </button>
           )}
         </div>
       </div>
 
-      {/* Outside the state switch below, because a failed regenerate leaves the
-          existing plan on screen — the old placement (inside the empty-state
-          branch only) meant Regenerate could fail in total silence. */}
       {generateError && viewState !== "generating" && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
           <p className="text-xs font-bold text-rose-700">{generateError}</p>
         </div>
       )}
 
       {viewState === "loading" ? (
         <div className="flex h-72 items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#6e41f5]" />
         </div>
       ) : viewState === "generating" ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed border-indigo-200 bg-indigo-50/30 p-14 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-sm font-bold text-indigo-700">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-14 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#6e41f5]" />
+          <p className="text-sm font-bold text-[#6e41f5]">
             Building today's plan for {context.level} • {context.subject} • {context.theme}…
           </p>
         </div>
       ) : viewState === "error" ? (
-        <div className="rounded-[22px] border border-rose-200 bg-rose-50/40 p-10 text-center">
+        <div className="rounded-[28px] border border-rose-200 bg-rose-50 p-10 text-center">
           <p className="text-base font-extrabold text-rose-700">We couldn't load this day</p>
           <p className="mt-1 text-sm font-semibold text-rose-600">
             {getErrorMessage(error, "Check your connection and try again.")}
           </p>
-          {/* Never offer Generate here. Whether this day is already planned is
-              exactly what we failed to find out, and generating blind either
-              409s or silently replaces a plan the teacher can't currently see. */}
           <button
             type="button"
             onClick={() => void refetch()}
             disabled={isFetching}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-60"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-60 cursor-pointer"
           >
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Try again
           </button>
         </div>
       ) : viewState === "empty" ? (
-        <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50/30 p-10 text-center">
+        <div className="rounded-[28px] border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-10 text-center">
           <p className="text-sm font-semibold text-slate-400">No activities planned for this day yet.</p>
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
               onClick={() => setSetupOpen(true)}
               disabled={generating}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-4 py-2 text-xs font-black text-white disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:opacity-60 cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" /> Generate plan
             </button>
           </div>
 
-          {/* Copying costs nothing — it's a straight clone of a day already
-              generated, so a teacher with two sections on one theme doesn't
-              pay twice, and keeps the edits they made to the first one. */}
           {copySources.length > 0 && (
-            <div className="mt-5 border-t border-slate-200/70 pt-4">
+            <div className="mt-6 border-t border-[#ecebf7] pt-5">
               <p className="text-[11px] font-bold text-slate-400">
                 Already planned this day for another class?
               </p>
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                 <div className="relative">
                   <select
                     value={copyFrom}
                     onChange={(event) => setCopyFrom(event.target.value)}
                     aria-label="Copy this day's plan from"
-                    className="appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-xs font-bold text-slate-800 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                    className="appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-8 text-xs font-bold text-[#171747] focus:border-[#6e41f5] focus:outline-none"
                   >
                     <option value="">Copy from…</option>
                     {copySources.map((group) => (
@@ -685,7 +686,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                   type="button"
                   onClick={() => void handleCopyDay()}
                   disabled={!copyFrom || copying}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-black text-[#6e41f5] transition hover:bg-[#6e41f5]/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2.5 text-xs font-black text-[#6e41f5] hover:bg-[#faf9ff] transition disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                 >
                   {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
                   Copy here
@@ -699,85 +700,18 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Summary cards */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-[22px] border border-blue-100 bg-blue-50/20 p-5 shadow-sm">
-              <span className="flex items-center gap-1.5 text-xs font-black text-blue-600">📖 Day Overview</span>
-              {dayTheme?.hero_image_url ? (
-                <div className="relative mt-3 h-20 overflow-hidden rounded-xl">
-                  <img
-                    src={dayTheme.hero_image_url}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent" />
-                  <span className="absolute bottom-1.5 left-2.5 text-xs font-black text-white drop-shadow">
-                    {dayTheme.emoji ? `${dayTheme.emoji} ` : ""}{dayTheme.name}
-                  </span>
-                </div>
-              ) : null}
-              <h4 className="mt-3 text-base font-black text-[#1e1e4f]">{dayTheme?.name || context.theme || "Today's learning"}</h4>
-              {dayTopic?.subtheme && (
-                <p className="mt-1 text-xs font-bold text-blue-600">
-                  Sub Theme: {dayTopic.subtheme}
-                </p>
-              )}
-              {dayRecord?.daily_focus && (
-                <div className="mt-2 rounded-lg bg-indigo-50/50 border border-indigo-100/50 px-3 py-1.5 text-xs font-bold text-indigo-700">
-                  Daily Focus: {dayRecord.daily_focus}
-                </div>
-              )}
-              <p className="mt-2 text-xs font-semibold text-slate-400 leading-normal">{overview}</p>
-            </div>
-
-            <div className="rounded-[22px] border border-amber-100 bg-amber-50/10 p-5 shadow-sm">
-              <span className="flex items-center gap-1.5 text-xs font-black text-amber-700">🎯 Outcomes & Objectives</span>
-              {dayRecord?.learning_outcomes && dayRecord.learning_outcomes.length > 0 && (
-                <div className="mt-3 space-y-2 border-b border-amber-100/50 pb-3 mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">Expected Outcomes</p>
-                  {dayRecord.learning_outcomes.map((lo: any, i: number) => (
-                    <div key={lo.id || i} className="flex items-start gap-2 text-xs font-bold text-slate-900">
-                      <span className="text-amber-500 mt-0.5">★</span>
-                      <span>{lo.text}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-amber-600">Lesson Objectives</p>
-                {objectivesList.map((obj, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs font-semibold text-slate-700">
-                    <span className="text-emerald-600 mt-0.5">✓</span>
-                    <span>{obj}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[22px] border border-purple-100 bg-purple-50/10 p-5 shadow-sm">
-              <span className="flex items-center gap-1.5 text-xs font-black text-purple-700">🧰 Materials</span>
-              <ul className="mt-3 list-disc pl-4 space-y-1.5 text-xs font-semibold text-slate-700">
-                {materialsList.length > 0 ? (
-                  materialsList.map((mat, i) => <li key={i}>{mat}</li>)
-                ) : (
-                  <li>Add resources to activities to see materials here.</li>
-                )}
-              </ul>
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div className="rounded-[24px] border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h3 className="text-lg font-black text-[#1e1e4f] flex items-center gap-1">
+          {/* Timeline journey */}
+          <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-6 gap-3">
+              <h3 className="text-lg font-black text-[#171747] flex items-center gap-1.5">
                 Today's Journey <span className="text-[#6e41f5]">✨</span>
               </h3>
               <div className="flex flex-wrap items-center gap-4">
-                <span className="text-xs text-slate-400 font-semibold">
-                  Total Time: <strong className="text-slate-800 font-extrabold">{totalDuration} min</strong>
+                <span className="text-xs text-[#596083] font-semibold">
+                  Total Time: <strong className="text-[#171747] font-black">{totalDuration} min</strong>
                 </span>
-                <span className="text-xs text-slate-400 font-semibold">
-                  Progress: <strong className="text-slate-800 font-extrabold">{completedCount}/{plannerActivities.length}</strong>
+                <span className="text-xs text-[#596083] font-semibold">
+                  Progress: <strong className="text-[#171747] font-black">{completedCount}/{plannerActivities.length}</strong>
                 </span>
                 <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-100">
                   <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(completedCount / plannerActivities.length) * 100}%` }} />
@@ -785,57 +719,70 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
               </div>
             </div>
 
-            <div className="relative space-y-2 border-l border-dashed border-slate-200 pl-5 sm:pl-7">
+            <div className="relative space-y-3 border-l-2 border-dashed border-[#e8e7fb] pl-8 ml-3">
               {plannerActivities.map((act) => {
                 const config = getActivityConfig(act.activity_type);
+                const stepImg = primaryStepImage(act.activity_type);
                 return (
                   <div
                     key={act.id}
-                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-transparent p-4 transition hover:bg-slate-50/50"
+                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#ecebf7] bg-white px-4 py-3 shadow-sm hover:border-[#6e41f5]/30 hover:shadow-md transition duration-200"
                   >
-                    <span className={cn("absolute -left-[25px] top-6 h-2 w-2 rounded-full ring-4 ring-white shadow-xs", config.dotBg)} />
+                    {/* Timeline dot */}
+                    <span className={cn("absolute -left-[41px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full ring-[3px] ring-white shadow-sm", config.dotBg)} />
 
-                    <div className="w-24 shrink-0">
-                      <span className="block text-xs font-black text-slate-800">{act.start_time ? act.start_time.slice(0, 5) : "—"}</span>
+                    {/* Time column */}
+                    <div className="w-20 shrink-0">
+                      <span className="block text-xs font-black text-[#171747] whitespace-nowrap">{format12h(act.start_time)}</span>
                       <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{act.duration_minutes || 10} min</span>
                     </div>
 
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-base", config.iconBg)}>
-                        <span>{config.emoji}</span>
+                    {/* Step image + title */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 shadow-sm">
+                        {stepImg ? (
+                          <img src={stepImg} alt={config.label} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className={cn("h-full w-full flex items-center justify-center text-xl", config.iconBg)}>
+                            {config.emoji}
+                          </div>
+                        )}
                       </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <h4 className="text-sm font-extrabold text-slate-900 truncate">{act.title}</h4>
-                        <p className="text-xs text-slate-400 font-medium leading-normal line-clamp-1">
-                          {act.notes || "No activity notes configured."}
+                      <div className="min-w-0 flex-1">
+                        <h4 className={cn("text-sm font-black truncate", config.badgeText)}>{act.title}</h4>
+                        <p className="text-[11px] text-slate-400 font-medium leading-normal line-clamp-1 mt-0.5">
+                          {act.notes || config.label}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 self-end sm:self-center">
-                      <span className={cn("rounded-lg border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider", config.badgeBg, config.badgeText, config.badgeBorder)}>
+                    {/* Right side: badge + status + view button */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={cn("hidden sm:inline-flex rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider", config.badgeBg, config.badgeText, config.badgeBorder)}>
                         {config.label}
                       </span>
+
                       {act.status === "completed" && (
-                        <span className="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700 gap-1">
+                        <span className="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-1 text-[9px] font-black text-emerald-700 gap-1">
                           <CheckCircle2 className="h-3 w-3" /> Done
                         </span>
                       )}
                       {act.status === "partially completed" && (
-                        <span className="inline-flex items-center rounded-lg bg-amber-50 border border-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-700 gap-1">
+                        <span className="inline-flex items-center rounded-lg bg-amber-50 border border-amber-100 px-2 py-1 text-[9px] font-black text-amber-700 gap-1">
                           <AlertTriangle className="h-3 w-3" /> Partial
                         </span>
                       )}
                       {act.status === "skipped" && (
-                        <span className="inline-flex items-center rounded-lg bg-rose-50 border border-rose-100 px-2 py-0.5 text-[9px] font-black text-rose-700 gap-1">
+                        <span className="inline-flex items-center rounded-lg bg-rose-50 border border-rose-100 px-2 py-1 text-[9px] font-black text-rose-700 gap-1">
                           <XCircle className="h-3 w-3" /> Skipped
                         </span>
                       )}
+
                       <Link
                         href={`/primary/today/activity/${act.id}?date=${selectedDate}${sectionId ? `&section_id=${sectionId}` : ""}`}
-                        className="rounded-xl border border-[#eeeeff] bg-white px-4 py-1.5 text-xs font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 transition shadow-xs"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#6e41f5]/30 bg-white px-3 py-1.5 text-[11px] font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 hover:border-[#6e41f5]/60 transition shadow-sm cursor-pointer whitespace-nowrap"
                       >
-                        View Activity
+                        <Eye className="h-3.5 w-3.5" /> View Activity
                       </Link>
                     </div>
                   </div>
@@ -844,38 +791,57 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
             </div>
           </div>
 
-          {/* Daily reflection */}
-          <div className="space-y-4 rounded-[22px] border border-slate-100 bg-slate-50/50 p-5 shadow-sm">
-            <div>
-              <h3 className="text-base font-black text-[#1e1e4f]">Daily Reflection & Handover</h3>
-              <p className="text-xs font-semibold text-slate-400">Capture notes for tomorrow.</p>
+          {/* Daily Reflection */}
+          <div className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
+            {/* Header row */}
+            <div className="flex items-start justify-between mb-5 gap-3">
+              <div>
+                <h3 className="text-base font-black text-[#171747] flex items-center gap-2">
+                  Daily Reflection &amp; Handover 🌱
+                </h3>
+                <p className="text-xs font-semibold text-slate-400 mt-0.5">Capture notes for tomorrow.</p>
+              </div>
+              {/* Quote card */}
+              <div className="hidden sm:flex shrink-0 items-start gap-2 rounded-2xl border border-[#e8e7fb] bg-white px-4 py-3 shadow-sm max-w-[220px]">
+                <span className="text-xl mt-0.5">💡</span>
+                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
+                  A few thoughts today,<br />Better learning tomorrow!
+                </p>
+              </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+
+            <div className="grid gap-4 md:grid-cols-3">
               {(
                 [
-                  ["workedWell", "What worked well today?", "What engaged learners or went smoothly?"],
-                  ["needsSupport", "What could improve?", "What needs a different approach next time?"],
-                  ["continueTomorrow", "What should happen tomorrow?", "Capture follow-up, preparation, or support needed."],
+                  ["workedWell", "What worked well today? ☀️", "What engaged learners or went smoothly?"],
+                  ["needsSupport", "What could improve? 🔍", "What needs a different approach next time?"],
+                  ["continueTomorrow", "What should happen tomorrow? 📋", "Capture follow-up, preparation, or support needed."],
                 ] as const
               ).map(([field, label, placeholder]) => (
-                <label key={field} className="space-y-1 text-xs font-black text-slate-700">
-                  {label}
+                <label key={field} className="space-y-1.5 text-xs font-black text-[#171747] flex flex-col">
+                  <span>{label}</span>
                   <textarea
                     value={reflection[field]}
                     onChange={(event) => setReflection((current) => ({ ...current, [field]: event.target.value }))}
                     placeholder={placeholder}
-                    className="min-h-[100px] w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    rows={4}
+                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition resize-none"
                   />
                 </label>
               ))}
             </div>
-            <button
-              onClick={handleSaveReflection}
-              disabled={savingReflection}
-              className="w-fit rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#5b32d3] disabled:opacity-50"
-            >
-              {savingReflection ? "Saving Reflection..." : "Save Daily Reflection"}
-            </button>
+
+            <div className="flex items-center justify-between mt-5">
+              <span className="text-2xl select-none">🌿</span>
+              <button
+                onClick={handleSaveReflection}
+                disabled={savingReflection}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/15 hover:bg-[#5731d8] transition disabled:opacity-50 cursor-pointer"
+              >
+                <Save className="h-3.5 w-3.5" />
+                {savingReflection ? "Saving..." : "Save Daily Reflection"}
+              </button>
+            </div>
           </div>
         </div>
       )}

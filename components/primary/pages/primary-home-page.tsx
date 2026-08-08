@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowRight, BookOpen, CalendarDays, ChevronRight, Clock3, Loader2,
+  ArrowRight, CalendarDays, ChevronRight, Clock3, Loader2,
   RefreshCw, Settings2, Sparkles, Star, UsersRound,
 } from "lucide-react";
 import { backendApi, CURRENT_USER_QUERY_KEY, getCurrentUser, type ApiUser, type PrimaryPlannerActivity } from "@/lib/api";
@@ -237,46 +237,70 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   });
 
   return (
-    <div className="primary-theme-dashboard" style={visuals.style}>
+    <div className="space-y-6 p-4 sm:p-6" style={{ ...visuals.style, color: "var(--primary-theme-text)" }}>
       <section
-        className="primary-theme-hero"
+        className="relative overflow-hidden rounded-[32px] border border-[#e8e7fb] p-6 sm:p-8 min-h-[180px] flex flex-col justify-center shadow-sm"
         style={{
-          backgroundImage: visuals.heroImage
-            ? `linear-gradient(90deg, rgba(255,255,255,.94) 0%, rgba(255,255,255,.78) 34%, rgba(255,255,255,.08) 58%, rgba(255,255,255,0) 100%), url(${visuals.heroImage})`
+          background: visuals.heroImage
+            ? `linear-gradient(90deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.82) 40%, rgba(255,255,255,.1) 70%, rgba(255,255,255,0) 100%), url(${visuals.heroImage}) center right/cover no-repeat`
             : visuals.backgroundImage
-            ? `linear-gradient(90deg, rgba(255,255,255,.96), rgba(255,255,255,.15)), url(${visuals.backgroundImage})`
-            : `linear-gradient(115deg, ${visuals.surface}, #ffffff 52%, color-mix(in srgb, ${visuals.primary} 14%, white))`,
+            ? `linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.3) 100%), url(${visuals.backgroundImage}) center right/cover no-repeat`
+            : `linear-gradient(135deg, ${visuals.surface || "#f5f3ff"} 0%, #ffffff 50%, color-mix(in srgb, ${visuals.primary || "#6e41f5"} 8%, white) 100%)`,
         }}
       >
         <div className="relative z-10 max-w-xl">
-          <p className="text-sm font-extrabold text-slate-500">Good morning, {teacherName}! 👋</p>
-          <h1>Let&apos;s make today amazing!</h1>
-          <p>You&apos;re all set to create joyful learning experiences.</p>
-          <p className="primary-hero-summary">{dateLabel} <span /> {activities.length} activities · {totalMinutes} min</p>
+          <p className="text-xs font-black uppercase tracking-widest text-[#6e41f5]">Good morning, {teacherName}! 👋</p>
+          <h1 className="mt-2 text-2xl sm:text-3.5xl font-black tracking-tight text-[#171747]">Let&apos;s make today amazing!</h1>
+          <p className="mt-1 text-sm font-semibold text-[#4f5680]">You&apos;re all set to create joyful learning experiences.</p>
+          <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/95 bg-white/80 px-3.5 py-1.5 text-[10px] font-black text-[#596083] shadow-sm backdrop-blur-sm">
+            <span>{dateLabel}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#6e41f5]" />
+            <span>{activities.length} activities</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#6e41f5]" />
+            <span>{totalMinutes} min</span>
+          </div>
         </div>
         {!visuals.heroImage && (
           illustrationFor(visuals, 0) ? (
-            <img className="primary-theme-hero-art" src={illustrationFor(visuals, 0)} alt="" />
+            <img className="hidden md:block absolute right-6 bottom-0 max-h-[90%] w-auto object-contain pointer-events-none" src={illustrationFor(visuals, 0)} alt="" />
           ) : (
-            <div className="primary-theme-hero-fallback" aria-hidden="true">{activeTheme?.emoji || "🌈"}</div>
+            <div className="absolute right-8 bottom-[-10px] text-8xl opacity-20 pointer-events-none" aria-hidden="true">{activeTheme?.emoji || "🌈"}</div>
           )
         )}
       </section>
 
-      <section id="primary-focus" className="primary-dashboard-section primary-focus-card">
-        <header><span className="section-icon"><Sparkles /></span><h2>Today&apos;s Focus</h2></header>
+      <section id="primary-focus" className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+        <header className="flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <h2 className="text-sm font-black text-[#171747]">Today&apos;s Focus</h2>
+          </div>
+          {hasClassroom && (
+            <button 
+              type="button" 
+              onClick={() => setSetupOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-3.5 py-1.5 text-xs font-black text-[#6e41f5] hover:bg-[#faf9ff] transition cursor-pointer shadow-sm"
+            >
+              <Settings2 className="h-4 w-4" /> Change classroom
+            </button>
+          )}
+        </header>
+
         {!hasClassroom ? (
-          <div className="primary-focus-setup">
-            <div className="primary-focus-setup-copy">
-              <span>✨</span>
+          <div className="rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-5 lg:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-sm border border-[#e8e7fb]">✨</span>
               <div>
-                <h3>Prepare today&apos;s classroom</h3>
-                <p>Select a class, theme and topic. TeachPad will build the complete teaching sequence for you.</p>
+                <h3 className="text-base font-black text-[#171747]">Prepare today&apos;s classroom</h3>
+                <p className="text-xs font-semibold text-[#596083] mt-1 max-w-md">Select a class, theme and topic. TeachPad will build the complete teaching sequence for you.</p>
               </div>
             </div>
-            <div className="primary-focus-fields">
-              <label>
-                <span>Class</span>
+            
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5 items-end w-full lg:max-w-4xl lg:flex-1">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+                Class
                 <select
                   value={draftLevel}
                   onChange={(event) => {
@@ -285,12 +309,14 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftSubtheme("");
                     setDraftTopicId("");
                   }}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
                 >
                   {PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
                 </select>
               </label>
-              <label>
-                <span>Theme</span>
+              
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+                Theme
                 <select
                   value={draftThemeId}
                   onChange={(event) => {
@@ -299,6 +325,7 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftTopicId("");
                   }}
                   disabled={setupThemesQuery.isFetching || setupThemes.length === 0}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
                 >
                   <option value="">{setupThemesQuery.isFetching ? "Loading themes…" : setupThemes.length ? "Select theme…" : "No published themes"}</option>
                   {setupThemes.map((theme) => (
@@ -308,8 +335,9 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                   ))}
                 </select>
               </label>
-              <label>
-                <span>Subtheme</span>
+              
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+                Subtheme
                 <select
                   value={draftSubtheme}
                   onChange={(event) => {
@@ -317,110 +345,158 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                     setDraftTopicId("");
                   }}
                   disabled={!selectedSetupTheme}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
                 >
                   <option value="">All subthemes</option>
                   {setupSubthemes.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
               </label>
-              <label>
-                <span>Topic</span>
+              
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
+                Topic
                 <select
                   value={draftTopicId}
                   onChange={(event) => setDraftTopicId(event.target.value)}
                   disabled={!selectedSetupTheme || setupTopics.length === 0}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-[#6e41f5]"
                 >
-                  <option value="">{selectedSetupTheme ? (draftSubtheme && setupTopics.length === 0 ? "No topics in this subtheme" : setupTopics.length ? "Select topic…" : "No published topics") : "Select a theme first"}</option>
+                  <option value="">{selectedSetupTheme ? (draftSubtheme && setupTopics.length === 0 ? "No topics in this subtheme" : setupTopics.length ? "Select topic…" : "No published topics") : "Select theme first"}</option>
                   {setupTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
                 </select>
               </label>
+              
               <button
                 type="button"
                 onClick={handleInlineSetup}
                 disabled={!selectedSetupTheme || !selectedSetupTopic || setupSubmitting}
+                className="w-full inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 hover:bg-[#5731d8] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 cursor-pointer"
               >
-                {setupSubmitting ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {setupSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {setupSubmitting ? "Preparing…" : "Prepare classroom"}
               </button>
             </div>
             {setupThemesQuery.isError && (
-              <p className="primary-focus-setup-error">{getErrorMessage(setupThemesQuery.error, "We couldn't load the curriculum. Please try again.")}</p>
+              <p className="text-rose-600 font-bold text-xs mt-2 block">{getErrorMessage(setupThemesQuery.error, "We couldn't load the curriculum. Please try again.")}</p>
             )}
           </div>
         ) : (
-          <div className="primary-focus-grid">
-            <div>
-              <span className="eyebrow">Theme</span>
-              <h3>{activeTheme?.name || context.theme || "Choose a theme"}</h3>
-              <p className="mt-1 text-sm font-bold text-slate-500">{activeTopic?.name || context.topic || "Choose a topic"}</p>
-              {activeTopic?.subtheme && (
-                <p className="mt-0.5 text-xs font-bold text-[#6e41f5]">Sub Theme: {activeTopic.subtheme}</p>
-              )}
-            </div>
-            <div className="primary-focus-illustration">
-              {illustrationFor(visuals, 1) ? <img src={illustrationFor(visuals, 1)} alt="" /> : <span>{activeTheme?.emoji || "📚"}</span>}
-            </div>
-            <div>
-              <span className="eyebrow">Today&apos;s focus</span>
-              {day?.daily_focus ? (
-                <p className="mt-1 rounded-lg bg-indigo-50/70 px-2.5 py-1.5 text-xs font-bold text-indigo-700">
-                  {day.daily_focus}
-                </p>
-              ) : null}
-              <span className="eyebrow mt-2">Today&apos;s objectives</span>
-              <div className="primary-objectives">
-                {objectives.length ? objectives.map((objective, index) => (
-                  <div key={`${objective}-${index}`}><b>{["●", "123", "Aa"][index] || "✓"}</b><span>{objective}</span></div>
-                )) : <p className="text-sm font-semibold text-slate-500">Today&apos;s objectives are being prepared.</p>}
+          <div className="grid gap-6 md:grid-cols-12 items-start">
+            {/* Left side focus block */}
+            <div className="md:col-span-7 space-y-4">
+              <div className="flex items-center gap-4">
+                <span className="grid h-16 w-16 place-items-center rounded-2xl bg-[#faf9ff] border border-[#e8e7fb] text-4xl shadow-sm">{activeTheme?.emoji || "📚"}</span>
+                <div>
+                  <small className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5]">{activeTopic?.subtheme || "Theme Theme"}</small>
+                  <h3 className="text-xl font-black text-[#171747]">{activeTheme?.name || context.theme || "Curriculum Theme"}</h3>
+                  <p className="text-xs font-bold text-slate-400 mt-0.5">{activeTopic?.name || context.topic}</p>
+                </div>
+              </div>
+              
+              <div className="rounded-2xl border border-violet-100 bg-[#faf9ff]/50 p-4">
+                <small className="text-[9px] font-black uppercase tracking-wider text-violet-700">Today&apos;s focus</small>
+                <p className="mt-1 text-xs font-semibold text-[#4f5680] leading-relaxed">{day?.daily_focus || "Today's focus is being prepared."}</p>
               </div>
             </div>
-            <div className="primary-focus-context">
-              <div><UsersRound /><span><small>Class</small><b>{context.level}</b></span></div>
-              <div><BookOpen /><span><small>Subject</small><b>{context.subject}</b></span></div>
-              <button type="button" onClick={() => setSetupOpen(true)}>Change classroom <Settings2 /></button>
+
+            {/* Right side: Today's objectives in 3 vertical box rows */}
+            <div className="md:col-span-5 space-y-3 md:border-l border-slate-100 md:pl-6">
+              <small className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Today&apos;s objectives</small>
+              {objectives.length ? objectives.map((objective, index) => (
+                <div key={`${objective}-${index}`} className="flex items-center gap-3 rounded-xl border border-[#ecebf7] bg-[#fbfbfe] p-3 shadow-sm hover:border-[#6e41f5]/25 transition duration-150">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white border border-[#ecebf7] text-[#6e41f5] text-xs font-black shadow-xs">
+                    {["●", "★", "✓"][index] || "✓"}
+                  </span>
+                  <span className="text-xs font-semibold text-[#263252] leading-snug">{objective}</span>
+                </div>
+              )) : (
+                <p className="text-xs font-semibold text-slate-400 italic">Objectives are being prepared.</p>
+              )}
             </div>
           </div>
         )}
       </section>
 
-      <section className="primary-dashboard-section">
-        <header>
-          <span className="section-icon"><CalendarDays /></span><h2>Today&apos;s Classroom Plan</h2>
-          <Link href="/primary/today">View full schedule <ArrowRight /></Link>
+      {/* Today's Classroom Plan */}
+      <section className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
+        <header className="flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+              <CalendarDays className="h-4 w-4" />
+            </span>
+            <h2 className="text-sm font-black text-[#171747]">Today&apos;s Classroom Plan</h2>
+          </div>
+          <Link href="/primary/today" className="inline-flex items-center gap-1 text-xs font-black text-[#6e41f5] hover:text-[#5731d8] transition">
+            View full schedule <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </header>
+        
         {todayQuery.isLoading ? (
-          <div className="primary-loading"><Loader2 className="animate-spin" /> Preparing today&apos;s classroom…</div>
+          <div className="flex items-center justify-center p-12 text-xs font-bold text-slate-400 gap-2"><Loader2 className="h-4 w-4 animate-spin text-[#6e41f5]" /> Preparing today&apos;s plan…</div>
         ) : activities.length ? (
-          <div className="primary-plan-scroll">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {activities.slice(0, 8).map((activity, index) => {
               const resource = resourceForActivity(activity, resources);
               const stepArt = primaryStepImage(activity.activity_type);
+              const bgTone = cardTints[index % cardTints.length];
               return (
-                <Link key={activity.id} href={`/primary/today/activity/${activity.id}?date=${today}`} className="primary-plan-card" style={{ background: cardTints[index % cardTints.length] }}>
-                  <span className="primary-plan-dot" style={{ backgroundColor: cardTints[index % cardTints.length] }} />
-                  <p className="primary-plan-time"><Clock3 /> {timeLabel(activity, index)}</p>
-                  <h3>{activity.title}</h3>
-                  <div className="primary-plan-art">
-                    {stepArt ? <img src={stepArt} alt="" />
-                      : resource?.thumbnailUrl ? <img src={resource.thumbnailUrl} alt="" />
-                      : illustrationFor(visuals, index + 2) ? <img src={illustrationFor(visuals, index + 2)} alt="" />
-                      : <span>{activityEmoji[activity.activity_type] || "🎨"}</span>}
+                <Link 
+                  key={activity.id} 
+                  href={`/primary/today/activity/${activity.id}?date=${today}`} 
+                  className="group relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400"><Clock3 className="h-3 w-3 text-slate-400" /> {timeLabel(activity, index)}</p>
+                      <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: bgTone }} />
+                    </div>
+                    <h3 className="mt-2 text-sm font-black text-[#171747] leading-tight group-hover:text-[#6e41f5] transition line-clamp-2 min-h-[40px]">{activity.title}</h3>
                   </div>
-                  <footer><span><Clock3 /> {activity.duration_minutes} min</span><ChevronRight /></footer>
+
+                  <div className="my-4 aspect-[4/3] rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                    {stepArt ? (
+                      <img src={stepArt} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                    ) : resource?.thumbnailUrl ? (
+                      <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                    ) : illustrationFor(visuals, index + 2) ? (
+                      <img src={illustrationFor(visuals, index + 2)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition duration-200" />
+                    ) : (
+                      <span className="text-4xl filter drop-shadow-sm group-hover:scale-110 transition duration-200">{activityEmoji[activity.activity_type] || "🎨"}</span>
+                    )}
+                  </div>
+
+                  <footer className="flex items-center justify-between mt-1 pt-2 border-t border-slate-50">
+                    <span className="text-[10px] font-bold text-slate-500">{activity.duration_minutes} min</span>
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-[#faf9ff] border border-slate-100 text-[#6e41f5] shadow-xs group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </span>
+                  </footer>
                 </Link>
               );
             })}
           </div>
         ) : (
-          <div className="primary-empty-plan">
-            <span>{activeTheme?.emoji || "✨"}</span>
-            <div><h3>Your guided classroom starts here</h3><p>Select a class, theme and topic. TeachPad will prepare the complete sequence automatically.</p></div>
-            <button type="button" onClick={openClassroomSetup}>Prepare classroom <Sparkles /></button>
+          <div className="rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-8 text-center flex flex-col items-center justify-center">
+            <span className="text-4xl">{activeTheme?.emoji || "✨"}</span>
+            <h3 className="mt-3 text-sm font-black text-[#171747]">Your guided classroom starts here</h3>
+            <p className="mt-1 text-xs text-[#596083] max-w-sm mb-5">Select a class, theme and topic. TeachPad will prepare the complete sequence automatically.</p>
+            <button 
+              type="button" 
+              onClick={openClassroomSetup}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] hover:-translate-y-0.5 shadow-md shadow-[#6e41f5]/15 transition duration-150 cursor-pointer"
+            >
+              Prepare classroom <Sparkles className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </section>
 
+      {/* Today's Recommended Resources */}
       <section className="primary-dashboard-section">
-        <header><span className="section-icon"><Star /></span><h2>Today&apos;s Recommended Resources</h2><Link href="/primary/library">View all <ArrowRight /></Link></header>
+        <header>
+          <span className="section-icon"><Star /></span>
+          <h2>Today&apos;s Recommended Resources</h2>
+          <Link href="/primary/library">View all <ArrowRight /></Link>
+        </header>
         <div className="primary-resource-grid">
           {recommended.length ? recommended.map((resource, index) => (
             <Link key={resource.id} href={`/primary/library?search=${encodeURIComponent(resource.title)}`}>
@@ -437,15 +513,32 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
         </div>
       </section>
 
+      {/* Recently Used */}
       {recentEvents.length > 0 && (
-        <section className="primary-dashboard-section primary-recent">
-          <header><span className="section-icon"><RefreshCw /></span><h2>Recently Used</h2></header>
-          <div>{recentEvents.map((event) => (
-            <Link key={event.id} href={activityHref(event)}>
-              <span>{event.entity_type === "resource" ? "📄" : "✨"}</span>
-              <b>{activityDisplayName(event.entity_type, event.entity_id)}</b><small>{timeAgo(event.created_at)}</small>
-            </Link>
-          ))}</div>
+        <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+          <header className="flex items-center gap-2.5 mb-4">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+              <RefreshCw className="h-4 w-4" />
+            </span>
+            <h2 className="text-sm font-black text-[#171747]">Recently Used</h2>
+          </header>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            {recentEvents.map((event) => (
+              <Link 
+                key={event.id} 
+                href={activityHref(event)}
+                className="flex items-center gap-3 shrink-0 min-w-[200px] border border-slate-100 bg-[#fbfbfe] rounded-2xl p-3 hover:border-[#6e41f5]/30 transition duration-155"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-100 text-2xl shadow-xs">
+                  {event.entity_type === "resource" ? "📄" : "✨"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-xs font-black text-[#171747]">{activityDisplayName(event.entity_type, event.entity_id)}</h4>
+                  <small className="block text-[10px] font-semibold text-slate-400 mt-0.5">{timeAgo(event.created_at)}</small>
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

@@ -4,32 +4,67 @@ import { useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   X, Check, ArrowRight, ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, 
-  Paperclip, Save, Sparkles, AlertTriangle, FileText, CheckCircle 
+  Paperclip, Save, Sparkles, AlertTriangle, FileText, CheckCircle,
+  UploadCloud, Loader2
 } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import type { PrimaryCurriculumLesson, PrimaryCurriculumTheme, PrimaryResource } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-
-const STEP_TYPE_OPTIONS = [
-  { value: "routine", label: "Routine" },
-  { value: "classroom_activity", label: "Classroom Activity" },
-  { value: "circle_time", label: "Circle Time" },
-  { value: "story", label: "Story" },
-  { value: "flashcards", label: "Flashcards" },
-  { value: "worksheet", label: "Worksheet" },
-  { value: "craft", label: "Craft" },
-  { value: "song", label: "Song" },
-  { value: "movement", label: "Movement" },
-  { value: "game", label: "Game" },
-  { value: "assessment", label: "Assessment" },
-  { value: "reflection", label: "Reflection" },
-  { value: "parent_note", label: "Parent Note" }
-];
+import { STEP_TYPE_OPTIONS, stepDetailFields, type StepDetailField } from "@/lib/primary-step-fields";
+import { RESOURCE_CATEGORIES } from "@/lib/primary-authoring";
 
 interface TeachingDayEditorProps {
   lessonId: string;
   onClose: () => void;
+}
+
+/** Repeatable string rows ("list" type field) — one input per item. */
+function StringListEditor({ value, onChange, placeholder }: { value: string[]; onChange: (next: string[]) => void; placeholder?: string }) {
+  const list = Array.isArray(value) ? value : [];
+  return (
+    <div className="space-y-1.5">
+      {list.map((item, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={item}
+            onChange={(e) => {
+              const next = [...list];
+              next[i] = e.target.value;
+              onChange(next);
+            }}
+            placeholder={placeholder}
+            className="flex-1 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+          />
+          <button onClick={() => onChange(list.filter((_, x) => x !== i))} className="text-rose-400 hover:text-rose-600">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ))}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onChange([...list, ""])}
+        className="text-blue-600 font-bold text-[10px] p-0 hover:bg-transparent"
+      >
+        <Plus className="h-3 w-3 mr-1" /> Add Row
+      </Button>
+    </div>
+  );
+}
+
+/** A chip showing an attached printable id, with a remove button. */
+function ResourceIdChip({ id, onRemove }: { id: string; onRemove: () => void }) {
+  return (
+    <div className="flex items-center gap-1.5 bg-slate-50 border rounded-lg pl-2.5 pr-1.5 py-1 text-[10px]">
+      <FileText className="h-3.5 w-3.5 text-blue-500" />
+      <span className="font-bold text-slate-700 truncate max-w-[160px]">{id}</span>
+      <button onClick={onRemove} className="text-rose-400 hover:text-rose-600 pl-1.5">
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
 }
 
 export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps) {
@@ -60,9 +95,19 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
   // Resource picker state
   const [isResourceDrawerOpen, setIsResourceDrawerOpen] = useState<boolean>(false);
   const [activeStepIndexForResource, setActiveStepIndexForResource] = useState<number | null>(null);
+  // null = the step's own `resource_ids`; otherwise a `details` key
+  // (single-select or multi-select) being edited.
+  const [resourceTarget, setResourceTarget] = useState<{ key: string; multi: boolean } | null>(null);
   const [resourceSearch, setResourceSearch] = useState<string>("");
   const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>("");
   const [resourcesList, setResourcesList] = useState<PrimaryResource[]>([]);
+
+  // Upload-from-device state (Cloudinary-backed)
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState<string>("");
+  const [uploadCategory, setUploadCategory] = useState<string>("Flashcards");
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [resourceListRefresh, setResourceListRefresh] = useState<number>(0);
 
   // Fetch themes
   const { data: themes = [] } = useQuery<PrimaryCurriculumTheme[]>({
@@ -105,6 +150,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
           objective_indexes: s.objective_indexes || [0],
           resource_category: s.resource_category || "",
           resource_ids: s.resource_ids || [],
+          details: s.details || {},
           isExpanded: false
         }));
         setSteps(mappedSteps.sort((a,b) => a.position - b.position));
@@ -122,7 +168,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
         .then((res) => setResourcesList(res.items))
         .catch((err) => toast({ title: "Failed to load resources", description: err.message, variant: "error" }));
     }
-  }, [isResourceDrawerOpen, resourceSearch, resourceCategoryFilter, toast]);
+  }, [isResourceDrawerOpen, resourceSearch, resourceCategoryFilter, resourceListRefresh, toast]);
 
   // Debounced Autosave effect
   const firstUpdate = useRef(true);
@@ -157,7 +203,8 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
           duration_minutes: s.duration_minutes,
           objective_indexes: s.objective_indexes,
           resource_category: s.resource_category || null,
-          resource_ids: s.resource_ids || []
+          resource_ids: s.resource_ids || [],
+          details: s.details || {}
         }));
         await backendApi.adminReplacePrimarySteps(lessonId, cleanedSteps);
         
@@ -213,6 +260,7 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
       objective_indexes: [0],
       resource_category: "",
       resource_ids: [],
+      details: {},
       isExpanded: true
     };
     setSteps([...steps, newStep]);
@@ -244,20 +292,72 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
   const handleOpenResourceDrawer = (stepIndex: number, category: string) => {
     setActiveStepIndexForResource(stepIndex);
     setResourceCategoryFilter(category);
+    setUploadCategory(category || "Flashcards");
+    setResourceTarget(null);
+    setIsResourceDrawerOpen(true);
+  };
+
+  const handleOpenDetailResourceDrawer = (stepIndex: number, field: StepDetailField) => {
+    setActiveStepIndexForResource(stepIndex);
+    setResourceCategoryFilter(field.category || "");
+    setUploadCategory(field.category || "Flashcards");
+    setResourceTarget({ key: field.key, multi: field.type === "resource_multi" });
+    setResourceSearch("");
     setIsResourceDrawerOpen(true);
   };
 
   const handleAttachResource = (resourceId: string) => {
     if (activeStepIndexForResource === null) return;
     const step = steps[activeStepIndexForResource];
+    if (resourceTarget) {
+      const current = step.details?.[resourceTarget.key];
+      if (resourceTarget.multi) {
+        const attached: string[] = Array.isArray(current) ? current : [];
+        if (attached.includes(resourceId)) return;
+        handleUpdateStep(activeStepIndexForResource, {
+          details: { ...step.details, [resourceTarget.key]: [...attached, resourceId] }
+        });
+      } else {
+        handleUpdateStep(activeStepIndexForResource, {
+          details: { ...step.details, [resourceTarget.key]: resourceId }
+        });
+      }
+      setIsResourceDrawerOpen(false);
+      toast({ title: "Resource attached" });
+      return;
+    }
     const attached = step.resource_ids || [];
     if (attached.includes(resourceId)) return;
-    
+
     handleUpdateStep(activeStepIndexForResource, {
       resource_ids: [...attached, resourceId]
     });
     setIsResourceDrawerOpen(false);
     toast({ title: "Resource attached" });
+  };
+
+  const handleUploadResource = async () => {
+    if (!uploadFile) {
+      toast({ title: "Choose a file first", variant: "error" });
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const resource = await backendApi.adminUploadPrimaryResource(
+        uploadFile,
+        uploadCategory,
+        uploadTitle.trim() || undefined,
+      );
+      setUploadFile(null);
+      setUploadTitle("");
+      setResourceListRefresh((n) => n + 1);
+      toast({ title: "Uploaded", description: "Link saved to the resource catalog." });
+      handleAttachResource(resource.id);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message || "Could not upload this file.", variant: "error" });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleRemoveResource = (stepIdx: number, resourceId: string) => {
@@ -266,6 +366,23 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
     handleUpdateStep(stepIdx, {
       resource_ids: attached.filter((id: string) => id !== resourceId)
     });
+  };
+
+  const handleRemoveDetailResource = (stepIdx: number, key: string, resourceId: string) => {
+    const step = steps[stepIdx];
+    const current: string[] = Array.isArray(step.details?.[key]) ? step.details[key] : [];
+    handleUpdateStep(stepIdx, {
+      details: { ...step.details, [key]: current.filter((id: string) => id !== resourceId) }
+    });
+  };
+
+  // Per-step-type `details` editing helpers
+  const updateDetail = (idx: number, key: string, value: unknown) => {
+    const step = steps[idx];
+    handleUpdateStep(idx, { details: { ...(step.details || {}), [key]: value } });
+  };
+  const updateDetailList = (idx: number, key: string, list: string[]) => {
+    updateDetail(idx, key, list);
   };
 
   // Pre-publish validations
@@ -770,6 +887,113 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
                           </div>
                         </div>
 
+                        {/* Per-step-type detail fields */}
+                        {stepDetailFields(step.step_type).length > 0 && (
+                          <div className="space-y-3 border-t pt-3">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-black text-slate-400 uppercase">
+                                {step.step_type.replace(/_/g, " ")} Details
+                              </label>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {stepDetailFields(step.step_type).map((field) => {
+                                const details = step.details || {};
+                                const value = details[field.key];
+                                if (field.type === "text" || field.type === "image") {
+                                  return (
+                                    <div key={field.key} className="flex flex-col gap-1">
+                                      <label className="text-[10px] font-bold text-slate-500">
+                                        {field.label}
+                                        {field.optional && <span className="ml-1 text-slate-400 font-medium">(Optional)</span>}
+                                        {field.type === "image" && <span className="ml-1 text-slate-400 font-medium">(URL)</span>}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={typeof value === "string" ? value : ""}
+                                        onChange={(e) => updateDetail(idx, field.key, e.target.value)}
+                                        placeholder={field.placeholder}
+                                        className="border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                                      />
+                                    </div>
+                                  );
+                                }
+                                if (field.type === "textarea") {
+                                  return (
+                                    <div key={field.key} className="flex flex-col gap-1 sm:col-span-2">
+                                      <label className="text-[10px] font-bold text-slate-500">
+                                        {field.label}
+                                        {field.optional && <span className="ml-1 text-slate-400 font-medium">(Optional)</span>}
+                                      </label>
+                                      <textarea
+                                        rows={3}
+                                        value={typeof value === "string" ? value : ""}
+                                        onChange={(e) => updateDetail(idx, field.key, e.target.value)}
+                                        placeholder={field.placeholder}
+                                        className="border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 resize-y"
+                                      />
+                                    </div>
+                                  );
+                                }
+                                if (field.type === "list") {
+                                  return (
+                                    <div key={field.key} className="flex flex-col gap-1 sm:col-span-2">
+                                      <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
+                                      <StringListEditor
+                                        value={Array.isArray(value) ? value : []}
+                                        onChange={(next) => updateDetailList(idx, field.key, next)}
+                                        placeholder={field.placeholder}
+                                      />
+                                    </div>
+                                  );
+                                }
+                                if (field.type === "resource" || field.type === "resource_multi") {
+                                  const isMulti = field.type === "resource_multi";
+                                  const attached: string[] = isMulti
+                                    ? Array.isArray(value) ? value : []
+                                    : typeof value === "string" && value ? [value] : [];
+                                  return (
+                                    <div key={field.key} className="flex flex-col gap-1.5 sm:col-span-2">
+                                      <label className="text-[10px] font-bold text-slate-500">
+                                        {field.label}
+                                        {field.optional && <span className="ml-1 text-slate-400 font-medium">(Optional)</span>}
+                                      </label>
+                                      {field.note && <p className="text-[10px] text-slate-400">{field.note}</p>}
+                                      <div className="flex flex-wrap gap-2">
+                                        {attached.map((rId) => (
+                                          <ResourceIdChip
+                                            key={rId}
+                                            id={rId}
+                                            onRemove={
+                                              isMulti
+                                                ? () => handleRemoveDetailResource(idx, field.key, rId)
+                                                : () => updateDetail(idx, field.key, "")
+                                            }
+                                          />
+                                        ))}
+                                        {attached.length === 0 && (
+                                          <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3 text-amber-400" />
+                                            {isMulti ? "No printables attached yet." : "No printable selected."}
+                                          </div>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleOpenDetailResourceDrawer(idx, field)}
+                                          className="text-blue-600 font-bold text-[10px] p-0 hover:bg-transparent"
+                                        >
+                                          <Paperclip className="h-3 w-3 mr-1" /> {attached.length > 0 ? "Change" : "Attach"} Resource
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Explicit Resource attachments */}
                         {step.resource_category && (
                           <div className="space-y-2 border-t pt-3">
@@ -962,6 +1186,50 @@ export function TeachingDayEditor({ lessonId, onClose }: TeachingDayEditorProps)
                   {resourceCategoryFilter}
                 </span>
               </div>
+            </div>
+
+            {/* Upload from device */}
+            <div className="p-4 border-b space-y-3 bg-blue-50/40">
+              <div className="flex items-center gap-2">
+                <UploadCloud className="h-4 w-4 text-blue-600" />
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-wide">Upload from device</span>
+                <span className="text-[9px] text-slate-400 font-semibold">(Cloudinary)</span>
+              </div>
+              <input
+                type="file"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                className="block w-full text-[10px] text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-[10px] file:font-black file:text-blue-600 file:shadow-sm file:cursor-pointer"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={uploadCategory}
+                  onChange={(e) => setUploadCategory(e.target.value)}
+                  className="flex-1 border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] bg-white focus:outline-none focus:border-blue-500"
+                >
+                  {RESOURCE_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={uploadTitle}
+                  onChange={(e) => setUploadTitle(e.target.value)}
+                  placeholder="Title (optional)"
+                  className="flex-1 border border-slate-200 rounded-xl px-2 py-1.5 text-[11px] bg-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <Button
+                size="sm"
+                disabled={isUploading || !uploadFile}
+                onClick={handleUploadResource}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black"
+              >
+                {isUploading ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Uploading…</>
+                ) : (
+                  <><UploadCloud className="h-3.5 w-3.5 mr-1.5" /> Upload & attach</>
+                )}
+              </Button>
             </div>
 
             {/* Scrollable list */}

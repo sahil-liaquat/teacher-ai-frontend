@@ -25,6 +25,13 @@ import {
   Sparkles,
   Trash2,
   UsersRound,
+  MoreVertical,
+  AlertCircle,
+  Flag,
+  MoreHorizontal,
+  FolderOpen,
+  Image,
+  HelpCircle,
 } from "lucide-react";
 import {
   backendApi,
@@ -36,6 +43,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { adaptApiResource, type PrimaryResource } from "@/lib/primary-resource-adapter";
 import { OBSERVATION_RATINGS, RATING_LABELS, ratingTone, type ObservationRating } from "@/lib/primary-roster";
 import { primaryStepImage } from "@/lib/primary-step-images";
+import { stepDetailFields, type StepDetailField, type StepDetailFieldType } from "@/lib/primary-step-fields";
 import { usePrimarySection } from "@/lib/use-primary-section";
 import { usePrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { cn } from "@/lib/utils";
@@ -108,6 +116,168 @@ function resourceEmoji(resource: PrimaryResource) {
 function contextString(activity: PrimaryPlannerActivity, key: string, fallback = "—") {
   const value = activity.context[key];
   return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlannerActivity; resourceMap: Map<string, PrimaryResource> }) {
+  const rawDetails = activity.context.details;
+  const details = rawDetails && typeof rawDetails === "object" ? (rawDetails as Record<string, unknown>) : undefined;
+
+  const fields = useMemo(() => {
+    if (!details) return [];
+    
+    const predefined = stepDetailFields(activity.activity_type);
+    const predefinedKeys = new Set(predefined.map((f) => f.key));
+    const list: StepDetailField[] = [...predefined];
+    
+    const toTitleCase = (str: string) => {
+      if (str.toLowerCase() === "youtube_url") return "YouTube Video Link";
+      return str
+        .replace(/_/g, " ")
+        .replace(/([A-Z])/g, " $1")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+    };
+
+    const inferType = (key: string, val: unknown): StepDetailFieldType => {
+      if (Array.isArray(val)) {
+        if (val.length > 0 && typeof val[0] === "string" && val[0].length === 36 && resourceMap.has(val[0])) {
+          return "resource_multi";
+        }
+        return "list";
+      }
+      if (typeof val === "string") {
+        const lowerKey = key.toLowerCase();
+        if (/^https?:\/\//.test(val)) {
+          if (/\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(val) || lowerKey.includes("image") || lowerKey.includes("cover")) {
+            return "image";
+          }
+          return "text";
+        }
+        if (val.length === 36 && resourceMap.has(val)) {
+          return "resource";
+        }
+        if (val.length > 60 || val.includes("\n")) {
+          return "textarea";
+        }
+      }
+      return "text";
+    };
+
+    for (const key of Object.keys(details)) {
+      if (predefinedKeys.has(key)) continue;
+      const val = details[key];
+      if (val === null || val === undefined || (typeof val === "string" && !val.trim())) continue;
+      if (Array.isArray(val) && val.length === 0) continue;
+      
+      list.push({
+        key,
+        label: toTitleCase(key),
+        type: inferType(key, val),
+      });
+    }
+    
+    return list;
+  }, [details, activity.activity_type, resourceMap]);
+
+  const filledFields = details
+    ? fields.filter((field) => {
+        const value = details[field.key];
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value)) return value.length > 0;
+        return String(value).trim() !== "";
+      })
+    : [];
+
+  if (filledFields.length === 0) return null;
+
+  const fieldLabel = (field: StepDetailField) => (
+    <small className="font-black uppercase tracking-wider text-[#5731d8]">{field.label}</small>
+  );
+
+  const textNode = (field: StepDetailField, value: string) => (
+    /^https?:\/\//.test(value) ? (
+      <a href={value} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#6e41f5] underline underline-offset-2 break-all">{value}</a>
+    ) : (
+      <p className="text-xs font-semibold leading-5 text-[#4f5680] whitespace-pre-line">{value}</p>
+    )
+  );
+
+  return (
+    <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+      <header>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Block Details</p>
+        <h2 className="mt-1 text-xl font-black">What was planned for this block</h2>
+      </header>
+      <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+        {filledFields.map((field) => {
+          const value = details![field.key];
+          if (field.type === "image") {
+            const src = typeof value === "string" ? value : "";
+            return (
+              <div key={field.key} className="sm:col-span-2">
+                {fieldLabel(field)}
+                <img src={src} alt={field.label} className="mt-2 max-h-64 w-full rounded-2xl border border-[#ecebf7] object-cover" />
+              </div>
+            );
+          }
+          if (field.type === "resource" || field.type === "resource_multi") {
+            const ids = field.type === "resource_multi" && Array.isArray(value)
+              ? value.filter((item): item is string => typeof item === "string")
+              : typeof value === "string" && value ? [value] : [];
+            if (ids.length === 0) return null;
+            return (
+              <div key={field.key} className="sm:col-span-2">
+                {fieldLabel(field)}
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {ids.map((id) => {
+                    const resource = resourceMap.get(id);
+                    if (!resource) return <div key={id} className="rounded-xl border border-amber-100 bg-amber-50/40 px-3 py-2 text-[11px] font-bold text-amber-700">A linked printable was removed from the catalog — ask your admin to re-link it.</div>;
+                    return (
+                      <div key={id} className="flex items-center gap-3 rounded-xl border border-[#ecebf7] bg-[#faf9ff] p-3">
+                        {resource.thumbnailUrl ? (
+                          <img src={resource.thumbnailUrl} alt="" className="h-12 w-16 shrink-0 rounded-lg object-cover" />
+                        ) : (
+                          <span className="grid h-12 w-16 shrink-0 place-items-center rounded-lg bg-white text-2xl shadow-sm">{resourceEmoji(resource)}</span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <small className="font-black uppercase tracking-wider text-[#6e41f5]">{resource.category}</small>
+                          <h4 className="truncate text-xs font-black">{resource.title}</h4>
+                        </div>
+                        <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-[#6e41f5] px-2.5 py-1.5 text-[10px] font-black text-white"><ExternalLink className="h-3 w-3" /> Open</a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+          if (field.type === "list") {
+            const items = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
+            if (items.length === 0) return null;
+            return (
+              <div key={field.key} className="sm:col-span-2">
+                {fieldLabel(field)}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {items.map((item, index) => (
+                    <span key={`${item}-${index}`} className="rounded-full border border-[#e8e7fb] bg-[#faf9ff] px-3 py-1.5 text-[11px] font-bold text-[#4b3e8d]">{item}</span>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          const strValue = String(value);
+          if (!strValue.trim()) return null;
+          const fullWidth = field.type === "textarea";
+          return (
+            <div key={field.key} className={fullWidth ? "sm:col-span-2" : ""}>
+              {fieldLabel(field)}
+              <div className="mt-1.5">{textNode(field, strValue)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function formattedTime(activity: PrimaryPlannerActivity) {
@@ -193,10 +363,27 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
       : [];
   }, [activity]);
 
+  const detailResourceIds = useMemo(() => {
+    const details = activity?.context?.details;
+    if (!details || typeof details !== "object") return [] as string[];
+    const ids: string[] = [];
+    for (const field of stepDetailFields(activity!.activity_type)) {
+      if (field.type !== "resource" && field.type !== "resource_multi") continue;
+      const value = (details as Record<string, unknown>)[field.key];
+      if (typeof value === "string" && value.trim()) ids.push(value);
+      else if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (typeof item === "string" && item.trim()) ids.push(item);
+        });
+      }
+    }
+    return ids;
+  }, [activity]);
+
   const allResourceIds = useMemo(() => {
-    const set = new Set([...requiredIds, ...optionalIds]);
+    const set = new Set([...requiredIds, ...optionalIds, ...detailResourceIds]);
     return Array.from(set);
-  }, [requiredIds, optionalIds]);
+  }, [requiredIds, optionalIds, detailResourceIds]);
 
   const linkedResourceQueries = useQueries({
     queries: allResourceIds.map((id) => ({
@@ -397,162 +584,319 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   const subject = contextString(activity, "subject", teachingContext.subject || presentation.learningArea);
   const statusLabel = activity.status === "partially completed" ? "Partially completed" : activity.status.charAt(0).toUpperCase() + activity.status.slice(1);
 
+
   return (
     <div className="primary-shell min-h-screen text-[#171747]">
       <main className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 lg:px-7">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="inline-flex items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-[#6e41f5]/30 hover:text-[#6e41f5]"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#f5f1ff] px-4 py-2 text-xs font-extrabold text-[#5731d8]"><Sparkles className="h-3.5 w-3.5" /> {level} • {subject} • {theme}</div>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-[#6e41f5]/30 hover:text-[#6e41f5]"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link>
+          <div className="inline-flex max-w-full items-center gap-2 truncate rounded-full bg-[#f5f1ff] px-4 py-2 text-xs font-extrabold text-[#5731d8]"><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{level} • {subject} • {theme}</span></div>
         </div>
 
-        <section className={cn("relative min-h-[220px] overflow-hidden rounded-[28px] border border-[#e9e8f7] bg-gradient-to-r shadow-sm", presentation.gradient)}>
-          <div className="relative z-10 max-w-[62%] p-6 sm:p-8">
-            <div className="flex items-start gap-3"><span className="text-3xl" aria-hidden="true">{presentation.emoji}</span><div><p className="text-xs font-black uppercase tracking-[0.14em] text-[#6e41f5]">{presentation.label}</p><h1 className="mt-1 text-3xl font-black tracking-tight text-[#11143e] sm:text-4xl">{activity.title}</h1></div></div>
-            <p className="mt-3 max-w-lg text-sm font-semibold text-[#4f5680]">{presentation.subtitle}</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/85 px-3 py-2 text-xs font-bold shadow-sm"><Clock3 className="h-4 w-4 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Duration</small>{activity.duration_minutes || 10} min</span></span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/85 px-3 py-2 text-xs font-bold shadow-sm"><CalendarDays className="h-4 w-4 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Time</small>{formattedTime(activity)}</span></span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/85 px-3 py-2 text-xs font-bold shadow-sm"><BookOpen className="h-4 w-4 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Topic</small>{topic}</span></span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/85 px-3 py-2 text-xs font-bold shadow-sm"><GraduationCap className="h-4 w-4 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Learning area</small>{presentation.learningArea}</span></span>
+        <section className={cn("relative overflow-hidden rounded-[28px] border border-[#e9e8f7] bg-gradient-to-r shadow-sm", presentation.gradient)}>
+          <div className="relative z-10 p-5 sm:p-8 sm:max-w-[62%]">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl sm:text-3xl shrink-0" aria-hidden="true">{presentation.emoji}</span>
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#6e41f5]">{presentation.label}</p>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-[#11143e] sm:text-3xl lg:text-4xl leading-tight">{activity.title}</h1>
+              </div>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-[#4f5680] line-clamp-2 sm:line-clamp-none">{presentation.subtitle}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><Clock3 className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Duration</small>{activity.duration_minutes || 10} min</span></span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><CalendarDays className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Time</small>{formattedTime(activity)}</span></span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><BookOpen className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Topic</small>{topic}</span></span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/85 px-2.5 py-1.5 text-xs font-bold shadow-sm"><GraduationCap className="h-3.5 w-3.5 text-[#6e41f5]" /><span><small className="block text-[9px] uppercase text-slate-400">Learning area</small>{presentation.learningArea}</span></span>
             </div>
           </div>
-          {stepArt && <div className="absolute inset-y-0 right-0 w-[43%] min-w-[260px]"><div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/20 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover" /></div>}
+          {stepArt && <div className="hidden sm:block absolute inset-y-0 right-0 w-[40%]"><div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/20 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover" /></div>}
         </section>
 
-        <div className="mx-auto mt-5 max-w-4xl space-y-5">
+        <div className="mt-5">
           {editing ? (
-            <form onSubmit={saveMetadata} className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-              <div className="mb-5 flex items-center justify-between"><div><h2 className="text-lg font-black">Edit activity</h2><p className="text-xs font-semibold text-slate-400">Changes update this planned classroom step.</p></div><button type="button" onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold">Cancel</button></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-xs font-black text-slate-600 sm:col-span-2">Activity title<input value={title} onChange={(event) => setTitle(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-[#6e41f5]" /></label>
-                <label className="text-xs font-black text-slate-600">Start time<input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                <label className="text-xs font-black text-slate-600">Duration (minutes)<input type="number" min={1} max={120} value={duration} onChange={(event) => setDuration(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                <label className="text-xs font-black text-slate-600 sm:col-span-2">Step type<input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
-                <label className="text-xs font-black text-slate-600 sm:col-span-2">Instructions <span className="font-semibold text-slate-400">— one step per line</span><textarea value={instructionsText} onChange={(event) => setInstructionsText(event.target.value)} rows={6} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none focus:border-[#6e41f5]" /></label>
+            <div className="space-y-5">
+              <form onSubmit={saveMetadata} className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+                <div className="mb-5 flex items-center justify-between"><div><h2 className="text-lg font-black">Edit activity</h2><p className="text-xs font-semibold text-slate-400">Changes update this planned classroom step.</p></div><button type="button" onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold">Cancel</button></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Activity title<input value={title} onChange={(event) => setTitle(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-[#6e41f5]" /></label>
+                  <label className="text-xs font-black text-slate-600">Start time<input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
+                  <label className="text-xs font-black text-slate-600">Duration (minutes)<input type="number" min={1} max={120} value={duration} onChange={(event) => setDuration(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Step type<input value={activityType} onChange={(event) => setActivityType(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#6e41f5]" /></label>
+                  <label className="text-xs font-black text-slate-600 sm:col-span-2">Instructions <span className="font-semibold text-slate-400">— one step per line</span><textarea value={instructionsText} onChange={(event) => setInstructionsText(event.target.value)} rows={6} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none focus:border-[#6e41f5]" /></label>
+                </div>
+                <fieldset className="mt-4"><legend className="text-xs font-black text-slate-600">Linked resources</legend><div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">{resourceCandidates.map((resource) => { const selected = resourceIds.includes(resource.id); return <button type="button" key={resource.id} onClick={() => setResourceIds((current) => selected ? current.filter((id) => id !== resource.id) : [...current, resource.id])} className={cn("rounded-full border px-3 py-1.5 text-[11px] font-bold", selected ? "border-[#6e41f5] bg-[#6e41f5] text-white" : "border-[#e8e7fb] bg-[#f8f6ff] text-[#4b3e8d]")}>{selected ? "✓ " : ""}{resource.title}</button>; })}</div></fieldset>
+                <button disabled={savingMetadata} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50"><Save className="h-4 w-4" />{savingMetadata ? "Saving…" : "Save activity"}</button>
+              </form>
+              <BlockDetailsSection activity={activity} resourceMap={resourceMap} />
+              {activity.context.child_action && activity.context.child_action.length > 0 && (
+                <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+                  <header className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">Child Action</p>
+                      <h2 className="mt-1 text-xl font-black">What children do</h2>
+                    </div>
+                  </header>
+                  <ul className="mt-5 list-disc pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
+                    {activity.context.child_action.map((act: string, idx: number) => (
+                      <li key={idx}>{act}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {activity.context.transition && (
+                <section className="rounded-[24px] border border-violet-100 bg-violet-50/10 p-5 shadow-sm sm:p-6">
+                  <header className="flex items-center gap-2">
+                    <span className="text-xl">🔄</span>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-700">Transition Guidance</p>
+                      <h2 className="text-sm font-black text-violet-900 mt-0.5">Moving to the next block</h2>
+                    </div>
+                  </header>
+                  <p className="mt-3 text-xs font-semibold text-[#4f5680] leading-normal">{activity.context.transition}</p>
+                </section>
+              )}
+
+              {sectionId && (students.data || []).length > 0 && <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6"><header className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><UsersRound className="h-5 w-5" /></span><div><h2 className="text-lg font-black">How did each child do?</h2><p className="text-xs font-semibold text-slate-400">Tap a rating to capture progress for this activity.</p></div></header><ul className="mt-5 grid gap-2 sm:grid-cols-2">{(students.data || []).map((student: PrimaryStudent) => <li key={student.id} className="rounded-xl border border-[#ecebf7] p-3"><b className="text-xs">{student.code}</b><div className="mt-2 flex flex-wrap gap-1.5">{OBSERVATION_RATINGS.map((rating) => { const active = ratingByStudent[student.id] === rating; const tone = ratingTone(rating); return <button key={rating} type="button" disabled={rateChild.isPending} onClick={() => rateChild.mutate({ studentId: student.id, rating })} className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold", active ? `${tone.chip} ${tone.text}` : "border-[#e8e7fb] bg-white text-[#596083]")}>{RATING_LABELS[rating]}</button>; })}</div></li>)}</ul></section>}
+              <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+                {activity.context.observation_point && (
+                  <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
+                    <span className="flex items-center gap-1.5 text-xs font-black text-amber-800">🧐 Observation Focus</span>
+                    <p className="mt-1 text-xs font-semibold text-slate-700 leading-normal">{activity.context.observation_point}</p>
+                  </div>
+                )}
+                <div className="grid gap-4 md:grid-cols-2"><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#6e41f5]" /> Classroom observations</span><textarea value={observation} onChange={(event) => { setObservation(event.target.value); localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What did you notice about learning?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Teacher notes</span><textarea value={notes} onChange={(event) => { setNotes(event.target.value); localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What should you remember for next time?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label></div><button onClick={saveNotes} disabled={savingNotes} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-2.5 text-xs font-black text-white disabled:opacity-50"><Save className="h-4 w-4" />{savingNotes ? "Saving…" : "Save notes & observations"}</button>
+              </section>
+              <div className="grid gap-4 sm:grid-cols-2 w-full mt-4">
+                {/* Previous Activity */}
+                {previousActivity ? (
+                  <Link
+                    href={activityUrl(previousActivity, sectionId)}
+                    className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-[#faf9ff]/60 hover:bg-[#f5f1ff]/50 hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                  >
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-[#6e41f5] group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
+                      <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+                      <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{previousActivity.title}</h4>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
+                      <ArrowLeft className="h-5 w-5 opacity-40" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+                      <h4 className="text-sm font-bold italic truncate mt-0.5">First activity of today</h4>
+                    </div>
+                  </div>
+                )}
+
+                {/* Next Activity */}
+                {nextActivity ? (
+                  <Link
+                    href={activityUrl(nextActivity, sectionId)}
+                    className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-[#6e41f5] hover:bg-[#5731d8] text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#6e41f5]/20 transition duration-200"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-white/70">Next activity</small>
+                      <h4 className="text-sm font-black truncate mt-0.5">{nextActivity.title}</h4>
+                    </div>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 group-hover:bg-white/20 transition duration-200">
+                      <ArrowRight className="h-5 w-5 text-white transition duration-200 group-hover:translate-x-0.5" />
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                    <div className="min-w-0 flex-1">
+                      <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Next activity</small>
+                      <h4 className="text-sm font-bold italic truncate mt-0.5">End of today's plan</h4>
+                    </div>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
+                      <ArrowRight className="h-5 w-5 opacity-40" />
+                    </span>
+                  </div>
+                )}
               </div>
-              <fieldset className="mt-4"><legend className="text-xs font-black text-slate-600">Linked resources</legend><div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">{resourceCandidates.map((resource) => { const selected = resourceIds.includes(resource.id); return <button type="button" key={resource.id} onClick={() => setResourceIds((current) => selected ? current.filter((id) => id !== resource.id) : [...current, resource.id])} className={cn("rounded-full border px-3 py-1.5 text-[11px] font-bold", selected ? "border-[#6e41f5] bg-[#6e41f5] text-white" : "border-[#e8e7fb] bg-[#f8f6ff] text-[#4b3e8d]")}>{selected ? "✓ " : ""}{resource.title}</button>; })}</div></fieldset>
-              <button disabled={savingMetadata} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50"><Save className="h-4 w-4" />{savingMetadata ? "Saving…" : "Save activity"}</button>
-            </form>
+            </div>
           ) : (
-            <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-              <header className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Teach this step</p><h2 className="mt-1 text-xl font-black">Activity guide (Teacher Speech)</h2></div><button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#e8e7fb] bg-[#faf9ff] px-3 py-2 text-xs font-black text-[#5731d8]"><Edit3 className="h-4 w-4" /> Edit</button></header>
-              {instructions.length ? <ol className="mt-5 grid gap-3 sm:grid-cols-2">{instructions.map((line, index) => <li key={`${line}-${index}`} className="flex min-h-[94px] gap-3 rounded-2xl border border-[#ecebf7] bg-gradient-to-br from-white to-[#faf9ff] p-4"><span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black", presentation.numberTone)}>{index + 1}</span><div><b className="text-sm text-[#171747]">{index === 0 ? "Let’s begin" : `Step ${index + 1}`}</b><p className="mt-1 text-xs font-medium leading-5 text-[#596083]">{line}</p></div></li>)}</ol> : <button onClick={() => setEditing(true)} className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-5 text-left"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-xl shadow-sm">✍️</span><span><b className="block text-sm">Add teaching instructions</b><small className="mt-1 block font-semibold text-slate-500">Write the sequence once; it will be ready each time this activity opens.</small></span></button>}
-            </section>
-          )}
-
-          {activity.context.child_action && activity.context.child_action.length > 0 && (
-            <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-              <header className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">Child Action</p>
-                  <h2 className="mt-1 text-xl font-black">What children do</h2>
-                </div>
-              </header>
-              <ul className="mt-5 list-disc pl-5 space-y-2.5 text-sm font-semibold text-slate-700 leading-relaxed">
-                {activity.context.child_action.map((act: string, idx: number) => (
-                  <li key={idx}>{act}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {activity.context.transition && (
-            <section className="rounded-[24px] border border-violet-100 bg-violet-50/10 p-5 shadow-sm sm:p-6">
-              <header className="flex items-center gap-2">
-                <span className="text-xl">🔄</span>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-700">Transition Guidance</p>
-                  <h2 className="text-sm font-black text-violet-900 mt-0.5">Moving to the next block</h2>
-                </div>
-              </header>
-              <p className="mt-3 text-xs font-semibold text-[#4f5680] leading-normal">{activity.context.transition}</p>
-            </section>
-          )}
-
-          <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-            <header><p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-500">Ready to use</p><h2 className="mt-1 text-xl font-black">Learning resources</h2></header>
-            {missingResourceCount > 0 && (
-              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
-                {missingResourceCount} linked resource{missingResourceCount > 1 ? "s" : ""} {missingResourceCount > 1 ? "were" : "was"} removed from the catalog — ask your admin to re-link it in the curriculum.
-              </p>
-            )}
-            {requiredResources.length || optionalResources.length ? (
-              <div className="mt-5 space-y-6">
-                {requiredResources.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-rose-500 mb-3 flex items-center gap-1.5">📌 Required Materials</h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {requiredResources.map((resource, index) => (
-                        <article key={resource.id} className="overflow-hidden rounded-2xl border border-rose-100 bg-rose-50/5 p-4 flex items-center gap-4">
-                          {resource.thumbnailUrl ? (
-                            <img src={resource.thumbnailUrl} alt="" className="h-16 w-20 rounded-xl object-cover shrink-0" />
-                          ) : (
-                            <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-rose-50 text-3xl">{resourceEmoji(resource)}</span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <small className="font-black uppercase tracking-wider text-rose-600">{resource.category}</small>
-                            <h4 className="mt-0.5 truncate text-sm font-black">{resource.title}</h4>
-                            <div className="mt-2 flex gap-2">
-                              <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6e41f5] px-3 py-1.5 text-[11px] font-black text-white"><ExternalLink className="h-3.5 w-3.5" /> Open</a>
-                              <a href={resource.fileUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#4b3e8d]"><Download className="h-3.5 w-3.5" /> Download</a>
-                            </div>
-                          </div>
-                        </article>
-                      ))}
+            <div className="grid gap-5 lg:grid-cols-12 items-start">
+              <div className="lg:col-span-7 space-y-5">
+                <section className="rounded-[24px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
+                  <header className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6e41f5]">Teach this step</p>
+                      <h2 className="mt-1 text-xl font-black text-[#171747]">Activity guide <span className="text-slate-400 font-semibold text-sm">(Teacher Speech)</span></h2>
                     </div>
-                  </div>
-                )}
-                
-                {optionalResources.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">🧩 Optional / Extension Resources</h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {optionalResources.map((resource) => (
-                        <article key={resource.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/20 p-4 flex items-center gap-4">
-                          {resource.thumbnailUrl ? (
-                            <img src={resource.thumbnailUrl} alt="" className="h-16 w-20 rounded-xl object-cover shrink-0" />
-                          ) : (
-                            <span className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-slate-100 text-3xl">{resourceEmoji(resource)}</span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <small className="font-black uppercase tracking-wider text-slate-600">{resource.category}</small>
-                            <h4 className="mt-0.5 truncate text-sm font-black">{resource.title}</h4>
-                            <div className="mt-2 flex gap-2">
-                              <a href={resource.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-[#6e41f5] px-3 py-1.5 text-[11px] font-black text-white"><ExternalLink className="h-3.5 w-3.5" /> Open</a>
-                              <a href={resource.fileUrl} download className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#4b3e8d]"><Download className="h-3.5 w-3.5" /> Download</a>
-                            </div>
+                    <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#e8e7fb] bg-white px-3 py-2 text-xs font-black text-[#5731d8] shadow-sm hover:bg-[#faf9ff] transition duration-155">
+                      <Edit3 className="h-4 w-4" /> Edit
+                    </button>
+                  </header>
+
+                  <div className="relative mt-6 pl-12 space-y-6">
+                    <div className="absolute left-[23px] top-6 bottom-6 w-[2px] bg-[#e8e7fb] border-l border-dashed border-[#d2cbfa]" />
+                    
+                    {instructions.length > 0 ? (
+                      instructions.map((text, index) => (
+                        <div key={index} className="relative flex items-center justify-between gap-4 rounded-2xl border border-[#ecebf7] bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:shadow transition duration-200">
+                          <div className="absolute left-[-40px] top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-[#6e41f5] text-xs font-black text-white border-4 border-[#fbfbfe] shadow-sm">
+                            {index + 1}
                           </div>
-                        </article>
-                      ))}
-                    </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium leading-5 text-[#596083]">{text}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-[#e8e7fb] rounded-2xl bg-white">
+                        <span className="text-3xl mb-2">📋</span>
+                        <p className="text-sm font-black text-[#171747]">No steps added yet</p>
+                        <p className="text-xs text-slate-400 mt-1">Edit this activity to add teaching steps.</p>
+                        <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#6e41f5] shadow-sm ring-1 ring-[#e8e7fb]">
+                          Add steps
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </section>
+
+                <section className="rounded-[24px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
+                  <header className="flex items-center gap-2.5">
+                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] shadow-sm">
+                      <ClipboardList className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Classroom observations &amp; Teacher notes</p>
+                      <h2 className="text-sm font-black text-[#171747]">Write observations &amp; notes</h2>
+                    </div>
+                  </header>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                      <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-[#6e41f5]" /> Classroom observations</span>
+                      <textarea
+                        value={observation}
+                        onChange={(event) => {
+                          setObservation(event.target.value);
+                          localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
+                        }}
+                        rows={4}
+                        placeholder="What did you notice about learning?"
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition duration-150 resize-none"
+                      />
+                    </label>
+                    <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                      <span className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> Teacher notes</span>
+                      <textarea
+                        value={notes}
+                        onChange={(event) => {
+                          setNotes(event.target.value);
+                          localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
+                        }}
+                        rows={4}
+                        placeholder="What should you remember for next time?"
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition duration-150 resize-none"
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button onClick={saveNotes} disabled={savingNotes} className="inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-3 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 hover:bg-[#5731d8] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:translate-y-0">
+                      <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save notes & observations"}
+                    </button>
+                  </div>
+                </section>
               </div>
-            ) : (
-              <div className="mt-5 rounded-2xl border border-dashed border-[#d8d3ef] bg-[#faf9ff] p-6 text-center">
-                <span className="text-3xl">📚</span>
-                <h3 className="mt-2 text-sm font-black">No resources attached yet</h3>
-                <p className="mt-1 text-xs font-semibold text-slate-500">Edit the activity to link items from the Primary resource catalogue.</p>
-                <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-[#6e41f5] shadow-sm ring-1 ring-[#e8e7fb]">Choose resources</button>
+
+              <div className="lg:col-span-5 space-y-5">
+
+
+
+                {/* Block Details — data-driven from API */}
+                <BlockDetailsSection activity={activity} resourceMap={resourceMap} />
+
+
+
+
+                {/* Vocabulary List — data-driven from API context */}
+                {(() => {
+                  const rawVocab = activity.context.vocabulary_list;
+                  const vocab = Array.isArray(rawVocab) && rawVocab.length > 0 ? rawVocab as string[] : [];
+                  if (vocab.length === 0) return null;
+                  return (
+                    <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+                      <header className="flex items-center gap-2.5 mb-4">
+                        <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#f5f1ff] text-[#6e41f5] text-xs font-black shadow-sm">Aa</span>
+                        <h2 className="text-sm font-black text-[#171747]">Vocabulary List</h2>
+                      </header>
+                      <div className="flex flex-wrap gap-1.5">
+                        {vocab.map((word, idx) => (
+                          <span key={idx} className="rounded-full border border-[#ecebf7] bg-white px-3 py-1.5 text-[11px] font-bold text-[#6e41f5] hover:border-[#6e41f5]/40 hover:bg-[#fbfbfe] transition duration-150 cursor-default">{word}</span>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })()}
+
               </div>
-            )}
-          </section>
 
-          {sectionId && (students.data || []).length > 0 && <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6"><header className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><UsersRound className="h-5 w-5" /></span><div><h2 className="text-lg font-black">How did each child do?</h2><p className="text-xs font-semibold text-slate-400">Tap a rating to capture progress for this activity.</p></div></header><ul className="mt-5 grid gap-2 sm:grid-cols-2">{(students.data || []).map((student: PrimaryStudent) => <li key={student.id} className="rounded-xl border border-[#ecebf7] p-3"><b className="text-xs">{student.code}</b><div className="mt-2 flex flex-wrap gap-1.5">{OBSERVATION_RATINGS.map((rating) => { const active = ratingByStudent[student.id] === rating; const tone = ratingTone(rating); return <button key={rating} type="button" disabled={rateChild.isPending} onClick={() => rateChild.mutate({ studentId: student.id, rating })} className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold", active ? `${tone.chip} ${tone.text}` : "border-[#e8e7fb] bg-white text-[#596083]")}>{RATING_LABELS[rating]}</button>; })}</div></li>)}</ul></section>}
+              <div className="lg:col-span-12 mt-4">
+                <div className="grid gap-3 sm:grid-cols-2 w-full">
+                  {/* Previous Activity */}
+                  {previousActivity ? (
+                    <Link
+                      href={activityUrl(previousActivity, sectionId)}
+                      className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-[#faf9ff]/60 hover:bg-[#f5f1ff]/50 hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition duration-200"
+                    >
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-[#6e41f5] group-hover:bg-[#6e41f5] group-hover:text-white transition duration-200">
+                        <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{previousActivity.title}</h4>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
+                        <ArrowLeft className="h-5 w-5 opacity-40" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+                        <h4 className="text-sm font-bold italic truncate mt-0.5">First activity of today</h4>
+                      </div>
+                    </div>
+                  )}
 
-          <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-            {activity.context.observation_point && (
-              <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50/30 p-4">
-                <span className="flex items-center gap-1.5 text-xs font-black text-amber-800">🧐 Observation Focus</span>
-                <p className="mt-1 text-xs font-semibold text-slate-700 leading-normal">{activity.context.observation_point}</p>
+                  {/* Next Activity */}
+                  {nextActivity ? (
+                    <Link
+                      href={activityUrl(nextActivity, sectionId)}
+                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl bg-[#6e41f5] hover:bg-[#5731d8] text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#6e41f5]/20 transition duration-200"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-white/70">Next activity</small>
+                        <h4 className="text-sm font-black truncate mt-0.5">{nextActivity.title}</h4>
+                      </div>
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 group-hover:bg-white/20 transition duration-200">
+                        <ArrowRight className="h-5 w-5 text-white transition duration-200 group-hover:translate-x-0.5" />
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+                      <div className="min-w-0 flex-1">
+                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Next activity</small>
+                        <h4 className="text-sm font-bold italic truncate mt-0.5">End of today's plan</h4>
+                      </div>
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
+                        <ArrowRight className="h-5 w-5 opacity-40" />
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            <div className="grid gap-4 md:grid-cols-2"><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><ClipboardList className="h-4 w-4 text-[#6e41f5]" /> Classroom observations</span><textarea value={observation} onChange={(event) => { setObservation(event.target.value); localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What did you notice about learning?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label><label className="text-xs font-black text-slate-700"><span className="mb-2 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Teacher notes</span><textarea value={notes} onChange={(event) => { setNotes(event.target.value); localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value); }} rows={5} placeholder="What should you remember for next time?" className="w-full rounded-xl border border-slate-200 p-3 text-xs font-medium leading-5 outline-none focus:border-[#6e41f5]" /></label></div><button onClick={saveNotes} disabled={savingNotes} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-2.5 text-xs font-black text-white disabled:opacity-50"><Save className="h-4 w-4" />{savingNotes ? "Saving…" : "Save notes & observations"}</button>
-          </section>
-
-          <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-4 shadow-sm"><div className="flex flex-wrap items-center gap-2"><span className="mr-2 text-xs font-black text-slate-500">Activity status:</span><button onClick={() => updateStatus("completed")} disabled={savingStatus} className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black", activity.status === "completed" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700")}><Check className="h-4 w-4" /> Complete</button><button onClick={() => updateStatus("partially completed")} disabled={savingStatus} className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black", activity.status === "partially completed" ? "bg-amber-500 text-white" : "bg-amber-50 text-amber-700")}><CheckSquare className="h-4 w-4" /> Partial</button><button onClick={() => updateStatus("skipped")} disabled={savingStatus} className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black", activity.status === "skipped" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700")}><Ban className="h-4 w-4" /> Skip</button>{rescheduleDate ? <><input type="date" min={activity.date} value={rescheduleDate} onChange={(event) => setRescheduleDate(event.target.value)} className="rounded-xl border border-violet-200 px-3 py-2 text-xs font-bold" aria-label="New activity date" /><button onClick={rescheduleActivity} disabled={savingStatus} className="rounded-xl bg-violet-600 px-3 py-2 text-xs font-black text-white">Confirm reschedule</button><button onClick={() => setRescheduleDate("")} className="rounded-xl px-2 py-2 text-xs font-bold text-slate-500">Cancel</button></> : <button onClick={() => { const date = new Date(`${activity.date}T12:00:00`); date.setDate(date.getDate() + 1); setRescheduleDate(date.toISOString().slice(0, 10)); }} className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black", activity.status === "rescheduled" ? "bg-violet-600 text-white" : "bg-violet-50 text-violet-700")}><CalendarDays className="h-4 w-4" /> Reschedule</button>}<button onClick={deleteActivity} disabled={savingStatus} className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-rose-100 px-3 py-2 text-xs font-black text-rose-600"><Trash2 className="h-4 w-4" /> Delete</button></div></section>
-
-          <nav className="grid gap-3 sm:grid-cols-2">{previousActivity ? <Link href={activityUrl(previousActivity, sectionId)} className="flex items-center gap-3 rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm"><ArrowLeft className="h-5 w-5 text-[#6e41f5]" /><span><small className="block font-bold text-slate-400">Previous activity</small><b className="text-sm">{previousActivity.title}</b></span></Link> : <div className="rounded-2xl border border-dashed border-[#e8e7fb] p-4 text-xs font-bold text-slate-400">This is the first activity.</div>}{nextActivity ? <Link href={activityUrl(nextActivity, sectionId)} className="flex items-center justify-end gap-3 rounded-2xl bg-[#6e41f5] p-4 text-right text-white shadow-lg"><span><small className="block font-bold text-white/70">Next activity</small><b className="text-sm">{nextActivity.title}</b></span><ArrowRight className="h-5 w-5" /></Link> : <div className="rounded-2xl border border-dashed border-[#e8e7fb] p-4 text-right text-xs font-bold text-slate-400">You’ve reached the end of today’s plan.</div>}</nav>
+            </div>
+          )}
         </div>
       </main>
       {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#171747] px-5 py-3 text-xs font-black text-white shadow-xl">{toast}</div>}
