@@ -33,6 +33,14 @@ import {
   FolderOpen,
   Image,
   HelpCircle,
+  ListTodo,
+  ClipboardCheck,
+  MessageSquare,
+  Layers,
+  FileText,
+  Play,
+  Maximize2,
+  X,
 } from "lucide-react";
 import {
   backendApi,
@@ -708,6 +716,87 @@ function BlockDetailsSection({ activity, resourceMap }: { activity: PrimaryPlann
   );
 }
 
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+const STEP_COLORS = [
+  "bg-indigo-500",
+  "bg-violet-500",
+  "bg-purple-500",
+  "bg-fuchsia-500",
+  "bg-pink-500"
+];
+
+function getInstructionStepImage(text: string, index: number): string {
+  const lower = text.toLowerCase();
+  if (lower.includes("rhyme") || lower.includes("song") || lower.includes("sing")) {
+    return "/assets/primary/steps/song.webp";
+  }
+  if (lower.includes("routine") || lower.includes("calendar") || lower.includes("circle time") || lower.includes("board")) {
+    return "/assets/primary/steps/routine.webp";
+  }
+  if (lower.includes("hygiene") || lower.includes("nails") || lower.includes("hands")) {
+    if (lower.includes("attendance")) {
+      return "/assets/primary/steps/classroom-activity.webp";
+    }
+    return "/assets/primary/steps/circle-time.webp";
+  }
+  if (lower.includes("weather") || lower.includes("calendar")) {
+    return "/assets/primary/steps/warm-up.webp";
+  }
+  if (lower.includes("attendance") || lower.includes("names")) {
+    return "/assets/primary/steps/classroom-activity.webp";
+  }
+  if (lower.includes("introduce") || lower.includes("topic")) {
+    return "/assets/primary/steps/introduction.webp";
+  }
+  if (lower.includes("encourage") || lower.includes("touch") || lower.includes("repeat") || lower.includes("closing") || lower.includes("bye")) {
+    return "/assets/primary/steps/movement.webp";
+  }
+  
+  const fallbacks = [
+    "/assets/primary/steps/song.webp",
+    "/assets/primary/steps/routine.webp",
+    "/assets/primary/steps/circle-time.webp",
+    "/assets/primary/steps/warm-up.webp",
+    "/assets/primary/steps/classroom-activity.webp",
+    "/assets/primary/steps/song.webp",
+    "/assets/primary/steps/introduction.webp",
+    "/assets/primary/steps/movement.webp"
+  ];
+  return fallbacks[index % fallbacks.length];
+}
+
+function getMaterialImage(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("children") || lower.includes("kids") || lower.includes("student")) {
+    return "/assets/primary/library/lib_rhymes.webp";
+  }
+  if (lower.includes("calendar") || lower.includes("weather") || lower.includes("date")) {
+    return "/assets/primary/library/lib_calendar_activities.webp";
+  }
+  if (lower.includes("music") || lower.includes("song") || lower.includes("sing")) {
+    return "/assets/primary/steps/song.webp";
+  }
+  if (lower.includes("sanitizer") || lower.includes("soap") || lower.includes("hygiene") || lower.includes("wash")) {
+    return "/assets/primary/library/lib_sanitizer.webp";
+  }
+  if (lower.includes("flashcard") || lower.includes("card")) {
+    return "/assets/primary/library/lib_flashcards.webp";
+  }
+  if (lower.includes("book") || lower.includes("story")) {
+    return "/assets/primary/library/lib_story_cards.webp";
+  }
+  if (lower.includes("crayon") || lower.includes("pencil") || lower.includes("paint") || lower.includes("color")) {
+    return "/assets/primary/library/lib_creative_corner.webp";
+  }
+  return "/assets/primary/library/lib_circle_time_prompts.webp";
+}
+
 function formattedTime(activity: PrimaryPlannerActivity) {
   if (!activity.start_time) return "Flexible";
   const [hours, minutes] = activity.start_time.slice(0, 5).split(":").map(Number);
@@ -736,6 +825,26 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   const [resourceIds, setResourceIds] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [observation, setObservation] = useState("");
+  const [resourceModal, setResourceModal] = useState<{ title: string; fileUrl: string; thumbnailUrl?: string; fileType: string } | null>(null);
+
+  // Cross-origin safe download — fetch the file as a blob then trigger save-as
+  const downloadResource = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // Fallback: open in new tab so the browser handles it
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const notify = (message: string) => {
     setToast(message);
@@ -1017,8 +1126,500 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   const topic = contextString(activity, "topic", teachingContext.topic || theme);
   const level = contextString(activity, "level", teachingContext.level || "Primary");
   const subject = contextString(activity, "subject", teachingContext.subject || presentation.learningArea);
-  const statusLabel = activity.status === "partially completed" ? "Partially completed" : activity.status.charAt(0).toUpperCase() + activity.status.slice(1);
+  const rawDetails = activity.context.details;
+  const details = rawDetails && typeof rawDetails === "object" ? (rawDetails as Record<string, unknown>) : undefined;
 
+  const conversationText = (details?.theme_conversation as string) || (details?.story_text as string) || (details?.corner_instructions as string) || "";
+  const conversationLines = conversationText.split("\n").map(l => l.trim()).filter(Boolean);
+  const questionsList = conversationLines.filter(l => l.startsWith("•") || l.startsWith("-") || l.startsWith("*") || l.endsWith("?"));
+  const mainInstruction = conversationLines.filter(l => !questionsList.includes(l)).join("\n");
+
+  const rawVocab = activity.context.vocabulary_list || details?.vocabulary_list;
+  const vocab = Array.isArray(rawVocab) && rawVocab.length > 0 ? rawVocab as string[] : [];
+
+  const videoUrl = (details?.youtube_url as string) || "";
+
+  const themeImgSrc = (details?.theme_image as string) || (details?.story_cover_image as string) || (details?.reference_image as string) || "";
+
+  const hasRightColumnContent = Boolean(
+    conversationText.trim() ||
+    allResourceIds.length > 0 ||
+    themeImgSrc.trim() ||
+    vocab.length > 0 ||
+    videoUrl.trim()
+  );
+
+  const renderDisplayMode = () => {
+    interface DashboardCard {
+      element: React.ReactNode;
+      height: number;
+    }
+    const activeCards: DashboardCard[] = [];
+
+    // 1. Teach this step
+    const rawMaterials = details?.materials_required || details?.props || details?.manipulatives_required;
+    const materials = Array.isArray(rawMaterials)
+      ? rawMaterials.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      : [];
+
+    const teachStepHeight = 150 + (instructions.length * 60) + (details?.teacher_notes ? 80 : 0);
+    activeCards.push({
+      element: (
+        <section key="teach-step" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+          <header className="flex items-center justify-between gap-4 border-b border-slate-100/60 pb-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-violet-50 text-violet-600 text-sm">
+                <ListTodo className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black text-[#171747]">Teach this step</h2>
+                <p className="text-[10px] font-semibold text-violet-600 mt-0.5">Activity guide (Teacher Speech)</p>
+              </div>
+            </div>
+            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ecebf7] bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-2xs hover:bg-slate-50 transition">
+              <Edit3 className="h-3.5 w-3.5" /> Edit
+            </button>
+          </header>
+
+          <div className="mt-5 space-y-5">
+            {instructions.length > 0 ? (
+              instructions.map((text, index) => {
+                const stepColor = STEP_COLORS[index % STEP_COLORS.length];
+                return (
+                  <div key={index} className="flex items-center gap-4 pb-4 border-b border-dashed border-slate-100 last:border-0 last:pb-0">
+                    {/* Step number */}
+                    <span className={cn("grid h-6 w-6 place-items-center rounded-full text-[10px] font-black text-white shrink-0 shadow-2xs", stepColor)}>
+                      {index + 1}
+                    </span>
+                    
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold leading-relaxed text-slate-700/90">{text}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-[#e8e7fb] rounded-2xl bg-white">
+                <span className="text-3xl mb-2">📋</span>
+                <p className="text-sm font-black text-[#171747]">No steps added yet</p>
+                <p className="text-xs text-slate-400 mt-1">Edit this activity to add teaching steps.</p>
+                <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-blue-500 shadow-sm ring-1 ring-[#e8e7fb]">
+                  Add steps
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Teacher tip banner */}
+          {(() => {
+            const tipText = (details?.teacher_notes as string) || (details?.observation_notes as string) || "";
+            if (!tipText.trim()) return null;
+            return (
+              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-[#f8f6ff] p-4 border border-[#e8e0f8]/30 shadow-2xs">
+                <Lightbulb className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-violet-600">Teacher tip</h4>
+                  <p className="text-xs font-semibold text-slate-600 mt-1 leading-relaxed">{tipText}</p>
+                </div>
+              </div>
+            );
+          })()}
+        </section>
+      ),
+      height: teachStepHeight,
+    });
+
+    // 2. Key items list
+    if (materials.length > 0) {
+      activeCards.push({
+        element: (
+          <section key="materials" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 border-b border-slate-100/60 pb-4">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-50 text-emerald-600 text-sm">
+                <ClipboardCheck className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Key items list</h2>
+            </header>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {materials.map((mat, idx) => (
+                <span key={idx} className="rounded-lg border border-emerald-100 bg-[#f4fbf7] px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-2xs transition hover:bg-[#eafbf2] cursor-default">{mat}</span>
+              ))}
+            </div>
+          </section>
+        ),
+        height: 120,
+      });
+    }
+
+    // 3. Theme Conversation
+    if (conversationText.trim()) {
+      const convHeight = 120 + (questionsList.length * 20);
+      activeCards.push({
+        element: (
+          <section key="conversation" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 mb-4">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-violet-50 text-violet-600 text-sm">
+                <MessageSquare className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Theme Conversation</h2>
+            </header>
+            
+            {mainInstruction && (
+              <p className="text-xs font-semibold leading-relaxed text-slate-600 whitespace-pre-line mb-4">{mainInstruction}</p>
+            )}
+
+            <div className="p-4 rounded-2xl bg-[#f8f7ff] border border-[#f0edff] flex items-center justify-between gap-4 shadow-2xs">
+              <div className="min-w-0 flex-1">
+                <h4 className="text-[10px] font-black uppercase tracking-wider text-violet-700">Questions & Prompts</h4>
+                <ul className="mt-2.5 space-y-2 text-xs font-semibold text-slate-600 list-disc pl-5 leading-relaxed">
+                  {questionsList.map((q, idx) => {
+                    const cleanQ = q.replace(/^([•\-*]\s*)/, "");
+                    return <li key={idx} className="marker:text-violet-500">{cleanQ}</li>;
+                  })}
+                </ul>
+              </div>
+              <img src="/assets/illustrations/thinking_boy.webp" alt="Thinking Boy" className="w-20 h-24 object-contain shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]" />
+            </div>
+          </section>
+        ),
+        height: convHeight,
+      });
+    }
+
+    // 4. Attached resources
+    if (allResourceIds.length > 0) {
+      const hasThumbs = allResourceIds.some(id => {
+        const res = resourceMap.get(id);
+        return !!(res?.thumbnailUrl);
+      });
+      const itemHeight = hasThumbs ? 170 : 110;
+      const resHeight = 100 + (Math.ceil(allResourceIds.length / 3) * itemHeight);
+
+      activeCards.push({
+        element: (
+          <section key="resources" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 mb-4 border-b border-slate-100 pb-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-teal-50 text-teal-600 text-sm">
+                <BookOpen className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Attached resources</h2>
+              <span className="ml-auto text-[10px] font-bold text-slate-400">Click to preview</span>
+            </header>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {allResourceIds.map(id => {
+                const res = resourceMap.get(id);
+                if (!res) return null;
+                
+                const thumbnail = res.thumbnailUrl || "";
+                const isPdf = res.fileType?.toLowerCase().includes("pdf") || res.fileUrl?.toLowerCase().endsWith(".pdf");
+
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setResourceModal({ title: res.title, fileUrl: res.fileUrl, thumbnailUrl: res.thumbnailUrl, fileType: res.fileType })}
+                    className={cn("border border-slate-100 rounded-2xl bg-white p-2.5 shadow-2xs flex flex-col items-center justify-between text-center hover:border-teal-300 hover:shadow-sm hover:-translate-y-0.5 transition duration-200 cursor-pointer group w-full", thumbnail ? "min-h-[170px]" : "min-h-[110px]")}
+                  >
+                    {thumbnail ? (
+                      <div className="w-full h-24 bg-slate-50/50 rounded-xl flex items-center justify-center p-1 overflow-hidden border border-slate-50 group-hover:border-teal-100 transition">
+                        <img src={thumbnail} alt="" className="max-h-full max-w-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="w-full h-16 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-teal-50/30 transition">
+                        {isPdf ? <FileText className="h-6 w-6 text-slate-300 group-hover:text-teal-400 transition" /> : <BookOpen className="h-6 w-6 text-slate-300 group-hover:text-teal-400 transition" />}
+                      </div>
+                    )}
+                    <h4 className="text-[10px] font-black text-slate-700 leading-tight mt-2 line-clamp-2 w-full text-left">{res.title}</h4>
+                    <div className="mt-2 w-full py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-teal-600 bg-teal-50/0 group-hover:bg-teal-50 flex items-center justify-center gap-1 transition">
+                      Preview
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ),
+        height: resHeight,
+      });
+    }
+
+    // 5. Theme Image
+    if (themeImgSrc.trim()) {
+      activeCards.push({
+        element: (
+          <section key="theme-image" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 mb-4">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-amber-50 text-amber-600 text-sm">
+                <Image className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Theme Image</h2>
+            </header>
+            <div className="w-full rounded-2xl overflow-hidden border border-slate-100/50 shadow-2xs mt-2">
+              <img 
+                src={themeImgSrc} 
+                alt="Theme Visual Reference" 
+                className="w-full h-auto object-cover" 
+              />
+            </div>
+          </section>
+        ),
+        height: 250,
+      });
+    }
+
+    // 6. Vocabulary list
+    if (vocab.length > 0) {
+      activeCards.push({
+        element: (
+          <section key="vocabulary" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 mb-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blue-50 text-blue-600 text-sm">
+                <FileText className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Vocabulary List</h2>
+            </header>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {vocab.map((word, idx) => (
+                <span key={idx} className="rounded-lg border border-blue-100 bg-[#f4f8ff] px-3 py-1.5 text-xs font-semibold text-[#3b82f6] shadow-2xs transition hover:bg-[#eaf2ff] cursor-default">{word}</span>
+              ))}
+            </div>
+          </section>
+        ),
+        height: 100,
+      });
+    }
+
+    // 7. Video resource
+    if (videoUrl.trim()) {
+      const ytId = getYouTubeVideoId(videoUrl);
+      activeCards.push({
+        element: (
+          <section key="video" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5 mb-4">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-rose-50 text-rose-600 text-sm">
+                <Play className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-sm font-black text-[#171747]">Video resource</h2>
+            </header>
+            
+            <div className="space-y-3">
+              {ytId ? (
+                <div className="w-full aspect-video rounded-2xl overflow-hidden border border-slate-100/50 shadow-2xs">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${ytId}`}
+                    title="YouTube video player"
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl border border-slate-100 bg-white shadow-2xs flex items-center justify-between gap-3">
+                  <div className="relative w-28 aspect-video rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100 shadow-2xs flex items-center justify-center">
+                    <div className="h-full w-full bg-slate-100 flex items-center justify-center"><Play className="h-6 w-6 text-slate-300" /></div>
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                      <span className="h-7 w-7 rounded-full bg-white/95 flex items-center justify-center shadow-md">
+                        <Play className="h-3 w-3 text-[#171747] fill-current ml-0.5" />
+                      </span>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-black text-[#171747] leading-snug line-clamp-2">
+                      {activity.title}
+                    </h4>
+                  </div>
+                  <a href={videoUrl} target="_blank" rel="noreferrer" className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-black text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-1.5 shrink-0 shadow-2xs transition">
+                    Watch Video <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-3 px-1 mt-2">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs font-black text-[#171747] leading-snug line-clamp-2">
+                    {(() => {
+                      const isMyBody = activity.title?.toLowerCase().includes("body") || topic.toLowerCase().includes("body");
+                      return isMyBody 
+                        ? "My Body Song for Kids | Body Parts Song | Nursery Rhymes" 
+                        : `${activity.title} Song | Nursery Rhymes & Activities`;
+                    })()}
+                  </h4>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1">YouTube player · Play inline or fullscreen</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        ),
+        height: ytId ? 350 : 150,
+      });
+    }
+
+    // 8. Observations & notes
+    if (!nextActivity) {
+      activeCards.push({
+        element: (
+          <section key="observations" className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
+            <header className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black shadow-xs bg-[#fff1f2] text-rose-500">
+                <ClipboardList className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Classroom observations &amp; Teacher notes</p>
+                <h2 className="text-sm font-black text-[#171747]">Write observations &amp; notes</h2>
+              </div>
+            </header>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-rose-500" /> Classroom observations</span>
+                <textarea
+                  value={observation}
+                  onChange={(event) => {
+                    setObservation(event.target.value);
+                    localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
+                  }}
+                  rows={4}
+                  placeholder="What did you notice about learning?"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                />
+              </label>
+              <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
+                <span className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> Teacher notes</span>
+                <textarea
+                  value={notes}
+                  onChange={(event) => {
+                    setNotes(event.target.value);
+                    localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
+                  }}
+                  rows={4}
+                  placeholder="What should you remember for next time?"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
+                />
+              </label>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <button onClick={saveNotes} disabled={savingNotes} className="inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-3 text-xs font-black text-white shadow-xs hover:bg-[#111136] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:translate-y-0">
+                <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save notes & observations"}
+              </button>
+            </div>
+          </section>
+        ),
+        height: 220,
+      });
+    }
+
+    const fallbackSection = (
+      <div className="hidden" key="fallback">
+        <BlockDetailsSection activity={activity} resourceMap={resourceMap} />
+      </div>
+    );
+
+    const paginationRow = (
+      <div className="grid gap-3 sm:grid-cols-2 w-full mt-4" key="pagination">
+        {/* Previous Activity */}
+        {previousActivity ? (
+          <Link
+            href={activityUrl(previousActivity, sectionId)}
+            className="group flex items-center gap-4 p-4 rounded-2xl border border-[#e8e7fb] bg-white hover:bg-[#faf9ff] hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-sm transition duration-200"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition duration-200">
+              <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+              <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{previousActivity.title}</h4>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
+              <ArrowLeft className="h-5 w-5 opacity-40" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
+              <h4 className="text-sm font-bold italic truncate mt-0.5">First activity of today</h4>
+            </div>
+          </div>
+        )}
+
+        {/* Next Activity */}
+        {nextActivity ? (
+          <Link
+            href={activityUrl(nextActivity, sectionId)}
+            className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 hover:-translate-y-1 hover:shadow-sm transition duration-200"
+          >
+            <div className="min-w-0 flex-1">
+              <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+              <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{nextActivity.title}</h4>
+            </div>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+              <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        ) : (
+          <Link
+            href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`}
+            className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 transition duration-200"
+          >
+            <div className="min-w-0 flex-1">
+              <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
+              <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">End of today&apos;s plan · Return Home</h4>
+            </div>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
+              <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        )}
+      </div>
+    );
+
+    if (!hasRightColumnContent) {
+      return (
+        <div className="space-y-6">
+          <div className="space-y-6 max-w-4xl mx-auto w-full">
+            {activeCards.map((card, idx) => <div key={idx}>{card.element}</div>)}
+            {fallbackSection}
+          </div>
+          {paginationRow}
+        </div>
+      );
+    }
+
+    // Always anchor the first card (Teach Step) in Column A.
+    // Then greedily fill remaining cards starting from Column B so gaps are always filled.
+    const [anchorCard, ...restCards] = activeCards;
+
+    const colA: React.ReactNode[] = anchorCard ? [anchorCard.element] : [];
+    const colB: React.ReactNode[] = [];
+    let heightA = anchorCard ? anchorCard.height : 0;
+    let heightB = 0;
+
+    restCards.forEach((card) => {
+      if (heightB <= heightA) {
+        colB.push(card.element);
+        heightB += card.height;
+      } else {
+        colA.push(card.element);
+        heightA += card.height;
+      }
+    });
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start w-full">
+          <div className="space-y-6 w-full">
+            {colA}
+          </div>
+          <div className="space-y-6 w-full">
+            {colB}
+          </div>
+        </div>
+        {fallbackSection}
+        {paginationRow}
+      </div>
+    );
+  };
 
   return (
     <div className="primary-shell min-h-screen text-[#171747]">
@@ -1218,188 +1819,99 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
               </div>
             </div>
           ) : (
-            <div className="grid gap-5 lg:grid-cols-12 items-start">
-              <div className="lg:col-span-7 space-y-5">
-                <section className="rounded-[24px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
-                  <header className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-500">Teach this step</p>
-                      <h2 className="mt-1 text-xl font-black text-[#171747]">Activity guide <span className="text-slate-400 font-semibold text-sm">(Teacher Speech)</span></h2>
-                    </div>
-                    <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-xl border border-[#ecebf7] bg-white px-3 py-2 text-xs font-black text-blue-500 shadow-xs hover:bg-blue-50/30 transition duration-155">
-                      <Edit3 className="h-4 w-4" /> Edit
-                    </button>
-                  </header>
-
-                  <div className="relative mt-6 pl-10 sm:pl-12 space-y-6">
-                    <div className="absolute left-[18px] sm:left-[23px] top-6 bottom-6 w-[2px] bg-[#e8e7fb] border-l border-dashed border-slate-200" />
-                    
-                    {instructions.length > 0 ? (
-                      instructions.map((text, index) => (
-                        <div key={index} className="relative flex items-center justify-between gap-4 rounded-2xl border border-[#ecebf7] bg-white p-4 shadow-xs hover:border-blue-500/30 hover:shadow-sm transition duration-200">
-                          <div className="absolute left-[-36px] sm:left-[-40px] top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full text-xs font-black text-white border-4 border-[#fbfbfe] shadow-xs transition duration-150 bg-blue-500">
-                            {index + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium leading-5 text-[#596083]">{text}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-[#e8e7fb] rounded-2xl bg-white">
-                        <span className="text-3xl mb-2">📋</span>
-                        <p className="text-sm font-black text-[#171747]">No steps added yet</p>
-                        <p className="text-xs text-slate-400 mt-1">Edit this activity to add teaching steps.</p>
-                        <button onClick={() => setEditing(true)} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-black text-blue-500 shadow-sm ring-1 ring-[#e8e7fb]">
-                          Add steps
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </section>
-
-                {!nextActivity && (
-                  <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-xs sm:p-6">
-                    <header className="flex items-center gap-2.5">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black shadow-xs bg-[#fff1f2] text-rose-500">
-                        <ClipboardList className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Classroom observations &amp; Teacher notes</p>
-                        <h2 className="text-sm font-black text-[#171747]">Write observations &amp; notes</h2>
-                      </div>
-                    </header>
-                    <div className="mt-4 grid gap-4 md:grid-cols-2">
-                      <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
-                        <span className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-rose-500" /> Classroom observations</span>
-                        <textarea
-                          value={observation}
-                          onChange={(event) => {
-                            setObservation(event.target.value);
-                            localStorage.setItem(`draft-obs-${activity.id}-${activity.date}`, event.target.value);
-                          }}
-                          rows={4}
-                          placeholder="What did you notice about learning?"
-                          className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
-                        />
-                      </label>
-                      <label className="text-xs font-black text-slate-700 flex flex-col gap-1.5">
-                        <span className="flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> Teacher notes</span>
-                        <textarea
-                          value={notes}
-                          onChange={(event) => {
-                            setNotes(event.target.value);
-                            localStorage.setItem(`draft-notes-${activity.id}-${activity.date}`, event.target.value);
-                          }}
-                          rows={4}
-                          placeholder="What should you remember for next time?"
-                          className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-medium leading-5 outline-none focus:ring-2 focus:border-rose-400 focus:ring-rose-500/10 transition duration-150 resize-none"
-                        />
-                      </label>
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <button onClick={saveNotes} disabled={savingNotes} className="inline-flex items-center gap-2 rounded-xl bg-[#171747] px-5 py-3 text-xs font-black text-white shadow-xs hover:bg-[#111136] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:translate-y-0">
-                        <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save notes & observations"}
-                      </button>
-                    </div>
-                  </section>
-                )}
-              </div>
-
-              <div className="lg:col-span-5 space-y-5">
-
-
-
-                {/* Block Details — data-driven from API */}
-                <BlockDetailsSection activity={activity} resourceMap={resourceMap} />
-
-
-
-
-                {/* Vocabulary List — data-driven from API context */}
-                {(() => {
-                  const rawVocab = activity.context.vocabulary_list;
-                  const vocab = Array.isArray(rawVocab) && rawVocab.length > 0 ? rawVocab as string[] : [];
-                  if (vocab.length === 0) return null;
-                  return (
-                    <section className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
-                      <header className="flex items-center gap-2.5 mb-4">
-                        <span className="grid h-8 w-8 place-items-center rounded-lg text-xs font-black shadow-xs bg-sky-50 text-sky-600">Aa</span>
-                        <h2 className="text-sm font-black text-[#171747]">Vocabulary List</h2>
-                      </header>
-                      <div className="flex flex-wrap gap-1.5">
-                        {vocab.map((word, idx) => (
-                          <span key={idx} className="rounded-full border border-sky-100 bg-sky-50/30 px-3 py-1.5 text-[11px] font-bold transition duration-150 cursor-default hover:bg-sky-50/80 text-sky-700">{word}</span>
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })()}
-
-              </div>
-
-              <div className="lg:col-span-12 mt-4">
-                <div className="grid gap-3 sm:grid-cols-2 w-full">
-                  {/* Previous Activity */}
-                  {previousActivity ? (
-                    <Link
-                      href={activityUrl(previousActivity, sectionId)}
-                      className="group flex items-center gap-4 p-4 rounded-2xl border border-[#e8e7fb] bg-white hover:bg-[#faf9ff] hover:border-blue-500/30 hover:-translate-y-1 hover:shadow-sm transition duration-200"
-                    >
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-slate-200 text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition duration-200">
-                        <ArrowLeft className="h-5 w-5 transition duration-200 group-hover:-translate-x-0.5" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
-                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{previousActivity.title}</h4>
-                      </div>
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-4 p-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-dashed border-slate-200">
-                        <ArrowLeft className="h-5 w-5 opacity-40" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Previous activity</small>
-                        <h4 className="text-sm font-bold italic truncate mt-0.5">First activity of today</h4>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Next Activity */}
-                  {nextActivity ? (
-                    <Link
-                      href={activityUrl(nextActivity, sectionId)}
-                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 hover:-translate-y-1 hover:shadow-sm transition duration-200"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
-                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">{nextActivity.title}</h4>
-                      </div>
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
-                        <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
-                      </span>
-                    </Link>
-                  ) : (
-                    <Link
-                      href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`}
-                      className="group flex items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/20 hover:bg-blue-50/60 hover:border-blue-300 transition duration-200"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <small className="block text-[9px] font-black uppercase tracking-wider text-blue-500">Next activity</small>
-                        <h4 className="text-sm font-black text-[#171747] truncate mt-0.5">End of today&apos;s plan · Return Home</h4>
-                      </div>
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white border border-blue-100 text-blue-500 transition duration-200 group-hover:bg-blue-500 group-hover:text-white">
-                        <ArrowRight className="h-5 w-5 transition duration-200 group-hover:translate-x-0.5" />
-                      </span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
+            renderDisplayMode()
           )}
         </div>
       </main>
+      {/* Resource Preview Modal */}
+      {resourceModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setResourceModal(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-white rounded-[28px] shadow-2xl overflow-hidden flex flex-col"
+            style={{ maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-teal-50 text-teal-600 shrink-0">
+                  <BookOpen className="h-4 w-4" />
+                </span>
+                <h3 className="text-sm font-black text-[#171747] truncate">{resourceModal.title}</h3>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Download — fetch→blob to work cross-origin (Cloudinary) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ext = resourceModal.fileUrl.split(".").pop()?.split("?")[0] || "file";
+                    const filename = `${resourceModal.title.replace(/[^a-z0-9]/gi, "_")}.${ext}`;
+                    downloadResource(resourceModal.fileUrl, filename);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-2xs transition"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </button>
+                {/* Fullscreen — open raw URL in new tab */}
+                <button
+                  type="button"
+                  onClick={() => window.open(resourceModal.fileUrl, "_blank", "noopener,noreferrer")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-2xs transition"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" /> Fullscreen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResourceModal(null)}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition shadow-2xs"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-hidden bg-slate-50" style={{ minHeight: "60vh" }}>
+              {(() => {
+                const url = resourceModal.fileUrl;
+                const type = resourceModal.fileType?.toLowerCase() || "";
+                const isImage = type.includes("image") || /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(url);
+
+                if (isImage) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center p-6" style={{ minHeight: "60vh" }}>
+                      <img
+                        src={url}
+                        alt={resourceModal.title}
+                        className="max-w-full object-contain rounded-xl shadow-sm"
+                        style={{ maxHeight: "70vh" }}
+                      />
+                    </div>
+                  );
+                }
+
+                // For PDFs and all other file types from Cloudinary:
+                // Use Google Docs viewer — it handles cross-origin files reliably
+                // without CORS issues and renders PDFs, Word docs, spreadsheets, etc.
+                const docsViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+                return (
+                  <iframe
+                    key={url}
+                    src={docsViewerUrl}
+                    title={resourceModal.title}
+                    className="w-full border-0"
+                    style={{ height: "70vh" }}
+                    sandbox="allow-scripts allow-same-origin allow-popups"
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#171747] px-5 py-3 text-xs font-black text-white shadow-xl">{toast}</div>}
     </div>
   );
