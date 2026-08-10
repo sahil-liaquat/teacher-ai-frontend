@@ -1023,6 +1023,7 @@ export type AdminUsageByTier = {
 export type AdminUsageDaily = {
   day: string; // ISO date "YYYY-MM-DD"
   generations: number;
+  first_time_generations: number; // successful generations that were the user's first ever
   total_tokens: number;
   cost_inr: number;
 };

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { backendApi, type ActivityKind } from "@/lib/api";
 import { LoadingState, EmptyState, StatusPill } from "@/components/admin/admin-ui";
 import { getErrorMessage } from "@/lib/errors";
+import { ActivityOutputView } from "@/components/admin/activity-output-view";
 
 export function ActivityDetailDrawer({
   generationId,
@@ -24,6 +25,11 @@ export function ActivityDetailDrawer({
     enabled: open,
   });
 
+  const [view, setView] = useState<"rendered" | "json">("rendered");
+  useEffect(() => {
+    setView("rendered");
+  }, [generationId]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -41,9 +47,23 @@ export function ActivityDetailDrawer({
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{kind.replace("_", " ")}</p>
             <h2 className="text-lg font-bold text-gray-900">Generation detail</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-gray-500 hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+              {(["rendered", "json"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setView(option)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold capitalize transition ${view === option ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  {option === "rendered" ? "Rendered" : "Raw JSON"}
+                </button>
+              ))}
+            </div>
+            <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-gray-500 hover:bg-gray-100">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 space-y-5 px-6 py-5">
@@ -67,7 +87,15 @@ export function ActivityDetailDrawer({
               </Section>
 
               <Section title="Output">
-                {d.output_json ? <JsonBlock value={d.output_json} /> : <span className="text-sm text-gray-500">—</span>}
+                {d.output_json ? (
+                  view === "rendered" ? (
+                    <ActivityOutputView kind={kind} output={d.output_json} />
+                  ) : (
+                    <JsonBlock value={d.output_json} />
+                  )
+                ) : (
+                  <span className="text-sm text-gray-500">—</span>
+                )}
               </Section>
             </>
           )}
