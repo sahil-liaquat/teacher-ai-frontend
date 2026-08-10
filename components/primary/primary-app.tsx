@@ -19,14 +19,13 @@ import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type Primary
 import { PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { cn } from "@/lib/utils";
 
-export type PrimaryPage = "home" | "today" | "library" | "settings" | "coverage" | "roster";
+export type PrimaryPage = "home" | "today" | "library" | "settings" | "coverage";
 
 import PrimaryHomePage from "./pages/primary-home-page";
 import PrimaryTodayPage from "./pages/primary-today-page";
 import PrimaryLibraryPage from "./pages/primary-library-page";
 import PrimarySettingsPage from "./pages/primary-settings-page";
 import PrimaryCoveragePage from "./pages/primary-coverage-page";
-import PrimaryRosterPage from "./pages/primary-roster-page";
 
 // Sidebar/topbar chrome for /primary/* comes from <AppShell> (components/app-shell.tsx),
 // which wraps every page via app/primary/layout.tsx — this component only owns page content.
@@ -36,7 +35,6 @@ const title: Record<PrimaryPage, [string, string]> = {
   library: ["Resource Library 📚", "Explore and search educational activities and worksheets."],
   settings: ["Settings ⚙️", "Configure your Primary Teaching context and preferences."],
   coverage: ["Curriculum Coverage 📊", "Review textbook scope and classroom progress."],
-  roster: ["Class Roster 👥", "Manage students, classes and attendance profiles."],
 };
 
 export function PrimaryApp({ page }: { page: PrimaryPage }) {
@@ -48,14 +46,13 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 2400); };
 
   return <>
-    <div className="primary-shell min-h-screen text-teachpad-ink">
+    <div className="primary-shell primary-workspace min-h-screen text-teachpad-ink">
     <main className="primary-main min-h-screen p-4 lg:p-7">
       {page === "home" && <PrimaryHomePage notify={notify} />}
       {page === "today" && <PrimaryTodayPage notify={notify} />}
       {page === "library" && <PrimaryLibraryPage Resources={Resources} notify={notify} />}
       {page === "settings" && <PrimarySettingsPage />}
       {page === "coverage" && <PrimaryCoveragePage notify={notify} />}
-      {page === "roster" && <PrimaryRosterPage notify={notify} />}
     </main>
     {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#17206a] px-5 py-3 text-sm font-bold text-white shadow-xl">{toast}</div>}
     </div>
@@ -193,7 +190,7 @@ export function TopicBar({ action = "Change Topic", href, notify }: { action?: s
               {PRIMARY_LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}
             </select>
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 col-span-full xl:col-span-1 xl:justify-end">
             <button type="submit" disabled={saving} className="rounded-xl bg-[#6e41f5] px-4 py-2.5 text-xs font-black text-white hover:bg-[#5731d8] transition shadow-md shadow-[#6e41f5]/15 disabled:cursor-wait disabled:opacity-60 cursor-pointer">
               {saving ? "Saving…" : "Save"}
             </button>
@@ -209,7 +206,7 @@ export function TopicBar({ action = "Change Topic", href, notify }: { action?: s
           <Topic icon="🌿" label="Theme" value={context.theme ?? "—"} onClick={() => setEditing(true)} />
           <Topic icon="🎯" label="Focus Skill" value={context.skill ?? "All Skills"} onClick={() => setEditing(true)} />
           <Topic icon="🌐" label="Language" value={context.language} onClick={() => setEditing(true)} />
-          <div className="flex flex-wrap items-center justify-between gap-3 w-full border-t xl:border-t-0 border-slate-100 pt-3 xl:pt-0">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full border-t xl:border-t-0 border-slate-100 pt-3 xl:pt-0 col-span-full xl:col-span-1">
             <div className="flex items-center gap-2">
               {syncStatus === "syncing" && <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 animate-pulse">Saving…</span>}
               {syncStatus === "synced" && <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Saved ✓</span>}
@@ -638,4 +635,3 @@ export function Resources({
     </>
   );
 }
-

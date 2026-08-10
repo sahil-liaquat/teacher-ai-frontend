@@ -33,6 +33,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "theme_image", label: "Theme Image", type: "image", placeholder: "https://…/theme-image.webp" },
     { key: "vocabulary_list", label: "Vocabulary List", type: "list" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (action rhyme/video)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
   free_play: [
@@ -40,6 +41,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "corner_instructions", label: "Corner Instructions", type: "textarea", placeholder: "How to set up and run each learning corner…" },
     { key: "materials_required", label: "Materials Required", type: "list" },
     { key: "observation_points", label: "Observation Points", type: "list" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
   story: [
@@ -50,6 +52,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "props", label: "Props", type: "list" },
     { key: "supporting_picture_cards", label: "Supporting Picture / Sequence Cards", type: "resource_multi", category: "Picture Talk Cards" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (story narration/animated story)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
   numeracy_time: [
@@ -57,12 +60,14 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "printable_activity", label: "Printable Activity", type: "resource", category: "Worksheets" },
     { key: "manipulatives_required", label: "Manipulatives Required", type: "list", placeholder: "e.g. Counters, number cards, abacus…" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (demonstration/counting activity)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "assessment_observation", label: "Assessment / Observation", type: "textarea" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
   meal_time: [
     { key: "meal_prayer", label: "Meal Prayer", type: "textarea", placeholder: "The prayer / thanks to say before the meal…" },
     { key: "hygiene_checklist", label: "Hygiene Checklist", type: "list", placeholder: "e.g. Wash hands, use napkin, clean up…" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
   creative_time: [
@@ -71,6 +76,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "reference_image", label: "Reference Image", type: "image", placeholder: "https://…/reference.webp" },
     { key: "activity_steps", label: "Activity Steps", type: "list" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (craft demonstration)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "observation_points", label: "Observation Points", type: "list" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
@@ -79,6 +85,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "supporting_flashcards", label: "Supporting Flashcards", type: "resource_multi", category: "Flashcards", optional: true },
     { key: "letter_word_focus", label: "Letter / Word Focus", type: "text", placeholder: "e.g. Letter S, sight word 'the'…" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (phonics/letter formation)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "assessment_observation", label: "Assessment / Observation", type: "textarea" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
@@ -87,6 +94,7 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "materials_required", label: "Materials Required", type: "list" },
     { key: "safety_instructions", label: "Safety Instructions", type: "list" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (game demonstration)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "observation_notes", label: "Observation Notes", type: "textarea" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
@@ -96,6 +104,50 @@ export const STEP_DETAIL_FIELDS: Partial<Record<PrimaryStepType, StepDetailField
     { key: "goodbye_song", label: "Goodbye Song", type: "resource", category: "Circle Time Prompts" },
     { key: "tomorrow_preview", label: "Tomorrow Preview", type: "textarea", placeholder: "What's coming up tomorrow…" },
     { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (goodbye song)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
+    { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
+  ],
+
+  // ── Story-variant types ────────────────────────────────────────────────────
+  // story_or_rhyme combines a read-aloud story with a rhyme/song component.
+  story_or_rhyme: [
+    { key: "story_resource_id", label: "Story", type: "resource", category: "Story Cards", note: "Pick the story printable from the catalog." },
+    { key: "story_text", label: "Story Text", type: "textarea", placeholder: "The full story to narrate…" },
+    { key: "story_cover_image", label: "Story Cover Image", type: "image", placeholder: "https://…/story-cover.webp" },
+    { key: "rhyme_resource_id", label: "Rhyme / Song", type: "resource", category: "Circle Time Prompts", optional: true, note: "Pick the rhyme or action song printable." },
+    { key: "props", label: "Props", type: "list", optional: true },
+    { key: "supporting_picture_cards", label: "Supporting Picture / Sequence Cards", type: "resource_multi", category: "Picture Talk Cards", optional: true },
+    { key: "vocabulary_list", label: "Vocabulary List", type: "list", optional: true },
+    { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (story narration/animated story)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
+    { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
+  ],
+
+  // story_rhyme_picture_talk is a combined block: story + rhyme + picture discussion.
+  story_rhyme_picture_talk: [
+    { key: "story_resource_id", label: "Story", type: "resource", category: "Story Cards", note: "Pick the story printable from the catalog." },
+    { key: "story_text", label: "Story Text", type: "textarea", placeholder: "The full story to narrate…" },
+    { key: "story_cover_image", label: "Story Cover Image", type: "image", placeholder: "https://…/story-cover.webp" },
+    { key: "rhyme_resource_id", label: "Rhyme / Song", type: "resource", category: "Circle Time Prompts", optional: true, note: "Pick the rhyme or action song printable." },
+    { key: "theme_image", label: "Picture Talk Image", type: "image", placeholder: "https://…/picture-talk.webp", optional: true },
+    { key: "theme_conversation", label: "Picture Talk Questions", type: "textarea", placeholder: "Questions to prompt discussion about the picture…", optional: true },
+    { key: "supporting_picture_cards", label: "Supporting Picture / Sequence Cards", type: "resource_multi", category: "Picture Talk Cards", optional: true },
+    { key: "props", label: "Props", type: "list", optional: true },
+    { key: "vocabulary_list", label: "Vocabulary List", type: "list", optional: true },
+    { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (story narration/animated story)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
+    { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
+  ],
+
+  // picture_talk is a standalone image-led discussion activity.
+  picture_talk: [
+    { key: "theme_image", label: "Picture Talk Image", type: "image", placeholder: "https://…/picture-talk.webp" },
+    { key: "theme_conversation", label: "Discussion Questions & Prompts", type: "textarea", placeholder: "Questions to prompt discussion about the picture…" },
+    { key: "supporting_picture_cards", label: "Supporting Picture Cards", type: "resource_multi", category: "Picture Talk Cards", optional: true },
+    { key: "supporting_flashcards", label: "Supporting Flashcards", type: "resource_multi", category: "Flashcards", optional: true },
+    { key: "vocabulary_list", label: "Vocabulary List", type: "list", optional: true },
+    { key: "youtube_url", label: "YouTube Video Link", type: "text", optional: true, placeholder: "https://youtube.com/… (related video)" },
+    { key: "media_links", label: "Media Links (YouTube/Images)", type: "list", optional: true, placeholder: "Add a video or image URL (https://…)" },
     { key: "teacher_notes", label: "Teacher Notes", type: "textarea", optional: true },
   ],
 };

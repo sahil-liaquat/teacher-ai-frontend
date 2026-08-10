@@ -3013,6 +3013,7 @@ export type PrimaryPlannerActivityContext = {
   transition?: string | null;
   required_resource_ids?: string[] | null;
   optional_resource_ids?: string[] | null;
+  objectives?: string[];
   [key: string]: unknown;
 };
 

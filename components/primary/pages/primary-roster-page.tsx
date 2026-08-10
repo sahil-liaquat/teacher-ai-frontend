@@ -143,9 +143,9 @@ export default function PrimaryRosterPage({ notify }: { notify: (message: string
     Boolean(selectedSectionId) && isValidStudentCode(newStudentCode) && !createStudent.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="primary-workspace-page space-y-6">
       {/* Header */}
-      <div className="pb-5 border-b border-[#e8e7fb]">
+      <div className="primary-page-header pb-5 border-b border-[#e8e7fb]">
         <h2 className="text-3xl font-black tracking-tight text-[#171747]">Classroom Roster</h2>
         <p className="text-xs font-semibold text-[#596083] mt-1">
           Manage your classes, student codes, and profiles safely and privately.

@@ -32,7 +32,7 @@ export default function PrimaryStudentProfilePanel({
   const data = profile.data;
 
   return (
-    <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-md">
+    <section className="primary-student-profile rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-md">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-50 pb-4 mb-4">
         <div>
           <h2 className="text-2xl font-black text-[#171747]">{student.code}</h2>
@@ -188,4 +188,3 @@ export default function PrimaryStudentProfilePanel({
     </section>
   );
 }
-

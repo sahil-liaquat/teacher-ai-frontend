@@ -595,9 +595,9 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   };
 
   return (
-    <div className="space-y-6">
+    <div className="primary-workspace-page space-y-6">
       {/* Header */}
-      <div className="relative pb-5 border-b border-[#e8e7fb] overflow-hidden">
+      <div className="primary-page-header relative pb-5 border-b border-[#e8e7fb] overflow-hidden">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-3xl font-black tracking-tight text-[#171747]">Today's Plan ☀️</h2>
@@ -617,9 +617,9 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       </div>
 
       {/* Today's Plan Selector Card */}
-      <div className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Left: Title and Date Section */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 lg:border-r lg:border-[#e8e7fb] lg:pr-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-[#6e41f5]/15">
             <Calendar className="h-4.5 w-4.5" />
           </div>
@@ -670,7 +670,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
           {/* Sub Theme */}
           <div className="relative w-full">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+            <div className="flex items-center gap-2 bg-slate-50 border border-[#ecebf7] rounded-xl px-3.5 py-2.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Subtheme</span>
               <select
                 value={selSubtheme}
@@ -689,7 +689,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
           {/* Topic */}
           <div className="relative w-full">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+            <div className="flex items-center gap-2 bg-slate-50 border border-[#ecebf7] rounded-xl px-3.5 py-2.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Topic</span>
               <select
                 value={selTopicId}
@@ -708,12 +708,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
 
         {/* Right: View Button */}
-        <div className="shrink-0 xl:self-center flex justify-end">
+        <div className="shrink-0 lg:self-center flex justify-end w-full lg:w-auto">
           <button
             onClick={() => void handleViewFullPlan()}
             disabled={!canViewPlan || savingContext}
             title={canViewPlan ? undefined : "Select a class, theme and topic first"}
-            className="w-full xl:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#6e41f5] px-4.5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 transition hover:bg-[#5731d8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full lg:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#7c5dff] to-[#5a39eb] hover:from-[#6e41f5] hover:to-[#4e29db] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 hover:shadow-lg hover:shadow-[#6e41f5]/25 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
             {savingContext ? (
               <>
@@ -842,10 +842,30 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                 <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-100">
                   <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(completedCount / plannerActivities.length) * 100}%` }} />
                 </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm("This will overwrite your current schedule edits with the latest curriculum. Continue?")) {
+                      const themeRow = pickerThemesQuery.data?.find((t) => t.name === context.theme) ?? null;
+                      await runGenerate({
+                        context,
+                        date: selectedDate,
+                        themeId: themeRow?.id,
+                        topicId: context.topicId || undefined,
+                        replace: true
+                      });
+                    }
+                  }}
+                  disabled={generating}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-3 py-1.5 text-[11px] font-black text-[#6e41f5] hover:bg-[#faf9ff] transition cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", generating && "animate-spin")} />
+                  Sync from Curriculum
+                </button>
               </div>
             </div>
 
-            <div className="relative space-y-3 border-l-2 border-dashed border-[#e8e7fb] pl-8 ml-3">
+            <div className="primary-today-timeline relative space-y-3 border-l-2 border-dashed border-[#e8e7fb] pl-8 ml-3">
               {plannerActivities.map((act, index) => {
                 const config = getActivityConfig(act.activity_type);
                 const stepImg = primaryStepImage(act.activity_type);
@@ -853,7 +873,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                 return (
                   <div
                     key={act.id}
-                    className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#ecebf7] bg-white px-4 py-3.5 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+                    className="primary-today-activity-card relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#ecebf7] bg-white px-4 py-3.5 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
                   >
                     {/* Timeline dot */}
                     <span className={cn("absolute -left-[41px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full ring-[4px] ring-white shadow-md transition-transform duration-200 group-hover:scale-110", theme.dotBg)} />
@@ -884,7 +904,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                     </div>
 
                     {/* Right side: badge + status + view button */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="primary-today-activity-actions flex items-center gap-2 shrink-0">
                       <span className={cn("hidden sm:inline-flex rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider", theme.badgeBg, theme.badgeText, theme.badgeBorder)}>
                         {config.label}
                       </span>
@@ -907,7 +927,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
                       <Link
                         href={`/primary/today/activity/${act.id}?date=${selectedDate}${sectionId ? `&section_id=${sectionId}` : ""}`}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#6e41f5]/30 bg-white px-3 py-1.5 text-[11px] font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 hover:border-[#6e41f5]/60 transition shadow-sm cursor-pointer whitespace-nowrap"
+                        className="primary-today-view-activity inline-flex items-center gap-1.5 rounded-xl border border-[#6e41f5]/30 bg-white px-3 py-1.5 text-[11px] font-black text-[#6e41f5] hover:bg-[#6e41f5]/5 hover:border-[#6e41f5]/60 transition shadow-sm cursor-pointer whitespace-nowrap"
                       >
                         <Eye className="h-3.5 w-3.5" /> View Activity
                       </Link>
@@ -919,54 +939,73 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
           </div>
 
           {/* Daily Reflection */}
-          <div className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
+          <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
             {/* Header row */}
-            <div className="flex items-start justify-between mb-5 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
-                <h3 className="text-base font-black text-[#171747] flex items-center gap-2">
+                <h3 className="text-sm font-black text-[#171747] flex items-center gap-1.5">
                   Daily Reflection &amp; Handover 🌱
                 </h3>
                 <p className="text-xs font-semibold text-slate-400 mt-0.5">Capture notes for tomorrow.</p>
               </div>
-              {/* Quote card */}
-              <div className="hidden sm:flex shrink-0 items-start gap-2 rounded-2xl border border-[#e8e7fb] bg-white px-4 py-3 shadow-sm max-w-[220px]">
-                <span className="text-xl mt-0.5">💡</span>
-                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
-                  A few thoughts today,<br />Better learning tomorrow!
-                </p>
-              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              {(
-                [
-                  ["workedWell", "What worked well today? ☀️", "What engaged learners or went smoothly?"],
-                  ["needsSupport", "What could improve? 🔍", "What needs a different approach next time?"],
-                  ["continueTomorrow", "What should happen tomorrow? 📋", "Capture follow-up, preparation, or support needed."],
-                ] as const
-              ).map(([field, label, placeholder]) => (
-                <label key={field} className="space-y-1.5 text-xs font-black text-[#171747] flex flex-col">
-                  <span>{label}</span>
-                  <textarea
-                    value={reflection[field]}
-                    onChange={(event) => setReflection((current) => ({ ...current, [field]: event.target.value }))}
-                    placeholder={placeholder}
-                    rows={4}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-[#6e41f5] focus:ring-2 focus:ring-[#6e41f5]/15 transition resize-none"
-                  />
-                </label>
-              ))}
+              {/* Worked Well */}
+              <label className="space-y-1.5 flex flex-col">
+                <span className="flex items-center gap-1.5 text-xs font-black text-[#171747]">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 text-[10px]">☀️</span>
+                  What worked well today?
+                </span>
+                <textarea
+                  value={reflection.workedWell}
+                  onChange={(event) => setReflection((current) => ({ ...current, workedWell: event.target.value }))}
+                  placeholder="What engaged learners or went smoothly?"
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-200 bg-[#fbfbfe]/50 px-3.5 py-3 text-xs font-medium text-slate-700 placeholder:text-slate-400/70 focus:bg-white focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition duration-200 resize-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                />
+              </label>
+
+              {/* Needs Support */}
+              <label className="space-y-1.5 flex flex-col">
+                <span className="flex items-center gap-1.5 text-xs font-black text-[#171747]">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-50 text-amber-600 text-[10px]">🔍</span>
+                  What could improve?
+                </span>
+                <textarea
+                  value={reflection.needsSupport}
+                  onChange={(event) => setReflection((current) => ({ ...current, needsSupport: event.target.value }))}
+                  placeholder="What needs a different approach next time?"
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-200 bg-[#fbfbfe]/50 px-3.5 py-3 text-xs font-medium text-slate-700 placeholder:text-slate-400/70 focus:bg-white focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition duration-200 resize-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                />
+              </label>
+
+              {/* Continue Tomorrow */}
+              <label className="space-y-1.5 flex flex-col">
+                <span className="flex items-center gap-1.5 text-xs font-black text-[#171747]">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 text-blue-600 text-[10px]">📋</span>
+                  What should happen tomorrow?
+                </span>
+                <textarea
+                  value={reflection.continueTomorrow}
+                  onChange={(event) => setReflection((current) => ({ ...current, continueTomorrow: event.target.value }))}
+                  placeholder="Capture follow-up or support needed."
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-200 bg-[#fbfbfe]/50 px-3.5 py-3 text-xs font-medium text-slate-700 placeholder:text-slate-400/70 focus:bg-white focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition duration-200 resize-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                />
+              </label>
             </div>
 
-            <div className="flex items-center justify-between mt-5">
-              <span className="text-2xl select-none">🌿</span>
+            {/* Save button area */}
+            <div className="flex items-center justify-end mt-4 pt-3 border-t border-slate-100">
               <button
                 onClick={handleSaveReflection}
                 disabled={savingReflection}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#6e41f5] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/15 hover:bg-[#5731d8] transition disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6e41f5] to-indigo-600 px-5 py-2 text-xs font-black text-white shadow-md shadow-indigo-500/15 hover:from-[#5731d8] hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98] hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 cursor-pointer"
               >
-                <Save className="h-3.5 w-3.5" />
-                {savingReflection ? "Saving..." : "Save Daily Reflection"}
+                {savingReflection ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                <span>{savingReflection ? "Saving..." : "Save Daily Reflection"}</span>
               </button>
             </div>
           </div>

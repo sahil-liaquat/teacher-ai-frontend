@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
   BookOpen, Printer, Palette, Users, Puzzle, School, ClipboardList,
-  Search, ChevronDown, SlidersHorizontal, ArrowRight, ChevronRight,
+  Search, ChevronDown, ArrowRight, ChevronRight,
   ChevronLeft, X, Download, Sparkles, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,16 +23,16 @@ type ResourcesComponent = React.ComponentType<{
 // Mock Count Data & Visual Themes for category grid types
 const TYPE_METADATA: Record<string, { count: string; description: string; theme: string; image: string; tag: string }> = {
   // Teaching Resources
-  "flashcards": { count: "120+", description: "Visual cards for easy concept building", theme: "blue", image: "/assets/primary/library/cow.jpg", tag: "Visual Aids" },
-  "picture-talk-cards": { count: "80+", description: "Real-life images to spark conversation", theme: "green", image: "/assets/primary/library/elephant.jpg", tag: "Visual Aids" },
-  "story-cards": { count: "60+", description: "Short stories to build language & imagination", theme: "orange", image: "/assets/illustrations/create-lesson-plan-header.png", tag: "Language" },
-  "rhymes": { count: "50+", description: "Fun rhymes to sing and enjoy", theme: "pink", image: "/assets/illustrations/circle_time_kids.png", tag: "Rhymes & Songs" },
-  "action-songs": { count: "30+", description: "Songs with actions for active learning", theme: "purple", image: "/assets/primary/dashboard-sing-move.webp", tag: "Rhymes & Songs" },
-  "big-book-pages": { count: "25+", description: "Large, engaging pages for group learning", theme: "teal", image: "/assets/illustrations/lesson-plan-card.png", tag: "Visual Aids" },
-  "vocabulary-cards": { count: "100+", description: "Key words with images and meanings", theme: "yellow", image: "/assets/primary/library/apple.jpg", tag: "Language" },
-  "conversation-cards": { count: "40+", description: "Prompts to build speaking and listening", theme: "blue", image: "/assets/illustrations/create-notes-header.png", tag: "Conversation" },
-  "circle-time-prompts": { count: "60+", description: "Questions and ideas for circle discussions", theme: "green", image: "/assets/illustrations/circle_time_kids.png", tag: "Circle Time" },
-  "calendar-activities": { count: "20+", description: "Daily calendar and routine activities", theme: "red", image: "/assets/primary/dashboard-plan.webp", tag: "Calendar" },
+  "flashcards": { count: "120+", description: "Visual cards for easy concept building", theme: "blue", image: "/assets/primary/library/lib_flashcards.webp", tag: "Visual Aids" },
+  "picture-talk-cards": { count: "80+", description: "Real-life images to spark conversation", theme: "green", image: "/assets/primary/library/lib_picture_talk.webp", tag: "Visual Aids" },
+  "story-cards": { count: "60+", description: "Short stories to build language & imagination", theme: "orange", image: "/assets/primary/library/lib_story_cards.webp", tag: "Language" },
+  "rhymes": { count: "50+", description: "Fun rhymes to sing and enjoy", theme: "pink", image: "/assets/primary/library/lib_rhymes.webp", tag: "Rhymes & Songs" },
+  "action-songs": { count: "30+", description: "Songs with actions for active learning", theme: "purple", image: "/assets/primary/library/lib_action_songs.webp", tag: "Rhymes & Songs" },
+  "big-book-pages": { count: "25+", description: "Large, engaging pages for group learning", theme: "teal", image: "/assets/primary/library/lib_big_book_pages.webp", tag: "Visual Aids" },
+  "vocabulary-cards": { count: "100+", description: "Key words with images and meanings", theme: "yellow", image: "/assets/primary/library/lib_vocabulary_cards.webp", tag: "Language" },
+  "conversation-cards": { count: "40+", description: "Prompts to build speaking and listening", theme: "blue", image: "/assets/primary/library/lib_conversation_cards.webp", tag: "Conversation" },
+  "circle-time-prompts": { count: "60+", description: "Questions and ideas for circle discussions", theme: "green", image: "/assets/primary/library/lib_circle_time_prompts.webp", tag: "Circle Time" },
+  "calendar-activities": { count: "20+", description: "Daily calendar and routine activities", theme: "red", image: "/assets/primary/library/lib_calendar_activities.webp", tag: "Calendar" },
   
   // Printable Activities
   "worksheets": { count: "150+", description: "Concept practice and writing worksheets", theme: "blue", image: "/assets/illustrations/create-worksheet-header.png", tag: "Worksheets" },
@@ -269,195 +269,126 @@ export default function PrimaryLibraryPage({
   };
 
   return (
-    <div className="space-y-7 pb-12 antialiased">
-      {/* Top Filter and Search Bar */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1.5">
-          {activeType && (
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              <button onClick={handleBackToLibrary} className="hover:text-slate-600 transition">Library</button>
-              <ChevronRight className="h-3 w-3 text-slate-300" />
-              <button onClick={handleBackToLibrary} className="hover:text-slate-600 transition">{activeCategory.name}</button>
-              <ChevronRight className="h-3 w-3 text-slate-300" />
-              <span className="text-[#2563eb] font-extrabold">{activeType.name}</span>
-            </div>
-          )}
-          
-          <h1 className="text-3xl font-black tracking-tight text-[#12346b] flex items-center gap-2">
-            {activeType ? (
-              <>
-                <span>{activeType.name}</span>
-                <span className="text-2xl filter drop-shadow-xs select-none">🎴</span>
-              </>
-            ) : (
-              <>
-                <span>Library</span>
-                <span className="text-2xl filter drop-shadow-xs select-none">📖</span>
-              </>
-            )}
-          </h1>
-          <p className="text-xs font-semibold text-slate-400 max-w-xl">
-            {activeType ? (
-              "Visual cards to build concepts, vocabulary and early understanding."
-            ) : (
-              "Explore NEP-aligned resources for joyful teaching and learning."
-            )}
-          </p>
+    <div className="primary-workspace-page space-y-7 pb-12 antialiased">
+      {/* Header */}
+      <div className="primary-page-header relative pb-5 border-b border-[#e8e7fb] overflow-hidden">
+        {activeType && (
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <button onClick={handleBackToLibrary} className="hover:text-slate-600 transition">Library</button>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <button onClick={handleBackToLibrary} className="hover:text-slate-600 transition">{activeCategory.name}</button>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <span className="text-[#2563eb] font-extrabold">{activeType.name}</span>
+          </div>
+        )}
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-[#171747]">
+              {activeType ? activeType.name : "Library"} {activeType ? "🎴" : "📖"}
+            </h2>
+            <p className="text-xs font-semibold text-[#596083] mt-1">
+              {activeType
+                ? "Visual cards to build concepts, vocabulary and early understanding."
+                : "Explore NEP-aligned resources for joyful teaching and learning."}
+            </p>
+          </div>
+          {/* Decorative illustration */}
+          <div className="hidden sm:flex items-end gap-1 shrink-0 select-none pointer-events-none" aria-hidden>
+            <span className="text-4xl">📚</span>
+            <span className="text-5xl">✏️</span>
+            <span className="text-3xl">🎨</span>
+            <span className="text-3xl">🌟</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Library Selector Card */}
+      <div className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        {/* Left: Title and Icon Section */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5dff] to-[#5a39eb] text-white shadow-md shadow-[#6e41f5]/15">
+            <BookOpen className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#6e41f5] leading-none">Library</p>
+            <p className="text-[11px] font-bold text-slate-400 mt-1">Resource Finder</p>
+          </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Search bar */}
-          <div className="relative w-full max-w-xs sm:w-60">
-            <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={activeType ? `Search ${activeType.name.toLowerCase()}...` : "Search resources..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs font-bold text-slate-700 placeholder-slate-400 shadow-[0_1px_2px_rgba(0,0,0,0.02)] focus:border-blue-400 focus:outline-none transition-colors duration-200"
-            />
-          </div>
-
-          {/* Class Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setClassDropdownOpen(!classDropdownOpen);
-                setSubjectDropdownOpen(false);
-                setThemeDropdownOpen(false);
-              }}
-              className="flex h-10 items-center justify-between gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:bg-slate-50 transition-colors"
-            >
-              <span>Class: <span className="font-extrabold text-[#12346b]">{context.level}</span></span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-            </button>
-            {classDropdownOpen && (
-              <div className="absolute right-0 top-11 z-50 w-36 rounded-xl border border-slate-100 bg-white py-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-100">
+        {/* Middle: Grid of Selectors */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 flex-1">
+          {/* Class */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Class</span>
+              <select
+                value={context.level}
+                onChange={(e) => void updateContext({ level: e.target.value as any })}
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none"
+              >
                 {PRIMARY_LEVELS.map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => {
-                      void updateContext({ level: lvl });
-                      setClassDropdownOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 transition-colors",
-                      context.level === lvl ? "text-blue-600 bg-blue-50/20" : "text-slate-600"
-                    )}
-                  >
-                    <span>{lvl}</span>
-                    {context.level === lvl && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                  </button>
+                  <option key={lvl} value={lvl}>{lvl}</option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          {/* Subject Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSubjectDropdownOpen(!subjectDropdownOpen);
-                setClassDropdownOpen(false);
-                setThemeDropdownOpen(false);
-              }}
-              className="flex h-10 items-center justify-between gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:bg-slate-50 transition-colors"
-            >
-              <span>Subject: <span className="font-extrabold text-[#12346b]">{context.subject || "All"}</span></span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-            </button>
-            {subjectDropdownOpen && (
-              <div className="absolute right-0 top-11 z-50 w-36 rounded-xl border border-slate-100 bg-white py-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-100">
-                <button
-                  onClick={() => {
-                    void updateContext({ subject: "" });
-                    setSubjectDropdownOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 transition-colors",
-                    !context.subject ? "text-blue-600 bg-blue-50/20" : "text-slate-600"
-                  )}
-                >
-                  <span>All</span>
-                  {!context.subject && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                </button>
+          {/* Subject */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Subject</span>
+              <select
+                value={context.subject || ""}
+                onChange={(e) => void updateContext({ subject: e.target.value })}
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none"
+              >
+                <option value="">All Subjects</option>
                 {subjects.map((sub) => (
-                  <button
-                    key={sub}
-                    onClick={() => {
-                      void updateContext({ subject: sub });
-                      setSubjectDropdownOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 transition-colors",
-                      context.subject === sub ? "text-blue-600 bg-blue-50/20" : "text-slate-600"
-                    )}
-                  >
-                    <span>{sub}</span>
-                    {context.subject === sub && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                  </button>
+                  <option key={sub} value={sub}>{sub}</option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          {/* Theme Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setThemeDropdownOpen(!themeDropdownOpen);
-                setClassDropdownOpen(false);
-                setSubjectDropdownOpen(false);
-              }}
-              className="flex h-10 items-center justify-between gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:bg-slate-50 transition-colors"
-            >
-              <span>Theme: <span className="font-extrabold text-[#12346b]">{context.theme || "All"}</span></span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-            </button>
-            {themeDropdownOpen && (
-              <div className="absolute right-0 top-11 z-50 w-44 rounded-xl border border-slate-100 bg-white py-1 shadow-lg max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-100">
-                <button
-                  onClick={() => {
-                    void updateContext({ theme: "" });
-                    setThemeDropdownOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 transition-colors",
-                    !context.theme ? "text-blue-600 bg-blue-50/20" : "text-slate-600"
-                  )}
-                >
-                  <span>All</span>
-                  {!context.theme && <Check className="h-3.5 w-3.5 text-blue-600 animate-in zoom-in-75 shrink-0" />}
-                </button>
+          {/* Theme */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Theme</span>
+              <select
+                value={context.theme || ""}
+                onChange={(e) => void updateContext({ theme: e.target.value })}
+                disabled={themes.length === 0}
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none cursor-pointer w-full pr-5 appearance-none disabled:opacity-50"
+              >
+                <option value="">All Themes</option>
                 {themes.map((th) => (
-                  <button
-                    key={th}
-                    onClick={() => {
-                      void updateContext({ theme: th });
-                      setThemeDropdownOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 transition-colors",
-                      context.theme === th ? "text-blue-600 bg-blue-50/20" : "text-slate-600"
-                    )}
-                  >
-                    <span className="truncate pr-1">{th}</span>
-                    {context.theme === th && <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
-                  </button>
+                  <option key={th} value={th}>{th}</option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
 
-          {/* Filters Toggle Button */}
-          <button className="flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:bg-slate-50 transition-colors">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-            <span>Filters</span>
-          </button>
+          {/* Search bar */}
+          <div className="relative w-full">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">Search</span>
+              <input
+                type="text"
+                placeholder={activeType ? `Search ${activeType.name.toLowerCase()}...` : "Search resources..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent text-xs font-bold text-[#171747] outline-none w-full placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery("")} className="shrink-0 text-slate-400 hover:text-slate-600">
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -482,7 +413,7 @@ export default function PrimaryLibraryPage({
                     {/* Card — pastel bg + image fills it completely, just like the source illustration panels */}
                     <div
                       className={cn(
-                        "w-[7.5rem] h-[6.5rem] rounded-[22px] overflow-hidden transition-all duration-300",
+                        "primary-library-category-card w-[9rem] h-[12rem] rounded-[24px] overflow-hidden transition-all duration-300",
                         isSelected
                           ? "shadow-[0_12px_28px_rgba(37,99,235,0.22)] ring-[3px] ring-blue-500 scale-105"
                           : "shadow-[0_4px_14px_rgba(0,0,0,0.07)] hover:shadow-[0_10px_24px_rgba(37,99,235,0.13)] hover:-translate-y-1"
@@ -498,7 +429,7 @@ export default function PrimaryLibraryPage({
 
                     {/* Label — below the card */}
                     <span className={cn(
-                      "text-[10px] font-black leading-snug tracking-tight text-center max-w-[7.5rem] transition-colors duration-300",
+                      "text-xs font-black leading-snug tracking-tight text-center max-w-[9rem] transition-colors duration-300",
                       isSelected ? "text-blue-600" : "text-[#12346b] group-hover:text-blue-500"
                     )}>
                       {cat.name}
@@ -578,47 +509,29 @@ export default function PrimaryLibraryPage({
                       key={t.slug}
                       onClick={() => handleTypeClick(t.slug)}
                       className={cn(
-                        "group flex flex-col justify-between overflow-hidden rounded-[24px] border p-4 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.05)] cursor-pointer bg-white",
+                        "group flex flex-col overflow-hidden rounded-[24px] border p-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.05)] cursor-pointer bg-white",
                         styles.bg, styles.border
                       )}
                     >
-                      <div className="space-y-4">
-                        {/* Clipart and Badge Header inside a white block */}
-                        <div className="relative flex h-32 w-full items-center justify-center rounded-[20px] bg-white border border-slate-100/50 shadow-[0_1px_3px_rgba(0,0,0,0.01)] overflow-hidden">
-                          {/* Count Badge */}
-                          <span className={cn("absolute right-2 top-2 rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-xs", styles.badge)}>
-                            {meta.count}
-                          </span>
-                          
-                          {/* Image Clipart */}
-                          <img
-                            src={meta.image}
-                            alt={t.name}
-                            className="h-20 w-20 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)] group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-
-                        {/* Text Details */}
-                        <div className="space-y-1 px-1">
-                          <h3 className="text-sm font-black text-[#12346b] leading-tight group-hover:text-blue-600 transition-colors">
-                            {t.name}
-                          </h3>
-                          <p className="text-[11px] font-semibold text-slate-400 leading-relaxed line-clamp-2">
-                            {meta.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Explore Button pill */}
-                      <div className="mt-4 pt-1">
-                        <span className={cn(
-                          "flex items-center justify-center gap-1 w-full text-center py-2.5 rounded-xl text-xs font-black transition-all duration-200",
-                          styles.buttonBg, styles.text, styles.buttonHover
-                        )}>
-                          <span>Explore</span>
-                          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      {/* Clipart and Badge Header */}
+                      <div className="relative flex h-52 w-full items-center justify-center rounded-[18px] bg-white/40 border border-white/50 shadow-[0_1px_3px_rgba(0,0,0,0.01)] overflow-hidden">
+                        {/* Count Badge */}
+                        <span className={cn("absolute right-2.5 top-2.5 rounded-full border px-2 py-0.5 text-[9px] font-black shadow-xs z-10 bg-white/95 backdrop-blur-xs", styles.badge)}>
+                          {meta.count}
                         </span>
+                        
+                        {/* Image Clipart */}
+                        <img
+                          src={meta.image}
+                          alt={t.name}
+                          className="h-full w-full object-contain p-3 group-hover:scale-108 transition-all duration-500 ease-out"
+                        />
                       </div>
+
+                      {/* Title only */}
+                      <h3 className="text-xs font-black text-[#12346b] text-center mt-2.5 px-1 leading-snug group-hover:text-blue-600 transition-colors">
+                        {t.name}
+                      </h3>
                     </div>
                   );
                 })}
@@ -766,10 +679,10 @@ export default function PrimaryLibraryPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex flex-col w-full max-w-4xl max-h-[85vh] bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="primary-library-modal relative flex flex-col w-full max-w-4xl max-h-[85vh] bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4.5 bg-slate-50/50">
+            <div className="primary-library-modal-header flex items-center justify-between border-b border-slate-100 px-6 py-4.5 bg-slate-50/50">
               <div>
                 <h3 className="text-lg font-black text-[#12346b] flex items-center gap-1.5">
                   <span>{selectedSet.title} {activeType?.name || "Cards"}</span>

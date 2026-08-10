@@ -888,6 +888,44 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   const previousActivity = currentIndex > 0 ? dayActivities[currentIndex - 1] : undefined;
   const nextActivity = currentIndex >= 0 ? dayActivities[currentIndex + 1] : undefined;
 
+  useEffect(() => {
+    if (!activity || !dayQuery.isSuccess || currentIndex < 0 || editing || resourceModal) return;
+
+    const handleActivityArrowNavigation = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      ) return;
+
+      if (event.key === "ArrowLeft" && previousActivity) {
+        event.preventDefault();
+        router.push(activityUrl(previousActivity, sectionId));
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        router.push(
+          nextActivity
+            ? activityUrl(nextActivity, sectionId)
+            : `/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`,
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleActivityArrowNavigation);
+    return () => window.removeEventListener("keydown", handleActivityArrowNavigation);
+  }, [activity, currentIndex, dayQuery.isSuccess, editing, nextActivity, previousActivity, resourceModal, router, sectionId]);
+
   const requiredIds = useMemo(() => {
     return Array.isArray(activity?.context?.required_resource_ids)
       ? activity.context.required_resource_ids
@@ -1303,11 +1341,11 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
               <span className="grid h-8 w-8 place-items-center rounded-full bg-teal-50 text-teal-600 text-sm">
                 <BookOpen className="h-4.5 w-4.5" />
               </span>
-              <h2 className="text-sm font-black text-[#171747]">Attached resources</h2>
+              <h2 className="text-sm font-black text-[#171747]">Learning resources</h2>
               <span className="ml-auto text-[10px] font-bold text-slate-400">Click to preview</span>
             </header>
             
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {allResourceIds.map(id => {
                 const res = resourceMap.get(id);
                 if (!res) return null;
@@ -1516,7 +1554,7 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
     );
 
     const paginationRow = (
-      <div className="grid gap-3 sm:grid-cols-2 w-full mt-4" key="pagination">
+      <div className="primary-activity-pagination grid w-full grid-cols-2 gap-2 mt-4" key="pagination">
         {/* Previous Activity */}
         {previousActivity ? (
           <Link
@@ -1577,7 +1615,7 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
     if (!hasRightColumnContent) {
       return (
         <div className="space-y-6">
-          <div className="space-y-6 max-w-4xl mx-auto w-full">
+          <div className="w-full space-y-6">
             {activeCards.map((card, idx) => <div key={idx}>{card.element}</div>)}
             {fallbackSection}
           </div>
@@ -1586,34 +1624,14 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
       );
     }
 
-    // Always anchor the first card (Teach Step) in Column A.
-    // Then greedily fill remaining cards starting from Column B so gaps are always filled.
-    const [anchorCard, ...restCards] = activeCards;
-
-    const colA: React.ReactNode[] = anchorCard ? [anchorCard.element] : [];
-    const colB: React.ReactNode[] = [];
-    let heightA = anchorCard ? anchorCard.height : 0;
-    let heightB = 0;
-
-    restCards.forEach((card) => {
-      if (heightB <= heightA) {
-        colB.push(card.element);
-        heightB += card.height;
-      } else {
-        colA.push(card.element);
-        heightA += card.height;
-      }
-    });
-
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start w-full">
-          <div className="space-y-6 w-full">
-            {colA}
-          </div>
-          <div className="space-y-6 w-full">
-            {colB}
-          </div>
+        <div className="primary-activity-masonry w-full columns-1 lg:columns-2">
+          {activeCards.map((card, index) => (
+            <div key={index} className="primary-activity-masonry-item inline-block w-full align-top">
+              {card.element}
+            </div>
+          ))}
         </div>
         {fallbackSection}
         {paginationRow}
@@ -1622,56 +1640,57 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
   };
 
   return (
-    <div className="primary-shell min-h-screen text-[#171747]">
-      <main className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 lg:px-7">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-blue-500/30 hover:text-blue-500"><ArrowLeft className="h-4 w-4" /> Back to Today’s Plan</Link>
+    <div className="primary-shell primary-activity-page min-h-screen text-[#171747]">
+      <main className="primary-activity-main mx-auto max-w-[1500px] px-3 py-5 sm:px-5 lg:px-7">
+        <div className="primary-activity-toolbar mb-4 flex flex-wrap items-center justify-between gap-2">
+          <Link href={`/primary/today?date=${activity.date}${sectionId ? `&section_id=${sectionId}` : ""}`} className="primary-activity-back inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-[#29317c] shadow-sm transition hover:border-blue-500/30 hover:text-blue-500"><ArrowLeft className="h-4 w-4 shrink-0" /> <span className="truncate">Back to Today’s Plan</span></Link>
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               disabled={savingStatus}
               onClick={() => updateStatus("skipped")}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-slate-500 shadow-sm transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-50"
+              className="primary-skip-activity inline-flex items-center gap-1.5 rounded-full border border-[#e8e7fb] bg-white px-4 py-2 text-xs font-extrabold text-slate-500 shadow-sm transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-50"
             >
               <ChevronsRight className="h-3.5 w-3.5" /> Skip Activity
             </button>
-            <div className="inline-flex max-w-full items-center gap-2 truncate rounded-full bg-blue-50 px-4 py-2 text-xs font-extrabold text-blue-500"><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{level} • {subject} • {theme}</span></div>
+            <div className="primary-activity-context inline-flex max-w-full items-center gap-2 truncate rounded-full bg-blue-50 px-4 py-2 text-xs font-extrabold text-blue-500"><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{level} • {subject} • {theme}</span></div>
           </div>
         </div>
 
-        <section className={cn("relative overflow-hidden rounded-[20px] border border-[#e9e8f7] bg-gradient-to-r shadow-xs", presentation.gradient)}>
-          <div className="relative z-10 p-4 sm:p-5 sm:max-w-[68%]">
-            <div className="flex items-start gap-2.5">
-              <span className="text-xl sm:text-2xl shrink-0" aria-hidden="true">{presentation.emoji}</span>
-              <div className="min-w-0">
-                <p className={cn("text-[10px] font-black uppercase tracking-[0.14em]", presentation.accentText)}>{presentation.label}</p>
-                <h1 className="mt-0.5 text-lg font-black tracking-tight text-[#11143e] sm:text-xl lg:text-2xl leading-tight">{activity.title}</h1>
-              </div>
+        <section className="primary-activity-hero relative overflow-hidden rounded-[30px] bg-white">
+          <div className="relative z-10 p-5 sm:max-w-[70%] sm:p-6 lg:p-7">
+            <div className="primary-activity-badges flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-700">
+                <span aria-hidden="true">{presentation.emoji}</span> Activity guide
+              </span>
+              <span className="rounded-lg bg-[#eee8ff] px-3 py-1.5 text-[10px] font-black text-[#6528f7]">{presentation.label}</span>
+              <span className="rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black capitalize text-blue-600">{activity.status || "planned"}</span>
             </div>
-            <p className="mt-2 text-xs font-semibold text-[#4f5680] line-clamp-2 sm:line-clamp-none">{presentation.subtitle}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+            <h1 className="mt-3 max-w-3xl text-xl font-black tracking-[-0.035em] text-[#141414] sm:text-2xl lg:text-[30px] lg:leading-[1.08]">{activity.title}</h1>
+            <p className="mt-2 max-w-2xl text-xs font-semibold leading-5 text-[#72727d]">{presentation.subtitle}</p>
+            <div className="primary-activity-meta mt-4 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-[#f6f6f8] px-3 py-2.5 text-[10px] font-extrabold text-[#27272d]">
                 <Clock3 className={cn("h-3.5 w-3.5", presentation.accentText)} />
                 <span>{activity.duration_minutes || 10} min</span>
               </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-[#f6f6f8] px-3 py-2.5 text-[10px] font-extrabold text-[#27272d]">
                 <CalendarDays className={cn("h-3.5 w-3.5", presentation.accentText)} />
                 <span>{formattedTime(activity)}</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+              <span className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-[#f6f6f8] px-3 py-2.5 text-[10px] font-extrabold text-[#27272d]">
                 <BookOpen className={cn("h-3.5 w-3.5", presentation.accentText)} />
-                <span className="truncate max-w-[120px]">{topic}</span>
+                <span className="truncate">{topic}</span>
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 rounded-lg border border-white/80 bg-white/85 px-2 py-0.5 text-[10px] font-extrabold text-[#171747] shadow-xs">
+              <span className="inline-flex min-w-0 items-center gap-2 rounded-xl bg-[#f6f6f8] px-3 py-2.5 text-[10px] font-extrabold text-[#27272d]">
                 <GraduationCap className={cn("h-3.5 w-3.5", presentation.accentText)} />
-                <span className="truncate max-w-[150px]">{presentation.learningArea}</span>
+                <span className="truncate">{presentation.learningArea}</span>
               </span>
             </div>
           </div>
-          {stepArt && <div className="hidden sm:block absolute inset-y-0 right-0 w-[32%]"><div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/20 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover object-top" /></div>}
+          {stepArt && <div className="primary-activity-hero-art hidden sm:block absolute inset-y-0 right-0 w-[34%]"><div className="absolute inset-0 z-10 bg-gradient-to-r from-white via-white/15 to-transparent" /><img src={stepArt} alt={`${presentation.label} classroom illustration`} className="h-full w-full object-cover object-center" /></div>}
         </section>
 
-        <div className="mt-5">
+        <div className="primary-activity-content mt-5">
           {editing ? (
             <div className="space-y-5">
               <form onSubmit={saveMetadata} className="rounded-[24px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
@@ -1761,7 +1780,7 @@ export default function PrimaryActivityDetailPage({ activityId }: { activityId: 
                   </button>
                 </section>
               )}
-              <div className="grid gap-4 sm:grid-cols-2 w-full mt-4">
+              <div className="primary-activity-pagination grid w-full grid-cols-2 gap-2 mt-4">
                 {/* Previous Activity */}
                 {previousActivity ? (
                   <Link

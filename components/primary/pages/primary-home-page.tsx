@@ -341,262 +341,140 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   });
 
   return (
-    <div className="space-y-6 p-4 sm:p-6" style={{ ...visuals.style, color: "var(--primary-theme-text)" }}>
+    <div className="primary-workspace-page space-y-6" style={{ ...visuals.style, color: "var(--primary-theme-text)" }}>
       <section
-        className="relative overflow-hidden rounded-[32px] border border-[#e8e7fb] p-6 sm:p-8 min-h-[180px] flex flex-col justify-center shadow-sm transition-all duration-300"
+        className={cn(
+          "relative overflow-hidden rounded-2xl sm:rounded-[32px] border border-[#e8e7fb] p-4 sm:p-8 min-h-[110px] sm:min-h-[180px] flex flex-col justify-center shadow-sm transition-all duration-300 primary-home-banner",
+          visuals.heroImage ? "has-hero" : visuals.backgroundImage ? "has-bg" : "no-images"
+        )}
         style={{
           backgroundColor: visuals.surface || "#ffffff",
-          backgroundImage: visuals.heroImage
-            ? `linear-gradient(90deg, ${visuals.surface || "#ffffff"} 0%, ${visuals.surface || "#ffffff"} 35%, transparent 75%), url(${visuals.heroImage})`
-            : visuals.backgroundImage
-            ? `linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.3) 100%), url(${visuals.backgroundImage})`
-            : `linear-gradient(135deg, ${visuals.surface || "#f5f3ff"} 0%, #ffffff 50%, color-mix(in srgb, ${visuals.primary || "#1677ff"} 8%, white) 100%)`,
-          backgroundPosition: visuals.heroImage
-            ? "center, right center"
-            : visuals.backgroundImage
-            ? "center, center right"
-            : "center",
-          backgroundSize: visuals.heroImage
-            ? "100% 100%, contain"
-            : visuals.backgroundImage
-            ? "100% 100%, cover"
-            : "100% 100%",
-          backgroundRepeat: "no-repeat",
-        }}
+          "--banner-bg": visuals.surface || "#ffffff",
+          "--hero-image": visuals.heroImage ? `url(${visuals.heroImage})` : "none",
+          "--bg-image": visuals.backgroundImage ? `url(${visuals.backgroundImage})` : "none",
+          "--banner-primary": visuals.primary || "#1677ff",
+        } as React.CSSProperties}
       >
         <div className="relative z-10 max-w-xl">
           <p className="text-xs font-black uppercase tracking-widest text-blue-500">Good morning, {teacherName}! 👋</p>
-          <h1 className="mt-2 text-2xl sm:text-3.5xl font-black tracking-tight text-[#171747]">Let&apos;s make today amazing!</h1>
-          <p className="mt-1 text-sm font-semibold text-[#4f5680]">You&apos;re all set to create joyful learning experiences.</p>
-          <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/95 bg-white/80 px-3.5 py-1.5 text-[10px] font-black text-[#596083] shadow-sm backdrop-blur-sm">
-            <span>{dateLabel}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <span>{activities.length} activities</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <span>{totalMinutes} min</span>
-          </div>
+          <h1 className="mt-1.5 text-2xl sm:text-3.5xl font-black tracking-tight text-[#171747]">Let&apos;s make today amazing!</h1>
+          
+          {hasClassroom ? (
+            <div className="mt-3.5 inline-flex flex-wrap items-center gap-2 rounded-xl bg-white/60 border border-white/50 px-3 py-1.5 text-[10px] font-black text-slate-700 shadow-xs backdrop-blur-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Theme</span>
+                <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 font-extrabold text-blue-600">{activeTheme?.name || context.theme}</span>
+              </div>
+              <span className="text-slate-300">•</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Sub-theme</span>
+                <span className="rounded-md bg-indigo-500/10 px-1.5 py-0.5 font-extrabold text-indigo-600">{activeTopic?.subtheme || "General"}</span>
+              </div>
+              <span className="text-slate-300">•</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Topic</span>
+                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 font-extrabold text-amber-600">{activeTopic?.name || context.topic}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-1 text-sm font-semibold text-[#4f5680]">You&apos;re all set to create joyful learning experiences.</p>
+          )}
         </div>
         {!visuals.heroImage && (
           illustrationFor(visuals, 0) ? (
             <img className="hidden md:block absolute right-6 bottom-0 max-h-[90%] w-auto object-contain pointer-events-none" src={illustrationFor(visuals, 0)} alt="" />
           ) : (
-            <div className="absolute right-8 bottom-[-10px] text-8xl opacity-20 pointer-events-none" aria-hidden="true">{activeTheme?.emoji || "🌈"}</div>
+            <div className="hidden sm:block absolute right-8 bottom-[-10px] text-8xl opacity-20 pointer-events-none" aria-hidden="true">{activeTheme?.emoji || "🌈"}</div>
           )
         )}
       </section>
 
-      <section id="primary-focus" className="rounded-[28px] border border-[#e8e7fb] bg-white p-4 sm:p-5 shadow-sm">
-        <header className="flex items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-500 shadow-sm">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <h2 className="text-sm font-black text-[#171747]">Today&apos;s Focus</h2>
-          </div>
-          {hasClassroom && (
-            <button 
-              type="button" 
-              onClick={() => setSetupOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-3.5 py-1.5 text-xs font-black text-blue-500 hover:bg-blue-50/50 transition cursor-pointer shadow-sm"
-            >
-              <Settings2 className="h-4 w-4" /> Change classroom
-            </button>
-          )}
-        </header>
-
-        {!hasClassroom ? (
-          <div className="rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-5 lg:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-sm border border-[#e8e7fb]">✨</span>
-              <div>
-                <h3 className="text-base font-black text-[#171747]">Prepare today&apos;s classroom</h3>
-                <p className="text-xs font-semibold text-[#596083] mt-1 max-w-md">Select a class, theme and topic. TeachPad will build the complete teaching sequence for you.</p>
-              </div>
-            </div>
-            
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5 items-end w-full lg:max-w-4xl lg:flex-1">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
-                Class
-                <select
-                  value={draftLevel}
-                  onChange={(event) => {
-                    setDraftLevel(event.target.value as PrimaryTeachingContext["level"]);
-                    setDraftThemeId("");
-                    setDraftSubtheme("");
-                    setDraftTopicId("");
-                  }}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
-                >
-                  {PRIMARY_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
-                </select>
-              </label>
-              
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
-                Theme
-                <select
-                  value={draftThemeId}
-                  onChange={(event) => {
-                    setDraftThemeId(event.target.value);
-                    setDraftSubtheme("");
-                    setDraftTopicId("");
-                  }}
-                  disabled={setupThemesQuery.isFetching || setupThemes.length === 0}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
-                >
-                  <option value="">{setupThemesQuery.isFetching ? "Loading themes…" : setupThemes.length ? "Select theme…" : "No published themes"}</option>
-                  {setupThemes.map((theme) => (
-                    <option key={theme.id} value={theme.id}>
-                      {theme.emoji ? `${theme.emoji} ` : ""}{theme.name} · {theme.subject}{theme.language !== "English" ? ` · ${theme.language}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
-                Subtheme
-                <select
-                  value={draftSubtheme}
-                  onChange={(event) => {
-                    setDraftSubtheme(event.target.value);
-                    setDraftTopicId("");
-                  }}
-                  disabled={!selectedSetupTheme}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
-                >
-                  <option value="">All subthemes</option>
-                  {setupSubthemes.map((option) => <option key={option} value={option}>{option}</option>)}
-                </select>
-              </label>
-              
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block w-full">
-                Topic
-                <select
-                  value={draftTopicId}
-                  onChange={(event) => setDraftTopicId(event.target.value)}
-                  disabled={!selectedSetupTheme || setupTopics.length === 0}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-[#171747] outline-none focus:border-blue-500"
-                >
-                  <option value="">{selectedSetupTheme ? (draftSubtheme && setupTopics.length === 0 ? "No topics in this subtheme" : setupTopics.length ? "Select topic…" : "No published topics") : "Select theme first"}</option>
-                  {setupTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
-                </select>
-              </label>
-              
-              <button
-                type="button"
-                onClick={handleInlineSetup}
-                disabled={!selectedSetupTheme || !selectedSetupTopic || setupSubmitting}
-                className="w-full inline-flex h-[42px] items-center justify-center gap-1.5 rounded-xl bg-blue-500 px-5 text-xs font-black text-white shadow-md shadow-blue-500/20 hover:bg-blue-600 hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 cursor-pointer"
-              >
-                {setupSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {setupSubmitting ? "Preparing…" : "Prepare classroom"}
-              </button>
-            </div>
-            {setupThemesQuery.isError && (
-              <p className="text-rose-600 font-bold text-xs mt-2 block">{getErrorMessage(setupThemesQuery.error, "We couldn't load the curriculum. Please try again.")}</p>
-            )}
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-12 items-center">
-            {/* Left side focus block - merged emoji, theme titles and daily focus text to occupy less vertical space */}
-            <div className="md:col-span-7 flex items-center gap-3.5 min-w-0">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#faf9ff] border border-[#e8e7fb] text-2xl shadow-xs">{activeTheme?.emoji || "📚"}</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-blue-500">{activeTopic?.subtheme || "Theme Theme"}</span>
-                  <span className="text-slate-300 text-xs">•</span>
-                  <span className="text-[10px] font-bold text-slate-400">{activeTheme?.name || context.theme}</span>
-                </div>
-                <h3 className="text-sm font-black text-[#171747] truncate mt-0.5">{activeTopic?.name || context.topic}</h3>
-                
-                <p className="text-[11px] font-semibold text-slate-500 leading-normal line-clamp-2 mt-1">
-                  <span className="text-blue-500 font-black mr-1">Today&apos;s focus:</span>
-                  {day?.daily_focus || "Today's focus is being prepared."}
-                </p>
-              </div>
-            </div>
-
-            {/* Right side: Today's objectives in a super compact vertical list */}
-            <div className="md:col-span-5 md:border-l border-slate-100 md:pl-5 space-y-1.5">
-              <small className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Today&apos;s objectives</small>
-              <div className="space-y-1">
-                {objectives.length ? objectives.map((objective, index) => (
-                  <div key={`${objective}-${index}`} className="flex items-start gap-1.5 text-[11px] font-semibold text-[#263252] leading-tight">
-                    <span className="text-blue-500 shrink-0 mt-0.5">{["●", "★", "✓"][index] || "✓"}</span>
-                    <span className="line-clamp-1 hover:line-clamp-none transition-all duration-300 cursor-default">{objective}</span>
-                  </div>
-                )) : (
-                  <p className="text-[10px] font-semibold text-slate-400 italic">Objectives are being prepared.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
       {/* Today's Classroom Plan */}
-      <section className="rounded-[28px] border border-[#e8e7fb] bg-[#fbfbfe] p-5 shadow-sm sm:p-6">
-        <header className="flex items-center justify-between gap-4 mb-5">
+      <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-2.5">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-500 shadow-sm">
               <CalendarDays className="h-4 w-4" />
             </span>
             <h2 className="text-sm font-black text-[#171747]">Today&apos;s Classroom Plan</h2>
           </div>
-          <Link href="/primary/today" className="inline-flex items-center gap-1 text-xs font-black text-blue-500 hover:text-blue-600 transition">
-            View full schedule <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          {hasClassroom ? (
+            <button 
+              type="button"
+              onClick={() => setSetupOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-black text-blue-500 hover:text-blue-600 transition sm:ml-auto cursor-pointer"
+            >
+              <Settings2 className="h-3.5 w-3.5" /> Change classroom
+            </button>
+          ) : (
+            <button 
+              type="button"
+              onClick={() => setSetupOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-black text-blue-500 hover:text-blue-600 transition sm:ml-auto cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Setup classroom
+            </button>
+          )}
         </header>
         
         {todayQuery.isLoading ? (
           <div className="flex items-center justify-center p-12 text-xs font-bold text-slate-400 gap-2"><Loader2 className="h-4 w-4 animate-spin text-blue-500" /> Preparing today&apos;s plan…</div>
         ) : activities.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {activities.slice(0, 8).map((activity, index) => {
-              const resource = resourceForActivity(activity, resources);
-              const stepArt = primaryStepImage(activity.activity_type);
-              const theme = getActivityTheme(activity.activity_type);
-              return (
-                <Link
-                  key={activity.id}
-                  href={`/primary/today/activity/${activity.id}?date=${today}`}
-                  className={cn(
-                    "group relative flex flex-col justify-between rounded-[20px] border p-3 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer",
-                    theme.bg
-                  )}
-                >
-                  <div>
-                    {/* Header Row: Duration Pill and Chevron Icon */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wide", theme.timeBg)}>
-                        <Clock className="h-3 w-3 shrink-0 stroke-[2.5]" />
-                        <span>{activity.duration_minutes} min</span>
+          <div className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {activities.slice(0, 8).map((activity, index) => {
+                const resource = resourceForActivity(activity, resources);
+                const stepArt = primaryStepImage(activity.activity_type);
+                const theme = getActivityTheme(activity.activity_type);
+                return (
+                  <Link
+                    key={activity.id}
+                    href={`/primary/today/activity/${activity.id}?date=${today}`}
+                    className={cn(
+                      "group relative flex flex-col justify-between rounded-[20px] border p-3 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer",
+                      theme.bg
+                    )}
+                  >
+                    <div>
+                      {/* Header Row: Duration Pill and Chevron Icon */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wide", theme.timeBg)}>
+                          <Clock className="h-3 w-3 shrink-0 stroke-[2.5]" />
+                          <span>{activity.duration_minutes} min</span>
+                        </div>
+                        <div className={cn("grid h-6 w-6 place-items-center rounded-full shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95", theme.chevronBg)}>
+                          <ChevronRight className="h-3.5 w-3.5 stroke-[3]" />
+                        </div>
                       </div>
-                      <div className={cn("grid h-6 w-6 place-items-center rounded-full shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95", theme.chevronBg)}>
-                        <ChevronRight className="h-3.5 w-3.5 stroke-[3]" />
-                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-xs font-black text-[#171747] leading-tight line-clamp-2 h-9 mb-2 group-hover:text-blue-500 transition">
+                        {activity.title}
+                      </h3>
                     </div>
 
-                    {/* Title */}
-                    <h3 className="text-xs font-black text-[#171747] leading-tight truncate mb-2 group-hover:text-blue-500 transition">
-                      {activity.title}
-                    </h3>
-                  </div>
-
-                  {/* Image */}
-                  <div className="aspect-[3/2] rounded-[14px] flex items-center justify-center overflow-hidden">
-                    {stepArt ? (
-                      <img src={stepArt} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
-                    ) : resource?.thumbnailUrl ? (
-                      <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
-                    ) : illustrationFor(visuals, index + 2) ? (
-                      <img src={illustrationFor(visuals, index + 2)} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
-                    ) : (
-                      <span className="text-3xl filter drop-shadow-sm group-hover:scale-108 transition duration-250">{activityEmoji[activity.activity_type] || "🎨"}</span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+                    {/* Image */}
+                    <div className="aspect-[3/2] rounded-[14px] flex items-center justify-center overflow-hidden">
+                      {stepArt ? (
+                        <img src={stepArt} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
+                      ) : resource?.thumbnailUrl ? (
+                        <img src={resource.thumbnailUrl} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
+                      ) : illustrationFor(visuals, index + 2) ? (
+                        <img src={illustrationFor(visuals, index + 2)} alt="" className="h-full w-full object-cover group-hover:scale-103 transition duration-250" />
+                      ) : (
+                        <span className="text-3xl filter drop-shadow-sm group-hover:scale-108 transition duration-250">{activityEmoji[activity.activity_type] || "🎨"}</span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            
+            <div className="flex justify-center pt-1.5">
+              <Link href="/primary/today" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-black text-[#171747] shadow-sm hover:bg-slate-50 transition duration-150 cursor-pointer">
+                View full schedule <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-8 text-center flex flex-col items-center justify-center">
@@ -615,11 +493,17 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
       </section>
 
       {/* Today's Recommended Resources */}
-      <section className="primary-dashboard-section">
-        <header>
-          <span className="section-icon"><Star /></span>
-          <h2>Today&apos;s Recommended Resources</h2>
-          <Link href="/primary/library">View all <ArrowRight /></Link>
+      <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 text-blue-500 shadow-sm">
+              <Star className="h-4 w-4" />
+            </span>
+            <h2 className="text-sm font-black text-[#171747]">Today&apos;s Recommended Resources</h2>
+          </div>
+          <Link href="/primary/library" className="inline-flex items-center gap-1 text-xs font-black text-blue-500 hover:text-blue-600 transition sm:ml-auto">
+            View all <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </header>
         <div className="primary-resource-grid">
           {recommended.length ? recommended.map((resource, index) => (

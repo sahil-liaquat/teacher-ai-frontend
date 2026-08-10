@@ -115,42 +115,6 @@ export const LIBRARY_CATEGORIES: LibraryCategory[] = [
       { slug: "motor-skills", name: "Motor Skills" },
     ],
   },
-  {
-    slug: "classroom-resources",
-    name: "Classroom Resources",
-    description: "Classroom management and decoration resources.",
-    emoji: "🏫",
-    gradient: "from-sky-50/60 to-cyan-100/20 hover:border-sky-200",
-    iconBg: "bg-sky-50 text-sky-600 ring-sky-100",
-    types: [
-      { slug: "classroom-decorations", name: "Classroom Decorations" },
-      { slug: "bulletin-boards", name: "Bulletin Boards" },
-      { slug: "name-tags", name: "Name Tags" },
-      { slug: "labels", name: "Labels" },
-      { slug: "timetable-cards", name: "Timetable Cards" },
-      { slug: "birthday-charts", name: "Birthday Charts" },
-      { slug: "attendance-charts", name: "Attendance Charts" },
-      { slug: "reward-charts", name: "Reward Charts" },
-      { slug: "stickers", name: "Stickers" },
-      { slug: "certificates", name: "Certificates" },
-    ],
-  },
-  {
-    slug: "assessment-parent-communication",
-    name: "Assessment & Parent Communication",
-    description: "Assessment and parent support resources.",
-    emoji: "📋",
-    gradient: "from-yellow-50/60 to-lime-100/20 hover:border-yellow-200",
-    iconBg: "bg-yellow-50 text-yellow-700 ring-yellow-100",
-    types: [
-      { slug: "assessment-sheets", name: "Assessment Sheets" },
-      { slug: "observation-checklists", name: "Observation Checklists" },
-      { slug: "progress-reports", name: "Progress Reports" },
-      { slug: "parent-updates", name: "Parent Updates" },
-      { slug: "homework-slips", name: "Homework Slips" },
-      { slug: "weekly-learning-notes", name: "Weekly Learning Notes" },
-    ],
-  },
 ];
 
 export function findLibraryCategory(categorySlug: string): LibraryCategory | undefined {

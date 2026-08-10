@@ -12,10 +12,12 @@ export const metadata: Metadata = {
 
 export default function PrimaryLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppShell>
-      <DashboardBillingShell>
-        <div className="primary-embedded">{children}</div>
-      </DashboardBillingShell>
-    </AppShell>
+    <div className="primary-route-typography">
+      <AppShell>
+        <DashboardBillingShell>
+          <div className="primary-embedded">{children}</div>
+        </DashboardBillingShell>
+      </AppShell>
+    </div>
   );
 }

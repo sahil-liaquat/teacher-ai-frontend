@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
   BookmarkCheck,
+  BarChart3,
   BookMarked,
   BookOpen,
   CalendarCheck,
@@ -86,6 +87,7 @@ const primaryNav: NavItem[] = [
   { href: "/primary", label: "Home", icon: Home },
   { href: "/primary/today", label: "Today's Plan", icon: CalendarCheck },
   { href: "/primary/library", label: "Library", icon: BookOpen },
+  { href: "/primary/coverage", label: "Coverage", icon: BarChart3 },
   { href: "/primary/settings", label: "Settings", icon: Settings }
 ];
 
@@ -381,6 +383,9 @@ const navIconColors: Record<string, string> = {
   Books: "text-sky-400",
   Billing: "text-pink-500",
   Settings: "text-gray-400",
+  "Today's Plan": "text-amber-500",
+  Library: "text-violet-500",
+  Coverage: "text-emerald-500",
   Overview: "text-blue-500",
   Users: "text-red-500",
   Curriculum: "text-blue-500",

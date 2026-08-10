@@ -174,9 +174,9 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
   const totals = coverage.data?.totals;
 
   return (
-    <div className="space-y-6">
+    <div className="primary-workspace-page space-y-6">
       {/* Header */}
-      <div className="pb-5 border-b border-[#e8e7fb]">
+      <div className="primary-page-header pb-5 border-b border-[#e8e7fb]">
         <h2 className="text-3xl font-black tracking-tight text-[#171747]">Curriculum Coverage</h2>
         <p className="text-xs font-semibold text-[#596083] mt-1">
           Review curriculum completion records, stats, and milestones.
@@ -237,7 +237,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
       `}</style>
 
       {/* Controls Strip */}
-      <section className="flex flex-wrap items-center gap-4 rounded-[24px] border border-[#e8e7fb] bg-white p-4 shadow-sm">
+      <section className="primary-coverage-controls flex flex-wrap items-center gap-4 rounded-[24px] border border-[#e8e7fb] bg-white p-4 shadow-sm">
         <div className="inline-flex rounded-full bg-[#f4f4ff] p-1 border border-slate-100">
           {(["week", "month", "themes"] as CoverageTab[]).map((value) => (
             <button
@@ -364,15 +364,15 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
 
       {/* Month View */}
       {!loading && !failed && tab === "month" && (
-        <section className="rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
-          <div className="grid grid-cols-7 gap-2 pb-3 border-b border-[#ecebf7] mb-4">
+        <section className="primary-month-calendar overflow-x-auto rounded-[28px] border border-[#e8e7fb] bg-white p-6 shadow-sm">
+          <div className="primary-month-calendar-grid grid grid-cols-7 gap-2 pb-3 border-b border-[#ecebf7] mb-4">
             {WEEKDAY_HEADINGS.map((heading) => (
               <div key={heading} className="text-center text-[10px] font-black uppercase text-slate-400">
                 {heading}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="primary-month-calendar-grid grid grid-cols-7 gap-2">
             {monthDates.map((iso) => (
               <MonthTile
                 key={iso}
@@ -411,8 +411,8 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
             {visibleThemes.length === 0 && (
               <p className="p-6 text-xs font-bold text-[#5a5f8f]">No themes to show yet.</p>
             )}
-            {visibleThemes.map((theme) => (
-              <ThemeRow key={`${theme.theme_id}-${theme.subject}`} theme={theme} />
+            {visibleThemes.map((theme, index) => (
+              <ThemeRow key={`${theme.theme_id}-${theme.subject}-${index}`} theme={theme} />
             ))}
           </div>
         </section>
@@ -455,8 +455,8 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               <tr><th>Theme</th><th>Subject</th><th>Taught</th><th>%</th><th>Status</th></tr>
             </thead>
             <tbody>
-              {themes.data.themes.map((theme) => (
-                <tr key={`${theme.theme_id}-${theme.subject}-print`}>
+              {themes.data.themes.map((theme, index) => (
+                <tr key={`${theme.theme_id}-${theme.subject}-${index}-print`}>
                   <td>{theme.theme_name}</td>
                   <td>{theme.subject}</td>
                   <td>{theme.authored ? `${theme.steps_taught}/${theme.steps_total}` : "—"}</td>
@@ -591,7 +591,7 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
 function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
   const tone = themeStateTone(theme.state);
   return (
-    <div className="flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-[#faf9ff]/45 transition duration-150">
+    <div className="primary-theme-coverage-row flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-[#faf9ff]/45 transition duration-150">
       <div className="min-w-[190px] flex-1">
         <p className="text-sm font-black text-[#171747]">
           {theme.emoji ? `${theme.emoji} ` : ""}
@@ -627,4 +627,3 @@ function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
     </div>
   );
 }
-
