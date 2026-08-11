@@ -19,7 +19,7 @@ import {
   Ticket,
   UserRound,
 } from "lucide-react";
-import { backendApi } from "@/lib/api";
+import { backendApi, formatRole } from "@/lib/api";
 import {
   AdminPageHeader,
   AdminPanel,
@@ -83,7 +83,7 @@ export default function AdminUserDetailPage() {
           <>
             <StatusPill status={account.is_active ? "success" : "danger"}>{account.is_active ? "Active" : "Disabled"}</StatusPill>
             <StatusPill status={data.auth.confirmed ? "success" : "warning"}>{data.auth.confirmed ? "Email confirmed" : "Unconfirmed"}</StatusPill>
-            <StatusPill status="info">{account.role}</StatusPill>
+            <StatusPill status="info">{formatRole(account.role)}</StatusPill>
             {data.subscription ? <StatusPill status={subscriptionTone(data.subscription.status)}>{data.subscription.status}</StatusPill> : <StatusPill>No subscription</StatusPill>}
           </>
         }
@@ -105,7 +105,7 @@ export default function AdminUserDetailPage() {
         <AdminPanel title="Account & authentication" description="Core profile and login lifecycle.">
           <DetailGrid>
             <Detail label="User ID" value={account.id} mono />
-            <Detail label="Role" value={account.role} />
+            <Detail label="Role" value={formatRole(account.role)} />
             <Detail label="Email" value={account.email} icon={<Mail className="h-4 w-4" />} />
             <Detail label="Phone" value={account.phone} icon={<Phone className="h-4 w-4" />} />
             <Detail label="Email confirmed" value={formatDateTime(data.auth.email_confirmed_at ?? undefined)} />

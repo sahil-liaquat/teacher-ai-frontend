@@ -11,11 +11,12 @@ import { getErrorMessage } from "@/lib/errors";
 
 type ConfirmationState =
   | { status: "checking"; message: string }
-  | { status: "success"; message: string; purpose: "signup" | "recovery"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" } }
+  | { status: "success"; message: string; purpose: "signup" | "recovery"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" | "org_admin" } }
   | { status: "error"; message: string };
 
 function dashboardForRole(role: ApiUser["role"]) {
   if (role === "admin") return "/admin";
+  if (role === "org_admin") return "/school-admin";
   return "/dashboard";
 }
 

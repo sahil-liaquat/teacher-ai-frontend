@@ -84,7 +84,7 @@ test("Every admin step type has default artwork on the teacher dashboard", () =>
     );
   }
   assert.match(dashboard, /const stepArt = primaryStepImage\(activity\.activity_type\)/);
-  assert.match(dashboard, /stepArt \? <img src=\{stepArt\}/);
+  assert.match(dashboard, /stepArt \?\s*\(\s*<img src=\{stepArt\}/);
   assert.match(adminRows, /primaryStepImage\(step\.step_type\)/);
 });
 

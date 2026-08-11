@@ -28,6 +28,15 @@ function resolveApiBase() {
 export const API_BASE = resolveApiBase();
 export const BACKEND_ROOT = API_BASE.replace(/\/api\/v1$/, "");
 
+export function formatRole(role?: string | null): string {
+  if (!role) return "Teacher";
+  if (role === "admin") return "Admin";
+  if (role === "org_admin") return "School Admin";
+  if (role === "influencer") return "Influencer";
+  if (role === "teacher") return "Teacher";
+  return role;
+}
+
 export function resolveUploadUrl(value?: string | null) {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
@@ -53,7 +62,7 @@ export type ApiUser = {
   full_name?: string;
   name?: string;
   email?: string;
-  role?: "admin" | "teacher" | "influencer";
+  role?: "admin" | "teacher" | "influencer" | "org_admin";
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -1687,7 +1696,7 @@ export async function streamApiFetch(
   if (buffer.trim()) onEvent(JSON.parse(buffer) as LessonPlanStreamEvent);
 }
 
-export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" }> {
+export async function login(email: string, password: string): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" | "org_admin" }> {
   clearToken();
   const tokens = await apiFetch<TokenResponse>("/auth/login", {
     method: "POST",
@@ -1712,7 +1721,7 @@ export async function login(email: string, password: string): Promise<ApiUser & 
   };
 }
 
-export async function completeTokenLogin(tokens: Pick<TokenResponse, "access_token" | "refresh_token">): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" }> {
+export async function completeTokenLogin(tokens: Pick<TokenResponse, "access_token" | "refresh_token">): Promise<ApiUser & { name: string; role: "admin" | "teacher" | "influencer" | "org_admin" }> {
   if (!tokens.access_token || !tokens.refresh_token) {
     throw new Error("Confirmation link is missing the required session tokens.");
   }
@@ -2419,11 +2428,11 @@ export const backendApi = {
     ),
   adminPrimaryAcademicYears: () =>
     apiFetch<PrimaryAcademicYear[]>("/admin/primary/academic-years"),
-  adminCreatePrimaryAcademicYear: (payload: Omit<PrimaryAcademicYear, "id">) =>
+  adminCreatePrimaryAcademicYear: (payload: Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">) =>
     apiFetch<PrimaryAcademicYear>("/admin/primary/academic-years", {
       method: "POST", body: JSON.stringify(payload),
     }),
-  adminUpdatePrimaryAcademicYear: (id: string, payload: Partial<Omit<PrimaryAcademicYear, "id">>) =>
+  adminUpdatePrimaryAcademicYear: (id: string, payload: Partial<Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">>) =>
     apiFetch<PrimaryAcademicYear>(`/admin/primary/academic-years/${id}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
@@ -2462,11 +2471,13 @@ export const backendApi = {
   },
   adminDuplicatePrimaryTheme: (id: string) =>
     apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/duplicate`, { method: "POST" }),
+  adminCustomizePrimaryTheme: (id: string) =>
+    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/customize`, { method: "POST" }),
   adminArchivePrimaryTheme: (id: string) =>
     apiFetch<void>(`/admin/primary/curriculum/themes/${id}`, { method: "DELETE" }),
   adminDeletePrimaryTheme: (id: string) =>
     apiFetch<void>(`/admin/primary/curriculum/themes/${id}/permanent`, { method: "DELETE" }),
-  adminCreatePrimaryTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
+  adminCreatePrimaryTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "scope" | "organization_id" | "source_topic_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
     apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/themes/${themeId}/topics`, {
       method: "POST", body: JSON.stringify(payload),
     }),
@@ -2476,7 +2487,7 @@ export const backendApi = {
     }),
   adminArchivePrimaryTopic: (topicId: string) =>
     apiFetch<void>(`/admin/primary/curriculum/topics/${topicId}`, { method: "DELETE" }),
-  adminPrimaryLessons: (params: { theme_id?: string; level?: string; topic_id?: string } = {}) => {
+  adminPrimaryLessons: (params: { theme_id?: string; level?: string; topic_id?: string; academic_year_id?: string } = {}) => {
     const query = new URLSearchParams(params);
     return apiFetch<PrimaryCurriculumLesson[]>(`/admin/primary/curriculum/lessons${query.size ? `?${query}` : ""}`);
   },
@@ -2508,6 +2519,10 @@ export const backendApi = {
   adminDuplicatePrimaryLesson: (lessonId: string) =>
     apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/duplicate`, {
       method: "POST",
+    }),
+  adminCustomizePrimaryLesson: (lessonId: string, academicYearId?: string | null) =>
+    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/customize`, {
+      method: "POST", body: JSON.stringify({ academic_year_id: academicYearId ?? null }),
     }),
   adminPrimaryCurriculumFeedback: (params?: { level?: string; subject?: string; language?: string }) => {
     const query = new URLSearchParams();
@@ -2554,6 +2569,10 @@ export const backendApi = {
   adminUpdateResource: (id: string, payload: any) =>
     apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
       method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminCustomizeResource: (id: string) =>
+    apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}/customize`, {
+      method: "POST",
     }),
   adminDeleteResource: (id: string) =>
     apiFetch<void>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
@@ -2799,8 +2818,12 @@ export type PrimaryStepType =
   | "numeracy_time" | "meal_time" | "creative_time" | "literacy_time"
   | "outdoor_play" | "goodbye";
 
+export type PrimaryCurriculumScope = "platform" | "school";
+
 export type PrimaryAcademicYear = {
   id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
   name: string;
   starts_on: string;
   ends_on: string;
@@ -2809,6 +2832,9 @@ export type PrimaryAcademicYear = {
 
 export type PrimaryCurriculumTopic = {
   id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  source_topic_id?: string | null;
   theme_id: string;
   name: string;
   subtheme?: string | null;
@@ -2824,6 +2850,9 @@ export type PrimaryCurriculumTopic = {
 
 export type PrimaryResource = {
   id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  source_resource_id?: string | null;
   title: string;
   category: string;
   file_url: string;
@@ -2873,6 +2902,9 @@ export type PrimaryCurriculumStep = {
 
 export type PrimaryCurriculumTheme = {
   id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  source_theme_id?: string | null;
   name: string;
   subtheme?: string | null;
   language: string;
@@ -2906,6 +2938,9 @@ export type PrimaryLearningOutcome = {
 
 export type PrimaryCurriculumLesson = {
   id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  source_lesson_id?: string | null;
   theme_id: string;
   academic_year_id?: string | null;
   topic_id?: string | null;

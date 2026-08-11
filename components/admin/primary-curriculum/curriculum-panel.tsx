@@ -68,7 +68,7 @@ const STEPS_TEMPLATES: Record<string, any[]> = {
   "Blank Day": []
 };
 
-export function CurriculumPanel() {
+export function CurriculumPanel({ schoolMode = false }: { schoolMode?: boolean } = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -116,9 +116,9 @@ export function CurriculumPanel() {
 
   // Fetch Lessons for the selected Class level
   const { data: lessons = [], isLoading: isLoadingLessons } = useQuery<PrimaryCurriculumLesson[]>({
-    queryKey: ["admin-primary-lessons", selectedLevel],
-    queryFn: () => backendApi.adminPrimaryLessons({ level: selectedLevel }),
-    enabled: !!selectedLevel,
+    queryKey: ["admin-primary-lessons", selectedLevel, selectedYearId],
+    queryFn: () => backendApi.adminPrimaryLessons({ level: selectedLevel, academic_year_id: selectedYearId }),
+    enabled: !!selectedLevel && !!selectedYearId,
   });
 
   // Group lessons by Month -> Week -> Day (optionally scoped to the month's theme)
@@ -364,6 +364,18 @@ export function CurriculumPanel() {
   };
 
   const handlePublishDay = async (lesson: PrimaryCurriculumLesson) => {
+    if (schoolMode && lesson.scope === "platform") {
+      try {
+        const customized = await backendApi.adminCustomizePrimaryLesson(lesson.id, selectedYearId);
+        await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+        setEditingLessonId(customized.id);
+        setIsEditorOpen(true);
+        toast({ title: "School draft created", description: "Review your school copy before publishing it to teachers." });
+      } catch (err: any) {
+        toast({ title: "Failed to create school draft", description: err.message, variant: "error" });
+      }
+      return;
+    }
     if (!lesson.steps || lesson.steps.length === 0) {
       toast({ title: "Cannot publish", description: "Add at least one classroom activity before publishing.", variant: "error" });
       return;
@@ -379,6 +391,11 @@ export function CurriculumPanel() {
 
   const handleArchiveDay = async () => {
     if (!selectedLesson) return;
+    if (schoolMode && selectedLesson.scope === "platform") {
+      setArchiveConfirmOpen(false);
+      toast({ title: "Master day is read-only", description: "Create a school customization before changing it.", variant: "error" });
+      return;
+    }
     setArchiveConfirmOpen(false);
     try {
       await backendApi.adminUpdatePrimaryLesson(selectedLesson.id, { status: "archived" });
@@ -807,14 +824,25 @@ export function CurriculumPanel() {
                 <div className="grid gap-2 pt-2">
                   <Button 
                     variant="default" 
-                    onClick={() => {
+                    onClick={async () => {
+                      if (schoolMode && selectedLesson.scope === "platform") {
+                        try {
+                          const customized = await backendApi.adminCustomizePrimaryLesson(selectedLesson.id, selectedYearId);
+                          await queryClient.invalidateQueries({ queryKey: ["admin-primary-lessons", selectedLevel] });
+                          setEditingLessonId(customized.id);
+                          setIsEditorOpen(true);
+                        } catch (err: any) {
+                          toast({ title: "Failed to create school draft", description: err.message, variant: "error" });
+                        }
+                        return;
+                      }
                       setEditingLessonId(selectedLesson.id);
                       setIsEditorOpen(true);
                     }}
                     className="w-full rounded-xl font-bold"
                   >
                     <Edit2 className="h-4 w-4 mr-1.5" />
-                    Edit Day
+                    {schoolMode && selectedLesson.scope === "platform" ? "Customize for School" : "Edit Day"}
                   </Button>
 
                   {selectedLesson.status !== "published" && (

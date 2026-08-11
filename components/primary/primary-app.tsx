@@ -46,7 +46,7 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(""), 2400); };
 
   return <>
-    <div className="primary-shell primary-workspace min-h-screen text-teachpad-ink">
+    <div className={cn("primary-shell primary-workspace min-h-screen text-teachpad-ink", page !== "home" && "primary-subpage-shell")}>
     <main className="primary-main min-h-screen p-4 lg:p-7">
       {page === "home" && <PrimaryHomePage notify={notify} />}
       {page === "today" && <PrimaryTodayPage notify={notify} />}

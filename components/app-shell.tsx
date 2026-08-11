@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
   BookmarkCheck,
@@ -116,8 +116,11 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     staleTime: Infinity
   });
   const isPrimaryDashboard = !admin && pathname.startsWith("/primary");
+  const isSchoolAdmin = currentUser?.role === "org_admin";
   const homeHref = admin
     ? "/admin"
+    : isSchoolAdmin
+    ? "/school-admin"
     : isPrimaryDashboard
     ? "/primary"
     : role === "influencer"
@@ -125,13 +128,31 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     : "/dashboard";
   const isHomeDashboard = pathname === homeHref;
   const usesInfluencerWorkspace = role === "influencer" || currentUser?.role === "influencer";
-  const nav = admin
-    ? adminNav
-    : isPrimaryDashboard
-    ? primaryNav
-    : usesInfluencerWorkspace
-    ? influencerWorkspaceNav
-    : teacherNav;
+  const nav = useMemo(() => {
+    if (admin) return adminNav;
+    if (isSchoolAdmin) {
+      return [
+        {
+          href: "/school-admin",
+          label: "School Admin",
+          icon: Sparkles
+        }
+      ] as typeof teacherNav;
+    }
+    if (isPrimaryDashboard) {
+      const items = [...primaryNav];
+      if (currentUser?.role === "admin") {
+        items.push({
+          href: "/school-admin",
+          label: "School Admin",
+          icon: Sparkles
+        });
+      }
+      return items;
+    }
+    if (usesInfluencerWorkspace) return influencerWorkspaceNav;
+    return teacherNav;
+  }, [admin, isSchoolAdmin, isPrimaryDashboard, currentUser?.role, usesInfluencerWorkspace]);
   const showsWorkspaceHeader = isHomeDashboard || isPrimaryDashboard;
   const profileHref = "/dashboard/settings?section=account";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
@@ -180,6 +201,10 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   }, [isError, queryClient, router]);
 
   useEffect(() => {
+    if (currentUser?.role === "org_admin" && !pathname.startsWith("/school-admin")) {
+      router.replace("/school-admin");
+      return;
+    }
     if (admin && currentUser && currentUser.role !== "admin") {
       router.replace("/dashboard");
     }
@@ -189,7 +214,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     if (requiredRole && currentUser && currentUser.role !== requiredRole) {
       router.replace(currentUser.role === "admin" ? "/admin" : "/dashboard");
     }
-  }, [admin, allowsAdminWorkshopPreview, currentUser?.role, requiredRole, router]);
+  }, [admin, allowsAdminWorkshopPreview, currentUser?.role, requiredRole, router, pathname]);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 

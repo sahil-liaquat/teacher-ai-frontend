@@ -13,11 +13,12 @@ import { clearSupabaseOAuthStorage, getSupabaseClient } from "@/lib/supabase";
 
 type State =
   | { status: "checking" }
-  | { status: "success"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" } }
+  | { status: "success"; user: ApiUser & { name: string; role: "admin" | "teacher" | "influencer" | "org_admin" } }
   | { status: "error"; message: string };
 
 function dashboardForRole(role: ApiUser["role"]) {
   if (role === "admin") return "/admin";
+  if (role === "org_admin") return "/school-admin";
   return "/dashboard";
 }
 

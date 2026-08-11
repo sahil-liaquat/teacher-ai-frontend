@@ -771,3 +771,12 @@
 .primary-home-banner.no-images {
   background: linear-gradient(135deg, var(--banner-bg) 0%, #ffffff 50%, color-mix(in srgb, var(--banner-primary) 8%, white) 100%);
 }
+
+@media (min-width: 1024px) {
+  .primary-subpage-shell .primary-main {
+    padding-top: 12px !important;
+  }
+  .primary-subpage-shell .primary-page-header {
+    margin-top: 0px !important;
+  }
+}

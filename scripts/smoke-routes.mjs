@@ -15,7 +15,13 @@ const routes = [
   "/dashboard/worksheets/smoke-test",
   "/dashboard/presentation-generator/output?id=smoke-test",
   "/dashboard/notes-generator?id=smoke-test",
-  "/dashboard/activity-generator?id=smoke-test"
+  "/dashboard/activity-generator?id=smoke-test",
+  "/school-admin",
+  "/school-admin/curriculum",
+  "/school-admin/themes",
+  "/school-admin/resources",
+  "/school-admin/academic-years",
+  "/school-admin/settings"
 ];
 
 const failures = [];

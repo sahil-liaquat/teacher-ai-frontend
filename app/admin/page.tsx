@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   backendApi,
+  formatRole,
   type AdminActivityResponse,
   type AdminFeedbackResponse,
   type AdminSummary,
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
                       <td className="px-5 py-3">
                         <Link href={`/admin/users/${user.id}`} className="group block">
                           <span className="block font-semibold text-blue-600 group-hover:underline">{user.full_name || user.name || user.email || "Unnamed user"}</span>
-                          <span className="block text-xs text-gray-500">{user.email || "No email"} · {user.role || "teacher"}</span>
+                          <span className="block text-xs text-gray-500">{user.email || "No email"} · {formatRole(user.role)}</span>
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-xs text-gray-500">{formatDateTimeAmPm(user.created_at)}</td>

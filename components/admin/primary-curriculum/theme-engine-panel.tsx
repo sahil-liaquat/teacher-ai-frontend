@@ -48,7 +48,7 @@ function formFromTheme(theme: PrimaryCurriculumTheme): VisualForm {
   };
 }
 
-export function ThemeEnginePanel() {
+export function ThemeEnginePanel({ schoolMode = false }: { schoolMode?: boolean } = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [level, setLevel] = useState<PrimaryLevel>("lkg");
@@ -93,13 +93,17 @@ export function ThemeEnginePanel() {
     if (!selected || !form) return;
     setBusy("save");
     try {
-      await backendApi.adminUpdatePrimaryTheme(selected.id, {
+      const target = schoolMode && selected.scope === "platform"
+        ? await backendApi.adminCustomizePrimaryTheme(selected.id)
+        : selected;
+      await backendApi.adminUpdatePrimaryTheme(target.id, {
         name: form.name.trim(), description: form.description.trim() || null, emoji: form.emoji.trim() || null,
         hero_image_url: form.hero, background_image_url: form.background.trim() || null,
         illustration_pack: lines(form.illustrations), keywords: lines(form.keywords), aliases: lines(form.aliases),
         color_palette: { primary: form.primary, secondary: form.secondary, accent: form.accent, surface: form.surface, text: form.text },
       });
       await refresh();
+      setSelectedId(target.id);
       toast({ title: "Theme saved", description: "The teacher dashboard updates from this configuration." });
     } catch (error) {
       toast({ title: "Couldn't save theme", description: getErrorMessage(error, "Try again."), variant: "error" });
@@ -119,6 +123,10 @@ export function ThemeEnginePanel() {
 
   async function archiveTheme() {
     if (!selected || !window.confirm(`Archive ${selected.name}? Teachers will no longer be able to select it.`)) return;
+    if (schoolMode && selected.scope === "platform") {
+      toast({ title: "Master theme is read-only", description: "Customize it for your school before archiving it.", variant: "error" });
+      return;
+    }
     setBusy("archive");
     try {
       await backendApi.adminArchivePrimaryTheme(selected.id); setSelectedId(""); await refresh();
@@ -129,6 +137,10 @@ export function ThemeEnginePanel() {
 
   async function deleteTheme() {
     if (!selected || !window.confirm(`Permanently delete ${selected.name}? This only succeeds when it has no lesson history.`)) return;
+    if (schoolMode && selected.scope === "platform") {
+      toast({ title: "Master theme is read-only", description: "TeachPad master content cannot be deleted by a school.", variant: "error" });
+      return;
+    }
     setBusy("delete");
     try {
       await backendApi.adminDeletePrimaryTheme(selected.id); setSelectedId(""); await refresh();

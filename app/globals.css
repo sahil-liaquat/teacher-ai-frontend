@@ -1273,3 +1273,11 @@ tbody tr:hover {
   animation: ai-shimmer 3.5s infinite ease-in-out;
   color: #a855f7 !important;
 }
+
+@media (min-width: 1024px) {
+  /* On sub-pages where showsWorkspaceHeader is false, AppShell container has pt-3 (12px).
+     We override the padding-top of the page component's wrapper to 0px so it starts exactly at 12px. */
+  .lg\:pt-3 .flex.min-h-full.flex-col > .mx-auto {
+    padding-top: 0px !important;
+  }
+}

@@ -28,6 +28,7 @@ const forgotPasswordSchema = z.object({
 
 function dashboardForRole(role: ApiUser["role"]) {
   if (role === "admin") return "/admin";
+  if (role === "org_admin") return "/primary/school-admin";
   return "/dashboard";
 }
 
