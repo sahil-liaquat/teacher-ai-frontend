@@ -235,7 +235,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       {mobileOpen && (
         <>
           <button aria-label="Close sidebar overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-teachpad-ink/20 backdrop-blur-sm lg:hidden" />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
+          <aside style={sidebarFontFamily} className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
             <div className="flex items-center justify-between">
               <Brand href={homeHref} />
               <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
@@ -397,6 +397,10 @@ const navIconColors: Record<string, string> = {
   Influencer: "text-red-500",
 };
 
+const sidebarFontFamily = {
+  fontFamily: '"Nunito Sans", "Avenir Next", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+};
+
 
 function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
   const logout = (e: React.MouseEvent) => {
@@ -405,7 +409,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
   };
 
   return (
-    <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
+    <aside style={sidebarFontFamily} className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
       <TooltipProvider delayDuration={0} skipDelayDuration={0}>
         <nav className="flex h-full flex-col items-center justify-center">
           <div className="relative overflow-hidden flex flex-col items-center justify-center rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
@@ -513,7 +517,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
 
   if (centerIndex === -1 || items.length < 5) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
+      <nav style={sidebarFontFamily} className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
         <div className="flex h-[72px] w-full max-w-md items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
           {items.map((item) => (
             <TabBarItem
@@ -533,7 +537,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
   const rightItems = sideItems.slice(2, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
+    <nav style={sidebarFontFamily} className="fixed bottom-0 left-0 right-0 z-40 flex justify-center lg:hidden px-4 pb-4">
       <div className="relative w-full max-w-md">
         {/* Floating bar */}
         <div className="flex h-[72px] items-center justify-around rounded-[28px] bg-white px-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
@@ -624,7 +628,7 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
   };
 
   return (
-    <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between overflow-hidden">
+    <aside style={sidebarFontFamily} className="fixed bottom-0 left-0 top-0 z-40 hidden w-[240px] translate-x-[12px] translate-y-[12px] h-[calc(100vh-24px)] rounded-[24px] border border-teachpad-cardBorder bg-white/90 p-5 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md lg:flex lg:flex-col justify-between overflow-hidden">
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
         <div className="mb-6 flex items-center justify-between [@media(max-height:760px)]:mb-4 [@media(max-height:680px)]:mb-3">
           <Brand href={homeHref} compact={true} />

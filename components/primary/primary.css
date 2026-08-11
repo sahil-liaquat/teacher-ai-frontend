@@ -330,14 +330,17 @@
 .primary-top-nav nav::-webkit-scrollbar { display: none; }
 .primary-top-nav nav { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Readability pass: the Primary workspace was authored with 8-12px utility
-   sizes. Scale the small Tailwind utilities up inside the section only,
-   keeping the hierarchy: 13.5 < 15 < 16 (text-base is left untouched). */
-.primary-shell [class~="text-[9px]"] { font-size: 11.5px; }
-.primary-shell [class~="text-[10px]"] { font-size: 12.5px; }
-.primary-shell [class~="text-[11px]"] { font-size: 13px; }
-.primary-shell [class~="text-[13px]"] { font-size: 14px; }
-.primary-shell [class~="text-xs"] { font-size: 13.5px; }
+/* Readability pass: the Primary workspace was authored with smaller utility
+   sizes. Scale the Tailwind text size utilities up inside the section to improve
+   readability while preserving the size hierarchy. */
+.primary-shell [class~="text-[9px]"] { font-size: 13px; }
+.primary-shell [class~="text-[10px]"] { font-size: 14px; }
+.primary-shell [class~="text-[11px]"] { font-size: 14.5px; }
+.primary-shell [class~="text-[13px]"] { font-size: 15.5px; }
+.primary-shell [class~="text-xs"] { font-size: 15px; }
+.primary-shell [class~="text-sm"] { font-size: 16.5px; }
+.primary-shell [class~="text-base"] { font-size: 18px; }
+.primary-shell [class~="text-lg"] { font-size: 20px; }
 
 /* Activity detail pages use a calm analytics-dashboard language: a neutral
    canvas, large white modules, quiet inner surfaces and one vivid accent. */
@@ -739,7 +742,6 @@
   .primary-student-profile h2 { font-size: 21px !important; }
   .primary-student-profile table { min-width: 500px; }
 }
-.primary-shell [class~="text-sm"] { font-size: 15px; }
 
 /* Homepage Welcome Banner Styles */
 .primary-home-banner {
