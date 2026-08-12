@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Building2, CalendarRange, Home, Library, LogOut, Menu, Palette, Settings, X } from "lucide-react";
+import { BookOpen, Building2, CalendarRange, Home, Library, LogOut, Menu, Palette, Settings, Users, X } from "lucide-react";
 import {
   CURRENT_USER_QUERY_KEY,
   clearToken,
@@ -21,6 +21,7 @@ export const SCHOOL_ADMIN_NAV = [
   { href: "/school-admin/themes", label: "Themes", icon: Palette },
   { href: "/school-admin/resources", label: "Resources", icon: Library },
   { href: "/school-admin/academic-years", label: "Academic Years", icon: CalendarRange },
+  { href: "/school-admin/teachers", label: "Teachers", icon: Users },
   { href: "/school-admin/settings", label: "Settings", icon: Settings },
 ] as const;
 

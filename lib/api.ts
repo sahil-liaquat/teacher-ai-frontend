@@ -2590,6 +2590,277 @@ export const backendApi = {
     apiFetch<{ added_count: number; skipped_count: number }>("/admin/primary/resources/bulk", {
       method: "POST", body: JSON.stringify(payload),
     }),
+
+  // ── School teacher roster, classes and assignments ──────────────────────
+  adminSchoolTeachers: (params: SchoolTeacherQuery = {}) =>
+    apiFetch<SchoolTeacherRosterResponse>(`/admin/primary/teachers${schoolTeacherQuery(params)}`),
+  adminSchoolTeacher: (teacherId: string, academicYearId?: string) =>
+    apiFetch<SchoolTeacherDetail>(
+      `/admin/primary/teachers/${teacherId}${academicYearId ? `?academic_year_id=${academicYearId}` : ""}`
+    ),
+  adminRemoveSchoolTeacher: (teacherId: string) =>
+    apiFetch<void>(`/admin/primary/teachers/${teacherId}`, { method: "DELETE" }),
+  adminSchoolTeacherInvitations: (status?: TeacherInvitationStatus) =>
+    apiFetch<TeacherInvitation[]>(
+      `/admin/primary/teacher-invitations${status ? `?status=${status}` : ""}`
+    ),
+  adminInviteSchoolTeacher: (email: string) =>
+    apiFetch<TeacherInvitation>("/admin/primary/teacher-invitations", {
+      method: "POST", body: JSON.stringify({ email }),
+    }),
+  adminResendTeacherInvitation: (invitationId: string) =>
+    apiFetch<TeacherInvitation>(`/admin/primary/teacher-invitations/${invitationId}/resend`, {
+      method: "POST",
+    }),
+  adminCancelTeacherInvitation: (invitationId: string) =>
+    apiFetch<void>(`/admin/primary/teacher-invitations/${invitationId}`, { method: "DELETE" }),
+  adminSchoolClasses: (params: { academic_year_id?: string; include_archived?: boolean } = {}) => {
+    const query = new URLSearchParams();
+    if (params.academic_year_id) query.set("academic_year_id", params.academic_year_id);
+    if (params.include_archived) query.set("include_archived", "true");
+    return apiFetch<SchoolClass[]>(`/admin/primary/classes${query.size ? `?${query}` : ""}`);
+  },
+  adminCreateSchoolClass: (payload: { name: string; level: string; academic_year_id?: string }) =>
+    apiFetch<SchoolClass>("/admin/primary/classes", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdateSchoolClass: (
+    classId: string,
+    payload: Partial<{ name: string; level: string; is_active: boolean }>,
+  ) =>
+    apiFetch<SchoolClass>(`/admin/primary/classes/${classId}`, {
+      method: "PATCH", body: JSON.stringify(payload),
+    }),
+  adminDeleteSchoolClass: (classId: string) =>
+    apiFetch<{ archived: boolean; deleted: boolean }>(`/admin/primary/classes/${classId}`, {
+      method: "DELETE",
+    }),
+  adminTeacherAssignments: (params: {
+    academic_year_id?: string; teacher_id?: string; school_class_id?: string; include_inactive?: boolean;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.academic_year_id) query.set("academic_year_id", params.academic_year_id);
+    if (params.teacher_id) query.set("teacher_id", params.teacher_id);
+    if (params.school_class_id) query.set("school_class_id", params.school_class_id);
+    if (params.include_inactive) query.set("include_inactive", "true");
+    return apiFetch<TeacherAssignment[]>(`/admin/primary/teacher-assignments${query.size ? `?${query}` : ""}`);
+  },
+  adminAssignTeacherToClass: (
+    classId: string,
+    teacherId: string,
+    payload: { assignment_role?: TeacherAssignmentRole; starts_on?: string | null; ends_on?: string | null } = {},
+  ) =>
+    apiFetch<TeacherAssignment>(`/admin/primary/classes/${classId}/teachers/${teacherId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  adminUnassignTeacherFromClass: (classId: string, teacherId: string) =>
+    apiFetch<void>(`/admin/primary/classes/${classId}/teachers/${teacherId}`, { method: "DELETE" }),
+  /** Takes the COMPLETE desired assignment set — omitted classes are ended. */
+  adminReplaceTeacherAssignments: (payload: BulkAssignmentRequest) =>
+    apiFetch<BulkAssignmentResponse>("/admin/primary/teacher-assignments/bulk", {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+
+  // ── Invitation acceptance (teacher-facing) ──────────────────────────────
+  organizationInvitation: (token: string) =>
+    apiFetch<OrganizationInvitationPreview>(`/organization-invitations/${encodeURIComponent(token)}`),
+  acceptOrganizationInvitation: (token: string) =>
+    apiFetch<OrganizationInvitationAccept>(
+      `/organization-invitations/${encodeURIComponent(token)}/accept`,
+      { method: "POST" },
+    ),
+};
+
+function schoolTeacherQuery(params: SchoolTeacherQuery): string {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.level) query.set("level", params.level);
+  if (params.school_class_id) query.set("school_class_id", params.school_class_id);
+  if (params.status) query.set("status", params.status);
+  if (params.assignment) query.set("assignment", params.assignment);
+  if (params.academic_year_id) query.set("academic_year_id", params.academic_year_id);
+  if (params.page) query.set("page", String(params.page));
+  if (params.page_size) query.set("page_size", String(params.page_size));
+  return query.size ? `?${query}` : "";
+}
+
+export const SCHOOL_TEACHERS_QUERY_KEY = ["school-admin", "teachers"] as const;
+export const SCHOOL_CLASSES_QUERY_KEY = ["school-admin", "classes"] as const;
+export const TEACHER_INVITATIONS_QUERY_KEY = ["school-admin", "teacher-invitations"] as const;
+
+export type TeacherAssignmentRole = "lead" | "assistant";
+export type TeacherAccountStatus = "active" | "inactive" | "invited";
+export type TeacherInvitationStatus = "pending" | "accepted" | "expired" | "cancelled";
+export type CurriculumSource = "school" | "teachpad" | "none";
+
+export type SchoolTeacherQuery = {
+  search?: string;
+  level?: string;
+  school_class_id?: string;
+  status?: TeacherAccountStatus;
+  assignment?: "assigned" | "unassigned";
+  academic_year_id?: string;
+  page?: number;
+  page_size?: number;
+};
+
+export type SchoolClassAssignmentSummary = {
+  assignment_id: string;
+  school_class_id: string;
+  name: string;
+  level: string;
+  assignment_role: TeacherAssignmentRole;
+  is_active: boolean;
+};
+
+export type SchoolTeacher = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  account_status: TeacherAccountStatus;
+  joined_at?: string | null;
+  assigned_classes: SchoolClassAssignmentSummary[];
+  assigned_levels: string[];
+  has_curriculum: boolean;
+  curriculum_gap_levels: string[];
+};
+
+export type TeacherCurriculumSlot = {
+  level: string;
+  published_lesson_count: number;
+  source: CurriculumSource;
+};
+
+export type AssignmentHistoryEntry = {
+  id: string;
+  action: string;
+  summary?: string | null;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  school_class_id?: string | null;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  created_at: string;
+};
+
+export type SchoolTeacherDetail = SchoolTeacher & {
+  organization_id?: string | null;
+  organization_name?: string | null;
+  academic_year_id?: string | null;
+  academic_year_name?: string | null;
+  curriculum: TeacherCurriculumSlot[];
+  assignment_history: AssignmentHistoryEntry[];
+};
+
+export type SchoolTeacherRosterMetrics = {
+  total_teachers: number;
+  active_teachers: number;
+  awaiting_invitation: number;
+  unassigned_teachers: number;
+};
+
+export type SchoolTeacherRosterResponse = {
+  items: SchoolTeacher[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+  metrics: SchoolTeacherRosterMetrics;
+};
+
+export type SchoolClassTeacher = {
+  teacher_id: string;
+  teacher_name: string;
+  teacher_email: string;
+  assignment_id: string;
+  assignment_role: TeacherAssignmentRole;
+};
+
+export type SchoolClass = {
+  id: string;
+  organization_id: string;
+  academic_year_id: string;
+  name: string;
+  level: string;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  assigned_teacher_count: number;
+  teachers: SchoolClassTeacher[];
+  has_published_curriculum: boolean;
+  published_lesson_count: number;
+};
+
+export type TeacherAssignment = {
+  id: string;
+  organization_id: string;
+  academic_year_id: string;
+  school_class_id: string;
+  teacher_id: string;
+  assignment_role: TeacherAssignmentRole;
+  starts_on?: string | null;
+  ends_on?: string | null;
+  is_active: boolean;
+  assigned_by?: string | null;
+  school_class_name?: string | null;
+  level?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BulkAssignmentRequest = {
+  teacher_id: string;
+  academic_year_id?: string;
+  assignments: Array<{
+    school_class_id: string;
+    assignment_role?: TeacherAssignmentRole;
+    starts_on?: string | null;
+    ends_on?: string | null;
+  }>;
+};
+
+export type BulkAssignmentResponse = {
+  teacher_id: string;
+  academic_year_id: string;
+  created: number;
+  unchanged: number;
+  deactivated: number;
+  role_changed: number;
+  assignments: TeacherAssignment[];
+};
+
+export type TeacherInvitation = {
+  id: string;
+  organization_id: string;
+  email: string;
+  status: TeacherInvitationStatus;
+  expires_at: string;
+  invited_by?: string | null;
+  accepted_by?: string | null;
+  accepted_at?: string | null;
+  last_sent_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  /** Present only on the create/resend response — the token is hashed at rest. */
+  invitation_token?: string | null;
+  accept_url?: string | null;
+};
+
+export type OrganizationInvitationPreview = {
+  organization_name: string;
+  email: string;
+  status: TeacherInvitationStatus;
+  expires_at: string;
+};
+
+export type OrganizationInvitationAccept = {
+  organization_id: string;
+  organization_name: string;
+  already_member: boolean;
+  accepted_at: string;
 };
 
 export function normalizeLessonPlanForOutput(item: LessonPlan | any) {
