@@ -84,7 +84,10 @@ test("Every admin step type has default artwork on the teacher dashboard", () =>
     );
   }
   assert.match(dashboard, /const stepArt = primaryStepImage\(activity\.activity_type\)/);
-  assert.match(dashboard, /stepArt \?\s*\(\s*<img src=\{stepArt\}/);
+  // Whitespace-tolerant on purpose: both branches asserted this same thing, one
+  // with a literal space and mandatory parens. This form matches everything that
+  // stricter version did, and survives Prettier reflowing the JSX.
+  assert.match(dashboard, /stepArt\s*\?\s*\(?\s*<img\s+src=\{stepArt\}/);
   assert.match(adminRows, /primaryStepImage\(step\.step_type\)/);
 });
 
