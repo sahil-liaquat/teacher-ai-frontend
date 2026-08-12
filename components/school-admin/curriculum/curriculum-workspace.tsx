@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ChevronDown, Eye, MoreHorizontal, Sparkles, X } from "lucide-react";
-import { backendApi, type PrimaryAcademicYear, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme } from "@/lib/api";
+import { backendApi, type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
 import {
   findLessonForSlot,
   lessonIssues,
@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/toast";
 import { PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { CurriculumDayCard } from "@/components/school-admin/curriculum/curriculum-day-card";
 import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day-editor";
+import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 
 const WEEKS = [1, 2, 3, 4, 5];
 const DAYS = [1, 2, 3, 4, 5];
@@ -32,6 +33,8 @@ export function CurriculumWorkspace() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
+  const [aiTitle, setAITitle] = useState("AI curriculum proposal");
 
   const requestedYear = searchParams.get("year") ?? "";
   const level = searchParams.get("level") ?? "nursery";
@@ -78,11 +81,14 @@ export function CurriculumWorkspace() {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
-  function aiUnavailable(action: string, week?: number) {
-    toast({
-      title: `${action} needs the curriculum AI endpoint`,
-      description: `${levelLabel(level)} · ${monthLabel(month)}${week ? ` · Week ${week}` : ""}. Existing curriculum was left unchanged.`,
-    });
+  function openAI(operation: PrimaryAIProposalRequest["operation"], action: string, week?: number) {
+    const theme = themesQuery.data?.find((item) => item.is_active) ?? themesQuery.data?.[0];
+    if (!yearId || !theme) {
+      toast({ title: "A theme and academic year are required", description: "Set up the school year and a curriculum theme first.", variant: "error" });
+      return;
+    }
+    setAITitle(action);
+    setAIRequest({ operation, academic_year_id: yearId, level: level as PrimaryLevel, month, week, theme_id: theme.id });
   }
 
   async function createDay(week: number, day: number) {
@@ -179,7 +185,7 @@ export function CurriculumWorkspace() {
               </select><ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
             </label>
           </div>
-          <Button variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={() => aiUnavailable("Complete with AI")}><Sparkles className="h-4 w-4" /> Complete with AI</Button>
+          <Button variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={() => openAI("fill_month", "Complete this month with AI")}><Sparkles className="h-4 w-4" /> Complete with AI</Button>
         </div>
       </div>
 
@@ -193,7 +199,7 @@ export function CurriculumWorkspace() {
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">Start with a teaching day, or connect curriculum AI to prepare the month while preserving your school context.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button variant="outline" onClick={() => void createDay(1, 1)}>Create first day</Button>
-            <Button onClick={() => aiUnavailable("Create month with AI")}><Sparkles className="h-4 w-4" /> Create with AI</Button>
+            <Button onClick={() => openAI("create_month", "Create this month with AI")}><Sparkles className="h-4 w-4" /> Create with AI</Button>
           </div>
         </section>
       ) : (
@@ -208,7 +214,7 @@ export function CurriculumWorkspace() {
                 <details className="relative">
                   <summary className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl text-slate-500 hover:bg-white" aria-label={`Week ${week} actions`}><MoreHorizontal className="h-5 w-5" /></summary>
                   <div className="absolute right-0 z-10 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                    <button type="button" onClick={() => aiUnavailable("Fill week with AI", week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Fill week with AI</button>
+                    <button type="button" onClick={() => openAI("fill_week", `Fill week ${week} with AI`, week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Fill week with AI</button>
                     <button type="button" onClick={() => toast({ title: "Week preview", description: "Open any day to preview its classroom flow." })} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Preview week</button>
                   </div>
                 </details>
@@ -258,6 +264,16 @@ export function CurriculumWorkspace() {
           </div>
         </div>
       ) : null}
+      <AIProposalDialog
+        open={Boolean(aiRequest)}
+        onOpenChange={(open) => { if (!open) setAIRequest(null); }}
+        request={aiRequest}
+        title={aiTitle}
+        onApplied={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons", yearId, level] });
+          toast({ title: "AI changes applied to school drafts", description: "Published teacher curriculum remains unchanged until review and publish." });
+        }}
+      />
     </SchoolAdminPage>
   );
 }

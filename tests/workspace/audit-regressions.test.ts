@@ -56,6 +56,13 @@ test("desktop login logo stays clickable above the testimonial panel", () => {
   assert.match(login, /relative z-10 mx-auto flex max-w-2xl/);
 });
 
+test("school admins are sent to the canonical school-admin route after login", () => {
+  const login = source("app/login/page.tsx");
+
+  assert.match(login, /role === "org_admin"\) return "\/school-admin"/);
+  assert.doesNotMatch(login, /\/primary\/school-admin/);
+});
+
 test("Webpack ignores pptxgenjs Node-only browser-incompatible imports", () => {
   const config = source("next.config.mjs");
 

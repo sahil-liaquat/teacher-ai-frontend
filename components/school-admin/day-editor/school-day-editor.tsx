@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import {
   backendApi,
+  type PrimaryAIOperation,
+  type PrimaryAIProposalRequest,
   type PrimaryCurriculumLesson,
   type PrimaryCurriculumStep,
   type PrimaryCurriculumTheme,
@@ -38,6 +40,7 @@ import { useToast } from "@/components/ui/toast";
 import { SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 import { ResourcePicker } from "@/components/school-admin/day-editor/resource-picker";
+import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 
 type EditableStep = PrimaryCurriculumStep & { id: string };
 type PickerTarget = { stepIndex: number; detail?: { key: string; multi: boolean } };
@@ -73,6 +76,8 @@ export function SchoolDayEditor({
   const [saved, setSaved] = useState(true);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
+  const [aiTitle, setAITitle] = useState("AI block proposal");
   const initialSnapshot = useRef<PrimaryCurriculumLesson | null>(null);
 
   const lessonQuery = useQuery<PrimaryCurriculumLesson>({
@@ -256,10 +261,18 @@ export function SchoolDayEditor({
     setPickerTarget(null);
   }
 
-  function aiUnavailable(action: string, block?: EditableStep) {
-    toast({
-      title: `${action} needs the curriculum AI endpoint`,
-      description: `${levelLabel(lesson?.level ?? "nursery")}${theme ? ` · ${theme.name}` : ""}${block ? ` · ${block.title}` : ""}. Nothing was changed.`,
+  function openBlockAI(operation: PrimaryAIOperation, action: string, block: EditableStep) {
+    if (!lesson) return;
+    if (!saved) {
+      toast({ title: "Save this day first", description: "AI proposals use the latest saved curriculum so they cannot overwrite unsaved edits.", variant: "error" });
+      return;
+    }
+    setAITitle(action);
+    setAIRequest({
+      operation, academic_year_id: academicYearId, level: lesson.level,
+      month: lesson.month, week: lesson.week, day: lesson.day,
+      lesson_id: lesson.id, step_id: block.id, theme_id: lesson.theme_id,
+      topic_id: lesson.topic_id,
     });
   }
 
@@ -342,7 +355,7 @@ export function SchoolDayEditor({
               onMove={(direction) => moveStep(index, direction)}
               onRemove={() => { setSteps((current) => current.filter((_, position) => position !== index).map((item, position) => ({ ...item, position }))); setExpandedStep(null); markChanged(); }}
               onResource={(detail) => setPickerTarget({ stepIndex: index, detail })}
-              onAI={(action) => aiUnavailable(action, step)}
+              onAI={(operation, action) => openBlockAI(operation, action, step)}
               first={index === 0}
               last={index === steps.length - 1}
             />
@@ -360,6 +373,19 @@ export function SchoolDayEditor({
       {pickerTarget ? <ResourcePicker blockType={steps[pickerTarget.stepIndex]?.step_type ?? ""} selectedIds={allResourceIds(steps[pickerTarget.stepIndex])} onSelect={attachResource} onClose={() => setPickerTarget(null)} /> : null}
       {previewOpen ? <DayPreview lesson={localLesson} resourceMap={resourceMap} onClose={() => setPreviewOpen(false)} /> : null}
       {reviewOpen ? <PublishReview lesson={localLesson} initial={initialSnapshot.current} issues={issues} saving={saving} onClose={() => setReviewOpen(false)} onPublish={() => void publishDay()} /> : null}
+      <AIProposalDialog
+        open={Boolean(aiRequest)}
+        onOpenChange={(open) => { if (!open) setAIRequest(null); }}
+        request={aiRequest}
+        title={aiTitle}
+        onApplied={async (draftLessonIds) => {
+          await queryClient.invalidateQueries({ queryKey: ["school-admin"] });
+          const draftId = draftLessonIds[0];
+          if (draftId && draftId !== lesson.id) onLessonChanged(draftId);
+          else await lessonQuery.refetch();
+          toast({ title: "AI suggestion applied to a school draft", description: "Teachers still see the current published version." });
+        }}
+      />
     </SchoolAdminPage>
   );
 }
@@ -376,7 +402,7 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, o
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
   onResource: (detail?: { key: string; multi: boolean }) => void;
-  onAI: (action: string) => void;
+  onAI: (operation: PrimaryAIOperation, action: string) => void;
   first: boolean;
   last: boolean;
 }) {
@@ -403,7 +429,7 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, o
                 </div>
               </div>
               <div>
-                <div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-slate-950">What will the teacher do?</h3><p className="mt-1 text-xs text-slate-500">Keep instructions short, clear, and in teaching order.</p></div>{!readOnly ? <button type="button" onClick={() => onAI("Improve teacher instructions with AI")} className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700"><Sparkles className="h-3.5 w-3.5" /> Improve with AI</button> : null}</div>
+                <div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-slate-950">What will the teacher do?</h3><p className="mt-1 text-xs text-slate-500">Keep instructions short, clear, and in teaching order.</p></div><button type="button" onClick={() => onAI(step.instructions.length ? "improve_block" : "generate_teacher_instructions", step.instructions.length ? "Improve teacher instructions with AI" : "Generate teacher instructions with AI")} className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700"><Sparkles className="h-3.5 w-3.5" /> {step.instructions.length ? "Improve" : "Generate"} with AI</button></div>
                 <div className="mt-3 space-y-2">
                   {(step.instructions ?? []).map((instruction, instructionIndex) => <div key={instructionIndex} className="flex items-start gap-2"><span className="mt-2.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">{instructionIndex + 1}</span><textarea disabled={readOnly} value={instruction} onChange={(event) => onUpdate({ instructions: step.instructions.map((item, position) => position === instructionIndex ? event.target.value : item) })} rows={2} className="min-h-[64px] w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /><button disabled={readOnly} type="button" aria-label={`Remove instruction ${instructionIndex + 1}`} onClick={() => onUpdate({ instructions: step.instructions.filter((_, position) => position !== instructionIndex) })} className="mt-2 text-slate-400 hover:text-rose-600"><X className="h-4 w-4" /></button></div>)}
                   {!readOnly ? <button type="button" onClick={() => onUpdate({ instructions: [...(step.instructions ?? []), ""] })} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700"><Plus className="h-3.5 w-3.5" /> Add instruction</button> : null}
@@ -414,7 +440,7 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, o
                 <div className="mt-3 space-y-2">{objectives.map((objective, objectiveIndex) => <label key={objectiveIndex} className="flex items-start gap-2 text-sm text-slate-700"><input disabled={readOnly} type="checkbox" checked={(step.objective_indexes ?? []).includes(objectiveIndex)} onChange={(event) => onUpdate({ objective_indexes: event.target.checked ? [...(step.objective_indexes ?? []), objectiveIndex] : (step.objective_indexes ?? []).filter((value) => value !== objectiveIndex) })} className="mt-0.5 h-4 w-4 rounded border-slate-300" />{objective}</label>)}{!objectives.length ? <p className="text-xs text-slate-500">Add objectives in the Day summary first.</p> : null}</div>
               </div>
               <div>
-                <div className="flex items-center justify-between"><div><h3 className="text-sm font-semibold text-slate-950">What will the teacher need?</h3><p className="mt-1 text-xs text-slate-500">Resources are attached directly to this classroom block.</p></div>{!readOnly ? <button type="button" onClick={() => onAI("Find resources with AI")} className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700"><Sparkles className="h-3.5 w-3.5" /> Find with AI</button> : null}</div>
+                <div className="flex items-center justify-between"><div><h3 className="text-sm font-semibold text-slate-950">What will the teacher need?</h3><p className="mt-1 text-xs text-slate-500">Resources are attached directly to this classroom block.</p></div><button type="button" onClick={() => onAI("suggest_resources", "Suggest resources")} className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700"><Sparkles className="h-3.5 w-3.5" /> Find with AI</button></div>
                 <div className="mt-3 space-y-2">{resources.map((resourceId) => { const resource = resourceMap.get(resourceId); return <div key={resourceId} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3"><FileText className="h-4 w-4 shrink-0 text-blue-700" /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-900">{resource?.title ?? "Attached resource"}</span><span className="block text-xs text-slate-500">{resource?.category ?? "Classroom resource"}</span></span>{!readOnly ? <button type="button" onClick={() => onUpdate({ resource_ids: resources.filter((id) => id !== resourceId) })} className="text-xs font-bold text-rose-600">Remove</button> : null}</div>; })}{!resources.length ? <p className="text-xs text-slate-500">No resources attached.</p> : null}</div>
                 {!readOnly ? <Button variant="outline" size="sm" className="mt-3" onClick={() => onResource()}><Plus className="h-3.5 w-3.5" /> Add resource</Button> : null}
               </div>
@@ -422,6 +448,7 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, o
             </div>
             <aside className="space-y-2 border-t border-slate-200 pt-5 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Block actions</p>
+              {["story", "story_or_rhyme", "story_rhyme_picture_talk", "circle_time", "literacy_time", "numeracy_time", "assessment", "reflection"].includes(step.step_type) ? <button type="button" onClick={() => onAI("generate_questions", `Generate questions for ${step.title}`)} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50"><Sparkles className="h-4 w-4" /> Generate questions</button> : null}
               <button disabled={first} type="button" onClick={() => onMove(-1)} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-35"><ArrowUp className="h-4 w-4" /> Move up</button>
               <button disabled={last} type="button" onClick={() => onMove(1)} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-35"><ArrowDown className="h-4 w-4" /> Move down</button>
               {!readOnly ? <button type="button" onClick={onRemove} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50"><Trash2 className="h-4 w-4" /> Remove block</button> : null}

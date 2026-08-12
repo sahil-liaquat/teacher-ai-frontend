@@ -2493,6 +2493,14 @@ export const backendApi = {
   },
   adminPrimaryLesson: (lessonId: string) =>
     apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
+  adminGeneratePrimaryAIProposal: (payload: PrimaryAIProposalRequest) =>
+    apiFetch<PrimaryAIProposal>("/admin/primary/curriculum/ai/proposals", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminApplyPrimaryAIProposal: (proposalId: string, changeIds?: string[]) =>
+    apiFetch<PrimaryAIApplyResponse>(`/admin/primary/curriculum/ai/proposals/${proposalId}/apply`, {
+      method: "POST", body: JSON.stringify({ change_ids: changeIds }),
+    }),
   adminCreatePrimaryLesson: (payload: {
     theme_id: string; topic_id?: string | null; academic_year_id?: string | null;
     title?: string | null; daily_focus?: string | null;
@@ -2959,6 +2967,51 @@ export type PrimaryCurriculumLesson = {
   parent_update?: string | null;
   steps: PrimaryCurriculumStep[];
   learning_outcomes?: PrimaryLearningOutcome[];
+};
+
+export type PrimaryAIOperation =
+  | "create_month" | "fill_month" | "fill_week" | "fix_missing"
+  | "improve_block" | "generate_teacher_instructions"
+  | "generate_questions" | "suggest_resources";
+
+export type PrimaryAIProposalRequest = {
+  operation: PrimaryAIOperation;
+  academic_year_id: string;
+  level: PrimaryLevel;
+  month?: number | null;
+  week?: number | null;
+  day?: number | null;
+  lesson_id?: string | null;
+  step_id?: string | null;
+  theme_id?: string | null;
+  topic_id?: string | null;
+};
+
+export type PrimaryAIChange = {
+  id: string;
+  kind: string;
+  title: string;
+  description: string;
+  target: Record<string, unknown>;
+  current?: Record<string, unknown> | null;
+  proposed: Record<string, unknown>;
+  selected_by_default: boolean;
+};
+
+export type PrimaryAIProposal = {
+  id: string;
+  operation: PrimaryAIOperation;
+  status: "pending" | "applied" | "stale";
+  summary: string;
+  changes: PrimaryAIChange[];
+  created_at: string;
+};
+
+export type PrimaryAIApplyResponse = {
+  proposal_id: string;
+  status: string;
+  applied_change_ids: string[];
+  draft_lesson_ids: string[];
 };
 
 export type PrimaryStepFeedback = {

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight, BookOpen, FileClock, FileText, Plus } from "lucide-react";
-import { backendApi, type PrimaryAcademicYear, type PrimaryCurriculumLesson } from "@/lib/api";
+import { backendApi, type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryLevel } from "@/lib/api";
 import {
   curriculumHref,
   lessonIssues,
@@ -20,14 +20,18 @@ import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AIAction, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
+import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 
 const DEFAULT_MONTH = 9;
 
 export function SchoolAdminOverview() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [yearId, setYearId] = useState("");
   const [level, setLevel] = useState("nursery");
   const [month, setMonth] = useState(DEFAULT_MONTH);
+  const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
+  const [aiTitle, setAITitle] = useState("AI curriculum proposal");
 
   const yearsQuery = useQuery<PrimaryAcademicYear[]>({
     queryKey: ["school-admin", "academic-years"],
@@ -56,11 +60,10 @@ export function SchoolAdminOverview() {
   const readiness = Math.round((readySlots / 25) * 100);
   const curriculumUrl = curriculumHref({ year: yearId, level, month });
 
-  function explainAIGap(action: string) {
-    toast({
-      title: `${action} is ready for an AI connection`,
-      description: `TeachPad does not yet expose a school-curriculum generation endpoint for ${levelLabel(level)} ${monthLabel(month)}. No curriculum was changed.`,
-    });
+  function openAI(operation: PrimaryAIProposalRequest["operation"], title: string) {
+    if (!yearId) return;
+    setAITitle(title);
+    setAIRequest({ operation, academic_year_id: yearId, level: level as PrimaryLevel, month });
   }
 
   if (yearsQuery.isLoading) {
@@ -120,9 +123,9 @@ export function SchoolAdminOverview() {
         <SectionHeading title="Build and improve with AI" description="AI actions use the curriculum context selected above." />
         <h2 id="ai-actions-heading" className="sr-only">AI curriculum actions</h2>
         <div className="grid gap-3 md:grid-cols-3">
-          <AIAction title="Create curriculum with AI" description="Prepare a structured programme for this class and academic year." onClick={() => explainAIGap("Create curriculum")} />
-          <AIAction title="Fill this month with AI" description={`Complete unplanned teaching days in ${monthLabel(month)} while preserving existing work.`} onClick={() => explainAIGap("Fill this month")} muted />
-          <AIAction title="Fix missing content" description="Find incomplete objectives, instructions, activities, and resources." onClick={() => explainAIGap("Fix missing content")} muted />
+          <AIAction title="Create curriculum with AI" description="Prepare a structured programme for this class and academic year." onClick={() => openAI("create_month", "Create curriculum with AI")} />
+          <AIAction title="Fill this month with AI" description={`Complete unplanned teaching days in ${monthLabel(month)} while preserving existing work.`} onClick={() => openAI("fill_month", "Fill this month with AI")} muted />
+          <AIAction title="Fix missing content" description="Find incomplete objectives, instructions, activities, and resources." onClick={() => openAI("fix_missing", "Fix missing curriculum content")} muted />
         </div>
       </section>
 
@@ -180,6 +183,16 @@ export function SchoolAdminOverview() {
           </section>
         </div>
       )}
+      <AIProposalDialog
+        open={Boolean(aiRequest)}
+        onOpenChange={(open) => { if (!open) setAIRequest(null); }}
+        request={aiRequest}
+        title={aiTitle}
+        onApplied={async () => {
+          await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons", yearId, level] });
+          toast({ title: "AI changes applied to school drafts", description: "Teachers will not see them until you publish." });
+        }}
+      />
 
       <div className="grid gap-5 md:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
