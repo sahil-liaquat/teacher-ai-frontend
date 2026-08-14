@@ -102,8 +102,10 @@ test("day editor uses progressive block editing and safe publishing", () => {
   assert.match(editor, /Move down/);
   assert.match(editor, /Review changes/);
   assert.match(editor, /Publish to teachers/);
-  assert.match(editor, /adminPublishPrimaryLesson/);
-  assert.match(editor, /adminDuplicatePrimaryLesson/);
+  // The shared editor delegates writes to the route-selected ownership adapter.
+  assert.match(editor, /adapter\.publishLesson/);
+  assert.match(editor, /adapter\.duplicateLesson/);
+  assert.match(editor, /scope === "school"/);
   assert.match(editor, /Edit as a new draft/);
   assert.doesNotMatch(editor, /setStage|stage === 4/);
 });

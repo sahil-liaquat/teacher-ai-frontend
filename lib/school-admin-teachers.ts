@@ -5,25 +5,25 @@ import type {
   TeacherCurriculumSlot,
   TeacherInvitation,
 } from "@/lib/api";
+// Relative with an explicit extension, not the "@/" alias: this is a VALUE
+// import, and the node test runner resolves it at runtime where the alias
+// does not exist. Type-only imports elsewhere in this file survive the alias
+// because strip-types erases them before resolution.
+import { PRIMARY_CURRICULUM } from "./curriculum-definition.ts";
 
 /**
- * All eight Primary levels. Deliberately not `SCHOOL_LEVELS` from
+ * Every level the curriculum defines. Deliberately not `SCHOOL_LEVELS` from
  * school-admin-curriculum: that list stops at Class 2 because the authoring UI
  * only ships curriculum that far, but a school still has Class 3–5 classes to
- * staff. Keep this in sync with PRIMARY_LEVELS in the backend's models/primary.py.
+ * staff — a real product difference, not a duplicate.
+ *
+ * Now derived from the curriculum definition rather than hand-copied. The
+ * previous comment asked the next reader to keep this in sync with the
+ * backend's PRIMARY_LEVELS by hand; a test checks it instead.
  */
-export const TEACHER_LEVELS = [
-  { value: "nursery", label: "Nursery" },
-  { value: "lkg", label: "LKG" },
-  { value: "ukg", label: "UKG" },
-  { value: "class_1", label: "Class 1" },
-  { value: "class_2", label: "Class 2" },
-  { value: "class_3", label: "Class 3" },
-  { value: "class_4", label: "Class 4" },
-  { value: "class_5", label: "Class 5" },
-] as const;
+export const TEACHER_LEVELS = PRIMARY_CURRICULUM.levels;
 
-export type TeacherLevel = (typeof TEACHER_LEVELS)[number]["value"];
+export type TeacherLevel = string;
 
 export function teacherLevelLabel(level: string): string {
   return TEACHER_LEVELS.find((item) => item.value === level)?.label ?? level;

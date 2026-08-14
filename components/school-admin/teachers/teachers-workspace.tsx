@@ -72,7 +72,7 @@ export function TeachersWorkspace() {
 
   const years = useQuery<PrimaryAcademicYear[]>({
     queryKey: ["school-admin", "academic-years"],
-    queryFn: backendApi.adminPrimaryAcademicYears,
+    queryFn: backendApi.schoolAdminAcademicYears,
   });
   const activeYear = useMemo(
     () => (years.data ?? []).find((year) => year.is_active) ?? (years.data ?? [])[0],

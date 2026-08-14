@@ -39,8 +39,12 @@ test("resource mapping is nested under curriculum rather than a workspace route"
 test("school curriculum exposes explicit master customization requests", () => {
   const api = source("lib/api.ts");
   const curriculum = source("components/school-admin/day-editor/school-day-editor.tsx");
-  assert.match(api, /adminCustomizePrimaryLesson/);
-  assert.match(api, /adminCustomizePrimaryTheme/);
+  // Named schoolAdmin* since the Master Curriculum cutover: customization is a
+  // school action, so these hit /school-admin/*, not the platform admin surface.
+  assert.match(api, /schoolAdminCustomizeLesson/);
+  assert.match(api, /schoolAdminCustomizeTheme/);
+  assert.match(api, /`\/school-admin\/curriculum\/\$\{lessonId\}\/customize`/);
+  assert.match(api, /`\/school-admin\/themes\/\$\{id\}\/customize`/);
   assert.match(curriculum, /lesson\?\.scope === "platform"/);
   assert.match(curriculum, /Customize for your school/);
 });

@@ -61,16 +61,25 @@ function schoolClass(overrides: Record<string, unknown> = {}) {
 
 // ── navigation ─────────────────────────────────────────────────────────────
 
-test("Teachers sits between Academic Years and Settings in the school-admin nav", () => {
+test("Teachers sits after the year setup and before Settings in the nav", () => {
   const shell = source("components/school-admin/school-admin-shell.tsx");
   // Array.from, not spread: tsconfig targets es5, where iterating a matchAll
   // result needs downlevelIteration.
   const order = Array.from(shell.matchAll(/href: "(\/school-admin[^"]*)"/g)).map((match) => match[1]);
-  const teachers = order.indexOf("/school-admin/teachers");
+  const at = (href: string) => order.indexOf(href);
 
-  assert.ok(teachers > -1, "the Teachers nav item is missing");
-  assert.equal(order[teachers - 1], "/school-admin/academic-years");
-  assert.equal(order[teachers + 1], "/school-admin/settings");
+  assert.ok(at("/school-admin/teachers") > -1, "the Teachers nav item is missing");
+  // Relative order, not adjacency: the nav grows as the school surface does —
+  // Calendar landed between Academic Years and Teachers — and what matters is
+  // that staffing follows the year setup and precedes Settings.
+  assert.ok(
+    at("/school-admin/academic-years") < at("/school-admin/teachers"),
+    "Teachers should follow the academic year setup",
+  );
+  assert.ok(
+    at("/school-admin/teachers") < at("/school-admin/settings"),
+    "Settings should stay last",
+  );
 });
 
 test("the Teachers workspace is only reachable inside the school-admin shell", () => {
@@ -211,7 +220,19 @@ test("the assignment dialog surfaces every warning the spec calls for", () => {
 test("bulk assignment sends the complete desired set, not a delta", () => {
   const dialog = source("components/school-admin/teachers/assignment-dialog.tsx");
   assert.match(dialog, /adminReplaceTeacherAssignments/);
-  assert.match(dialog, /selectedIds\.map/, "omitted classes are ended by the backend, so the payload is the full set");
+  // The desired set is now keyed by TARGET — (class, section) — not by class.
+  // Keying on the class alone made the second section of a class overwrite the
+  // first in the draft map, so it could never be submitted.
+  assert.match(
+    dialog,
+    /selectedKeys\.map/,
+    "omitted targets are ended by the backend, so the payload is the full set",
+  );
+  assert.match(
+    dialog,
+    /class_section_id: target\.section\?\.id \?\? null/,
+    "each assignment must name the section it attaches to",
+  );
 });
 
 test("membership and assignment changes invalidate the roster and curriculum queries", () => {

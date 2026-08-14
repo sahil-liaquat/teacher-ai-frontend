@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, FileText, Search, Upload, X } from "lucide-react";
-import { backendApi, type PrimaryResource } from "@/lib/api";
+import { type PrimaryResource } from "@/lib/api";
+import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,12 +17,15 @@ export function ResourcePicker({
   selectedIds,
   onSelect,
   onClose,
+  scope = "school",
 }: {
   blockType: string;
   selectedIds: string[];
   onSelect: (resource: PrimaryResource) => void;
   onClose: () => void;
+  scope?: CurriculumAdminScope;
 }) {
+  const adapter = curriculumAdminAdapter(scope);
   const { toast } = useToast();
   const [tab, setTab] = useState<ResourceTab>("recommended");
   const [search, setSearch] = useState("");
@@ -29,8 +33,8 @@ export function ResourcePicker({
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploading, setUploading] = useState(false);
   const resourcesQuery = useQuery({
-    queryKey: ["school-admin", "resource-picker", search],
-    queryFn: () => backendApi.adminResources({ search, page_size: 100 }),
+    queryKey: [adapter.queryRoot, "resource-picker", search],
+    queryFn: () => adapter.resources({ search, page_size: 100 }),
   });
 
   const resources = useMemo(() => {
@@ -48,7 +52,7 @@ export function ResourcePicker({
     if (!uploadFile) return;
     setUploading(true);
     try {
-      const resource = await backendApi.adminUploadPrimaryResource(uploadFile, "Classroom Resource", uploadTitle.trim() || undefined);
+      const resource = await adapter.uploadResource(uploadFile, "Classroom Resource", uploadTitle.trim() || undefined);
       onSelect(resource);
       toast({ title: "Resource uploaded and attached" });
       onClose();

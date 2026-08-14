@@ -15,6 +15,12 @@ import {
   groupClassesByLevel,
   teacherLevelLabel,
 } from "@/lib/school-admin-teachers";
+import {
+  type AssignmentTarget,
+  assignmentTargets,
+  existingTargetKey,
+  targetKey,
+} from "@/lib/school-admin-sections";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -50,12 +56,17 @@ export function AssignmentDialog({
   // a cancelled edit never leaks into the next one.
   useEffect(() => {
     if (!open || !teacher) return;
-    const assigned = new Map(teacher.assigned_classes.map((item) => [item.school_class_id, item]));
+    // Keyed by TARGET — (class, section) — not by class. Keying on the class
+    // made the second section of a class overwrite the first, so it could never
+    // be submitted however well the backend understood sections.
+    const assigned = new Map(
+      teacher.assigned_classes.map((item) => [existingTargetKey(item, classes), item]),
+    );
     setDrafts(
       Object.fromEntries(
-        classes.map((item) => {
-          const existing = assigned.get(item.id);
-          return [item.id, {
+        assignmentTargets(classes).map((target) => {
+          const existing = assigned.get(target.key);
+          return [target.key, {
             selected: Boolean(existing),
             role: (existing?.assignment_role ?? "lead") as TeacherAssignmentRole,
             starts_on: "",
@@ -66,25 +77,42 @@ export function AssignmentDialog({
     );
   }, [open, teacher, classes]);
 
-  const groups = useMemo(() => groupClassesByLevel(classes.filter((item) => item.is_active)), [classes]);
-  const selectedIds = useMemo(
-    () => Object.entries(drafts).filter(([, draft]) => draft.selected).map(([id]) => id),
+  const activeClasses = useMemo(() => classes.filter((item) => item.is_active), [classes]);
+  const groups = useMemo(() => groupClassesByLevel(activeClasses), [activeClasses]);
+  const targetsByClass = useMemo(() => {
+    const map = new Map<string, AssignmentTarget[]>();
+    for (const target of assignmentTargets(activeClasses)) {
+      map.set(target.schoolClass.id, [...(map.get(target.schoolClass.id) ?? []), target]);
+    }
+    return map;
+  }, [activeClasses]);
+  const allTargets = useMemo(() => assignmentTargets(activeClasses), [activeClasses]);
+  const selectedKeys = useMemo(
+    () => Object.entries(drafts).filter(([, draft]) => draft.selected).map(([key]) => key),
     [drafts],
   );
   const notAMember = teacher?.account_status === "invited";
 
+  // A lead conflict is now per SECTION: Section A having a lead says nothing
+  // about Section B, and warning class-wide would block a legal assignment.
   const leadConflicts = useMemo(() => {
     if (!teacher) return [];
-    return classes.filter((item) => {
-      const draft = drafts[item.id];
+    return allTargets.filter((target) => {
+      const draft = drafts[target.key];
       if (!draft?.selected || draft.role !== "lead") return false;
-      const lead = item.teachers.find((entry) => entry.assignment_role === "lead");
+      const lead = target.schoolClass.teachers.find(
+        (entry) =>
+          entry.assignment_role === "lead" &&
+          (target.section
+            ? entry.class_section_id === target.section.id
+            : !entry.class_section_id),
+      );
       return Boolean(lead && lead.teacher_id !== teacher.id);
     });
-  }, [classes, drafts, teacher]);
+  }, [allTargets, drafts, teacher]);
 
-  function update(classId: string, patch: Partial<Draft>) {
-    setDrafts((current) => ({ ...current, [classId]: { ...current[classId], ...patch } }));
+  function update(key: string, patch: Partial<Draft>) {
+    setDrafts((current) => ({ ...current, [key]: { ...current[key], ...patch } }));
   }
 
   async function save() {
@@ -94,12 +122,16 @@ export function AssignmentDialog({
       const result = await backendApi.adminReplaceTeacherAssignments({
         teacher_id: teacher.id,
         academic_year_id: academicYear?.id,
-        assignments: selectedIds.map((classId) => ({
-          school_class_id: classId,
-          assignment_role: drafts[classId].role,
-          starts_on: drafts[classId].starts_on || null,
-          ends_on: drafts[classId].ends_on || null,
-        })),
+        assignments: selectedKeys.map((key) => {
+          const target = allTargets.find((item) => item.key === key)!;
+          return {
+            school_class_id: target.schoolClass.id,
+            class_section_id: target.section?.id ?? null,
+            assignment_role: drafts[key].role,
+            starts_on: drafts[key].starts_on || null,
+            ends_on: drafts[key].ends_on || null,
+          };
+        }),
       });
       await onSaved();
       onOpenChange(false);
@@ -158,9 +190,10 @@ export function AssignmentDialog({
         {!isCurrentYear && academicYear ? (
           <Warning>The academic year is not current. Assignments you make here apply to {academicYear.name}, not to the year teachers are planning today.</Warning>
         ) : null}
-        {leadConflicts.map((item) => (
-          <Warning key={item.id}>
-            “{item.name}” already has a lead teacher. Choose Assistant, or change the current lead first.
+        {leadConflicts.map((target) => (
+          <Warning key={target.key}>
+            “{target.sectionLabel ? `${target.label} ${target.sectionLabel}` : target.label}”
+            already has a lead teacher. Choose Assistant, or change the current lead first.
           </Warning>
         ))}
 
@@ -172,15 +205,17 @@ export function AssignmentDialog({
                   {teacherLevelLabel(group.level)}
                 </legend>
                 <div className="space-y-2">
-                  {group.classes.map((item) => (
-                    <ClassRow
-                      key={item.id}
-                      schoolClass={item}
-                      draft={drafts[item.id]}
-                      disabled={notAMember}
-                      onChange={(patch) => update(item.id, patch)}
-                    />
-                  ))}
+                  {group.classes.flatMap((item) =>
+                    (targetsByClass.get(item.id) ?? []).map((target) => (
+                      <ClassRow
+                        key={target.key}
+                        target={target}
+                        draft={drafts[target.key]}
+                        disabled={notAMember}
+                        onChange={(patch) => update(target.key, patch)}
+                      />
+                    )),
+                  )}
                 </div>
               </fieldset>
             ))}
@@ -196,16 +231,17 @@ export function AssignmentDialog({
 }
 
 function ClassRow({
-  schoolClass,
+  target,
   draft,
   disabled,
   onChange,
 }: {
-  schoolClass: SchoolClass;
+  target: AssignmentTarget;
   draft?: Draft;
   disabled: boolean;
   onChange: (patch: Partial<Draft>) => void;
 }) {
+  const schoolClass = target.schoolClass;
   const warning = classWarning(schoolClass);
   const selected = Boolean(draft?.selected);
 
@@ -220,6 +256,15 @@ function ClassRow({
           />
           <span>
             {schoolClass.name}
+            {/* The section is what the assignment actually attaches to, so it
+                is part of the row's identity rather than a footnote. Absent for
+                a class whose only section is unnamed — there the class name
+                already says everything. */}
+            {target.sectionLabel ? (
+              <span className="ml-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">
+                {target.sectionLabel}
+              </span>
+            ) : null}
             <span className="ml-2 text-xs font-medium text-slate-500">
               {schoolClass.published_lesson_count} published day{schoolClass.published_lesson_count === 1 ? "" : "s"}
             </span>
@@ -228,7 +273,7 @@ function ClassRow({
         {selected ? (
           <Select
             className="w-40"
-            aria-label={`Role on ${schoolClass.name}`}
+            aria-label={`Role on ${schoolClass.name}${target.sectionLabel ? ` ${target.sectionLabel}` : ""}`}
             value={draft?.role ?? "lead"}
             onChange={(event) => onChange({ role: event.target.value as TeacherAssignmentRole })}
           >

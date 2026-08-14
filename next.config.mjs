@@ -90,6 +90,16 @@ const nextConfig = {
         source: "/dashboard/reports",
         destination: "/dashboard",
         permanent: false
+      },
+      // Renamed in the Master Curriculum cutover: this page administers the
+      // platform-owned master curriculum (/admin/master/*), not the school one.
+      // Kept non-permanent so a stale 308 can't pin the old path in admins'
+      // browsers if /admin/primary is renamed next. Query is preserved, so
+      // bookmarked ?tab=... deep links still land on the right tab.
+      {
+        source: "/admin/primary-curriculum",
+        destination: "/admin/master-curriculum",
+        permanent: false
       }
     ];
   }

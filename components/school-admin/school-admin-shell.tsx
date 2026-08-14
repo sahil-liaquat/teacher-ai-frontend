@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Building2, CalendarRange, Home, Library, LogOut, Menu, Palette, Settings, Users, X } from "lucide-react";
+import { BookOpen, Building2, CalendarDays, CalendarRange, Home, Library, LogOut, Menu, Palette, School, Settings, Users, X } from "lucide-react";
 import {
   CURRENT_USER_QUERY_KEY,
   clearToken,
@@ -21,6 +21,8 @@ export const SCHOOL_ADMIN_NAV = [
   { href: "/school-admin/themes", label: "Themes", icon: Palette },
   { href: "/school-admin/resources", label: "Resources", icon: Library },
   { href: "/school-admin/academic-years", label: "Academic Years", icon: CalendarRange },
+  { href: "/school-admin/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/school-admin/classes", label: "Classes & Sections", icon: School },
   { href: "/school-admin/teachers", label: "Teachers", icon: Users },
   { href: "/school-admin/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -60,7 +62,7 @@ export function SchoolAdminShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isError) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     if (user && user.role !== "org_admin") {
-      router.replace(user.role === "admin" ? "/admin/primary-curriculum" : "/dashboard");
+      router.replace(user.role === "admin" ? "/admin/master-curriculum" : "/dashboard");
     }
   }, [isError, pathname, router, user]);
 
@@ -79,7 +81,7 @@ export function SchoolAdminShell({ children }: { children: ReactNode }) {
     <>
       <Link href="/school-admin" className="flex items-center gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)]"><Building2 className="h-5 w-5" /></span>
-        <span><span className="block text-base font-semibold tracking-tight text-slate-950">TeachPad</span><span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">School Admin</span></span>
+        <span className="min-w-0"><span className="block truncate text-base font-semibold tracking-tight text-slate-950">{user.organization_name || "TeachPad"}</span><span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">TeachPad · School Admin</span></span>
       </Link>
       <nav className="mt-8 space-y-1" aria-label="School administration">
         {SCHOOL_ADMIN_NAV.map((item) => {
@@ -114,7 +116,7 @@ export function SchoolAdminShell({ children }: { children: ReactNode }) {
       </aside>
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
         <button type="button" aria-label="Open school administration navigation" onClick={() => setMobileOpen(true)} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100"><Menu className="h-5 w-5" /></button>
-        <span className="font-semibold tracking-tight">TeachPad School Admin</span>
+        <span className="max-w-[70vw] truncate font-semibold tracking-tight">{user.organization_name || "TeachPad School Admin"}</span>
         <span className="h-5 w-5" aria-hidden="true" />
       </header>
       {mobileOpen ? (

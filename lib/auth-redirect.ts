@@ -17,6 +17,52 @@ export function getSafeNextPath(value: string | null | undefined): string | null
   }
 }
 
+export type AppRole = "admin" | "teacher" | "influencer" | "org_admin";
+
+export function dashboardForRole(role: AppRole): string {
+  if (role === "admin") return "/admin";
+  if (role === "org_admin") return "/school-admin";
+  return "/dashboard";
+}
+
+function isRoute(path: string, route: string): boolean {
+  return path === route || path.startsWith(`${route}/`);
+}
+
+/**
+ * Resolve a post-login destination without crossing workspace boundaries.
+ *
+ * `next` is normally added when an unauthenticated visitor opens a protected
+ * page. It is safe from open redirects after `getSafeNextPath`, but it can
+ * still point at a workspace for a different role (for example an admin who
+ * arrived at `/login?next=/dashboard`). In that case the account's role must
+ * win and the user should land on their own home page.
+ */
+export function getPostLoginPath(
+  role: AppRole,
+  nextValue: string | null | undefined
+): string {
+  const fallback = dashboardForRole(role);
+  const next = getSafeNextPath(nextValue);
+  if (!next) return fallback;
+
+  const isAdminPath = isRoute(next, "/admin");
+  const isSchoolAdminPath = isRoute(next, "/school-admin");
+  const isInfluencerPath = isRoute(next, "/influencer");
+  const isTeacherPath = isRoute(next, "/dashboard") || isRoute(next, "/primary");
+
+  if (isAdminPath) return role === "admin" ? next : fallback;
+  if (isSchoolAdminPath) return role === "org_admin" ? next : fallback;
+  if (isInfluencerPath) return role === "influencer" ? next : fallback;
+  if (isTeacherPath) {
+    return role === "teacher" || role === "influencer" ? next : fallback;
+  }
+
+  // Role-neutral authenticated flows, such as accepting an invitation, still
+  // retain their safe same-origin destination.
+  return next;
+}
+
 /**
  * Builds the absolute `/auth/callback` URL used as the Supabase OAuth
  * `redirectTo`, forwarding the post-login destination (`next`) and referral

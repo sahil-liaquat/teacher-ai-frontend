@@ -41,7 +41,7 @@ function filePreviewUrl(resource: PrimaryResource): string {
   return resource.thumbnail_url || resource.file_url;
 }
 
-export function ResourcePanel({ schoolMode = false }: { schoolMode?: boolean } = {}) {
+export function ResourcePanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -292,9 +292,8 @@ export function ResourcePanel({ schoolMode = false }: { schoolMode?: boolean } =
                     </a>
                     <button
                       onClick={() => handleDeleteResource(res.id)}
-                      disabled={schoolMode && res.scope === "platform"}
                       className="text-slate-400 hover:text-rose-600 p-1 disabled:cursor-not-allowed disabled:opacity-30"
-                      title={schoolMode && res.scope === "platform" ? "TeachPad master resources are read-only" : "Archive resource"}
+                      title="Archive resource"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

@@ -14,7 +14,7 @@ import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { builtInHeroForThemeName, DEFAULT_PRIMARY_HERO_URL } from "@/lib/primary-hero-library";
-import { PrimaryHeroImagePicker } from "./hero-image-picker";
+import { PrimaryHeroImagePicker } from "@/components/shared/primary-hero-image-picker";
 
 export const LEVEL_OPTIONS: { value: PrimaryLevel; label: string }[] = [
   { value: "nursery", label: "Nursery" },

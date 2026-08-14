@@ -58,8 +58,10 @@ test("desktop login logo stays clickable above the testimonial panel", () => {
 
 test("school admins are sent to the canonical school-admin route after login", () => {
   const login = source("app/login/page.tsx");
+  const redirects = source("lib/auth-redirect.ts");
 
-  assert.match(login, /role === "org_admin"\) return "\/school-admin"/);
+  assert.match(login, /getPostLoginPath\(user\.role, next\)/);
+  assert.match(redirects, /role === "org_admin"\) return "\/school-admin"/);
   assert.doesNotMatch(login, /\/primary\/school-admin/);
 });
 

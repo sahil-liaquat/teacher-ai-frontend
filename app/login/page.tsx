@@ -9,8 +9,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
-import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
-import { getSafeNextPath } from "@/lib/auth-redirect";
+import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, login, requestPasswordReset, resendConfirmation } from "@/lib/api";
+import { dashboardForRole, getPostLoginPath } from "@/lib/auth-redirect";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -25,12 +25,6 @@ const schema = z.object({
 const forgotPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address.")
 });
-
-function dashboardForRole(role: ApiUser["role"]) {
-  if (role === "admin") return "/admin";
-  if (role === "org_admin") return "/school-admin";
-  return "/dashboard";
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -112,8 +106,8 @@ export default function LoginPage() {
       const user = await login(values.email, values.password);
       queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
       toast({ title: "Welcome!", description: user.name });
-      const next = getSafeNextPath(new URLSearchParams(window.location.search).get("next"));
-      router.replace(next ?? dashboardForRole(user.role));
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(getPostLoginPath(user.role, next));
       router.refresh();
     } catch (error) {
       toast({ title: "Login failed", description: getErrorMessage(error, "Try again"), variant: "error" });

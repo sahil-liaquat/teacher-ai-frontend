@@ -22,7 +22,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  backendApi,
   type PrimaryAIOperation,
   type PrimaryAIProposalRequest,
   type PrimaryCurriculumLesson,
@@ -31,6 +30,7 @@ import {
   type PrimaryResource,
   type PrimaryStepType,
 } from "@/lib/api";
+import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import { STEP_TYPE_OPTIONS, stepDetailFields, type StepDetailField } from "@/lib/primary-step-fields";
 import { lessonIssues, levelLabel, monthLabel, resourceCount, stepIssues } from "@/lib/school-admin-curriculum";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export function SchoolDayEditor({
   initialBlockId,
   onBack,
   onLessonChanged,
+  scope = "school",
 }: {
   lessonId: string;
   academicYearId: string;
@@ -61,7 +62,9 @@ export function SchoolDayEditor({
   initialBlockId?: string | null;
   onBack: () => void;
   onLessonChanged: (lessonId: string) => void;
+  scope?: CurriculumAdminScope;
 }) {
+  const adapter = curriculumAdminAdapter(scope);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -81,12 +84,12 @@ export function SchoolDayEditor({
   const initialSnapshot = useRef<PrimaryCurriculumLesson | null>(null);
 
   const lessonQuery = useQuery<PrimaryCurriculumLesson>({
-    queryKey: ["school-admin", "lesson", lessonId],
-    queryFn: () => backendApi.adminPrimaryLesson(lessonId),
+    queryKey: [adapter.queryRoot, "lesson", lessonId],
+    queryFn: () => adapter.lesson(lessonId),
   });
   const resourcesQuery = useQuery({
-    queryKey: ["school-admin", "day-resource-titles"],
-    queryFn: () => backendApi.adminResources({ page_size: 100 }),
+    queryKey: [adapter.queryRoot, "day-resource-titles"],
+    queryFn: () => adapter.resources({ page_size: 100 }),
   });
 
   useEffect(() => {
@@ -106,7 +109,7 @@ export function SchoolDayEditor({
   const lesson = lessonQuery.data;
   const isMaster = lesson?.scope === "platform";
   const isPublished = lesson?.status === "published";
-  const readOnly = isMaster || isPublished;
+  const readOnly = (scope === "school" && isMaster) || isPublished;
   const theme = themes.find((item) => item.id === lesson?.theme_id || item.source_theme_id === lesson?.theme_id);
   const topics = theme?.topics ?? [];
   const duration = steps.reduce((sum, step) => sum + (step.duration_minutes || 0), 0);
@@ -160,8 +163,8 @@ export function SchoolDayEditor({
     if (!lesson) return;
     setSaving(true);
     try {
-      const draft = await backendApi.adminCustomizePrimaryLesson(lesson.id, academicYearId);
-      await queryClient.invalidateQueries({ queryKey: ["school-admin"] });
+      const draft = await adapter.customizeLesson(lesson.id, academicYearId);
+      await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot] });
       onLessonChanged(draft.id);
       toast({ title: "School draft created", description: "TeachPad curriculum remains unchanged." });
     } catch (error: any) {
@@ -175,8 +178,8 @@ export function SchoolDayEditor({
     if (!lesson || lesson.status !== "published") return;
     setSaving(true);
     try {
-      const draft = await backendApi.adminDuplicatePrimaryLesson(lesson.id);
-      await queryClient.invalidateQueries({ queryKey: ["school-admin"] });
+      const draft = await adapter.duplicateLesson(lesson.id);
+      await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot] });
       onLessonChanged(draft.id);
       toast({ title: "New draft created", description: "The published version remains unchanged for teachers until you review and publish this draft." });
     } catch (error: any) {
@@ -186,17 +189,17 @@ export function SchoolDayEditor({
     }
   }
 
-  async function saveDay(showToast = true) {
-    if (!lesson || readOnly) return false;
+  async function saveDay(showToast = true): Promise<PrimaryCurriculumLesson | null> {
+    if (!lesson || readOnly) return null;
     setSaving(true);
     try {
-      await backendApi.adminUpdatePrimaryLesson(lesson.id, {
+      await adapter.updateLesson(lesson.id, {
         title: title.trim() || null,
         daily_focus: dailyFocus.trim() || null,
         topic_id: topicId || null,
         objectives: objectives.filter((item) => item.trim()),
       });
-      const updated = await backendApi.adminReplacePrimarySteps(lesson.id, steps.map((step, position) => ({
+      const updated = await adapter.replaceSteps(lesson.id, steps.map((step, position) => ({
         position,
         step_type: step.step_type,
         title: step.title,
@@ -212,14 +215,15 @@ export function SchoolDayEditor({
         optional_resource_ids: step.optional_resource_ids ?? [],
         details: step.details ?? {},
       })));
-      queryClient.setQueryData(["school-admin", "lesson", lesson.id], updated);
-      await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons"] });
+      queryClient.setQueryData([adapter.queryRoot, "lesson", lesson.id], updated);
+      await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons"] });
+      setSteps(updated.steps.slice().sort((a, b) => a.position - b.position).map((step) => ({ ...step })));
       setSaved(true);
       if (showToast) toast({ title: "Teaching day saved" });
-      return true;
+      return updated;
     } catch (error: any) {
       toast({ title: "Could not save this day", description: error?.message, variant: "error" });
-      return false;
+      return null;
     } finally {
       setSaving(false);
     }
@@ -227,13 +231,13 @@ export function SchoolDayEditor({
 
   async function publishDay() {
     if (!lesson || issues.length) return;
-    const didSave = await saveDay(false);
-    if (!didSave) return;
+    const savedLesson = await saveDay(false);
+    if (!savedLesson) return;
     setSaving(true);
     try {
-      const published = await backendApi.adminPublishPrimaryLesson(lesson.id);
-      queryClient.setQueryData(["school-admin", "lesson", lesson.id], published);
-      await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons"] });
+      const published = await adapter.publishLesson(lesson.id);
+      queryClient.setQueryData([adapter.queryRoot, "lesson", lesson.id], published);
+      await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons"] });
       setReviewOpen(false);
       toast({ title: "Published to teachers", description: "This school version is now available to your teachers." });
     } catch (error: any) {
@@ -261,17 +265,28 @@ export function SchoolDayEditor({
     setPickerTarget(null);
   }
 
-  function openBlockAI(operation: PrimaryAIOperation, action: string, block: EditableStep) {
+  async function openBlockAI(operation: PrimaryAIOperation, action: string, block: EditableStep) {
     if (!lesson) return;
-    if (!saved) {
-      toast({ title: "Save this day first", description: "AI proposals use the latest saved curriculum so they cannot overwrite unsaved edits.", variant: "error" });
-      return;
+    let persistedBlock = block;
+    if (!saved || !isPersistedId(block.id)) {
+      if (readOnly) {
+        toast({ title: "This block is not ready for AI", description: "Create a school draft before generating changes.", variant: "error" });
+        return;
+      }
+      const savedLesson = await saveDay(false);
+      if (!savedLesson) return;
+      const savedBlock = savedLesson.steps.find((item) => item.position === block.position);
+      if (!savedBlock) {
+        toast({ title: "Could not prepare this block", description: "Save the teaching day and try again.", variant: "error" });
+        return;
+      }
+      persistedBlock = { ...savedBlock };
     }
     setAITitle(action);
     setAIRequest({
       operation, academic_year_id: academicYearId, level: lesson.level,
       month: lesson.month, week: lesson.week, day: lesson.day,
-      lesson_id: lesson.id, step_id: block.id, theme_id: lesson.theme_id,
+      lesson_id: lesson.id, step_id: persistedBlock.id, theme_id: lesson.theme_id,
       topic_id: lesson.topic_id,
     });
   }
@@ -322,7 +337,7 @@ export function SchoolDayEditor({
           <div className="mt-5">
             <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-slate-700">Learning objectives</h3>{!readOnly ? <button type="button" onClick={() => { setObjectives((current) => [...current, ""]); markChanged(); }} className="text-xs font-bold text-blue-700">+ Add objective</button> : null}</div>
             <div className="mt-2 space-y-2">
-              {objectives.map((objective, index) => <div key={index} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-600" /><Input disabled={readOnly} value={objective} onChange={(event) => { setObjectives((current) => current.map((item, position) => position === index ? event.target.value : item)); markChanged(); }} /></div>)}
+              {objectives.map((objective, index) => <div key={index} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-600" /><Input disabled={readOnly} value={objective} onChange={(event) => { setObjectives((current) => current.map((item, position) => position === index ? event.target.value : item)); markChanged(); }} />{!readOnly ? <button type="button" aria-label={`Remove objective ${index + 1}`} onClick={() => { setObjectives((current) => current.filter((_, position) => position !== index)); setSteps((current) => current.map((step) => ({ ...step, objective_indexes: (step.objective_indexes ?? []).filter((value) => value !== index).map((value) => value > index ? value - 1 : value) }))); markChanged(); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"><X className="h-4 w-4" /></button> : null}</div>)}
               {!objectives.length ? <p className="text-sm text-slate-500">No learning objectives yet.</p> : null}
             </div>
           </div>
@@ -355,7 +370,7 @@ export function SchoolDayEditor({
               onMove={(direction) => moveStep(index, direction)}
               onRemove={() => { setSteps((current) => current.filter((_, position) => position !== index).map((item, position) => ({ ...item, position }))); setExpandedStep(null); markChanged(); }}
               onResource={(detail) => setPickerTarget({ stepIndex: index, detail })}
-              onAI={(operation, action) => openBlockAI(operation, action, step)}
+              onAI={(operation, action) => { void openBlockAI(operation, action, step); }}
               first={index === 0}
               last={index === steps.length - 1}
             />
@@ -370,16 +385,17 @@ export function SchoolDayEditor({
         ) : null}
       </section>
 
-      {pickerTarget ? <ResourcePicker blockType={steps[pickerTarget.stepIndex]?.step_type ?? ""} selectedIds={allResourceIds(steps[pickerTarget.stepIndex])} onSelect={attachResource} onClose={() => setPickerTarget(null)} /> : null}
+      {pickerTarget ? <ResourcePicker scope={scope} blockType={steps[pickerTarget.stepIndex]?.step_type ?? ""} selectedIds={allResourceIds(steps[pickerTarget.stepIndex])} onSelect={attachResource} onClose={() => setPickerTarget(null)} /> : null}
       {previewOpen ? <DayPreview lesson={localLesson} resourceMap={resourceMap} onClose={() => setPreviewOpen(false)} /> : null}
       {reviewOpen ? <PublishReview lesson={localLesson} initial={initialSnapshot.current} issues={issues} saving={saving} onClose={() => setReviewOpen(false)} onPublish={() => void publishDay()} /> : null}
       <AIProposalDialog
+        scope={scope}
         open={Boolean(aiRequest)}
         onOpenChange={(open) => { if (!open) setAIRequest(null); }}
         request={aiRequest}
         title={aiTitle}
         onApplied={async (draftLessonIds) => {
-          await queryClient.invalidateQueries({ queryKey: ["school-admin"] });
+          await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot] });
           const draftId = draftLessonIds[0];
           if (draftId && draftId !== lesson.id) onLessonChanged(draftId);
           else await lessonQuery.refetch();
@@ -388,6 +404,10 @@ export function SchoolDayEditor({
       />
     </SchoolAdminPage>
   );
+}
+
+function isPersistedId(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, onToggle, onUpdate, onMove, onRemove, onResource, onAI, first, last }: {

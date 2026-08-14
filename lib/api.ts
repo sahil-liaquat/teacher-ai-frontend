@@ -63,6 +63,8 @@ export type ApiUser = {
   name?: string;
   email?: string;
   role?: "admin" | "teacher" | "influencer" | "org_admin";
+  organization_id?: string | null;
+  organization_name?: string | null;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -131,6 +133,77 @@ export type PaginatedResponse<T> = {
   page: number;
   size: number;
   pages: number;
+};
+
+/** The real tenant. `users.organization_id` points here, and every Primary row
+ *  is owned by one. Distinct from the legacy `School` onboarding record below,
+ *  which is self-asserted metadata and grants no access. */
+export type Organization = {
+  id: string;
+  name: string;
+  school_code?: string | null;
+  board?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  primary_contact?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  status: "draft" | "active" | "suspended";
+  plan: string;
+  subscription_status: string;
+  curriculum_starting_point: "teachpad" | "customize" | "empty";
+  curriculum_entitlement: boolean;
+  enabled_modules: string[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type OrganizationWrite = Omit<Organization, "id" | "created_at" | "updated_at">;
+
+/** What the org-management endpoints return after a membership change. */
+export type OrganizationUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: "admin" | "teacher" | "influencer" | "org_admin";
+  organization_id: string | null;
+};
+
+/** Phase 2 — the school academic calendar. Terms and calendar days answer one
+ *  question for scheduling: on which dates can this school teach? */
+export type PrimaryAcademicTerm = {
+  id: string;
+  academic_year_id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  name: string;
+  starts_on: string;
+  ends_on: string;
+  position: number;
+};
+
+export type PrimaryCalendarDayType = "teaching" | "holiday" | "weekend";
+
+export type PrimaryCalendarDay = {
+  id: string;
+  academic_year_id: string;
+  scope: PrimaryCurriculumScope;
+  organization_id?: string | null;
+  date: string;
+  day_type: PrimaryCalendarDayType;
+  label?: string | null;
+};
+
+export type PrimaryCalendarSummary = {
+  academic_year_id: string;
+  initialized: boolean;
+  term_count: number;
+  teaching_days: number;
+  holidays: number;
+  weekends: number;
+  first_day?: string | null;
+  last_day?: string | null;
 };
 
 export type Board = { id: string; code: string; name: string; description?: string; is_active?: boolean };
@@ -2423,18 +2496,66 @@ export const backendApi = {
     apiFetch<{ message: string }>(`/admin/users/${userId}/resend-confirmation`, { method: "POST" }),
   adminDeleteUser: (userId: string) =>
     apiFetch<void>(`/admin/users/${userId}`, { method: "DELETE" }),
+
+  // ── Platform Admin: organizations and School Admin assignment ───────────
+  // Platform-admin only (get_current_admin). These manage the tenant itself;
+  // everything *inside* a school is the org admin's, on /school-admin.
+  adminOrganizations: (params: { q?: string; skip?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.q) query.set("q", params.q);
+    query.set("skip", String(params.skip ?? 0));
+    query.set("limit", String(params.limit ?? 50));
+    return apiFetch<PaginatedResponse<Organization>>(`/admin/organizations?${query.toString()}`);
+  },
+  adminOrganization: (organizationId: string) =>
+    apiFetch<Organization>(`/admin/organizations/${organizationId}`),
+  adminCreateOrganization: (payload: Partial<OrganizationWrite> & Pick<OrganizationWrite, "name">) =>
+    apiFetch<Organization>("/admin/organizations", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  adminUpdateOrganization: (organizationId: string, payload: Partial<OrganizationWrite>) =>
+    apiFetch<Organization>(`/admin/organizations/${organizationId}`, {
+      method: "PATCH", body: JSON.stringify(payload),
+    }),
+  // 409 while any user is still assigned — the UI unassigns first.
+  adminDeleteOrganization: (organizationId: string) =>
+    apiFetch<void>(`/admin/organizations/${organizationId}`, { method: "DELETE" }),
+
+  adminInviteInitialSchoolAdmin: (organizationId: string, email: string) =>
+    apiFetch<TeacherInvitation>(`/admin/organizations/${organizationId}/school-admin-invitations`, {
+      method: "POST", body: JSON.stringify({ email }),
+    }),
+
+  // The service accepts TEACHER accounts only; promoting sets role=org_admin
+  // and stamps organization_id in one call.
+  adminAssignUserOrganization: (userId: string, organizationId: string) =>
+    apiFetch<OrganizationUser>(`/admin/users/${userId}/organization`, {
+      method: "PUT", body: JSON.stringify({ organization_id: organizationId }),
+    }),
+  adminUnassignUserOrganization: (userId: string) =>
+    apiFetch<OrganizationUser>(`/admin/users/${userId}/organization`, { method: "DELETE" }),
+  adminPromoteOrgAdmin: (userId: string, organizationId: string) =>
+    apiFetch<OrganizationUser>(`/admin/users/${userId}/promote-org-admin`, {
+      method: "POST", body: JSON.stringify({ organization_id: organizationId }),
+    }),
+  // `unassign` also clears organization_id, which is the only way to remove an
+  // org admin from a school — unassign alone 409s on an org_admin.
+  adminDemoteOrgAdmin: (userId: string, unassign = false) =>
+    apiFetch<OrganizationUser>(`/admin/users/${userId}/demote-org-admin`, {
+      method: "POST", body: JSON.stringify({ unassign }),
+    }),
   adminPrimaryThemes: (level?: string) =>
     apiFetch<PrimaryCurriculumTheme[]>(
-      `/admin/primary/curriculum/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
+      `/admin/master/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
     ),
   adminPrimaryAcademicYears: () =>
-    apiFetch<PrimaryAcademicYear[]>("/admin/primary/academic-years"),
+    apiFetch<PrimaryAcademicYear[]>("/admin/master/academic-years"),
   adminCreatePrimaryAcademicYear: (payload: Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">) =>
-    apiFetch<PrimaryAcademicYear>("/admin/primary/academic-years", {
+    apiFetch<PrimaryAcademicYear>("/admin/master/academic-years", {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdatePrimaryAcademicYear: (id: string, payload: Partial<Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">>) =>
-    apiFetch<PrimaryAcademicYear>(`/admin/primary/academic-years/${id}`, {
+    apiFetch<PrimaryAcademicYear>(`/admin/master/academic-years/${id}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
   adminCreatePrimaryTheme: (payload: {
@@ -2445,17 +2566,17 @@ export const backendApi = {
     icon_map?: Record<string, string>; decorations?: Array<Record<string, unknown>>;
     keywords?: string[]; aliases?: string[];
   }) =>
-    apiFetch<PrimaryCurriculumTheme>("/admin/primary/curriculum/themes", {
+    apiFetch<PrimaryCurriculumTheme>("/admin/master/themes", {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdatePrimaryTheme: (id: string, payload: Record<string, unknown>) =>
-    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}`, {
+    apiFetch<PrimaryCurriculumTheme>(`/admin/master/themes/${id}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
   adminUploadPrimaryHero: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    return apiFetch<{ path: string }>("/admin/primary/media/hero", {
+    return apiFetch<{ path: string }>("/admin/master/media/hero", {
       method: "POST",
       body: formData,
     });
@@ -2465,41 +2586,49 @@ export const backendApi = {
     formData.append("file", file);
     formData.append("category", category);
     if (title) formData.append("title", title);
-    return apiFetch<PrimaryResource>("/admin/primary/resources/upload", {
+    return apiFetch<PrimaryResource>("/admin/master/resources/upload", {
       method: "POST",
       body: formData,
     });
   },
   adminDuplicatePrimaryTheme: (id: string) =>
-    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/duplicate`, { method: "POST" }),
-  adminCustomizePrimaryTheme: (id: string) =>
-    apiFetch<PrimaryCurriculumTheme>(`/admin/primary/curriculum/themes/${id}/customize`, { method: "POST" }),
+    apiFetch<PrimaryCurriculumTheme>(`/admin/master/themes/${id}/duplicate`, { method: "POST" }),
+  schoolAdminCustomizeTheme: (id: string) =>
+    apiFetch<PrimaryCurriculumTheme>(`/school-admin/themes/${id}/customize`, { method: "POST" }),
   adminArchivePrimaryTheme: (id: string) =>
-    apiFetch<void>(`/admin/primary/curriculum/themes/${id}`, { method: "DELETE" }),
+    apiFetch<void>(`/admin/master/themes/${id}`, { method: "DELETE" }),
   adminDeletePrimaryTheme: (id: string) =>
-    apiFetch<void>(`/admin/primary/curriculum/themes/${id}/permanent`, { method: "DELETE" }),
+    apiFetch<void>(`/admin/master/themes/${id}/permanent`, { method: "DELETE" }),
   adminCreatePrimaryTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "scope" | "organization_id" | "source_topic_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
-    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/themes/${themeId}/topics`, {
+    apiFetch<PrimaryCurriculumTopic>(`/admin/master/themes/${themeId}/topics`, {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdatePrimaryTopic: (topicId: string, payload: Partial<PrimaryCurriculumTopic>) =>
-    apiFetch<PrimaryCurriculumTopic>(`/admin/primary/curriculum/topics/${topicId}`, {
+    apiFetch<PrimaryCurriculumTopic>(`/admin/master/topics/${topicId}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
   adminArchivePrimaryTopic: (topicId: string) =>
-    apiFetch<void>(`/admin/primary/curriculum/topics/${topicId}`, { method: "DELETE" }),
+    apiFetch<void>(`/admin/master/topics/${topicId}`, { method: "DELETE" }),
   adminPrimaryLessons: (params: { theme_id?: string; level?: string; topic_id?: string; academic_year_id?: string } = {}) => {
     const query = new URLSearchParams(params);
-    return apiFetch<PrimaryCurriculumLesson[]>(`/admin/primary/curriculum/lessons${query.size ? `?${query}` : ""}`);
+    return apiFetch<PrimaryCurriculumLesson[]>(`/admin/master/curriculum/lessons${query.size ? `?${query}` : ""}`);
   },
   adminPrimaryLesson: (lessonId: string) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`),
-  adminGeneratePrimaryAIProposal: (payload: PrimaryAIProposalRequest) =>
-    apiFetch<PrimaryAIProposal>("/admin/primary/curriculum/ai/proposals", {
+    apiFetch<PrimaryCurriculumLesson>(`/admin/master/curriculum/lessons/${lessonId}`),
+  adminGenerateCurriculumAIProposal: (payload: PrimaryAIProposalRequest) =>
+    apiFetch<PrimaryAIProposal>("/admin/master/curriculum/ai/proposals", {
       method: "POST", body: JSON.stringify(payload),
     }),
-  adminApplyPrimaryAIProposal: (proposalId: string, changeIds?: string[]) =>
-    apiFetch<PrimaryAIApplyResponse>(`/admin/primary/curriculum/ai/proposals/${proposalId}/apply`, {
+  adminApplyCurriculumAIProposal: (proposalId: string, changeIds?: string[]) =>
+    apiFetch<PrimaryAIApplyResponse>(`/admin/master/curriculum/ai/proposals/${proposalId}/apply`, {
+      method: "POST", body: JSON.stringify({ change_ids: changeIds }),
+    }),
+  schoolAdminGenerateCurriculumAIProposal: (payload: PrimaryAIProposalRequest) =>
+    apiFetch<PrimaryAIProposal>("/school-admin/curriculum/ai/proposals", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminApplyCurriculumAIProposal: (proposalId: string, changeIds?: string[]) =>
+    apiFetch<PrimaryAIApplyResponse>(`/school-admin/curriculum/ai/proposals/${proposalId}/apply`, {
       method: "POST", body: JSON.stringify({ change_ids: changeIds }),
     }),
   adminCreatePrimaryLesson: (payload: {
@@ -2510,27 +2639,27 @@ export const backendApi = {
     assessment_questions: string[]; homework?: string | null;
     parent_update?: string | null; steps: unknown[];
   }) =>
-    apiFetch<PrimaryCurriculumLesson>("/admin/primary/curriculum/lessons", {
+    apiFetch<PrimaryCurriculumLesson>("/admin/master/curriculum/lessons", {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdatePrimaryLesson: (lessonId: string, payload: Record<string, unknown>) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}`, {
+    apiFetch<PrimaryCurriculumLesson>(`/admin/master/curriculum/lessons/${lessonId}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
   adminReplacePrimarySteps: (lessonId: string, steps: unknown[]) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/steps`, {
+    apiFetch<PrimaryCurriculumLesson>(`/admin/master/curriculum/lessons/${lessonId}/steps`, {
       method: "PUT", body: JSON.stringify({ steps }),
     }),
   adminPublishPrimaryLesson: (lessonId: string) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/publish`, {
+    apiFetch<PrimaryCurriculumLesson>(`/admin/master/curriculum/lessons/${lessonId}/publish`, {
       method: "POST",
     }),
   adminDuplicatePrimaryLesson: (lessonId: string) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/duplicate`, {
+    apiFetch<PrimaryCurriculumLesson>(`/admin/master/curriculum/lessons/${lessonId}/duplicate`, {
       method: "POST",
     }),
-  adminCustomizePrimaryLesson: (lessonId: string, academicYearId?: string | null) =>
-    apiFetch<PrimaryCurriculumLesson>(`/admin/primary/curriculum/lessons/${lessonId}/customize`, {
+  schoolAdminCustomizeLesson: (lessonId: string, academicYearId?: string | null) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}/customize`, {
       method: "POST", body: JSON.stringify({ academic_year_id: academicYearId ?? null }),
     }),
   adminPrimaryCurriculumFeedback: (params?: { level?: string; subject?: string; language?: string }) => {
@@ -2540,7 +2669,7 @@ export const backendApi = {
     if (params?.language) query.set("language", params.language);
     const suffix = query.toString();
     return apiFetch<PrimaryStepFeedback[]>(
-      `/admin/primary/curriculum/feedback${suffix ? `?${suffix}` : ""}`
+      `/admin/master/curriculum/feedback${suffix ? `?${suffix}` : ""}`
     );
   },
   adminCloneAcademicYear: (yearId: string, payload: {
@@ -2551,7 +2680,7 @@ export const backendApi = {
     include_published?: boolean;
     include_resources?: boolean;
   }) =>
-    apiFetch<{ cloned_count: number }>(`/admin/primary/academic-years/${yearId}/clone`, {
+    apiFetch<{ cloned_count: number }>(`/admin/master/academic-years/${yearId}/clone`, {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminResources: (params: {
@@ -2569,71 +2698,274 @@ export const backendApi = {
     if (params.page) query.set("page", String(params.page));
     if (params.page_size) query.set("page_size", String(params.page_size));
     const suffix = query.toString() ? `?${query.toString()}` : "";
-    return apiFetch<PrimaryResourceListResponse>(`/admin/primary/resources${suffix}`);
+    return apiFetch<PrimaryResourceListResponse>(`/admin/master/resources${suffix}`);
   },
   adminCreateResource: (payload: any) =>
-    apiFetch<PrimaryResource>("/admin/primary/resources", {
+    apiFetch<PrimaryResource>("/admin/master/resources", {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdateResource: (id: string, payload: any) =>
-    apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+    apiFetch<PrimaryResource>(`/admin/master/resources/${encodeURIComponent(id)}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
-  adminCustomizeResource: (id: string) =>
-    apiFetch<PrimaryResource>(`/admin/primary/resources/${encodeURIComponent(id)}/customize`, {
+  schoolAdminCustomizeResource: (id: string) =>
+    apiFetch<PrimaryResource>(`/school-admin/resources/${encodeURIComponent(id)}/customize`, {
       method: "POST",
     }),
   adminDeleteResource: (id: string) =>
-    apiFetch<void>(`/admin/primary/resources/${encodeURIComponent(id)}`, {
+    apiFetch<void>(`/admin/master/resources/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
   adminBulkCreateResources: (payload: { resources: any[] }) =>
-    apiFetch<{ added_count: number; skipped_count: number }>("/admin/primary/resources/bulk", {
+    apiFetch<{ added_count: number; skipped_count: number }>("/admin/master/resources/bulk", {
       method: "POST", body: JSON.stringify(payload),
     }),
 
+  // ── School Admin curriculum, themes, resources, academic years ──────────
+  // These mirror the admin* helpers above operation-for-operation, but on the
+  // /school-admin surface, which is guarded by get_current_org_admin. The
+  // master helpers are guarded by get_current_admin and 403 for an org admin —
+  // that mismatch is what broke every School Admin write. Keep the two sets
+  // separate: never make one helper switch URL on the caller's role.
+  schoolAdminAcademicYears: () =>
+    apiFetch<PrimaryAcademicYear[]>("/school-admin/academic-years"),
+  schoolAdminCreateAcademicYear: (payload: Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">) =>
+    apiFetch<PrimaryAcademicYear>("/school-admin/academic-years", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  // Records whether this school inherits TeachPad's master curriculum or starts
+  // empty. Until this was wired, the "Start empty" card in the create-year
+  // dialog only changed the toast text — the choice never left the browser, so
+  // an "empty" school still read through to the master and opened with a full
+  // theme list and a ready day.
+  schoolAdminSetCurriculumStartingPoint: (startingPoint: "teachpad" | "customize" | "empty") =>
+    apiFetch<{ curriculum_starting_point: string }>("/school-admin/curriculum-starting-point", {
+      method: "PUT", body: JSON.stringify({ curriculum_starting_point: startingPoint }),
+    }),
+  schoolAdminUpdateAcademicYear: (id: string, payload: Partial<Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">>) =>
+    apiFetch<PrimaryAcademicYear>(`/school-admin/academic-years/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  // 409 when the year is current or still has teaching days, classes or
+  // assignments — a lesson's academic_year_id is ON DELETE SET NULL, so the
+  // service refuses rather than letting the database quietly detach curriculum.
+  schoolAdminDeleteAcademicYear: (id: string) =>
+    apiFetch<void>(`/school-admin/academic-years/${id}`, { method: "DELETE" }),
+  schoolAdminCloneAcademicYear: (yearId: string, payload: {
+    destination_year_id: string;
+    classes?: string[];
+    months?: number[];
+    include_drafts?: boolean;
+    include_published?: boolean;
+    include_resources?: boolean;
+  }) =>
+    apiFetch<{ cloned_count: number }>(`/school-admin/academic-years/${yearId}/clone`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+
+  // ── School calendar: terms and teaching days ────────────────────────────
+  schoolAdminTerms: (yearId: string) =>
+    apiFetch<PrimaryAcademicTerm[]>(`/school-admin/academic-years/${yearId}/terms`),
+  schoolAdminCreateTerm: (yearId: string, payload: { name: string; starts_on: string; ends_on: string; position?: number }) =>
+    apiFetch<PrimaryAcademicTerm>(`/school-admin/academic-years/${yearId}/terms`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminUpdateTerm: (termId: string, payload: Partial<{ name: string; starts_on: string; ends_on: string; position: number }>) =>
+    apiFetch<PrimaryAcademicTerm>(`/school-admin/terms/${termId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminDeleteTerm: (termId: string) =>
+    apiFetch<void>(`/school-admin/terms/${termId}`, { method: "DELETE" }),
+
+  schoolAdminCalendar: (yearId: string, params: { start?: string; end?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.start) query.set("start", params.start);
+    if (params.end) query.set("end", params.end);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryCalendarDay[]>(`/school-admin/academic-years/${yearId}/calendar${suffix}`);
+  },
+  schoolAdminCalendarSummary: (yearId: string) =>
+    apiFetch<PrimaryCalendarSummary>(`/school-admin/academic-years/${yearId}/calendar/summary`),
+  // teaching_weekdays: 0 = Monday … 6 = Sunday. Omitted means Mon–Fri.
+  schoolAdminInitializeCalendar: (yearId: string, payload: { teaching_weekdays?: number[]; replace_existing?: boolean } = {}) =>
+    apiFetch<{ created: number; kept: number }>(`/school-admin/academic-years/${yearId}/calendar/initialize`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminSetCalendarDay: (yearId: string, on: string, payload: { day_type: PrimaryCalendarDayType; label?: string | null }) =>
+    apiFetch<PrimaryCalendarDay>(`/school-admin/academic-years/${yearId}/calendar/${on}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminSetCalendarRange: (yearId: string, start: string, end: string, payload: { day_type: PrimaryCalendarDayType; label?: string | null }) =>
+    apiFetch<{ updated: number }>(`/school-admin/academic-years/${yearId}/calendar?start=${start}&end=${end}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+
+  schoolAdminThemes: (level?: string) =>
+    apiFetch<PrimaryCurriculumTheme[]>(
+      `/school-admin/themes${level ? `?level=${encodeURIComponent(level)}` : ""}`
+    ),
+  schoolAdminCreateTheme: (payload: {
+    name: string; subject?: string; language?: string;
+    description?: string | null; emoji?: string | null;
+    hero_image_url?: string | null; background_image_url?: string | null;
+    illustration_pack?: string[]; color_palette?: Record<string, string>;
+    icon_map?: Record<string, string>; decorations?: Array<Record<string, unknown>>;
+    keywords?: string[]; aliases?: string[];
+  }) =>
+    apiFetch<PrimaryCurriculumTheme>("/school-admin/themes", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminUpdateTheme: (id: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumTheme>(`/school-admin/themes/${id}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminDuplicateTheme: (id: string) =>
+    apiFetch<PrimaryCurriculumTheme>(`/school-admin/themes/${id}/duplicate`, { method: "POST" }),
+  schoolAdminArchiveTheme: (id: string) =>
+    apiFetch<void>(`/school-admin/themes/${id}`, { method: "DELETE" }),
+  schoolAdminDeleteTheme: (id: string) =>
+    apiFetch<void>(`/school-admin/themes/${id}/permanent`, { method: "DELETE" }),
+
+  // Stores a banner for a school-owned theme. Same shape as the master upload,
+  // different surface — the picker is handed whichever one its caller owns.
+  schoolAdminUploadThemeHero: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiFetch<{ path: string }>("/school-admin/media/hero", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  schoolAdminCreateTopic: (themeId: string, payload: Omit<PrimaryCurriculumTopic, "id" | "theme_id" | "scope" | "organization_id" | "source_topic_id" | "created_at" | "updated_at" | "has_published_lesson">) =>
+    apiFetch<PrimaryCurriculumTopic>(`/school-admin/themes/${themeId}/topics`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminUpdateTopic: (topicId: string, payload: Partial<PrimaryCurriculumTopic>) =>
+    apiFetch<PrimaryCurriculumTopic>(`/school-admin/topics/${topicId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminArchiveTopic: (topicId: string) =>
+    apiFetch<void>(`/school-admin/topics/${topicId}`, { method: "DELETE" }),
+
+  schoolAdminCurriculum: (params: { theme_id?: string; level?: string; topic_id?: string; academic_year_id?: string } = {}) => {
+    const query = new URLSearchParams(params);
+    return apiFetch<PrimaryCurriculumLesson[]>(`/school-admin/curriculum${query.size ? `?${query}` : ""}`);
+  },
+  schoolAdminCurriculumDay: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}`),
+  schoolAdminCreateCurriculumDay: (payload: {
+    theme_id: string; topic_id?: string | null; academic_year_id?: string | null;
+    title?: string | null; daily_focus?: string | null;
+    month?: number | null; week?: number | null; day?: number | null;
+    level: string; objectives: string[]; vocabulary: string[];
+    assessment_questions: string[]; homework?: string | null;
+    parent_update?: string | null; steps: unknown[];
+  }) =>
+    apiFetch<PrimaryCurriculumLesson>("/school-admin/curriculum", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminUpdateCurriculumDay: (lessonId: string, payload: Record<string, unknown>) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminReplaceCurriculumSteps: (lessonId: string, steps: unknown[]) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}/steps`, {
+      method: "PUT", body: JSON.stringify({ steps }),
+    }),
+  schoolAdminPublishCurriculumDay: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}/publish`, {
+      method: "POST",
+    }),
+  schoolAdminDuplicateCurriculumDay: (lessonId: string) =>
+    apiFetch<PrimaryCurriculumLesson>(`/school-admin/curriculum/${lessonId}/duplicate`, {
+      method: "POST",
+    }),
+
+  schoolAdminResources: (params: {
+    search?: string; category?: string; subject?: string;
+    level?: string; theme?: string; language?: string;
+    page?: number; page_size?: number;
+  } = {}) => {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.category) query.set("category", params.category);
+    if (params.subject) query.set("subject", params.subject);
+    if (params.level) query.set("level", params.level);
+    if (params.theme) query.set("theme", params.theme);
+    if (params.language) query.set("language", params.language);
+    if (params.page) query.set("page", String(params.page));
+    if (params.page_size) query.set("page_size", String(params.page_size));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch<PrimaryResourceListResponse>(`/school-admin/resources${suffix}`);
+  },
+  schoolAdminCreateResource: (payload: any) =>
+    apiFetch<PrimaryResource>("/school-admin/resources", {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  schoolAdminUploadResource: (file: File, category: string, title?: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", category);
+    if (title) formData.append("title", title);
+    return apiFetch<PrimaryResource>("/school-admin/resources/upload", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  schoolAdminUpdateResource: (id: string, payload: any) =>
+    apiFetch<PrimaryResource>(`/school-admin/resources/${encodeURIComponent(id)}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  schoolAdminDeleteResource: (id: string) =>
+    apiFetch<void>(`/school-admin/resources/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+
   // ── School teacher roster, classes and assignments ──────────────────────
+  // On /school-admin like the rest of the school surface. These used to call
+  // /admin/primary, a second mount of the same routes over the same services;
+  // that mount is gone, so there is one door onto the roster again.
   adminSchoolTeachers: (params: SchoolTeacherQuery = {}) =>
-    apiFetch<SchoolTeacherRosterResponse>(`/admin/primary/teachers${schoolTeacherQuery(params)}`),
+    apiFetch<SchoolTeacherRosterResponse>(`/school-admin/teachers${schoolTeacherQuery(params)}`),
   adminSchoolTeacher: (teacherId: string, academicYearId?: string) =>
     apiFetch<SchoolTeacherDetail>(
-      `/admin/primary/teachers/${teacherId}${academicYearId ? `?academic_year_id=${academicYearId}` : ""}`
+      `/school-admin/teachers/${teacherId}${academicYearId ? `?academic_year_id=${academicYearId}` : ""}`
     ),
   adminRemoveSchoolTeacher: (teacherId: string) =>
-    apiFetch<void>(`/admin/primary/teachers/${teacherId}`, { method: "DELETE" }),
+    apiFetch<void>(`/school-admin/teachers/${teacherId}`, { method: "DELETE" }),
   adminSchoolTeacherInvitations: (status?: TeacherInvitationStatus) =>
     apiFetch<TeacherInvitation[]>(
-      `/admin/primary/teacher-invitations${status ? `?status=${status}` : ""}`
+      `/school-admin/teacher-invitations${status ? `?status=${status}` : ""}`
     ),
   adminInviteSchoolTeacher: (email: string) =>
-    apiFetch<TeacherInvitation>("/admin/primary/teacher-invitations", {
+    apiFetch<TeacherInvitation>("/school-admin/teacher-invitations", {
       method: "POST", body: JSON.stringify({ email }),
     }),
   adminResendTeacherInvitation: (invitationId: string) =>
-    apiFetch<TeacherInvitation>(`/admin/primary/teacher-invitations/${invitationId}/resend`, {
+    apiFetch<TeacherInvitation>(`/school-admin/teacher-invitations/${invitationId}/resend`, {
       method: "POST",
     }),
   adminCancelTeacherInvitation: (invitationId: string) =>
-    apiFetch<void>(`/admin/primary/teacher-invitations/${invitationId}`, { method: "DELETE" }),
+    apiFetch<void>(`/school-admin/teacher-invitations/${invitationId}`, { method: "DELETE" }),
   adminSchoolClasses: (params: { academic_year_id?: string; include_archived?: boolean } = {}) => {
     const query = new URLSearchParams();
     if (params.academic_year_id) query.set("academic_year_id", params.academic_year_id);
     if (params.include_archived) query.set("include_archived", "true");
-    return apiFetch<SchoolClass[]>(`/admin/primary/classes${query.size ? `?${query}` : ""}`);
+    return apiFetch<SchoolClass[]>(`/school-admin/classes${query.size ? `?${query}` : ""}`);
   },
-  adminCreateSchoolClass: (payload: { name: string; level: string; academic_year_id?: string }) =>
-    apiFetch<SchoolClass>("/admin/primary/classes", {
+  adminCreateSchoolClass: (payload: { name: string; level: string; academic_year_id?: string; section?: string | null; subjects?: string[] }) =>
+    apiFetch<SchoolClass>("/school-admin/classes", {
       method: "POST", body: JSON.stringify(payload),
     }),
   adminUpdateSchoolClass: (
     classId: string,
-    payload: Partial<{ name: string; level: string; is_active: boolean }>,
+    payload: Partial<{ name: string; level: string; section: string | null; subjects: string[]; is_active: boolean }>,
   ) =>
-    apiFetch<SchoolClass>(`/admin/primary/classes/${classId}`, {
+    apiFetch<SchoolClass>(`/school-admin/classes/${classId}`, {
       method: "PATCH", body: JSON.stringify(payload),
     }),
   adminDeleteSchoolClass: (classId: string) =>
-    apiFetch<{ archived: boolean; deleted: boolean }>(`/admin/primary/classes/${classId}`, {
+    apiFetch<{ archived: boolean; deleted: boolean }>(`/school-admin/classes/${classId}`, {
       method: "DELETE",
     }),
   adminTeacherAssignments: (params: {
@@ -2644,21 +2976,66 @@ export const backendApi = {
     if (params.teacher_id) query.set("teacher_id", params.teacher_id);
     if (params.school_class_id) query.set("school_class_id", params.school_class_id);
     if (params.include_inactive) query.set("include_inactive", "true");
-    return apiFetch<TeacherAssignment[]>(`/admin/primary/teacher-assignments${query.size ? `?${query}` : ""}`);
+    return apiFetch<TeacherAssignment[]>(`/school-admin/teacher-assignments${query.size ? `?${query}` : ""}`);
   },
+  // ── Authoritative class sections ────────────────────────────────────────
+  adminClassSections: (classId: string, includeArchived = false) =>
+    apiFetch<ClassSection[]>(
+      `/school-admin/classes/${classId}/sections${includeArchived ? "?include_archived=true" : ""}`,
+    ),
+  adminCreateClassSection: (classId: string, payload: { name?: string | null } = {}) =>
+    apiFetch<ClassSection>(`/school-admin/classes/${classId}/sections`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  /** Rename or archive. There is no delete — assignments reference a section
+   *  and are the school's record of who taught what. */
+  adminUpdateClassSection: (
+    sectionId: string,
+    payload: { name?: string | null; is_active?: boolean },
+  ) =>
+    apiFetch<ClassSection>(`/school-admin/class-sections/${sectionId}`, {
+      method: "PATCH", body: JSON.stringify(payload),
+    }),
   adminAssignTeacherToClass: (
     classId: string,
     teacherId: string,
-    payload: { assignment_role?: TeacherAssignmentRole; starts_on?: string | null; ends_on?: string | null } = {},
+    payload: {
+      class_section_id?: string | null;
+      assignment_role?: TeacherAssignmentRole;
+      starts_on?: string | null;
+      ends_on?: string | null;
+    } = {},
   ) =>
-    apiFetch<TeacherAssignment>(`/admin/primary/classes/${classId}/teachers/${teacherId}`, {
+    apiFetch<TeacherAssignment>(`/school-admin/classes/${classId}/teachers/${teacherId}`, {
       method: "PUT", body: JSON.stringify(payload),
     }),
-  adminUnassignTeacherFromClass: (classId: string, teacherId: string) =>
-    apiFetch<void>(`/admin/primary/classes/${classId}/teachers/${teacherId}`, { method: "DELETE" }),
+  /** `classSectionId` is needed only when the teacher holds assignments in
+   *  several sections of this class — the server refuses rather than ending an
+   *  arbitrary one. */
+  adminUnassignTeacherFromClass: (classId: string, teacherId: string, classSectionId?: string | null) =>
+    apiFetch<void>(
+      `/school-admin/classes/${classId}/teachers/${teacherId}` +
+        (classSectionId ? `?class_section_id=${classSectionId}` : ""),
+      { method: "DELETE" },
+    ),
+  /** Move a teacher between sections of one class. Ends the old assignment and
+   *  creates a new one server-side, so the teaching record survives. */
+  adminMoveTeacherSection: (
+    classId: string,
+    teacherId: string,
+    payload: {
+      to_class_section_id: string;
+      from_class_section_id?: string | null;
+      assignment_role?: TeacherAssignmentRole | null;
+    },
+  ) =>
+    apiFetch<TeacherAssignment>(
+      `/school-admin/classes/${classId}/teachers/${teacherId}/section`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
   /** Takes the COMPLETE desired assignment set — omitted classes are ended. */
   adminReplaceTeacherAssignments: (payload: BulkAssignmentRequest) =>
-    apiFetch<BulkAssignmentResponse>("/admin/primary/teacher-assignments/bulk", {
+    apiFetch<BulkAssignmentResponse>("/school-admin/teacher-assignments/bulk", {
       method: "PUT", body: JSON.stringify(payload),
     }),
 
@@ -2708,7 +3085,10 @@ export type SchoolTeacherQuery = {
 export type SchoolClassAssignmentSummary = {
   assignment_id: string;
   school_class_id: string;
+  /** Which section. Null on legacy rows and pre-migration responses. */
+  class_section_id?: string | null;
   name: string;
+  section_name?: string | null;
   level: string;
   assignment_role: TeacherAssignmentRole;
   is_active: boolean;
@@ -2777,6 +3157,31 @@ export type SchoolClassTeacher = {
   teacher_email: string;
   assignment_id: string;
   assignment_role: TeacherAssignmentRole;
+  /** The section this assignment is for. Null on legacy rows the backfill has
+   *  not reached, and on responses from a pre-migration backend. */
+  class_section_id?: string | null;
+  section_name?: string | null;
+};
+
+/**
+ * The school's authoritative section identity.
+ *
+ * `name` is nullable and that is meaningful, not missing: null is the class's
+ * single unnamed section — the shape every class had before sections became
+ * first-class. Render `display_name`, which resolves that case to the class's
+ * own name, rather than branching on null at each call site.
+ */
+export type ClassSection = {
+  id: string;
+  organization_id: string;
+  school_class_id: string;
+  name?: string | null;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  display_name: string;
+  assigned_teacher_count: number;
 };
 
 export type SchoolClass = {
@@ -2785,6 +3190,10 @@ export type SchoolClass = {
   academic_year_id: string;
   name: string;
   level: string;
+  /** @deprecated Legacy label. Reference `sections` — a string cannot be
+   *  pointed at, and two classes that both say "A" are not the same section. */
+  section?: string | null;
+  subjects: string[];
   is_active: boolean;
   created_by?: string | null;
   created_at: string;
@@ -2793,6 +3202,7 @@ export type SchoolClass = {
   teachers: SchoolClassTeacher[];
   has_published_curriculum: boolean;
   published_lesson_count: number;
+  sections: ClassSection[];
 };
 
 export type TeacherAssignment = {
@@ -2800,6 +3210,7 @@ export type TeacherAssignment = {
   organization_id: string;
   academic_year_id: string;
   school_class_id: string;
+  class_section_id?: string | null;
   teacher_id: string;
   assignment_role: TeacherAssignmentRole;
   starts_on?: string | null;
@@ -2807,6 +3218,7 @@ export type TeacherAssignment = {
   is_active: boolean;
   assigned_by?: string | null;
   school_class_name?: string | null;
+  section_name?: string | null;
   level?: string | null;
   created_at: string;
   updated_at: string;
@@ -2817,6 +3229,9 @@ export type BulkAssignmentRequest = {
   academic_year_id?: string;
   assignments: Array<{
     school_class_id: string;
+    /** Omit to accept the class's only section. Required once a class has
+     *  several — the server refuses to guess rather than picking one. */
+    class_section_id?: string | null;
     assignment_role?: TeacherAssignmentRole;
     starts_on?: string | null;
     ends_on?: string | null;
@@ -3116,7 +3531,13 @@ export type PrimaryCurriculumTopic = {
   organization_id?: string | null;
   source_topic_id?: string | null;
   theme_id: string;
+  /** NULL means the topic sits directly under its theme. A topic that other
+   *  topics point at IS the sub-theme — there is no separate entity, so
+   *  "Plants → Parts of a Plant" needs no placeholder row. */
+  parent_topic_id?: string | null;
   name: string;
+  /** @deprecated free-text label that predates parent_topic_id and was never
+   *  queryable. Rendered for old rows only; write parent_topic_id instead. */
   subtheme?: string | null;
   description?: string | null;
   position: number;

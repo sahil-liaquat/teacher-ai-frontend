@@ -18,11 +18,11 @@ import {
 } from "@/lib/school-admin-curriculum";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AIAction, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
+import { AIAction, PageError, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 
-const DEFAULT_MONTH = 9;
+const DEFAULT_MONTH = new Date().getMonth() + 1;
 
 export function SchoolAdminOverview() {
   const { toast } = useToast();
@@ -35,7 +35,7 @@ export function SchoolAdminOverview() {
 
   const yearsQuery = useQuery<PrimaryAcademicYear[]>({
     queryKey: ["school-admin", "academic-years"],
-    queryFn: () => backendApi.adminPrimaryAcademicYears(),
+    queryFn: () => backendApi.schoolAdminAcademicYears(),
   });
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export function SchoolAdminOverview() {
 
   const lessonsQuery = useQuery<PrimaryCurriculumLesson[]>({
     queryKey: ["school-admin", "lessons", yearId, level],
-    queryFn: () => backendApi.adminPrimaryLessons({ academic_year_id: yearId, level }),
+    queryFn: () => backendApi.schoolAdminCurriculum({ academic_year_id: yearId, level }),
     enabled: Boolean(yearId),
   });
 
@@ -91,6 +91,15 @@ export function SchoolAdminOverview() {
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Create your school year before reviewing or customizing TeachPad curriculum.</p>
           <Link href="/school-admin/academic-years" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white">Set up academic year <ArrowRight className="h-4 w-4" /></Link>
         </div>
+      </SchoolAdminPage>
+    );
+  }
+
+  if (lessonsQuery.isError) {
+    return (
+      <SchoolAdminPage>
+        <PageHeading title="Primary Curriculum" description={`${year?.name ?? "Academic year"} · ${levelLabel(level)} · ${monthLabel(month)}`} />
+        <PageError description="The curriculum summary could not be loaded." onRetry={() => void lessonsQuery.refetch()} />
       </SchoolAdminPage>
     );
   }

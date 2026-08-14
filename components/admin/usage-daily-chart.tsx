@@ -196,16 +196,45 @@ export function UsageDailyChart({ data, start, end }: { data: AdminUsageDaily[];
         </ResponsiveContainer>
       </div>
       {isGenerations && (
-        <div className="flex items-center justify-center gap-6 text-xs font-medium text-gray-600">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#ef4444]" />
-            First-time generation
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#22c55e]" />
-            Repeat generation
-          </span>
-        </div>
+        <>
+          <div className="flex items-center justify-center gap-6 text-xs font-medium text-gray-600">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-[#ef4444]" />
+              First-time generation
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-[#22c55e]" />
+              Repeat generation
+            </span>
+          </div>
+          {/* Mirrors GenerationUsageRepository.daily() — keep in sync if that SQL changes. */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs leading-relaxed text-gray-600">
+            <p className="mb-2 font-bold text-gray-700">How this is counted</p>
+            <dl className="space-y-1.5">
+              <div>
+                <dt className="inline font-semibold text-gray-700">First-time</dt>
+                <dd className="inline">
+                  {" "}— every generation a teacher makes on their <strong>first-ever active day</strong>: the
+                  earliest date they ever generated successfully. That date is found across their whole
+                  history, not just the range shown, so a teacher who started before this window never
+                  counts as first-time here.
+                </dd>
+              </div>
+              <div>
+                <dt className="inline font-semibold text-gray-700">Repeat</dt>
+                <dd className="inline">
+                  {" "}— every other generation that day, i.e. the day&apos;s total minus first-time. Stacked
+                  together, the two bars add up to that day&apos;s total generations.
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-2.5 text-gray-500">
+              Only <strong>successful</strong> generations are counted — failures appear in neither bar. Days
+              are bucketed in UTC. Note this counts generations, not teachers: someone who generates five
+              times on their first day adds five to first-time, not one.
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

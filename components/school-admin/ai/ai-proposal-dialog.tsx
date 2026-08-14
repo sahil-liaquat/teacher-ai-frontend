@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, RefreshCw, Sparkles } from "lucide-react";
-import { backendApi, type PrimaryAIProposal, type PrimaryAIProposalRequest } from "@/lib/api";
+import { type PrimaryAIProposal, type PrimaryAIProposalRequest } from "@/lib/api";
+import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,14 +22,16 @@ function preview(value: Record<string, unknown> | null | undefined) {
 }
 
 export function AIProposalDialog({
-  open, onOpenChange, request, title, onApplied,
+  open, onOpenChange, request, title, onApplied, scope = "school",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   request: PrimaryAIProposalRequest | null;
   title: string;
+  scope?: CurriculumAdminScope;
   onApplied: (draftLessonIds: string[]) => void | Promise<void>;
 }) {
+  const adapter = curriculumAdminAdapter(scope);
   const [proposal, setProposal] = useState<PrimaryAIProposal | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -43,7 +46,7 @@ export function AIProposalDialog({
     setStale(false);
     setProposal(null);
     try {
-      const next = await backendApi.adminGeneratePrimaryAIProposal(request);
+      const next = await adapter.generateProposal(request);
       setProposal(next);
       setSelected(new Set(next.changes.filter((change) => change.selected_by_default).map((change) => change.id)));
     } catch (cause) {
@@ -51,7 +54,7 @@ export function AIProposalDialog({
     } finally {
       setLoading(false);
     }
-  }, [request]);
+  }, [request, scope]);
 
   useEffect(() => {
     if (open && request) void generate();
@@ -62,7 +65,7 @@ export function AIProposalDialog({
     setApplying(true);
     setError("");
     try {
-      const result = await backendApi.adminApplyPrimaryAIProposal(proposal.id, [...selected]);
+      const result = await adapter.applyProposal(proposal.id, Array.from(selected));
       await onApplied(result.draft_lesson_ids);
       onOpenChange(false);
     } catch (cause) {

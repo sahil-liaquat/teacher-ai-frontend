@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
-import { StepRows } from "@/components/admin/primary-curriculum/step-rows";
-import { ADMIN_PRIMARY_THEMES_QUERY_KEY, LEVEL_OPTIONS } from "@/components/admin/primary-curriculum/theme-list";
+import { StepRows } from "@/components/admin/master-curriculum/step-rows";
+import { ADMIN_PRIMARY_THEMES_QUERY_KEY, LEVEL_OPTIONS } from "@/components/admin/master-curriculum/theme-list";
 
 type FormState = {
   lessonId: string | null;

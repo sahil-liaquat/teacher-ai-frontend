@@ -7,7 +7,7 @@ import { AdminPanel, EmptyState, LoadingState, StatusPill } from "@/components/a
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { formatSkipRate, skipSeverity } from "@/lib/primary-feedback";
-import { LEVEL_OPTIONS } from "@/components/admin/primary-curriculum/theme-list";
+import { LEVEL_OPTIONS } from "@/components/admin/master-curriculum/theme-list";
 
 export const ADMIN_PRIMARY_FEEDBACK_QUERY_KEY = "admin-primary-curriculum-feedback";
 

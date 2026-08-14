@@ -15,9 +15,18 @@ type HeroImagePickerProps = {
   value: string;
   onChange: (value: string) => void;
   compact?: boolean;
+  /** Which surface stores the file. Master admins post to /admin/master, school
+   *  admins to /school-admin — the caller passes its own helper so no single
+   *  helper has to switch URL on the caller's role. */
+  uploadHero?: (file: File) => Promise<{ path: string }>;
 };
 
-export function PrimaryHeroImagePicker({ value, onChange, compact = false }: HeroImagePickerProps) {
+export function PrimaryHeroImagePicker({
+  value,
+  onChange,
+  compact = false,
+  uploadHero = backendApi.adminUploadPrimaryHero,
+}: HeroImagePickerProps) {
   const { toast } = useToast();
   const [mode, setMode] = useState<"built-in" | "custom">(
     isBuiltInPrimaryHero(value) ? "built-in" : "custom"
@@ -34,7 +43,7 @@ export function PrimaryHeroImagePicker({ value, onChange, compact = false }: Her
     if (!file) return;
     setUploading(true);
     try {
-      const uploaded = await backendApi.adminUploadPrimaryHero(file);
+      const uploaded = await uploadHero(file);
       onChange(uploaded.path);
       setMode("custom");
       toast({ title: "Custom hero uploaded", description: "Save the theme to publish this banner." });

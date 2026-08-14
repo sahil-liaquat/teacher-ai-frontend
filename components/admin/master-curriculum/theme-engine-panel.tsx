@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
 import { ADMIN_PRIMARY_THEMES_QUERY_KEY, CreateThemeForm, LEVEL_OPTIONS } from "./theme-list";
-import { PrimaryHeroImagePicker } from "./hero-image-picker";
+import { PrimaryHeroImagePicker } from "@/components/shared/primary-hero-image-picker";
 import { builtInHeroForThemeName } from "@/lib/primary-hero-library";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,7 @@ function formFromTheme(theme: PrimaryCurriculumTheme): VisualForm {
   };
 }
 
-export function ThemeEnginePanel({ schoolMode = false }: { schoolMode?: boolean } = {}) {
+export function ThemeEnginePanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [level, setLevel] = useState<PrimaryLevel>("lkg");
@@ -93,9 +93,7 @@ export function ThemeEnginePanel({ schoolMode = false }: { schoolMode?: boolean 
     if (!selected || !form) return;
     setBusy("save");
     try {
-      const target = schoolMode && selected.scope === "platform"
-        ? await backendApi.adminCustomizePrimaryTheme(selected.id)
-        : selected;
+      const target = selected;
       await backendApi.adminUpdatePrimaryTheme(target.id, {
         name: form.name.trim(), description: form.description.trim() || null, emoji: form.emoji.trim() || null,
         hero_image_url: form.hero, background_image_url: form.background.trim() || null,
@@ -123,10 +121,6 @@ export function ThemeEnginePanel({ schoolMode = false }: { schoolMode?: boolean 
 
   async function archiveTheme() {
     if (!selected || !window.confirm(`Archive ${selected.name}? Teachers will no longer be able to select it.`)) return;
-    if (schoolMode && selected.scope === "platform") {
-      toast({ title: "Master theme is read-only", description: "Customize it for your school before archiving it.", variant: "error" });
-      return;
-    }
     setBusy("archive");
     try {
       await backendApi.adminArchivePrimaryTheme(selected.id); setSelectedId(""); await refresh();
@@ -137,10 +131,6 @@ export function ThemeEnginePanel({ schoolMode = false }: { schoolMode?: boolean 
 
   async function deleteTheme() {
     if (!selected || !window.confirm(`Permanently delete ${selected.name}? This only succeeds when it has no lesson history.`)) return;
-    if (schoolMode && selected.scope === "platform") {
-      toast({ title: "Master theme is read-only", description: "TeachPad master content cannot be deleted by a school.", variant: "error" });
-      return;
-    }
     setBusy("delete");
     try {
       await backendApi.adminDeletePrimaryTheme(selected.id); setSelectedId(""); await refresh();

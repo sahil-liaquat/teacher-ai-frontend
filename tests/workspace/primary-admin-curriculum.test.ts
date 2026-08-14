@@ -6,17 +6,17 @@ function source(relativePath: string) {
   return readFileSync(new URL(`../../${relativePath}`, import.meta.url), "utf8");
 }
 
-test("Primary admin exposes a clear curriculum management navigation", () => {
-  const page = source("app/admin/primary-curriculum/page.tsx");
+test("Master Curriculum admin exposes a clear curriculum management navigation", () => {
+  const page = source("components/admin/master-curriculum/master-curriculum-shell.tsx");
 
-  assert.match(page, /Curriculum/);
-  assert.match(page, /Themes/);
-  assert.match(page, /Resources/);
-  assert.match(page, /Academic Year/);
+  // Locks the cutover rename: this surface administers the platform-owned
+  // master curriculum, so it must not drift back to "Primary classroom OS".
+  assert.match(page, /Master Curriculum/);
+  for (const label of ["Overview", "Create Themes", "Design Curriculum", "Manage Resources", "Map Resources", "Review & Publish"]) assert.match(page, new RegExp(label));
 });
 
-test("Primary lesson authoring creates topics inline and reopens saved drafts", () => {
-  const editor = source("components/admin/primary-curriculum/lesson-editor.tsx");
+test("Master lesson authoring creates topics inline and reopens saved drafts", () => {
+  const editor = source("components/admin/master-curriculum/lesson-editor.tsx");
 
   assert.match(editor, /adminPrimaryLessons/);
   assert.match(editor, /adminCreatePrimaryTopic/);
@@ -26,8 +26,8 @@ test("Primary lesson authoring creates topics inline and reopens saved drafts", 
 });
 
 test("Theme and calendar management provide editing controls", () => {
-  const themes = source("components/admin/primary-curriculum/theme-engine-panel.tsx");
-  const years = source("components/admin/primary-curriculum/academic-years-panel.tsx");
+  const themes = source("components/admin/master-curriculum/theme-engine-panel.tsx");
+  const years = source("components/admin/master-curriculum/academic-years-panel.tsx");
 
   assert.match(themes, /CreateThemeForm/);
   assert.match(themes, /adminUpdatePrimaryTopic/);
@@ -39,8 +39,8 @@ test("Theme and calendar management provide editing controls", () => {
 
 test("Primary themes ship with a built-in hero library and optional upload", () => {
   const library = source("lib/primary-hero-library.ts");
-  const picker = source("components/admin/primary-curriculum/hero-image-picker.tsx");
-  const createTheme = source("components/admin/primary-curriculum/theme-list.tsx");
+  const picker = source("components/shared/primary-hero-image-picker.tsx");
+  const createTheme = source("components/admin/master-curriculum/theme-list.tsx");
   const dashboard = source("components/primary/pages/primary-home-page.tsx");
   const slugs = [
     "farm-animals", "jungle-animals", "ocean-world", "birds", "my-family", "my-school",
@@ -66,7 +66,7 @@ test("Primary themes ship with a built-in hero library and optional upload", () 
 test("Every admin step type has default artwork on the teacher dashboard", () => {
   const mapping = source("lib/primary-step-images.ts");
   const dashboard = source("components/primary/pages/primary-home-page.tsx");
-  const adminRows = source("components/admin/primary-curriculum/step-rows.tsx");
+  const adminRows = source("components/admin/master-curriculum/step-rows.tsx");
   const stepAssets: Record<string, string> = {
     warm_up: "warm-up", introduction: "introduction", story_or_rhyme: "story-or-rhyme",
     picture_talk: "picture-talk", classroom_activity: "classroom-activity", worksheet: "worksheet",

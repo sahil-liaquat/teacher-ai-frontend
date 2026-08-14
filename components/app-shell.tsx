@@ -78,7 +78,7 @@ const adminNav: NavItem[] = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/curriculum", label: "Curriculum", icon: GraduationCap },
-  { href: "/admin/primary-curriculum", label: "Primary OS", icon: Sparkles },
+  { href: "/admin/master-curriculum", label: "Master Curriculum", icon: Sparkles },
   { href: "/admin/textbooks", label: "Textbooks", icon: BookOpen },
   { href: "/admin/system", label: "System", icon: Shield }
 ];
@@ -154,6 +154,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
     return teacherNav;
   }, [admin, isSchoolAdmin, isPrimaryDashboard, currentUser?.role, usesInfluencerWorkspace]);
   const showsWorkspaceHeader = isHomeDashboard || isPrimaryDashboard;
+  const assignedSchoolName = currentUser?.organization_name?.trim() || null;
   const profileHref = "/dashboard/settings?section=account";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
 
@@ -242,7 +243,14 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
         </button>
         {showsWorkspaceHeader ? (
           <>
-            <Brand compact href={homeHref} />
+            <div className="min-w-0">
+              <Brand compact href={homeHref} />
+              {assignedSchoolName && (
+                <p className="max-w-[150px] truncate text-[10px] font-extrabold text-violet-700" title={assignedSchoolName}>
+                  {assignedSchoolName}
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               {!admin && PRIMARY_ENABLED && <WorkspaceSwitcher compact />}
               {!admin && role !== "influencer" && <StreakPill mobile />}
@@ -324,8 +332,17 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
             )}
             {showsWorkspaceHeader && (
               <div className="flex h-12 items-center justify-between">
-                <div>
+                <div className="min-w-0">
                   {sidebarLayout !== "expanded" && <Brand compact href={homeHref} />}
+                  {assignedSchoolName && (
+                    <div
+                      className="inline-flex max-w-[420px] items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-xs font-extrabold text-violet-800"
+                      title={assignedSchoolName}
+                    >
+                      <GraduationCap className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{assignedSchoolName}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2.5">
                   {!admin && PRIMARY_ENABLED && <WorkspaceSwitcher compact />}

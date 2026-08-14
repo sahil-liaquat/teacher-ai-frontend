@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ChevronDown, Eye, MoreHorizontal, Sparkles, X } from "lucide-react";
-import { backendApi, type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
+import { type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
+import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import {
   findLessonForSlot,
   lessonIssues,
@@ -18,35 +19,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { CurriculumDayCard } from "@/components/school-admin/curriculum/curriculum-day-card";
 import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day-editor";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
+import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 
 const WEEKS = [1, 2, 3, 4, 5];
 const DAYS = [1, 2, 3, 4, 5];
+const DEFAULT_MONTH = new Date().getMonth() + 1;
 
-export function CurriculumWorkspace() {
+export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAdminScope }) {
+  const adapter = curriculumAdminAdapter(scope);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [previewScope, setPreviewScope] = useState<"month" | number | null>(null);
   const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
   const [aiTitle, setAITitle] = useState("AI curriculum proposal");
 
   const requestedYear = searchParams.get("year") ?? "";
   const level = searchParams.get("level") ?? "nursery";
-  const rawMonth = Number(searchParams.get("month") ?? 9);
-  const month = SCHOOL_MONTHS.some((item) => item.value === rawMonth) ? rawMonth : 9;
+  const rawMonth = Number(searchParams.get("month") ?? DEFAULT_MONTH);
+  const month = SCHOOL_MONTHS.some((item) => item.value === rawMonth) ? rawMonth : DEFAULT_MONTH;
   const selectedDayId = searchParams.get("day");
   const selectedBlockId = searchParams.get("block");
   const issueFilter = searchParams.get("issue");
 
   const yearsQuery = useQuery<PrimaryAcademicYear[]>({
-    queryKey: ["school-admin", "academic-years"],
-    queryFn: () => backendApi.adminPrimaryAcademicYears(),
+    queryKey: [adapter.queryRoot, "academic-years"],
+    queryFn: () => adapter.years(),
   });
   const yearId = requestedYear || yearsQuery.data?.find((year) => year.is_active)?.id || yearsQuery.data?.[0]?.id || "";
 
@@ -57,18 +62,18 @@ export function CurriculumWorkspace() {
   }, [requestedYear, yearId]);
 
   const themesQuery = useQuery<PrimaryCurriculumTheme[]>({
-    queryKey: ["school-admin", "themes", level],
-    queryFn: () => backendApi.adminPrimaryThemes(level),
+    queryKey: [adapter.queryRoot, "themes", level],
+    queryFn: () => adapter.themes(level),
   });
   const lessonsQuery = useQuery<PrimaryCurriculumLesson[]>({
-    queryKey: ["school-admin", "lessons", yearId, level],
-    queryFn: () => backendApi.adminPrimaryLessons({ academic_year_id: yearId, level }),
+    queryKey: [adapter.queryRoot, "lessons", yearId, level],
+    queryFn: () => adapter.lessons({ academic_year_id: yearId, level }),
     enabled: Boolean(yearId),
   });
 
   const monthLessons = useMemo(() => lessonsForMonth(lessonsQuery.data ?? [], month), [lessonsQuery.data, month]);
   const publishedCount = monthLessons.filter((lesson) => lesson.status === "published").length;
-  const draftCount = monthLessons.filter((lesson) => lesson.scope === "school" && lesson.status === "draft").length;
+  const draftCount = monthLessons.filter((lesson) => lesson.scope === scope && lesson.status === "draft").length;
   const attentionCount = monthLessons.filter((lesson) => lessonIssues(lesson).length).length;
   const readyCount = monthLessons.filter((lesson) => ["ready", "published"].includes(lessonStatus(lesson))).length;
 
@@ -98,7 +103,7 @@ export function CurriculumWorkspace() {
       return;
     }
     try {
-      const lesson = await backendApi.adminCreatePrimaryLesson({
+      const lesson = await adapter.createLesson({
         academic_year_id: yearId,
         theme_id: theme.id,
         level,
@@ -112,7 +117,7 @@ export function CurriculumWorkspace() {
         assessment_questions: [],
         steps: [],
       });
-      await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons", yearId, level] });
+      await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons", yearId, level] });
       updateContext({ day: lesson.id });
     } catch (error: any) {
       toast({ title: "Could not create the teaching day", description: error?.message, variant: "error" });
@@ -122,6 +127,7 @@ export function CurriculumWorkspace() {
   if (selectedDayId) {
     return (
       <SchoolDayEditor
+        scope={scope}
         lessonId={selectedDayId}
         academicYearId={yearId}
         themes={themesQuery.data ?? []}
@@ -132,7 +138,7 @@ export function CurriculumWorkspace() {
     );
   }
 
-  if (yearsQuery.isLoading || lessonsQuery.isLoading) {
+  if (yearsQuery.isLoading || (yearId && lessonsQuery.isLoading)) {
     return <SchoolAdminPage><Skeleton className="h-24" /><Skeleton className="h-16" /><Skeleton className="h-[540px]" /></SchoolAdminPage>;
   }
 
@@ -141,10 +147,26 @@ export function CurriculumWorkspace() {
       <SchoolAdminPage>
         <PageHeading title="Curriculum" description="Set up an academic year before planning teaching days." />
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-          <h2 className="text-xl font-semibold text-slate-950">Your curriculum needs a school year</h2>
-          <p className="mt-2 text-sm text-slate-600">Academic years keep drafts and published curriculum in the correct school context.</p>
-          <Button className="mt-6" onClick={() => router.push("/school-admin/academic-years")}>Set up academic year</Button>
+          <h2 className="text-xl font-semibold text-slate-950">This curriculum needs an academic year</h2>
+          <p className="mt-2 text-sm text-slate-600">Academic years keep drafts and published curriculum in the correct ownership context.</p>
+          <Button className="mt-6" onClick={() => router.push(scope === "platform" ? "/admin/organizations/master-curriculum" : "/school-admin/academic-years")}>Set up academic year</Button>
         </div>
+      </SchoolAdminPage>
+    );
+  }
+
+  if (yearsQuery.isError || lessonsQuery.isError || themesQuery.isError) {
+    return (
+      <SchoolAdminPage>
+        <PageHeading title="Curriculum" description={`Plan and publish ${adapter.ownerLabel} teaching days.`} />
+        <PageError
+          description="The academic years, themes, or teaching days could not be loaded."
+          onRetry={() => {
+            void yearsQuery.refetch();
+            void themesQuery.refetch();
+            void lessonsQuery.refetch();
+          }}
+        />
       </SchoolAdminPage>
     );
   }
@@ -157,7 +179,7 @@ export function CurriculumWorkspace() {
         description={`${readyCount} of 25 days ready · ${draftCount} draft changes · ${publishedCount} published · ${attentionCount} need attention`}
         actions={(
           <>
-            <Button variant="outline" onClick={() => toast({ title: "Month preview", description: "Open a teaching day to preview its complete classroom flow." })}><Eye className="h-4 w-4" /> Preview</Button>
+            <Button variant="outline" onClick={() => setPreviewScope("month")}><Eye className="h-4 w-4" /> Preview</Button>
             <Button onClick={() => setReviewOpen(true)}>Review &amp; Publish</Button>
           </>
         )}
@@ -189,14 +211,10 @@ export function CurriculumWorkspace() {
         </div>
       </div>
 
-      {lessonsQuery.isError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">Curriculum could not be loaded. Refresh the page to try again.</div>
-      ) : null}
-
       {!monthLessons.length ? (
         <section className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
           <h2 className="text-xl font-semibold text-slate-950">No curriculum planned for {monthLabel(month)} yet</h2>
-          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">Start with a teaching day, or connect curriculum AI to prepare the month while preserving your school context.</p>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">Start with a teaching day, or use curriculum AI to prepare the month while preserving this scope.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button variant="outline" onClick={() => void createDay(1, 1)}>Create first day</Button>
             <Button onClick={() => openAI("create_month", "Create this month with AI")}><Sparkles className="h-4 w-4" /> Create with AI</Button>
@@ -215,14 +233,14 @@ export function CurriculumWorkspace() {
                   <summary className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl text-slate-500 hover:bg-white" aria-label={`Week ${week} actions`}><MoreHorizontal className="h-5 w-5" /></summary>
                   <div className="absolute right-0 z-10 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                     <button type="button" onClick={() => openAI("fill_week", `Fill week ${week} with AI`, week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Fill week with AI</button>
-                    <button type="button" onClick={() => toast({ title: "Week preview", description: "Open any day to preview its classroom flow." })} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Preview week</button>
+                    <button type="button" onClick={() => setPreviewScope(week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Preview week</button>
                   </div>
                 </details>
               </div>
               <div className="hidden grid-cols-5 gap-3 xl:grid">
                 {DAYS.map((day) => {
                   const lesson = findLessonForSlot(monthLessons, week, day);
-                  const highlighted = Boolean(lesson && ((issueFilter === "resources" && lessonIssues(lesson).some((issue) => issue.includes("resource"))) || (issueFilter === "drafts" && lesson.scope === "school" && lesson.status === "draft")));
+                  const highlighted = Boolean(lesson && ((issueFilter === "resources" && lessonIssues(lesson).some((issue) => issue.includes("resource"))) || (issueFilter === "drafts" && lesson.scope === scope && lesson.status === "draft")));
                   return <CurriculumDayCard key={day} day={day} lesson={lesson} highlighted={highlighted} onOpen={(item) => updateContext({ day: item.id })} onCreate={() => void createDay(week, day)} />;
                 })}
               </div>
@@ -252,28 +270,96 @@ export function CurriculumWorkspace() {
               <button type="button" aria-label="Close review" onClick={() => setReviewOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
             </div>
             <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
-              {monthLessons.filter((lesson) => lesson.scope === "school" && lesson.status === "draft").map((lesson) => (
+              {monthLessons.filter((lesson) => lesson.scope === scope && lesson.status === "draft").map((lesson) => (
                 <button key={lesson.id} type="button" onClick={() => { setReviewOpen(false); updateContext({ day: lesson.id }); }} className="flex w-full items-center gap-3 py-4 text-left">
                   <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</span><span className="mt-1 block text-xs text-slate-500">Week {lesson.week}, day {lesson.day} · {lessonIssues(lesson).length ? lessonIssues(lesson)[0] : "Ready to review"}</span></span>
                   <span className="text-xs font-bold text-blue-700">Review</span>
                 </button>
               ))}
-              {!draftCount ? <p className="py-8 text-center text-sm text-slate-500">There are no school drafts waiting to publish.</p> : null}
+              {!draftCount ? <p className="py-8 text-center text-sm text-slate-500">There are no drafts waiting to publish.</p> : null}
             </div>
             <Button variant="outline" className="mt-6 w-full" onClick={() => setReviewOpen(false)}><ArrowLeft className="h-4 w-4" /> Return to curriculum</Button>
           </div>
         </div>
       ) : null}
+      {previewScope !== null ? (
+        <CurriculumPreview
+          month={month}
+          level={level}
+          week={previewScope === "month" ? null : previewScope}
+          lessons={monthLessons}
+          onClose={() => setPreviewScope(null)}
+          onOpenDay={(lessonId) => {
+            setPreviewScope(null);
+            updateContext({ day: lessonId });
+          }}
+        />
+      ) : null}
       <AIProposalDialog
+        scope={scope}
         open={Boolean(aiRequest)}
         onOpenChange={(open) => { if (!open) setAIRequest(null); }}
         request={aiRequest}
         title={aiTitle}
         onApplied={async () => {
-          await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons", yearId, level] });
-          toast({ title: "AI changes applied to school drafts", description: "Published teacher curriculum remains unchanged until review and publish." });
+          await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons", yearId, level] });
+          toast({ title: "AI changes applied to drafts", description: "Published curriculum remains unchanged until review and publish." });
         }}
       />
     </SchoolAdminPage>
+  );
+}
+
+function CurriculumPreview({ month, level, week, lessons, onClose, onOpenDay }: {
+  month: number;
+  level: string;
+  week: number | null;
+  lessons: PrimaryCurriculumLesson[];
+  onClose: () => void;
+  onOpenDay: (lessonId: string) => void;
+}) {
+  const visibleWeeks = week ? [week] : WEEKS;
+  const planned = lessons.filter((lesson) => week === null || lesson.week === week).length;
+  const total = visibleWeeks.length * DAYS.length;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="curriculum-preview-title">
+      <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Curriculum preview</p>
+            <h2 id="curriculum-preview-title" className="mt-1 text-xl font-semibold text-slate-950">{week ? `${monthLabel(month)} · Week ${week}` : `${monthLabel(month)} curriculum`}</h2>
+            <p className="mt-2 text-sm text-slate-600">{levelLabel(level)} · {planned} of {total} teaching days planned</p>
+          </div>
+          <button type="button" aria-label="Close curriculum preview" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="mt-6 space-y-6">
+          {visibleWeeks.map((weekNumber) => (
+            <section key={weekNumber} aria-labelledby={`preview-week-${weekNumber}`}>
+              <h3 id={`preview-week-${weekNumber}`} className="mb-3 text-sm font-semibold text-slate-950">Week {weekNumber}</h3>
+              <div className="grid gap-2 sm:grid-cols-5">
+                {DAYS.map((day) => {
+                  const lesson = findLessonForSlot(lessons, weekNumber, day);
+                  const dayName = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day - 1];
+                  return lesson ? (
+                    <button key={day} type="button" onClick={() => onOpenDay(lesson.id)} className="rounded-2xl border border-slate-200 p-3 text-left transition hover:border-blue-300 hover:bg-blue-50/40">
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>
+                      <span className="mt-2 line-clamp-2 block text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</span>
+                      <span className="mt-2 block text-xs text-slate-500">{lesson.steps?.length ?? 0} blocks</span>
+                      <span className="mt-3 block"><StatusBadge status={lessonStatus(lesson)} compact /></span>
+                    </button>
+                  ) : (
+                    <div key={day} className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3">
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>
+                      <span className="mt-2 block text-sm font-medium text-slate-400">Not planned</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+        <Button variant="outline" className="mt-7 w-full" onClick={onClose}>Close preview</Button>
+      </div>
+    </div>
   );
 }

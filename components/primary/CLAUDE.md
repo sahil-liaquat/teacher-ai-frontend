@@ -33,8 +33,11 @@ components/primary/
 
 Routes live in `app/primary/*` (`/primary`, `/today`, `/roster`, `/library`,
 `/coverage`, `/settings`, `/[section]`, `/resource-library/[category]`,
-`/today/activity/[activityId]`) plus `app/admin/primary-curriculum` for
-authoring. The route files are thin — the real components are here.
+`/today/activity/[activityId]`). Authoring lives on the platform-admin side
+at `app/admin/master-curriculum` (components in
+`components/admin/master-curriculum/`) — that surface owns the *master*
+curriculum schools adopt from, and is not part of this directory. The route
+files are thin — the real components are here.
 
 ## The 21 `lib/primary-*` modules
 
