@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Building2, CalendarDays, CalendarRange, Home, Library, LogOut, Menu, Palette, School, Settings, Users, X } from "lucide-react";
+import { Building2, LogOut, Menu, X } from "lucide-react";
 import {
   CURRENT_USER_QUERY_KEY,
   clearToken,
@@ -13,23 +13,12 @@ import {
   logout as logoutSession,
   type ApiUser,
 } from "@/lib/api";
+import { SCHOOL_ADMIN_NAV, isNavItemActive } from "@/lib/school-admin-nav";
 import { cn } from "@/lib/utils";
 
-export const SCHOOL_ADMIN_NAV = [
-  { href: "/school-admin", label: "Overview", icon: Home },
-  { href: "/school-admin/curriculum", label: "Curriculum", icon: BookOpen },
-  { href: "/school-admin/themes", label: "Themes", icon: Palette },
-  { href: "/school-admin/resources", label: "Resources", icon: Library },
-  { href: "/school-admin/academic-years", label: "Academic Years", icon: CalendarRange },
-  { href: "/school-admin/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/school-admin/classes", label: "Classes & Sections", icon: School },
-  { href: "/school-admin/teachers", label: "Teachers", icon: Users },
-  { href: "/school-admin/settings", label: "Settings", icon: Settings },
-] as const;
-
-function isActive(href: string, pathname: string) {
-  return href === "/school-admin" ? pathname === href : pathname.startsWith(href);
-}
+// Nav lives in lib/school-admin-nav.ts so the shell and the architecture test
+// read the same definition. Re-exported because existing imports point here.
+export { SCHOOL_ADMIN_NAV } from "@/lib/school-admin-nav";
 
 export function SchoolAdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -92,11 +81,14 @@ export function SchoolAdminShell({ children }: { children: ReactNode }) {
               href={item.href}
               className={cn(
                 "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
-                isActive(item.href, pathname) ? "bg-blue-50 text-blue-700 before:absolute before:-left-3 before:h-5 before:w-1 before:rounded-full before:bg-blue-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950",
+                isNavItemActive(item.href, pathname) ? "bg-blue-50 text-blue-700 before:absolute before:-left-3 before:h-5 before:w-1 before:rounded-full before:bg-blue-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950",
               )}
             >
               <Icon className="h-4 w-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.status === "foundation" ? (
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">Soon</span>
+              ) : null}
             </Link>
           );
         })}

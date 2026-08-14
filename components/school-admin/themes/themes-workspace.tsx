@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ActionDialog, ConfirmDialog } from "@/components/school-admin/shared/action-dialog";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,7 @@ export function ThemesWorkspace() {
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <PageHeading eyebrow="Curriculum building blocks" title="Themes" description="Organize the ideas and topic sequences used across your school curriculum." actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create theme</Button>} />
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row">
         <label className="relative flex-1"><Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" /><span className="sr-only">Search themes</span><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search themes" className="h-11 pl-9" /></label>
@@ -185,6 +187,7 @@ function ThemeDetail({ theme, lessons, yearId, level, onBack, onRefresh, onConfi
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950"><ArrowLeft className="h-4 w-4" /> All themes</button>
       <PageHeading eyebrow={`${ownershipLabel(ownershipOf(theme))} theme`} title={`${theme.emoji || "🎨"} ${theme.name}`} description={theme.description || `Topic sequence and curriculum use for ${levelLabel(level)}.`} actions={schoolOwned ? <Button variant="outline" onClick={() => onConfirm({ kind: "archive", theme })}>Archive theme</Button> : <Button onClick={() => onConfirm({ kind: "customize", theme })}>Customize for your school</Button>} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">

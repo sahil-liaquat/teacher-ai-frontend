@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ActionDialog, ConfirmDialog } from "@/components/school-admin/shared/action-dialog";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ export function AcademicYearsWorkspace() {
   // error it returns is the explanation — surface it rather than a generic one.
   async function deleteYear() { if (!remove) return; setBusy(true); try { await backendApi.schoolAdminDeleteAcademicYear(remove.id); await refresh(); toast({ title: `${remove.name} deleted`, description: "The academic year had no curriculum, classes or assignments." }); setRemove(null); } catch (error: any) { toast({ title: "Could not delete academic year", description: getErrorMessage(error, "Move or remove its curriculum, classes and assignments first."), variant: "error" }); } finally { setBusy(false); } }
   return <SchoolAdminPage>
+      <SectionSubnav />
     <PageHeading eyebrow="School calendar" title="Academic Years" description="Keep planning, published curriculum, and teacher access in the right school-year context." actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create academic year</Button>} />
     {years.isError || lessonSets.isError ? <PageError description="Academic years and curriculum readiness could not be loaded." onRetry={() => { void years.refetch(); void lessonSets.refetch(); }} /> : years.isLoading ? <div className="grid gap-4 lg:grid-cols-2">{[0, 1].map((item) => <Skeleton key={item} className="h-80 rounded-3xl" />)}</div> : ordered.length ? <div className="grid gap-4 lg:grid-cols-2">{ordered.map((year) => <YearCard key={year.id} year={year} lessons={lessonSets.data?.[year.id] ?? []} onActivate={() => setActivate(year)} onDelete={() => setRemove(year)} />)}</div> : <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><CalendarDays className="mx-auto h-7 w-7 text-slate-400" /><h2 className="mt-3 text-lg font-semibold text-slate-950">Set up your first academic year</h2><p className="mt-2 text-sm text-slate-500">This gives drafts and published curriculum a clear school context.</p><Button className="mt-5" onClick={() => setCreateOpen(true)}>Create academic year</Button></div>}
     <CreateYearDialog open={createOpen} onOpenChange={setCreateOpen} currentYear={years.data?.find((year) => year.is_active)} onCreated={refresh} />

@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ActionDialog, ConfirmDialog } from "@/components/school-admin/shared/action-dialog";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { getErrorMessage } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -168,12 +169,14 @@ export function CalendarWorkspace() {
   }
 
   if (years.isLoading) {
-    return <SchoolAdminPage><Skeleton className="h-64 rounded-3xl" /></SchoolAdminPage>;
+    return <SchoolAdminPage>
+      <SectionSubnav /><Skeleton className="h-64 rounded-3xl" /></SchoolAdminPage>;
   }
 
   if (!year) {
     return (
       <SchoolAdminPage>
+      <SectionSubnav />
         <PageHeading eyebrow="School calendar" title="Calendar" description="Set the dates your school can teach on." />
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
           <CalendarDays className="mx-auto h-7 w-7 text-slate-400" />
@@ -186,6 +189,7 @@ export function CalendarWorkspace() {
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <PageHeading
         eyebrow="School calendar"
         title="Calendar"

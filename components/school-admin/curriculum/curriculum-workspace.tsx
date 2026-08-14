@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { CurriculumDayCard } from "@/components/school-admin/curriculum/curriculum-day-card";
 import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day-editor";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
@@ -139,12 +140,14 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   }
 
   if (yearsQuery.isLoading || (yearId && lessonsQuery.isLoading)) {
-    return <SchoolAdminPage><Skeleton className="h-24" /><Skeleton className="h-16" /><Skeleton className="h-[540px]" /></SchoolAdminPage>;
+    return <SchoolAdminPage>
+      <SectionSubnav /><Skeleton className="h-24" /><Skeleton className="h-16" /><Skeleton className="h-[540px]" /></SchoolAdminPage>;
   }
 
   if (!yearsQuery.data?.length) {
     return (
       <SchoolAdminPage>
+      <SectionSubnav />
         <PageHeading title="Curriculum" description="Set up an academic year before planning teaching days." />
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
           <h2 className="text-xl font-semibold text-slate-950">This curriculum needs an academic year</h2>
@@ -158,6 +161,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   if (yearsQuery.isError || lessonsQuery.isError || themesQuery.isError) {
     return (
       <SchoolAdminPage>
+      <SectionSubnav />
         <PageHeading title="Curriculum" description={`Plan and publish ${adapter.ownerLabel} teaching days.`} />
         <PageError
           description="The academic years, themes, or teaching days could not be loaded."
@@ -173,6 +177,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <PageHeading
         eyebrow="Curriculum workspace"
         title={`${monthLabel(month)} Curriculum`}

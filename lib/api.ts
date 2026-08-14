@@ -152,7 +152,7 @@ export type Organization = {
   status: "draft" | "active" | "suspended";
   plan: string;
   subscription_status: string;
-  curriculum_starting_point: "teachpad" | "customize" | "empty";
+  curriculum_starting_point: CurriculumStartingPoint;
   curriculum_entitlement: boolean;
   enabled_modules: string[];
   created_at?: string;
@@ -1908,6 +1908,126 @@ export async function resetPassword(accessToken: string, password: string) {
   });
 }
 
+/**
+ * The school academic identity. Framework, Programme, Curriculum Model and
+ * Learning Structure are four independent dimensions — see the backend module
+ * app/models/academic.py for why collapsing any two of them is the bug.
+ */
+export type AcademicFramework = {
+  id: string;
+  code: string;
+  name: string;
+  full_name: string | null;
+  scope: "platform" | "school";
+  sort_order: number;
+};
+
+export type AcademicProgramme = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  framework_id: string;
+  curriculum_structure_id: string | null;
+  scope: "platform" | "school";
+  sort_order: number;
+};
+
+export type CurriculumModelOption = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  scope: "platform" | "school";
+};
+
+export type CurriculumStructureNode = {
+  key: string;
+  label: string;
+  depth: number;
+  is_required: boolean;
+};
+
+export type CurriculumStructure = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  lesson_noun: string;
+  scope: "platform" | "school";
+  nodes: CurriculumStructureNode[];
+};
+
+/** What this school calls things. Never hardcode "Class" — read this. */
+export type SchoolTerminology = Record<string, string>;
+
+export type AcademicProfile = {
+  school_name: string;
+  framework: AcademicFramework | null;
+  programmes: AcademicProgramme[];
+  terminology: SchoolTerminology;
+  curriculum_starting_point: CurriculumStartingPoint;
+};
+
+/** Four starting points. `import` behaves like `empty` for master
+ *  read-through but is a distinct choice the onboarding flow must preserve. */
+export type CurriculumStartingPoint = "teachpad" | "customize" | "import" | "empty";
+
+export type SchoolProgramme = {
+  programme_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  framework_id: string;
+  curriculum_structure_id: string | null;
+  status: "enabled" | "disabled";
+  /** Whether levels still reference it — a disable warning, not a block. */
+  in_use: boolean;
+};
+
+export type SchoolLevel = {
+  id: string;
+  code: string;
+  name: string;
+  scope: "platform" | "school";
+  sort_order: number;
+  programme_id: string | null;
+};
+
+/** Derived from real rows on every read — never a stored checklist. */
+export type OnboardingReadiness = {
+  framework: boolean;
+  programmes: boolean;
+  levels: boolean;
+  curriculum: boolean;
+  academic_year: boolean;
+};
+
+export type OnboardingState = {
+  status: "not_started" | "in_progress" | "completed";
+  step: number;
+  total_steps: number;
+  readiness: OnboardingReadiness;
+  resume_step: number;
+  is_complete: boolean;
+};
+
+/**
+ * The curriculum definition in force for a programme. `source` is the honest
+ * part: `compiled` means the code definition still governs — which is every
+ * programme today — and `structure` means rows do.
+ */
+export type ResolvedDefinition = {
+  key: string;
+  stage: string;
+  source: "compiled" | "structure";
+  lesson_noun: string;
+  level_noun: string;
+  levels: string[];
+  placement: string[];
+  nodes: CurriculumStructureNode[];
+};
+
 export const backendApi = {
   health: () => fetch(`${BACKEND_ROOT}/health`).then((res) => res.ok ? res.json() : Promise.reject(new Error("Backend health check failed"))),
   adminSummary: () => apiFetch<AdminSummary>("/admin/summary"),
@@ -2727,6 +2847,92 @@ export const backendApi = {
   // master helpers are guarded by get_current_admin and 403 for an org admin —
   // that mismatch is what broke every School Admin write. Keep the two sets
   // separate: never make one helper switch URL on the caller's role.
+  // ---- academic identity (/school-admin/academic) --------------------------
+  // One call for the framework, programmes, terminology and starting point:
+  // every School Admin screen needs all four to draw a heading, and three
+  // requests per page view is how a settings API becomes the slow path.
+  // ---- programme enablement -----------------------------------------------
+  schoolAdminEnabledProgrammes: () =>
+    apiFetch<SchoolProgramme[]>("/school-admin/academic/programmes/enabled"),
+  schoolAdminAvailableProgrammes: () =>
+    apiFetch<SchoolProgramme[]>("/school-admin/academic/programmes/available"),
+  schoolAdminEnableProgramme: (programmeId: string) =>
+    apiFetch<SchoolProgramme>(`/school-admin/academic/programmes/${programmeId}/enable`, { method: "PUT" }),
+  // Never deletes — levels reference programmes.
+  schoolAdminDisableProgramme: (programmeId: string) =>
+    apiFetch<SchoolProgramme>(`/school-admin/academic/programmes/${programmeId}/disable`, { method: "PUT" }),
+  schoolAdminProgrammeDefinition: (programmeId: string) =>
+    apiFetch<ResolvedDefinition>(`/school-admin/academic/programmes/${programmeId}/definition`),
+
+  // ---- level configuration -------------------------------------------------
+  // This school's OWN levels, not the shared TeachPad catalogue.
+  schoolAdminLevels: (includeInactive = false) =>
+    apiFetch<SchoolLevel[]>(`/school-admin/academic/levels${includeInactive ? "?include_inactive=true" : ""}`),
+  schoolAdminLevelCatalogue: () =>
+    apiFetch<SchoolLevel[]>("/school-admin/academic/levels/catalogue"),
+  schoolAdminCreateLevel: (payload: {
+    name: string; programme_id?: string | null; sort_order?: number;
+    age_min_years?: number | null; age_max_years?: number | null;
+  }) => apiFetch<SchoolLevel>("/school-admin/academic/levels", { method: "POST", body: JSON.stringify(payload) }),
+  // Copies a TeachPad level into the school keeping the SAME code, so existing
+  // classes, assignments and saved URLs still resolve.
+  schoolAdminAdoptLevel: (code: string, programmeId: string) =>
+    apiFetch<SchoolLevel>("/school-admin/academic/levels/adopt", {
+      method: "POST", body: JSON.stringify({ code, programme_id: programmeId }),
+    }),
+  schoolAdminUpdateLevel: (id: string, payload: {
+    name?: string; programme_id?: string | null; sort_order?: number;
+    age_min_years?: number | null; age_max_years?: number | null; clear_programme?: boolean;
+  }) => apiFetch<SchoolLevel>(`/school-admin/academic/levels/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  // Archive, not delete.
+  schoolAdminArchiveLevel: (id: string) =>
+    apiFetch<SchoolLevel>(`/school-admin/academic/levels/${id}`, { method: "DELETE" }),
+
+  // ---- onboarding ----------------------------------------------------------
+  schoolAdminOnboarding: () =>
+    apiFetch<OnboardingState>("/school-admin/academic/onboarding"),
+  schoolAdminAdvanceOnboarding: (step: number) =>
+    apiFetch<OnboardingState>("/school-admin/academic/onboarding/step", {
+      method: "PUT", body: JSON.stringify({ step }),
+    }),
+  // 409s with the unmet steps rather than marking a bare school complete.
+  schoolAdminCompleteOnboarding: () =>
+    apiFetch<OnboardingState>("/school-admin/academic/onboarding/complete", { method: "POST" }),
+
+  schoolAdminAcademicProfile: () =>
+    apiFetch<AcademicProfile>("/school-admin/academic/profile"),
+  schoolAdminFrameworks: () =>
+    apiFetch<AcademicFramework[]>("/school-admin/academic/frameworks"),
+  schoolAdminSetFramework: (frameworkId: string) =>
+    apiFetch<AcademicFramework>("/school-admin/academic/framework", {
+      method: "PUT", body: JSON.stringify({ framework_id: frameworkId }),
+    }),
+  // Programmes of THIS school's framework, not the whole catalogue — offering
+  // every board's programmes is how a CBSE level lands under an IB programme.
+  schoolAdminProgrammes: () =>
+    apiFetch<AcademicProgramme[]>("/school-admin/academic/programmes"),
+  schoolAdminCurriculumModels: () =>
+    apiFetch<CurriculumModelOption[]>("/school-admin/academic/curriculum-models"),
+  schoolAdminProgrammeCurriculumModels: (programmeId: string, gradeLevelId?: string) =>
+    apiFetch<CurriculumModelOption[]>(
+      `/school-admin/academic/programmes/${programmeId}/curriculum-models` +
+        (gradeLevelId ? `?grade_level_id=${gradeLevelId}` : ""),
+    ),
+  // null means the programme has no structure yet and the compiled curriculum
+  // definition still governs — the state every Primary programme is in today.
+  schoolAdminProgrammeStructure: (programmeId: string) =>
+    apiFetch<CurriculumStructure | null>(
+      `/school-admin/academic/programmes/${programmeId}/structure`,
+    ),
+  schoolAdminSetTerminology: (terminology: SchoolTerminology) =>
+    apiFetch<SchoolTerminology>("/school-admin/academic/terminology", {
+      method: "PUT", body: JSON.stringify({ terminology }),
+    }),
+  schoolAdminSetLevelProgramme: (gradeLevelId: string, programmeId: string | null) =>
+    apiFetch<{ id: string; programme_id: string | null }>(
+      `/school-admin/academic/levels/${gradeLevelId}/programme`,
+      { method: "PUT", body: JSON.stringify({ programme_id: programmeId }) },
+    ),
   schoolAdminAcademicYears: () =>
     apiFetch<PrimaryAcademicYear[]>("/school-admin/academic-years"),
   schoolAdminCreateAcademicYear: (payload: Pick<PrimaryAcademicYear, "name" | "starts_on" | "ends_on" | "is_active">) =>
@@ -2738,7 +2944,7 @@ export const backendApi = {
   // dialog only changed the toast text — the choice never left the browser, so
   // an "empty" school still read through to the master and opened with a full
   // theme list and a ready day.
-  schoolAdminSetCurriculumStartingPoint: (startingPoint: "teachpad" | "customize" | "empty") =>
+  schoolAdminSetCurriculumStartingPoint: (startingPoint: CurriculumStartingPoint) =>
     apiFetch<{ curriculum_starting_point: string }>("/school-admin/curriculum-starting-point", {
       method: "PUT", body: JSON.stringify({ curriculum_starting_point: startingPoint }),
     }),

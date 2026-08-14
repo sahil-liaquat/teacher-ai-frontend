@@ -13,8 +13,12 @@ const WORKSPACE = "components/school-admin/calendar/calendar-workspace.tsx";
 
 test("the calendar page exists and is in the School Admin navigation", () => {
   assert.equal(existsSync(`${root}/app/school-admin/calendar/page.tsx`), true);
-  const shell = read("components/school-admin/school-admin-shell.tsx");
-  assert.match(shell, /href: "\/school-admin\/calendar", label: "Calendar"/);
+  // The nav moved out of the shell into lib/school-admin-nav.ts so the shell
+  // and the tests read one definition. Calendar is still top level; academic
+  // years became its sub-navigation.
+  const nav = read("lib/school-admin-nav.ts");
+  assert.match(nav, /href: "\/school-admin\/calendar", label: "Calendar"/);
+  assert.match(nav, /"\/school-admin\/calendar": \[/);
 });
 
 test("every calendar helper is on the school surface", () => {

@@ -61,24 +61,27 @@ function schoolClass(overrides: Record<string, unknown> = {}) {
 
 // ── navigation ─────────────────────────────────────────────────────────────
 
-test("Teachers sits after the year setup and before Settings in the nav", () => {
-  const shell = source("components/school-admin/school-admin-shell.tsx");
+test("Teachers sits inside the operating loop and before Settings in the nav", () => {
+  // Reads lib/school-admin-nav.ts: the nav left the shell so one definition
+  // serves the sidebar and the tests.
+  const nav = source("lib/school-admin-nav.ts");
   // Array.from, not spread: tsconfig targets es5, where iterating a matchAll
   // result needs downlevelIteration.
-  const order = Array.from(shell.matchAll(/href: "(\/school-admin[^"]*)"/g)).map((match) => match[1]);
+  const order = Array.from(nav.matchAll(/href: "(\/school-admin[^"]*)"/g)).map((match) => match[1]);
   const at = (href: string) => order.indexOf(href);
 
   assert.ok(at("/school-admin/teachers") > -1, "the Teachers nav item is missing");
-  // Relative order, not adjacency: the nav grows as the school surface does —
-  // Calendar landed between Academic Years and Teachers — and what matters is
-  // that staffing follows the year setup and precedes Settings.
+  // The old assertion keyed on Academic Years preceding Teachers. Academic
+  // Years is no longer top-level navigation — it is calendar sub-navigation —
+  // so the surviving invariant is that staffing follows the classes it staffs
+  // and still precedes Settings.
   assert.ok(
-    at("/school-admin/academic-years") < at("/school-admin/teachers"),
-    "Teachers should follow the academic year setup",
+    at("/school-admin/classes") < at("/school-admin/teachers"),
+    "Teachers should follow Classes & Sections",
   );
   assert.ok(
     at("/school-admin/teachers") < at("/school-admin/settings"),
-    "Settings should stay last",
+    "Settings stays last",
   );
 });
 

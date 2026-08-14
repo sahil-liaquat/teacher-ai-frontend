@@ -136,6 +136,12 @@ test("Phase 2 routes use school-admin workspaces instead of legacy authoring pan
   assert.match(source("app/school-admin/resources/page.tsx"), /ResourcesWorkspace/);
   assert.match(source("app/school-admin/academic-years/page.tsx"), /AcademicYearsWorkspace/);
   const settings = source("components/school-admin/settings/settings-workspace.tsx");
-  assert.match(settings, /Only settings backed by real school-wide behavior/);
+  // Settings now spans the full academic architecture, so the old "only
+  // settings backed by real behavior appear here" claim no longer holds — the
+  // sections DO appear. The guarantee it protected is unchanged and stronger:
+  // a section that cannot be configured says so rather than rendering a
+  // control the product will not honour.
+  assert.match(settings, /Not configurable here yet/);
+  assert.match(settings, /NotConfigurableYet/);
   assert.doesNotMatch(settings, /type="checkbox"|Save settings/);
 });

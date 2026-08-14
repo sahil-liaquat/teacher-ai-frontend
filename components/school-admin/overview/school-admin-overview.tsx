@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AIAction, PageError, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
+import { SetupPrompt } from "@/components/school-admin/onboarding/setup-prompt";
 
 const DEFAULT_MONTH = new Date().getMonth() + 1;
 
@@ -73,6 +74,7 @@ export function SchoolAdminOverview() {
   if (yearsQuery.isError) {
     return (
       <SchoolAdminPage>
+      <SetupPrompt />
         <PageHeading title="Primary Curriculum" description="We could not load your school curriculum." />
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
           Refresh the page to try again. If this continues, check that your school has access to curriculum administration.
@@ -84,6 +86,7 @@ export function SchoolAdminOverview() {
   if (!yearsQuery.data?.length) {
     return (
       <SchoolAdminPage>
+      <SetupPrompt />
         <PageHeading title="Primary Curriculum" description="Start by setting up the academic year your school will teach." />
         <div className="rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center">
           <BookOpen className="mx-auto h-8 w-8 text-blue-600" />
@@ -98,6 +101,7 @@ export function SchoolAdminOverview() {
   if (lessonsQuery.isError) {
     return (
       <SchoolAdminPage>
+      <SetupPrompt />
         <PageHeading title="Primary Curriculum" description={`${year?.name ?? "Academic year"} · ${levelLabel(level)} · ${monthLabel(month)}`} />
         <PageError description="The curriculum summary could not be loaded." onRetry={() => void lessonsQuery.refetch()} />
       </SchoolAdminPage>
@@ -106,6 +110,7 @@ export function SchoolAdminOverview() {
 
   return (
     <SchoolAdminPage>
+      <SetupPrompt />
       <PageHeading
         eyebrow="School programme"
         title="Primary Curriculum"
@@ -243,6 +248,7 @@ export function SchoolAdminOverview() {
 function OverviewSkeleton() {
   return (
     <SchoolAdminPage>
+      <SetupPrompt />
       <Skeleton className="h-24 w-full" />
       <div className="grid gap-3 md:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
       <Skeleton className="h-48 w-full" />
