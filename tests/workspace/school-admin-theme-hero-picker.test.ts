@@ -77,8 +77,37 @@ test("an untouched picker still yields the image the card would have shown", () 
   assert.match(source, /import \{ builtInHeroForThemeName \} from "@\/lib\/primary-hero-library";/);
 });
 
-test("the picker state resets with the rest of the dialog", () => {
-  assert.match(read(WORKSPACE), /setTopics\(""\); setHero\(""\)/);
+test("the create dialog resets every field it owns, hero included", () => {
+  // Was `assert.match(source, /setTopics\(""\); setHero\(""\)/)` — a regex over a
+  // single literal line. It broke when the topic state was refactored into
+  // `setSubthemes([])` / `setStandaloneTopics([])` even though the behaviour was
+  // correct, and it would equally have PASSED if the reset had stopped running
+  // while that exact string survived somewhere else in the file.
+  //
+  // Assert the property instead: every piece of dialog state is cleared in the
+  // same block, so no field can be added and silently left holding the previous
+  // theme's value on reopen.
+  const source = read(WORKSPACE);
+  const dialog = source.slice(source.indexOf("function CreateThemeDialog"));
+  const declared = Array.from(dialog.matchAll(/const \[(\w+), (set\w+)\] = useState/g))
+    .map(([, , setter]) => setter)
+    // `busy` tracks the in-flight request, not user input; it is cleared in
+    // `finally` rather than in the reset block, which is correct.
+    .filter((setter) => setter !== "setBusy");
+
+  assert.ok(declared.length >= 5, "expected the dialog to own several fields");
+
+  const resetBlock = dialog.slice(dialog.indexOf("onOpenChange(false);"));
+  const resetEnd = resetBlock.indexOf("await onCreated");
+  const resetCalls = resetBlock.slice(0, resetEnd);
+
+  for (const setter of declared) {
+    assert.match(
+      resetCalls,
+      new RegExp(`${setter}\\(`),
+      `${setter} is never reset, so reopening the dialog keeps the previous theme's value`,
+    );
+  }
 });
 
 test("both built-in selection and custom upload are offered", () => {

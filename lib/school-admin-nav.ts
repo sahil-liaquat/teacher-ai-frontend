@@ -36,6 +36,7 @@ import {
   Palette,
   School,
   Settings,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -69,9 +70,14 @@ export const SCHOOL_ADMIN_NAV: readonly SchoolAdminNavItem[] = [
  * tidy a sidebar would be a regression wearing a redesign's clothes.
  */
 export const SCHOOL_ADMIN_SUBNAV: Readonly<Record<string, readonly SchoolAdminNavItem[]>> = {
+  // The three stages of one workflow, in the order they are worked: build the
+  // building blocks, plan the days, then ship them. Review & Publish is a real
+  // surface rather than a modal over the grid, so it is reachable, linkable and
+  // carries the same year/level/month context.
   "/school-admin/curriculum": [
+    { href: "/school-admin/themes", label: "Themes & Topics", icon: Palette },
     { href: "/school-admin/curriculum", label: "Teaching days", icon: BookOpen },
-    { href: "/school-admin/themes", label: "Themes", icon: Palette },
+    { href: "/school-admin/curriculum/review", label: "Review & Publish", icon: ShieldCheck },
   ],
   "/school-admin/calendar": [
     { href: "/school-admin/calendar", label: "Calendar", icon: CalendarDays },

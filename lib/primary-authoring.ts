@@ -35,7 +35,13 @@ export function moveStep(steps: StepDraft[], from: number, to: number): StepDraf
   return renumberSteps(next);
 }
 
-/** A brand-new, unsaved step — mirrors the server's defaults for a fresh row. */
+/** A brand-new, unsaved step — mirrors the server's defaults for a fresh row.
+ *
+ * Every list field is initialised, `resource_ids` included. It is optional on
+ * `PrimaryCurriculumStep`, so leaving it out type-checked — but it left the one
+ * id array undefined while the other three were `[]`, and callers spreading a
+ * draft then had to guard that single field differently from its neighbours.
+ */
 export function createStepDraft(position: number): StepDraft {
   return {
     position,
@@ -45,6 +51,7 @@ export function createStepDraft(position: number): StepDraft {
     duration_minutes: 10,
     objective_indexes: [],
     resource_category: null,
+    resource_ids: [],
     child_action: [],
     observation_point: null,
     transition: null,

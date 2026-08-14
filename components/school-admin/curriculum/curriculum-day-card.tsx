@@ -1,60 +1,132 @@
-import { ArrowRight, Plus } from "lucide-react";
+"use client";
+
+import { AlertTriangle, CheckCircle2, FileText, Plus, Radio } from "lucide-react";
 import type { PrimaryCurriculumLesson } from "@/lib/api";
-import { lessonIssues, lessonStatus } from "@/lib/school-admin-curriculum";
-import { StatusBadge } from "@/components/school-admin/shared/status-badge";
+import {
+  DAY_STATUS_LABELS,
+  advisoryNotes,
+  blockingIssues,
+  type CurriculumSlot,
+} from "@/lib/curriculum-readiness";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
+/**
+ * One cell of the month grid.
+ *
+ * ⚠ Takes a SLOT, not a lesson. A slot commonly holds two rows — the published
+ * version teachers are being served and the draft the author is editing — and
+ * the card has to show both facts: which day is live, and whether there are
+ * unpublished changes. A lesson prop could only ever say one of them.
+ *
+ * Every state is distinguishable at a glance without reading the label, because
+ * the label is the thing that gets skimmed past: empty is dashed, published is
+ * green, needs-attention is amber with a count, ready is blue.
+ */
 export function CurriculumDayCard({
   day,
-  lesson,
+  slot,
   highlighted,
   onOpen,
   onCreate,
 }: {
   day: number;
-  lesson?: PrimaryCurriculumLesson;
+  slot?: CurriculumSlot;
   highlighted?: boolean;
   onOpen: (lesson: PrimaryCurriculumLesson) => void;
   onCreate: () => void;
 }) {
-  if (!lesson) {
+  const dayName = DAY_NAMES[day - 1] ?? `Day ${day}`;
+
+  if (!slot) {
     return (
       <button
         type="button"
         onClick={onCreate}
-        className="group min-h-40 rounded-2xl border border-dashed border-slate-300 bg-white/45 p-4 text-left transition hover:border-blue-300 hover:bg-blue-50/40 focus-visible:ring-2 focus-visible:ring-blue-600"
-        aria-label={`Create curriculum for ${DAY_NAMES[day - 1]}`}
+        className="flex min-h-[9.5rem] flex-col items-start rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-3 text-left transition hover:border-blue-400 hover:bg-blue-50/40"
       >
-        <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{DAY_NAMES[day - 1]}</span>
-        <span className="mt-7 flex items-center gap-2 text-sm font-semibold text-slate-600 group-hover:text-blue-700"><Plus className="h-4 w-4" /> Create day</span>
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>
+        <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700">
+          <Plus className="h-4 w-4" /> Add Day
+        </span>
       </button>
     );
   }
 
-  const issues = lessonIssues(lesson);
-  const status = lessonStatus(lesson);
+  const lesson = slot.current;
+  const issues = blockingIssues(lesson);
+  const notes = advisoryNotes(lesson);
+  const attached = (lesson.steps ?? []).reduce(
+    (total, step) => total + (step.resource_ids?.length ?? 0) + (step.required_resource_ids?.length ?? 0),
+    0,
+  );
+
   return (
     <button
       type="button"
       onClick={() => onOpen(lesson)}
       className={cn(
-        "group flex min-h-40 flex-col rounded-2xl border bg-white p-4 text-left shadow-[0_8px_26px_rgba(15,23,42,0.045)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_12px_34px_rgba(15,23,42,0.08)] focus-visible:ring-2 focus-visible:ring-blue-600",
-        highlighted ? "border-rose-300 ring-2 ring-rose-100" : "border-slate-200",
+        "flex min-h-[9.5rem] flex-col items-start gap-1 rounded-2xl border bg-white p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md",
+        highlighted ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200",
       )}
     >
-      <span className="flex w-full items-center justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{DAY_NAMES[day - 1]}</span>
-        <span className="text-[11px] font-medium text-slate-400">{lesson.scope === "platform" ? "TeachPad curriculum" : "Your school"}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>
+      <span className="line-clamp-2 text-sm font-semibold text-slate-950">
+        {lesson.title || lesson.daily_focus || "Untitled teaching day"}
       </span>
-      <span className="mt-4 line-clamp-2 text-sm font-semibold leading-5 text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</span>
-      <span className="mt-2 text-xs text-slate-500">{lesson.steps?.length ?? 0} blocks{status !== "published" ? ` · ${issues.length ? `${issues.length} to fix` : "ready to review"}` : ""}</span>
-      <span className="mt-auto flex w-full items-end justify-between gap-2 pt-4">
-        <StatusBadge status={status} compact />
-        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-700" />
+      {lesson.topic?.name ? (
+        <span className="line-clamp-1 text-xs text-slate-500">{lesson.topic.name}</span>
+      ) : null}
+
+      <span className="mt-auto flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2">
+        <StatusChip status={slot.status} issueCount={issues.length} />
+        {slot.hasUnpublishedEdits ? (
+          // The distinction that matters most on this screen: teachers are being
+          // served something, AND the author has changes not yet shipped.
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-violet-700">
+            <Radio className="h-3 w-3" /> live + edits
+          </span>
+        ) : null}
+        {attached ? (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+            <FileText className="h-3 w-3" /> {attached}
+          </span>
+        ) : null}
+        {!issues.length && notes.length ? (
+          <span className="text-[11px] font-medium text-slate-400">
+            {notes.length} auto-matched
+          </span>
+        ) : null}
       </span>
-      {issues[0] ? <span className="mt-2 line-clamp-1 text-[11px] font-medium text-rose-600">{issues[0]}</span> : null}
     </button>
+  );
+}
+
+function StatusChip({ status, issueCount }: { status: CurriculumSlot["status"]; issueCount: number }) {
+  if (status === "needs_attention") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+        <AlertTriangle className="h-3 w-3" />
+        {issueCount} {issueCount === 1 ? "issue" : "issues"}
+      </span>
+    );
+  }
+  if (status === "published") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+        <CheckCircle2 className="h-3 w-3" /> Published
+      </span>
+    );
+  }
+  if (status === "ready") {
+    return (
+      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-800">Ready</span>
+    );
+  }
+  return (
+    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+      {DAY_STATUS_LABELS[status]}
+    </span>
   );
 }

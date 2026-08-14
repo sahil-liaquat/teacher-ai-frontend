@@ -15,26 +15,30 @@ test("Master Curriculum admin exposes a clear curriculum management navigation",
   for (const label of ["Overview", "Create Themes", "Design Curriculum", "Manage Resources", "Map Resources", "Review & Publish"]) assert.match(page, new RegExp(label));
 });
 
-test("Master lesson authoring creates topics inline and reopens saved drafts", () => {
-  const editor = source("components/admin/master-curriculum/lesson-editor.tsx");
-
-  assert.match(editor, /adminPrimaryLessons/);
-  assert.match(editor, /adminCreatePrimaryTopic/);
-  assert.match(editor, /Create the first topic/);
-  assert.match(editor, /Version history/);
-  assert.doesNotMatch(editor, /Create a topic in Themes & topics first/);
+test("master and school authoring run the same workspace, differently guarded", () => {
+  // `lesson-editor.tsx` and `teaching-day-editor.tsx` were unrouted duplicates
+  // of the live authoring surface — two authoring systems that had already
+  // drifted. Their useful part (the day templates) moved to
+  // lib/primary-day-templates.ts; the components are gone.
+  for (const dead of ["lesson-editor", "teaching-day-editor", "curriculum-panel", "step-rows", "academic-years-panel", "feedback-panel", "master-review"]) {
+    assert.equal(
+      existsSync(new URL(`../../components/admin/master-curriculum/${dead}.tsx`, import.meta.url)),
+      false,
+      `${dead} is a second authoring system; migrate its behaviour instead of reviving it`,
+    );
+  }
+  assert.match(source("app/admin/organizations/master-curriculum/design/page.tsx"), /CurriculumWorkspace/);
+  assert.match(source("app/admin/organizations/master-curriculum/design/page.tsx"), /scope="platform"/);
+  assert.match(source("app/admin/organizations/master-curriculum/review/page.tsx"), /ReviewPublishWorkspace/);
 });
 
-test("Theme and calendar management provide editing controls", () => {
+test("Theme management provides editing controls", () => {
   const themes = source("components/admin/master-curriculum/theme-engine-panel.tsx");
-  const years = source("components/admin/master-curriculum/academic-years-panel.tsx");
 
   assert.match(themes, /CreateThemeForm/);
   assert.match(themes, /adminUpdatePrimaryTopic/);
   assert.match(themes, /Save topic/);
   assert.match(themes, /restoreTopic/);
-  assert.match(years, /startEditing/);
-  assert.match(years, /Save changes/);
 });
 
 test("Primary themes ship with a built-in hero library and optional upload", () => {
@@ -66,7 +70,7 @@ test("Primary themes ship with a built-in hero library and optional upload", () 
 test("Every admin step type has default artwork on the teacher dashboard", () => {
   const mapping = source("lib/primary-step-images.ts");
   const dashboard = source("components/primary/pages/primary-home-page.tsx");
-  const adminRows = source("components/admin/master-curriculum/step-rows.tsx");
+  const adminRows = source("components/school-admin/day-editor/school-day-editor.tsx");
   const stepAssets: Record<string, string> = {
     warm_up: "warm-up", introduction: "introduction", story_or_rhyme: "story-or-rhyme",
     picture_talk: "picture-talk", classroom_activity: "classroom-activity", worksheet: "worksheet",
@@ -88,6 +92,8 @@ test("Every admin step type has default artwork on the teacher dashboard", () =>
   // with a literal space and mandatory parens. This form matches everything that
   // stricter version did, and survives Prettier reflowing the JSX.
   assert.match(dashboard, /stepArt\s*\?\s*\(?\s*<img\s+src=\{stepArt\}/);
+  // The author sees the same block artwork the teacher will. This moved from the
+  // retired step-rows.tsx into the live Day Editor rather than being dropped.
   assert.match(adminRows, /primaryStepImage\(step\.step_type\)/);
 });
 

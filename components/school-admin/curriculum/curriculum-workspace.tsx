@@ -7,21 +7,29 @@ import { ArrowLeft, ChevronDown, Eye, MoreHorizontal, Sparkles, X } from "lucide
 import { type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
 import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import {
-  findLessonForSlot,
-  lessonIssues,
   lessonsForMonth,
-  lessonStatus,
   levelLabel,
   monthLabel,
   SCHOOL_LEVELS,
   SCHOOL_MONTHS,
 } from "@/lib/school-admin-curriculum";
+import {
+  DAY_STATUS_LABELS,
+  blockingIssues,
+  dayStatus,
+  slotOccupant,
+  curriculumSlots,
+  monthMetrics,
+  type CurriculumSlot,
+} from "@/lib/curriculum-readiness";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { CurriculumDayCard } from "@/components/school-admin/curriculum/curriculum-day-card";
+import { CreateDayDialog, type CreateDayRequest } from "@/components/school-admin/curriculum/create-day-dialog";
 import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day-editor";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
@@ -37,10 +45,11 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [previewScope, setPreviewScope] = useState<"month" | number | null>(null);
   const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
   const [aiTitle, setAITitle] = useState("AI curriculum proposal");
+  const [createSlot, setCreateSlot] = useState<{ week: number; day: number } | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const requestedYear = searchParams.get("year") ?? "";
   const level = searchParams.get("level") ?? "nursery";
@@ -73,10 +82,16 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   });
 
   const monthLessons = useMemo(() => lessonsForMonth(lessonsQuery.data ?? [], month), [lessonsQuery.data, month]);
-  const publishedCount = monthLessons.filter((lesson) => lesson.status === "published").length;
-  const draftCount = monthLessons.filter((lesson) => lesson.scope === scope && lesson.status === "draft").length;
-  const attentionCount = monthLessons.filter((lesson) => lessonIssues(lesson).length).length;
-  const readyCount = monthLessons.filter((lesson) => ["ready", "published"].includes(lessonStatus(lesson))).length;
+  // ⚠ Counted in SLOTS, from the server's readiness verdict. These used to count
+  // lesson ROWS against a frontend rule the publish endpoint did not share, so a
+  // published day and the draft opened to edit it were counted twice and
+  // "N of 25 ready" could exceed 25. See lib/curriculum-readiness.ts.
+  const metrics = useMemo(() => monthMetrics(monthLessons), [monthLessons]);
+  const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
+  const slotFor = (week: number, day: number) => slots.find((slot) => slot.week === week && slot.day === day);
+  // Review & Publish is a real surface, not a modal over the grid. It carries
+  // the same year/level/month context so the admin never reselects it.
+  const reviewHref = `${scope === "platform" ? "/admin/organizations/master-curriculum/review" : "/school-admin/curriculum/review"}?year=${yearId}&level=${level}&month=${month}`;
 
   function updateContext(changes: Record<string, string | number | null>) {
     const next = new URLSearchParams(searchParams.toString());
@@ -97,31 +112,54 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
     setAIRequest({ operation, academic_year_id: yearId, level: level as PrimaryLevel, month, week, theme_id: theme.id });
   }
 
-  async function createDay(week: number, day: number) {
-    const theme = themesQuery.data?.find((item) => item.is_active) ?? themesQuery.data?.[0];
-    if (!theme || !yearId) {
-      toast({ title: "A theme and academic year are required", description: "Set up the school year and at least one curriculum theme first.", variant: "error" });
+  /**
+   * ⚠ Opens the dialog. It does NOT create anything.
+   *
+   * This used to create a day on the spot with
+   * `themesQuery.data?.find((item) => item.is_active) ?? themesQuery.data?.[0]`
+   * as the theme — the first active theme in the list, never chosen and, since
+   * the Day Editor had no theme control, never correctable. Theme drives both
+   * the teacher's lookup and the resource matcher's dominant facet, so it is
+   * now an explicit decision. See components/school-admin/curriculum/create-day-dialog.tsx.
+   */
+  function openCreateDay(week: number, day: number) {
+    if (!yearId) {
+      toast({ title: "An academic year is required", description: "Set up the school year before planning teaching days.", variant: "error" });
       return;
     }
+    setCreateSlot({ week, day });
+  }
+
+  async function createDay(request: CreateDayRequest) {
+    if (!createSlot || !yearId) return;
+    setCreating(true);
     try {
       const lesson = await adapter.createLesson({
         academic_year_id: yearId,
-        theme_id: theme.id,
+        theme_id: request.themeId,
+        topic_id: request.topicId,
         level,
         month,
-        week,
-        day,
+        week: createSlot.week,
+        day: createSlot.day,
         title: "New teaching day",
-        daily_focus: null,
+        daily_focus: request.dailyFocus,
         objectives: [],
         vocabulary: [],
         assessment_questions: [],
-        steps: [],
+        steps: request.steps,
       });
       await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons", yearId, level] });
+      setCreateSlot(null);
       updateContext({ day: lesson.id });
-    } catch (error: any) {
-      toast({ title: "Could not create the teaching day", description: error?.message, variant: "error" });
+    } catch (error) {
+      toast({
+        title: "Could not create the teaching day",
+        description: getErrorMessage(error, "Check the theme and topic and try again."),
+        variant: "error",
+      });
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -181,11 +219,11 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
       <PageHeading
         eyebrow="Curriculum workspace"
         title={`${monthLabel(month)} Curriculum`}
-        description={`${readyCount} of 25 days ready · ${draftCount} draft changes · ${publishedCount} published · ${attentionCount} need attention`}
+        description={`${metrics.slots} planned slots · ${metrics.created} days created · ${metrics.ready} ready · ${metrics.published} published · ${metrics.needsAttention} need attention`}
         actions={(
           <>
             <Button variant="outline" onClick={() => setPreviewScope("month")}><Eye className="h-4 w-4" /> Preview</Button>
-            <Button onClick={() => setReviewOpen(true)}>Review &amp; Publish</Button>
+            <Button onClick={() => router.push(reviewHref)}>Review &amp; Publish</Button>
           </>
         )}
       />
@@ -221,7 +259,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
           <h2 className="text-xl font-semibold text-slate-950">No curriculum planned for {monthLabel(month)} yet</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">Start with a teaching day, or use curriculum AI to prepare the month while preserving this scope.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={() => void createDay(1, 1)}>Create first day</Button>
+            <Button variant="outline" onClick={() => openCreateDay(1, 1)}>Create first day</Button>
             <Button onClick={() => openAI("create_month", "Create this month with AI")}><Sparkles className="h-4 w-4" /> Create with AI</Button>
           </div>
         </section>
@@ -232,7 +270,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h2 id={`week-${week}-heading`} className="text-base font-semibold text-slate-950">Week {week}</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">{DAYS.filter((day) => findLessonForSlot(monthLessons, week, day)).length} of 5 days planned</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{DAYS.filter((day) => slotFor(week, day)).length} of 5 days planned</p>
                 </div>
                 <details className="relative">
                   <summary className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl text-slate-500 hover:bg-white" aria-label={`Week ${week} actions`}><MoreHorizontal className="h-5 w-5" /></summary>
@@ -244,20 +282,25 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
               </div>
               <div className="hidden grid-cols-5 gap-3 xl:grid">
                 {DAYS.map((day) => {
-                  const lesson = findLessonForSlot(monthLessons, week, day);
-                  const highlighted = Boolean(lesson && ((issueFilter === "resources" && lessonIssues(lesson).some((issue) => issue.includes("resource"))) || (issueFilter === "drafts" && lesson.scope === scope && lesson.status === "draft")));
-                  return <CurriculumDayCard key={day} day={day} lesson={lesson} highlighted={highlighted} onOpen={(item) => updateContext({ day: item.id })} onCreate={() => void createDay(week, day)} />;
+                  const slot = slotFor(week, day);
+                  const highlighted = Boolean(slot && (
+                    (issueFilter === "resources" && blockingIssues(slot.current).some((issue) => issue.key.startsWith("step_resource")))
+                    || (issueFilter === "drafts" && slot.current.scope === scope && slot.current.status === "draft")
+                  ));
+                  return <CurriculumDayCard key={day} day={day} slot={slot} highlighted={highlighted} onOpen={(item) => updateContext({ day: item.id })} onCreate={() => openCreateDay(week, day)} />;
                 })}
               </div>
               <div className="space-y-2 xl:hidden">
                 {DAYS.map((day) => {
-                  const lesson = findLessonForSlot(monthLessons, week, day);
+                  const slot = slotFor(week, day);
+                  const lesson = slot?.current;
                   const dayName = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day - 1];
+                  const issues = slot ? blockingIssues(slot.current).length : 0;
                   return (
-                    <button key={day} type="button" onClick={() => lesson ? updateContext({ day: lesson.id }) : void createDay(week, day)} className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left">
+                    <button key={day} type="button" onClick={() => lesson ? updateContext({ day: lesson.id }) : openCreateDay(week, day)} className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left">
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">{dayName.slice(0, 3).toUpperCase()}</span>
                       <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-slate-500">{dayName}</span><span className="block truncate text-sm font-semibold text-slate-950">{lesson?.title || lesson?.daily_focus || "Not planned"}</span></span>
-                      <span className="text-xs font-bold text-blue-700">{lesson ? lessonStatus(lesson).replace("_", " ") : "+ Create"}</span>
+                      <span className="text-xs font-bold text-blue-700">{slot ? (issues ? `${issues} ${issues === 1 ? "issue" : "issues"}` : DAY_STATUS_LABELS[slot.status]) : "+ Create"}</span>
                     </button>
                   );
                 })}
@@ -267,26 +310,6 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
         </div>
       )}
 
-      {reviewOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/35 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="month-review-title">
-          <div className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Safe publishing</p><h2 id="month-review-title" className="mt-1 text-xl font-semibold text-slate-950">Review {monthLabel(month)} changes</h2><p className="mt-2 text-sm text-slate-600">Open each draft to review its classroom flow before publishing to teachers.</p></div>
-              <button type="button" aria-label="Close review" onClick={() => setReviewOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
-              {monthLessons.filter((lesson) => lesson.scope === scope && lesson.status === "draft").map((lesson) => (
-                <button key={lesson.id} type="button" onClick={() => { setReviewOpen(false); updateContext({ day: lesson.id }); }} className="flex w-full items-center gap-3 py-4 text-left">
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</span><span className="mt-1 block text-xs text-slate-500">Week {lesson.week}, day {lesson.day} · {lessonIssues(lesson).length ? lessonIssues(lesson)[0] : "Ready to review"}</span></span>
-                  <span className="text-xs font-bold text-blue-700">Review</span>
-                </button>
-              ))}
-              {!draftCount ? <p className="py-8 text-center text-sm text-slate-500">There are no drafts waiting to publish.</p> : null}
-            </div>
-            <Button variant="outline" className="mt-6 w-full" onClick={() => setReviewOpen(false)}><ArrowLeft className="h-4 w-4" /> Return to curriculum</Button>
-          </div>
-        </div>
-      ) : null}
       {previewScope !== null ? (
         <CurriculumPreview
           month={month}
@@ -298,6 +321,20 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
             setPreviewScope(null);
             updateContext({ day: lessonId });
           }}
+        />
+      ) : null}
+      {createSlot ? (
+        <CreateDayDialog
+          open
+          week={createSlot.week}
+          day={createSlot.day}
+          month={month}
+          level={level}
+          themes={themesQuery.data ?? []}
+          monthLessons={monthLessons}
+          busy={creating}
+          onCancel={() => setCreateSlot(null)}
+          onCreate={(request) => void createDay(request)}
         />
       ) : null}
       <AIProposalDialog
@@ -343,14 +380,14 @@ function CurriculumPreview({ month, level, week, lessons, onClose, onOpenDay }: 
               <h3 id={`preview-week-${weekNumber}`} className="mb-3 text-sm font-semibold text-slate-950">Week {weekNumber}</h3>
               <div className="grid gap-2 sm:grid-cols-5">
                 {DAYS.map((day) => {
-                  const lesson = findLessonForSlot(lessons, weekNumber, day);
+                  const lesson = slotOccupant(lessons, weekNumber, day);
                   const dayName = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day - 1];
                   return lesson ? (
                     <button key={day} type="button" onClick={() => onOpenDay(lesson.id)} className="rounded-2xl border border-slate-200 p-3 text-left transition hover:border-blue-300 hover:bg-blue-50/40">
                       <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>
                       <span className="mt-2 line-clamp-2 block text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</span>
                       <span className="mt-2 block text-xs text-slate-500">{lesson.steps?.length ?? 0} blocks</span>
-                      <span className="mt-3 block"><StatusBadge status={lessonStatus(lesson)} compact /></span>
+                      <span className="mt-3 block"><StatusBadge status={dayStatus(lesson)} compact /></span>
                     </button>
                   ) : (
                     <div key={day} className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3">

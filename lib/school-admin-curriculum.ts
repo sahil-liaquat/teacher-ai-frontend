@@ -33,35 +33,20 @@ export function levelLabel(level: string): string {
   return SCHOOL_LEVELS.find((item) => item.value === level)?.label ?? level;
 }
 
-export function stepIssues(step: PrimaryCurriculumStep): string[] {
-  const issues: string[] = [];
-  if (!step.title?.trim()) issues.push("missing a title");
-  if (!step.instructions?.some((instruction) => instruction.trim())) issues.push("missing teacher instructions");
-  if (step.resource_category && !(step.resource_ids?.length || step.required_resource_ids?.length)) {
-    issues.push("missing a resource");
-  }
-  return issues;
-}
-
-export function lessonIssues(lesson: PrimaryCurriculumLesson): string[] {
-  const issues: string[] = [];
-  if (!lesson.title?.trim() && !lesson.daily_focus?.trim()) issues.push("Add a topic or daily focus");
-  if (!lesson.objectives?.some((objective) => objective.trim())) issues.push("Add a learning objective");
-  if (!lesson.steps?.length) issues.push("Add classroom blocks");
-  const missingInstructions = lesson.steps?.filter((step) => stepIssues(step).includes("missing teacher instructions")).length ?? 0;
-  const missingResources = lesson.steps?.filter((step) => stepIssues(step).includes("missing a resource")).length ?? 0;
-  if (missingInstructions) issues.push(`${missingInstructions} ${missingInstructions === 1 ? "block needs" : "blocks need"} teacher instructions`);
-  if (missingResources) issues.push(`${missingResources} ${missingResources === 1 ? "block needs" : "blocks need"} resources`);
-  return issues;
-}
-
-export function lessonStatus(lesson?: PrimaryCurriculumLesson | null): SchoolDayStatus {
-  if (!lesson) return "not_started";
-  if (lesson.status === "published") return "published";
-  if (lessonIssues(lesson).length) return "needs_attention";
-  if (lesson.scope === "school") return "ready";
-  return "draft";
-}
+/**
+ * ⚠ `stepIssues`, `lessonIssues` and `lessonStatus` used to live here.
+ *
+ * They were a SECOND readiness rule, evaluated in the browser, and it disagreed
+ * with the one the publish endpoint applies: the two sets overlapped on "has
+ * steps" and nothing else. A day could show a green *Ready* badge and then be
+ * refused for a missing topic, while a day flagged *Needs attention* for missing
+ * objectives published without complaint.
+ *
+ * Readiness is now decided once, on the server, and arrives on
+ * `lesson.readiness`. Read it through `lib/curriculum-readiness.ts`. If a new
+ * criterion is needed, add it to `backend/app/curriculum/primary.py` — putting
+ * one back here recreates exactly the split this removed.
+ */
 
 export function resourceCount(lesson: PrimaryCurriculumLesson): number {
   return (lesson.steps ?? []).reduce((total, step) => (
@@ -94,10 +79,10 @@ export function lessonsForMonth(lessons: PrimaryCurriculumLesson[], month: numbe
   return lessons.filter((lesson) => lesson.month === month && lesson.status !== "archived");
 }
 
-export function findLessonForSlot(
-  lessons: PrimaryCurriculumLesson[],
-  week: number,
-  day: number,
-): PrimaryCurriculumLesson | undefined {
-  return lessons.find((lesson) => lesson.week === week && lesson.day === day);
-}
+/**
+ * ⚠ `findLessonForSlot` was removed. It took the FIRST row matching (week, day),
+ * which silently picked one of the two versions a slot commonly holds — the
+ * published one teachers see, and the draft the author is editing. Use
+ * `slotAt`/`slotOccupant` from `lib/curriculum-readiness.ts`, which model the
+ * slot as holding both.
+ */

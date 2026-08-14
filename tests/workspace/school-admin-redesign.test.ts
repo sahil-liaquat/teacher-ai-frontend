@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+
 import {
-  curriculumHref,
-  lessonIssues,
-  lessonStatus,
-  resourceCount,
-} from "../../lib/school-admin-curriculum.ts";
+  DAY_STATUS_LABELS,
+  blockingIssues,
+  dayStatus,
+  focusTarget,
+  isPublishable,
+} from "../../lib/curriculum-readiness.ts";
+import { curriculumHref, resourceCount } from "../../lib/school-admin-curriculum.ts";
 import {
   academicYearState,
   ownershipLabel,
@@ -55,19 +58,36 @@ function lesson(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
-test("school curriculum readiness reports actionable incomplete states", () => {
-  const ready = lesson();
-  assert.deepEqual(lessonIssues(ready), []);
-  assert.equal(lessonStatus(ready), "ready");
-  assert.equal(resourceCount(ready), 1);
+test("school curriculum readiness comes from the server, and is actionable", () => {
+  // Was two assertions over a frontend-only `lessonIssues` rule that the publish
+  // endpoint did not share. The contract now under test is the one that matters:
+  // whatever the server says is what the UI shows, and every failure carries a
+  // message and somewhere to go.
+  const incomplete = lesson({
+    readiness: {
+      ready: false,
+      blocking_count: 2,
+      checks: [
+        { key: "objectives", label: "Learning objectives", ok: false, severity: "blocking", detail: "Add at least one learning objective.", field: "objectives" },
+        { key: "step_instructions:1", label: "Story Time — teacher instructions", ok: false, severity: "blocking", detail: "“Story Time” has no teacher instructions.", step_position: 1 },
+      ],
+    },
+  });
 
-  const incomplete = lesson({ objectives: [], steps: [{ ...ready.steps[0], instructions: [], resource_ids: [] }] });
-  assert.equal(lessonStatus(incomplete), "needs_attention");
-  assert.match(lessonIssues(incomplete).join(" "), /learning objective/);
-  assert.match(lessonIssues(incomplete).join(" "), /teacher instructions/);
-  assert.match(lessonIssues(incomplete).join(" "), /resources/);
+  assert.equal(dayStatus(incomplete), "needs_attention");
+  assert.equal(isPublishable(incomplete), false);
+  assert.equal(blockingIssues(incomplete).length, 2);
+  for (const issue of blockingIssues(incomplete)) {
+    assert.ok(issue.detail, `${issue.key} has no message`);
+    assert.ok(focusTarget(issue), `${issue.key} is a dead end`);
+  }
+  assert.equal(focusTarget(blockingIssues(incomplete)[1]), "block:1");
 
-  assert.equal(lessonStatus(lesson({ status: "published" })), "published");
+  const ready = lesson({ readiness: { ready: true, blocking_count: 0, checks: [] } });
+  assert.equal(dayStatus(ready), "ready");
+  assert.equal(isPublishable(ready), true);
+  assert.deepEqual(blockingIssues(ready), []);
+  assert.equal(dayStatus(lesson({ status: "published" })), "published");
 });
 
 test("curriculum context and selected day are deep-linkable", () => {
@@ -86,11 +106,25 @@ test("overview is operational rather than an analytics dashboard", () => {
 
 test("curriculum is week-based and mobile switches to a day list", () => {
   const workspace = source("components/school-admin/curriculum/curriculum-workspace.tsx");
-  const card = source("components/school-admin/curriculum/curriculum-day-card.tsx");
   assert.match(workspace, /WEEKS\.map/);
   assert.match(workspace, /xl:hidden/);
   assert.match(workspace, /updateContext/);
-  assert.match(card, /Needs attention|lessonStatus/);
+});
+
+test("every grid cell state has a distinct label", () => {
+  // Was a source regex over the day card asserting the literal "Needs attention"
+  // appeared in that file. It broke the moment the labels moved into the shared
+  // readiness module — while the behaviour was fine — and it would equally have
+  // PASSED if the card had stopped rendering the label at all. Assert the thing
+  // that actually matters: the five states an author has to tell apart are all
+  // named, and no two share a name.
+  const labels = Object.values(DAY_STATUS_LABELS);
+  assert.equal(labels.length, 5);
+  assert.equal(new Set(labels).size, 5, "two states share a label");
+  assert.deepEqual(
+    Object.keys(DAY_STATUS_LABELS).sort(),
+    ["draft", "needs_attention", "not_started", "published", "ready"],
+  );
 });
 
 test("day editor uses progressive block editing and safe publishing", () => {

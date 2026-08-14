@@ -21,6 +21,10 @@ export function curriculumAdminAdapter(scope: CurriculumAdminScope) {
     duplicateLesson: (id: string) => platform ? backendApi.adminDuplicatePrimaryLesson(id) : backendApi.schoolAdminDuplicateCurriculumDay(id),
     customizeLesson: (id: string, academicYearId?: string | null) => platform ? backendApi.adminDuplicatePrimaryLesson(id) : backendApi.schoolAdminCustomizeLesson(id, academicYearId),
     resources: (params: any) => platform ? backendApi.adminResources(params) : backendApi.schoolAdminResources(params),
+    // Resolve attachments by id. Never resolve a title out of `resources()` —
+    // that is a paginated search, and anything past the first page comes back
+    // unresolved. See the note on `adminLookupResources` in lib/api.ts.
+    lookupResources: (ids: string[]) => platform ? backendApi.adminLookupResources(ids) : backendApi.schoolAdminLookupResources(ids),
     uploadResource: (file: File, category: string, title?: string) => platform ? backendApi.adminUploadPrimaryResource(file, category, title) : backendApi.schoolAdminUploadResource(file, category, title),
     generateProposal: (request: PrimaryAIProposalRequest) => platform ? backendApi.adminGenerateCurriculumAIProposal(request) : backendApi.schoolAdminGenerateCurriculumAIProposal(request),
     applyProposal: (id: string, changeIds?: string[]) => platform ? backendApi.adminApplyCurriculumAIProposal(id, changeIds) : backendApi.schoolAdminApplyCurriculumAIProposal(id, changeIds),

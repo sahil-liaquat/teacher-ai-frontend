@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  type LessonReadinessCheck,
   type PrimaryAIOperation,
   type PrimaryAIProposalRequest,
   type PrimaryCurriculumLesson,
@@ -32,7 +33,18 @@ import {
 } from "@/lib/api";
 import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import { STEP_TYPE_OPTIONS, stepDetailFields, type StepDetailField } from "@/lib/primary-step-fields";
-import { lessonIssues, levelLabel, monthLabel, resourceCount, stepIssues } from "@/lib/school-admin-curriculum";
+import { primaryStepImage } from "@/lib/primary-step-images";
+import { levelLabel, monthLabel, resourceCount } from "@/lib/school-admin-curriculum";
+import {
+  advisoryNotes,
+  blockingIssues,
+  dayStatus,
+  focusTarget,
+  isPublishable,
+  satisfiedChecks,
+} from "@/lib/curriculum-readiness";
+import { applySelectionChange, topicOptions } from "@/lib/curriculum-day-draft";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +81,11 @@ export function SchoolDayEditor({
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [dailyFocus, setDailyFocus] = useState("");
+  // Theme is editable HERE. It used to be derived from `lesson.theme_id` with no
+  // control at all, so a day created with the old silent default could never be
+  // corrected — and theme drives both the teacher's lookup and the resource
+  // matcher's dominant facet.
+  const [themeId, setThemeId] = useState("");
   const [topicId, setTopicId] = useState("");
   const [objectives, setObjectives] = useState<string[]>([]);
   const [steps, setSteps] = useState<EditableStep[]>([]);
@@ -87,9 +104,26 @@ export function SchoolDayEditor({
     queryKey: [adapter.queryRoot, "lesson", lessonId],
     queryFn: () => adapter.lesson(lessonId),
   });
+  /**
+   * ⚠ Resolve attachments BY ID, never out of a search page.
+   *
+   * This was `adapter.resources({ page_size: 100 })` against a title-ordered
+   * catalog of ~861 rows, so any printable outside the first page rendered as
+   * "Attached resource / Classroom resource" and the author could not tell what
+   * was attached without reopening the picker. Raising the page size would not
+   * have fixed it — it was the wrong query. The step already knows its ids.
+   */
+  const attachedResourceIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const step of steps) {
+      for (const id of allResourceIds(step)) ids.add(id);
+    }
+    return Array.from(ids).sort();
+  }, [steps]);
   const resourcesQuery = useQuery({
-    queryKey: [adapter.queryRoot, "day-resource-titles"],
-    queryFn: () => adapter.resources({ page_size: 100 }),
+    queryKey: [adapter.queryRoot, "resource-lookup", attachedResourceIds.join(",")],
+    queryFn: () => adapter.lookupResources(attachedResourceIds),
+    enabled: attachedResourceIds.length > 0,
   });
 
   useEffect(() => {
@@ -97,6 +131,7 @@ export function SchoolDayEditor({
     const lesson = lessonQuery.data;
     setTitle(lesson.title ?? "");
     setDailyFocus(lesson.daily_focus ?? "");
+    setThemeId(lesson.theme_id ?? "");
     setTopicId(lesson.topic_id ?? "");
     setObjectives(lesson.objectives ?? []);
     setSteps((lesson.steps ?? []).slice().sort((a, b) => a.position - b.position).map((step) => ({ ...step })));
@@ -110,12 +145,30 @@ export function SchoolDayEditor({
   const isMaster = lesson?.scope === "platform";
   const isPublished = lesson?.status === "published";
   const readOnly = (scope === "school" && isMaster) || isPublished;
-  const theme = themes.find((item) => item.id === lesson?.theme_id || item.source_theme_id === lesson?.theme_id);
-  const topics = theme?.topics ?? [];
+  const activeThemes = useMemo(() => themes.filter((item) => item.is_active), [themes]);
+  const theme = activeThemes.find((item) => item.id === themeId || item.source_theme_id === themeId);
+  const topics = topicOptions(activeThemes, { themeId, subthemeId: "" });
   const duration = steps.reduce((sum, step) => sum + (step.duration_minutes || 0), 0);
-  const localLesson = lesson ? ({ ...lesson, title, daily_focus: dailyFocus, topic_id: topicId || null, objectives, steps } as PrimaryCurriculumLesson) : null;
-  const issues = localLesson ? lessonIssues(localLesson) : [];
-  const resourceMap = useMemo(() => new Map((resourcesQuery.data?.items ?? []).map((resource) => [resource.id, resource])), [resourcesQuery.data]);
+  const localLesson = lesson ? ({ ...lesson, title, daily_focus: dailyFocus, theme_id: themeId || lesson.theme_id, topic_id: topicId || null, objectives, steps } as PrimaryCurriculumLesson) : null;
+  /**
+   * ⚠ Issues come from the SERVER's verdict on the SAVED row — never from a
+   * rule evaluated here. That second rule is what let a day show a green
+   * *Ready* badge and then be refused on publish. The trade is that the panel
+   * reflects the last save, which is why unsaved edits say so rather than
+   * silently re-scoring against a rule the publish endpoint does not share.
+   */
+  const issues = blockingIssues(lesson);
+  const notes = advisoryNotes(lesson);
+  const passing = satisfiedChecks(lesson);
+  // Picker selections are merged in so a freshly attached printable shows its
+  // real title immediately, without waiting for the lookup to refetch.
+  const [pickedResources, setPickedResources] = useState<Record<string, PrimaryResource>>({});
+  const resourceMap = useMemo(() => {
+    const map = new Map<string, PrimaryResource>();
+    for (const resource of resourcesQuery.data ?? []) map.set(resource.id, resource);
+    for (const resource of Object.values(pickedResources)) map.set(resource.id, resource);
+    return map;
+  }, [resourcesQuery.data, pickedResources]);
 
   function markChanged() {
     setSaved(false);
@@ -196,6 +249,10 @@ export function SchoolDayEditor({
       await adapter.updateLesson(lesson.id, {
         title: title.trim() || null,
         daily_focus: dailyFocus.trim() || null,
+        // Both halves of the pair travel together. The server validates the
+        // RESULTING (theme, topic) combination, so sending one without the
+        // other would be judged against whatever is still on the row.
+        theme_id: themeId || lesson.theme_id,
         topic_id: topicId || null,
         objectives: objectives.filter((item) => item.trim()),
       });
@@ -221,8 +278,8 @@ export function SchoolDayEditor({
       setSaved(true);
       if (showToast) toast({ title: "Teaching day saved" });
       return updated;
-    } catch (error: any) {
-      toast({ title: "Could not save this day", description: error?.message, variant: "error" });
+    } catch (error) {
+      toast({ title: "Could not save this day", description: getErrorMessage(error, "Check the theme and topic and try again."), variant: "error" });
       return null;
     } finally {
       setSaving(false);
@@ -230,9 +287,21 @@ export function SchoolDayEditor({
   }
 
   async function publishDay() {
-    if (!lesson || issues.length) return;
+    if (!lesson) return;
+    // Save first, then judge the SAVED row. Gating on the pre-save verdict would
+    // either refuse a day the author has just fixed, or attempt a publish the
+    // server will refuse — the save response carries a fresh `readiness`, so
+    // this is the only moment at which the two can be guaranteed to agree.
     const savedLesson = await saveDay(false);
     if (!savedLesson) return;
+    if (!isPublishable(savedLesson)) {
+      toast({
+        title: "This day is not ready yet",
+        description: blockingIssues(savedLesson)[0]?.detail ?? "Resolve the remaining issues and try again.",
+        variant: "error",
+      });
+      return;
+    }
     setSaving(true);
     try {
       const published = await adapter.publishLesson(lesson.id);
@@ -240,8 +309,8 @@ export function SchoolDayEditor({
       await queryClient.invalidateQueries({ queryKey: [adapter.queryRoot, "lessons"] });
       setReviewOpen(false);
       toast({ title: "Published to teachers", description: "This school version is now available to your teachers." });
-    } catch (error: any) {
-      toast({ title: "Could not publish", description: error?.message, variant: "error" });
+    } catch (error) {
+      toast({ title: "Could not publish", description: getErrorMessage(error, "Resolve the remaining issues and try again."), variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -249,6 +318,9 @@ export function SchoolDayEditor({
 
   function attachResource(resource: PrimaryResource) {
     if (!pickerTarget) return;
+    // Keep the row the picker already resolved. Without this the freshly
+    // attached printable would show a placeholder until the lookup refetched.
+    setPickedResources((current) => ({ ...current, [resource.id]: resource }));
     const step = steps[pickerTarget.stepIndex];
     if (pickerTarget.detail) {
       const { key, multi } = pickerTarget.detail;
@@ -295,7 +367,7 @@ export function SchoolDayEditor({
   if (lessonQuery.isError || !lesson || !localLesson) return <SchoolAdminPage><button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-bold text-blue-700"><ArrowLeft className="h-4 w-4" /> Back to curriculum</button><div className="rounded-2xl bg-rose-50 p-5 text-sm text-rose-800">This teaching day could not be loaded.</div></SchoolAdminPage>;
 
   const dayName = lesson.day ? DAY_NAMES[lesson.day - 1] : "Teaching day";
-  const status = lesson.status === "published" ? "published" : issues.length ? "needs_attention" : "ready";
+  const status = dayStatus(lesson);
 
   return (
     <SchoolAdminPage className="max-w-[1180px]">
@@ -309,7 +381,7 @@ export function SchoolDayEditor({
           <p className="mt-2 text-sm text-slate-500">{levelLabel(lesson.level)}{theme ? ` · ${theme.name}` : ""} · {saved ? "All changes saved" : "Unsaved changes"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setPreviewOpen(true)}><Eye className="h-4 w-4" /> Preview</Button>
+          <Button variant="outline" onClick={() => setPreviewOpen(true)}><Eye className="h-4 w-4" /> Preview as Teacher</Button>
           {isMaster ? <Button onClick={() => void customizeDay()} disabled={saving}>Customize for your school</Button> : isPublished ? <Button onClick={() => void createDraftFromPublished()} disabled={saving}>Edit as a new draft</Button> : (
             <><Button variant="outline" onClick={() => void saveDay()} disabled={saving || saved}><Save className="h-4 w-4" /> {saving ? "Saving…" : "Save"}</Button><Button onClick={() => setReviewOpen(true)}>Review &amp; Publish</Button></>
           )}
@@ -326,31 +398,109 @@ export function SchoolDayEditor({
         </div>
       ) : null}
 
-      <section className="grid gap-5 rounded-3xl bg-white p-5 shadow-[0_10px_34px_rgba(15,23,42,0.05)] sm:p-6 lg:grid-cols-[1fr_280px]">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-950">Day summary</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-semibold text-slate-700">Topic<Input disabled={readOnly} value={title} onChange={(event) => { setTitle(event.target.value); markChanged(); }} className="mt-2" placeholder="What is this day about?" /></label>
-            <label className="text-sm font-semibold text-slate-700">Curriculum topic<select disabled={readOnly} value={topicId} onChange={(event) => { setTopicId(event.target.value); markChanged(); }} className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold"><option value="">No linked topic</option>{topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></label>
+      <section className="grid gap-5 rounded-3xl bg-white p-5 shadow-[0_10px_34px_rgba(15,23,42,0.05)] sm:p-6 lg:grid-cols-[1fr_300px]">
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">Curriculum context</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label id="field-theme" className="text-sm font-semibold text-slate-700">
+                Theme
+                <select
+                  disabled={readOnly}
+                  value={themeId}
+                  onChange={(event) => {
+                    // Clearing an invalidated topic happens in the same update as
+                    // the theme change, so no render can observe a mismatched
+                    // pair — and a fast Save in that window cannot send one.
+                    const next = applySelectionChange(activeThemes, { themeId, subthemeId: "", topicId }, { themeId: event.target.value });
+                    setThemeId(next.themeId);
+                    setTopicId(next.topicId);
+                    markChanged();
+                  }}
+                  className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold"
+                >
+                  <option value="">Select a theme…</option>
+                  {activeThemes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+              <label id="field-topic" className="text-sm font-semibold text-slate-700">
+                Topic
+                <select
+                  disabled={readOnly || !themeId}
+                  value={topicId}
+                  onChange={(event) => { setTopicId(event.target.value); markChanged(); }}
+                  className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold"
+                >
+                  <option value="">{themeId ? "Select a topic…" : "Pick a theme first"}</option>
+                  {topics.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">
+              {levelLabel(lesson.level)} · {lesson.month ? monthLabel(lesson.month) : "month"} · week {lesson.week ?? "—"}, day {lesson.day ?? "—"}
+            </p>
           </div>
-          <label className="mt-4 block text-sm font-semibold text-slate-700">Daily focus<Input disabled={readOnly} value={dailyFocus} onChange={(event) => { setDailyFocus(event.target.value); markChanged(); }} className="mt-2" placeholder="One clear focus for teachers" /></label>
-          <div className="mt-5">
-            <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-slate-700">Learning objectives</h3>{!readOnly ? <button type="button" onClick={() => { setObjectives((current) => [...current, ""]); markChanged(); }} className="text-xs font-bold text-blue-700">+ Add objective</button> : null}</div>
-            <div className="mt-2 space-y-2">
-              {objectives.map((objective, index) => <div key={index} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-emerald-600" /><Input disabled={readOnly} value={objective} onChange={(event) => { setObjectives((current) => current.map((item, position) => position === index ? event.target.value : item)); markChanged(); }} />{!readOnly ? <button type="button" aria-label={`Remove objective ${index + 1}`} onClick={() => { setObjectives((current) => current.filter((_, position) => position !== index)); setSteps((current) => current.map((step) => ({ ...step, objective_indexes: (step.objective_indexes ?? []).filter((value) => value !== index).map((value) => value > index ? value - 1 : value) }))); markChanged(); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"><X className="h-4 w-4" /></button> : null}</div>)}
-              {!objectives.length ? <p className="text-sm text-slate-500">No learning objectives yet.</p> : null}
+
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">Learning</h2>
+            <label id="field-daily_focus" className="mt-4 block text-sm font-semibold text-slate-700">
+              Daily focus
+              <Input disabled={readOnly} value={dailyFocus} onChange={(event) => { setDailyFocus(event.target.value); markChanged(); }} className="mt-2" placeholder="One clear focus for teachers" />
+            </label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">
+              Day title
+              <Input disabled={readOnly} value={title} onChange={(event) => { setTitle(event.target.value); markChanged(); }} className="mt-2" placeholder="What is this day about?" />
+            </label>
+            <div id="field-objectives" className="mt-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">Learning objectives</h3>
+                {!readOnly ? <button type="button" onClick={() => { setObjectives((current) => [...current, ""]); markChanged(); }} className="text-xs font-bold text-blue-700">+ Add objective</button> : null}
+              </div>
+              <div className="mt-2 space-y-2">
+                {objectives.map((objective, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-5 shrink-0 text-xs font-bold text-slate-400">{index + 1}.</span>
+                    <Input disabled={readOnly} value={objective} onChange={(event) => { setObjectives((current) => current.map((item, position) => position === index ? event.target.value : item)); markChanged(); }} />
+                    {!readOnly ? (
+                      <button
+                        type="button"
+                        aria-label={`Remove objective ${index + 1}`}
+                        onClick={() => {
+                          setObjectives((current) => current.filter((_, position) => position !== index));
+                          // Blocks index INTO this list, so removing an objective
+                          // has to reindex every block or they silently point at
+                          // the wrong one.
+                          setSteps((current) => current.map((step) => ({ ...step, objective_indexes: (step.objective_indexes ?? []).filter((value) => value !== index).map((value) => value > index ? value - 1 : value) })));
+                          markChanged();
+                        }}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      ><X className="h-4 w-4" /></button>
+                    ) : null}
+                  </div>
+                ))}
+                {!objectives.length ? <p className="text-sm text-slate-500">No learning objectives yet.</p> : null}
+              </div>
             </div>
           </div>
         </div>
-        <aside className="rounded-2xl bg-slate-50 p-4">
-          <h3 className="text-sm font-semibold text-slate-950">Day readiness</h3>
-          <p className="mt-2 text-2xl font-semibold text-slate-950">{steps.filter((step) => !stepIssues(step).length).length} / {steps.length || 0}</p>
-          <p className="text-xs text-slate-500">blocks complete · {duration} minutes total</p>
-          <div className="mt-4 space-y-2">
-            {issues.slice(0, 4).map((issue, index) => <button key={`${issue}-${index}`} type="button" onClick={() => { const blockIndex = steps.findIndex((step) => issue.includes(step.title)); if (blockIndex >= 0) setExpandedStep(blockIndex); }} className="flex w-full items-start gap-2 text-left text-xs font-medium text-rose-700"><AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />{issue}</button>)}
-            {!issues.length ? <p className="flex items-center gap-2 text-xs font-semibold text-emerald-700"><Check className="h-4 w-4" /> Ready to review</p> : null}
-          </div>
-        </aside>
+
+        <ReadinessPanel
+          ready={isPublishable(lesson)}
+          issues={issues}
+          notes={notes}
+          passing={passing}
+          stale={!saved}
+          blocks={steps.length}
+          minutes={duration}
+          onFocus={(target) => {
+            if (target.startsWith("block:")) {
+              setExpandedStep(Number(target.slice("block:".length)));
+              document.getElementById(`block-${target.slice("block:".length)}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+              return;
+            }
+            document.getElementById(`field-${target.slice("field:".length)}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
       </section>
 
       <section>
@@ -365,6 +515,7 @@ export function SchoolDayEditor({
               expanded={expandedStep === index}
               readOnly={readOnly}
               resourceMap={resourceMap}
+              blockIssues={issues.filter((check) => check.step_position === index)}
               onToggle={() => setExpandedStep(expandedStep === index ? null : index)}
               onUpdate={(patch) => updateStep(index, patch)}
               onMove={(direction) => moveStep(index, direction)}
@@ -406,17 +557,120 @@ export function SchoolDayEditor({
   );
 }
 
+
+/**
+ * The readiness checklist — the server's verdict, rendered.
+ *
+ * ⚠ Every entry here came from `lesson.readiness`. The panel adds presentation
+ * and a jump target and decides nothing, which is what makes "Ready to publish"
+ * here and "publish succeeds" the same claim.
+ *
+ * `stale` is honest rather than clever: readiness describes the SAVED row, so
+ * while there are unsaved edits the panel says so instead of re-scoring against
+ * a rule the publish endpoint does not share.
+ */
+function ReadinessPanel({ ready, issues, notes, passing, stale, blocks, minutes, onFocus }: {
+  ready: boolean;
+  issues: LessonReadinessCheck[];
+  notes: LessonReadinessCheck[];
+  passing: LessonReadinessCheck[];
+  stale: boolean;
+  blocks: number;
+  minutes: number;
+  onFocus: (target: string) => void;
+}) {
+  return (
+    <aside className="h-fit rounded-2xl bg-slate-50 p-4">
+      <h3 className="text-sm font-semibold text-slate-950">
+        {ready ? "Ready to publish" : `Needs attention`}
+      </h3>
+      <p className="mt-1 text-xs text-slate-500">{blocks} blocks · {minutes} minutes</p>
+
+      {stale ? (
+        <p className="mt-3 rounded-lg bg-amber-50 px-2.5 py-2 text-[11px] font-semibold text-amber-800">
+          Unsaved changes. Save to re-check.
+        </p>
+      ) : null}
+
+      {issues.length ? (
+        <>
+          <p className="mt-4 text-xs font-bold text-rose-700">
+            {issues.length} {issues.length === 1 ? "issue" : "issues"}
+          </p>
+          <ul className="mt-2 space-y-2">
+            {issues.map((check) => {
+              const target = focusTarget(check);
+              return (
+                <li key={check.key}>
+                  <button
+                    type="button"
+                    onClick={() => target && onFocus(target)}
+                    disabled={!target}
+                    className="flex w-full items-start gap-2 rounded-lg p-1.5 text-left text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:hover:bg-transparent"
+                  >
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>{check.detail ?? check.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : (
+        <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-700">
+          <Check className="h-4 w-4" /> Every requirement is met.
+        </p>
+      )}
+
+      {passing.length ? (
+        <ul className="mt-4 space-y-1 border-t border-slate-200 pt-3">
+          {passing.map((check) => (
+            <li key={check.key} className="flex items-start gap-2 text-[11px] text-slate-500">
+              <Check className="mt-0.5 h-3 w-3 shrink-0 text-emerald-600" />
+              <span>{check.label}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {notes.length ? (
+        <div className="mt-4 border-t border-slate-200 pt-3">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Notes</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {notes.map((check) => {
+              const target = focusTarget(check);
+              return (
+                <li key={check.key}>
+                  <button
+                    type="button"
+                    onClick={() => target && onFocus(target)}
+                    disabled={!target}
+                    className="w-full text-left text-[11px] text-slate-500 hover:text-slate-900"
+                  >
+                    {check.detail ?? check.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+    </aside>
+  );
+}
+
 function isPersistedId(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, onToggle, onUpdate, onMove, onRemove, onResource, onAI, first, last }: {
+function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, blockIssues, onToggle, onUpdate, onMove, onRemove, onResource, onAI, first, last }: {
   step: EditableStep;
   index: number;
   objectives: string[];
   expanded: boolean;
   readOnly: boolean;
   resourceMap: Map<string, PrimaryResource>;
+  blockIssues: LessonReadinessCheck[];
   onToggle: () => void;
   onUpdate: (patch: Partial<EditableStep>) => void;
   onMove: (direction: -1 | 1) => void;
@@ -426,13 +680,22 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, o
   first: boolean;
   last: boolean;
 }) {
-  const blockIssues = stepIssues(step);
+  // ⚠ Per-block issues arrive from the server's readiness verdict, filtered to
+  // this block's position. Re-deriving them here would put a second rule back
+  // in the browser — the exact split this work removed.
   const resources = step.resource_ids ?? [];
+  const blockArt = primaryStepImage(step.step_type);
   const detailFields = stepDetailFields(step.step_type);
   return (
-    <article className={`overflow-hidden rounded-2xl border bg-white transition ${expanded ? "border-blue-300 shadow-[0_12px_38px_rgba(37,99,235,0.08)]" : "border-slate-200"}`}>
+    <article id={`block-${index}`} className={`overflow-hidden rounded-2xl border bg-white transition ${expanded ? "border-blue-300 shadow-[0_12px_38px_rgba(37,99,235,0.08)]" : "border-slate-200"}`}>
       <button type="button" onClick={onToggle} className="flex w-full items-center gap-3 p-4 text-left sm:p-5" aria-expanded={expanded}>
         <GripVertical className="hidden h-5 w-5 shrink-0 text-slate-300 sm:block" aria-hidden="true" />
+        {/* The SAME artwork the teacher's block page shows. Migrated from the
+            retired step-rows.tsx: an author previewing a block should see what
+            a teacher will, and the mapping already existed. */}
+        {blockArt ? (
+          <img src={blockArt} alt="" aria-hidden="true" className="hidden h-9 w-9 shrink-0 rounded-lg object-cover sm:block" />
+        ) : null}
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-950 text-xs font-bold text-white">{index + 1}</span>
         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-slate-950">{step.title || "Untitled block"}</span><span className="mt-1 block truncate text-xs text-slate-500">{step.instructions?.[0] || "Add teacher instructions"} · {step.duration_minutes} min</span></span>
         <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-bold sm:inline-flex ${blockIssues.length ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>{blockIssues.length ? `${blockIssues.length} to fix` : "Ready"}</span>
@@ -501,15 +764,106 @@ function allResourceIds(step?: EditableStep): string[] {
   return Array.from(new Set([...(step.resource_ids ?? []), ...detailIds]));
 }
 
-function DayPreview({ lesson, resourceMap, onClose }: { lesson: PrimaryCurriculumLesson; resourceMap: Map<string, PrimaryResource>; onClose: () => void }) {
-  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="day-preview-title"><div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl sm:p-7"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Teacher preview</p><h2 id="day-preview-title" className="mt-1 text-xl font-semibold text-slate-950">{lesson.title || lesson.daily_focus}</h2><p className="mt-1 text-sm text-slate-500">{levelLabel(lesson.level)} · {lesson.steps.length} blocks · {lesson.steps.reduce((sum, step) => sum + step.duration_minutes, 0)} minutes</p></div><button type="button" aria-label="Close preview" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button></div><div className="mt-6 space-y-4">{lesson.steps.map((step, index) => <div key={step.id} className="border-l-2 border-blue-200 pl-4"><p className="text-xs font-bold text-slate-400">{index + 1} · {step.duration_minutes} min</p><h3 className="mt-1 font-semibold text-slate-950">{step.title}</h3><ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-slate-600">{step.instructions.map((instruction) => <li key={instruction}>{instruction}</li>)}</ol>{step.resource_ids?.length ? <p className="mt-2 text-xs font-semibold text-blue-700">{step.resource_ids.map((id) => resourceMap.get(id)?.title ?? "Attached resource").join(" · ")}</p> : null}</div>)}</div></div></div>;
+/**
+ * Preview as Teacher — what the authored day will look like when delivered.
+ *
+ * ⚠ An authoring QA view, not the teacher's runtime. It mirrors
+ * `services/primary_assembly.py::assemble_activities`: blocks in authored order,
+ * each starting where the previous one ended, from DEFAULT_DAY_START (08:00).
+ * Nothing about `/primary/today` changes — this shows the input to it.
+ *
+ * The one thing it deliberately cannot show is auto-matching. A block naming a
+ * resource category with nothing attached gets its printable picked at
+ * generation time, so the preview says that rather than inventing a resource
+ * name or leaving a silent blank.
+ */
+const PREVIEW_DAY_START_MINUTES = 8 * 60;
+
+function clockAt(minutesFromMidnight: number): string {
+  const hours = Math.floor(minutesFromMidnight / 60) % 24;
+  const minutes = minutesFromMidnight % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-function PublishReview({ lesson, initial, issues, saving, onClose, onPublish }: { lesson: PrimaryCurriculumLesson; initial: PrimaryCurriculumLesson | null; issues: string[]; saving: boolean; onClose: () => void; onPublish: () => void }) {
+function DayPreview({ lesson, resourceMap, onClose }: { lesson: PrimaryCurriculumLesson; resourceMap: Map<string, PrimaryResource>; onClose: () => void }) {
+  const ordered = lesson.steps.slice().sort((a, b) => a.position - b.position);
+  let cursor = PREVIEW_DAY_START_MINUTES;
+  const timed = ordered.map((step) => {
+    const startsAt = cursor;
+    cursor += step.duration_minutes || 0;
+    return { step, startsAt };
+  });
+  const total = cursor - PREVIEW_DAY_START_MINUTES;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="day-preview-title">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Preview as teacher</p>
+            <h2 id="day-preview-title" className="mt-1 text-xl font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {levelLabel(lesson.level)} · {lesson.topic?.name ? `${lesson.topic.name} · ` : ""}{ordered.length} blocks · {total} minutes
+            </p>
+          </div>
+          <button type="button" aria-label="Close preview" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
+        </div>
+
+        {lesson.objectives.filter((item) => item.trim()).length ? (
+          <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Learning focus</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+              {lesson.objectives.filter((item) => item.trim()).map((objective) => <li key={objective}>{objective}</li>)}
+            </ul>
+          </div>
+        ) : null}
+
+        <div className="mt-6 space-y-4">
+          {timed.map(({ step, startsAt }) => {
+            const attached = [...(step.required_resource_ids ?? []), ...(step.resource_ids ?? [])];
+            const awaitingMatch = !attached.length && step.resource_category;
+            return (
+              <div key={step.id} className="flex gap-4">
+                <span className="w-14 shrink-0 pt-0.5 text-sm font-bold tabular-nums text-slate-400">{clockAt(startsAt)}</span>
+                <div className="min-w-0 flex-1 border-l-2 border-blue-200 pl-4 pb-1">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <h3 className="font-semibold text-slate-950">{step.title || "Untitled block"}</h3>
+                    <span className="text-xs text-slate-400">{step.duration_minutes} min</span>
+                  </div>
+                  {step.instructions?.length ? (
+                    <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm text-slate-600">
+                      {step.instructions.map((instruction, index) => <li key={`${step.id}-${index}`}>{instruction}</li>)}
+                    </ol>
+                  ) : (
+                    <p className="mt-2 text-sm italic text-rose-600">No teacher instructions yet.</p>
+                  )}
+                  {attached.length ? (
+                    <p className="mt-2 text-xs font-semibold text-blue-700">
+                      {attached.map((id) => resourceMap.get(id)?.title ?? "Attached resource").join(" · ")}
+                    </p>
+                  ) : awaitingMatch ? (
+                    <p className="mt-2 text-xs text-slate-400">
+                      TeachPad will match a {step.resource_category} printable when a teacher plans this day.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+          {!ordered.length ? <p className="py-10 text-center text-sm text-slate-500">This day has no blocks yet, so a teacher would receive an empty timetable.</p> : null}
+        </div>
+
+        <Button variant="outline" className="mt-7 w-full" onClick={onClose}>Close preview</Button>
+      </div>
+    </div>
+  );
+}
+
+function PublishReview({ lesson, initial, issues, saving, onClose, onPublish }: { lesson: PrimaryCurriculumLesson; initial: PrimaryCurriculumLesson | null; issues: LessonReadinessCheck[]; saving: boolean; onClose: () => void; onPublish: () => void }) {
   const changes: string[] = [];
   if (!initial || initial.title !== lesson.title || initial.daily_focus !== lesson.daily_focus) changes.push("Day topic or focus updated");
   if (!initial || JSON.stringify(initial.objectives) !== JSON.stringify(lesson.objectives)) changes.push("Learning objectives updated");
   lesson.steps.forEach((step, index) => { const before = initial?.steps[index]; if (!before) changes.push(`${step.title} added`); else if (JSON.stringify(before.instructions) !== JSON.stringify(step.instructions)) changes.push(`${step.title}: teacher instructions updated`); });
   if (!initial || resourceCount(initial) !== resourceCount(lesson)) changes.push(`${resourceCount(lesson)} resources now attached`);
-  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="publish-review-title"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Safe publishing</p><h2 id="publish-review-title" className="mt-1 text-xl font-semibold text-slate-950">Review changes</h2><p className="mt-2 text-sm text-slate-600">Teachers will receive this school version only after you confirm.</p></div><button type="button" aria-label="Close publish review" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button></div>{issues.length ? <div className="mt-6 rounded-2xl bg-rose-50 p-4"><p className="text-sm font-semibold text-rose-800">Finish these items before publishing</p><ul className="mt-2 space-y-1 text-sm text-rose-700">{issues.map((issue) => <li key={issue}>• {issue}</li>)}</ul></div> : <div className="mt-6"><p className="text-sm font-semibold text-slate-950">{changes.length} {changes.length === 1 ? "change" : "changes"}</p><div className="mt-3 divide-y divide-slate-200 border-y border-slate-200">{(changes.length ? changes : ["Curriculum reviewed with no unsaved content changes"]).map((change) => <p key={change} className="py-3 text-sm text-slate-700">{change}</p>)}</div></div>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={onClose}>Continue editing</Button><Button disabled={Boolean(issues.length) || saving} onClick={onPublish}>{saving ? "Publishing…" : "Publish to teachers"}</Button></div></div></div>;
+  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="publish-review-title"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Safe publishing</p><h2 id="publish-review-title" className="mt-1 text-xl font-semibold text-slate-950">Review changes</h2><p className="mt-2 text-sm text-slate-600">Teachers will receive this school version only after you confirm.</p></div><button type="button" aria-label="Close publish review" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button></div>{issues.length ? <div className="mt-6 rounded-2xl bg-rose-50 p-4"><p className="text-sm font-semibold text-rose-800">Finish these items before publishing</p><ul className="mt-2 space-y-1 text-sm text-rose-700">{issues.map((issue) => <li key={issue.key}>• {issue.detail ?? issue.label}</li>)}</ul></div> : <div className="mt-6"><p className="text-sm font-semibold text-slate-950">{changes.length} {changes.length === 1 ? "change" : "changes"}</p><div className="mt-3 divide-y divide-slate-200 border-y border-slate-200">{(changes.length ? changes : ["Curriculum reviewed with no unsaved content changes"]).map((change) => <p key={change} className="py-3 text-sm text-slate-700">{change}</p>)}</div></div>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={onClose}>Continue editing</Button><Button disabled={Boolean(issues.length) || saving} onClick={onPublish}>{saving ? "Publishing…" : "Publish to teachers"}</Button></div></div></div>;
 }

@@ -2,7 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Loader2,
+  Calendar,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  BookOpen,
+  Layers,
+  Award,
+  BarChart3,
+} from "lucide-react";
 import {
   CURRENT_USER_QUERY_KEY,
   backendApi,
@@ -336,20 +349,37 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
 
       {/* Summary Cards */}
       {!loading && !failed && totals && tab !== "themes" && (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Days with a plan" value={`${totals.days_with_plan} of ${totals.days_in_range}`} />
-          <Stat label="Activities completed" value={`${totals.completed} of ${totals.activities}`} />
-          <Stat label="Skipped or moved" value={`${totals.skipped + totals.rescheduled}`} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            label="Days with a plan"
+            value={`${totals.days_with_plan} of ${totals.days_in_range}`}
+            variant="indigo"
+            icon={Calendar}
+          />
+          <Stat
+            label="Activities completed"
+            value={`${totals.completed} of ${totals.activities}`}
+            variant="emerald"
+            icon={CheckCircle}
+          />
+          <Stat
+            label="Skipped or moved"
+            value={`${totals.skipped + totals.rescheduled}`}
+            variant="amber"
+            icon={AlertTriangle}
+          />
           <Stat
             label="Time taught"
             value={`${formatMinutes(totals.minutes_completed)} of ${formatMinutes(totals.minutes_planned)}`}
+            variant="violet"
+            icon={Clock}
           />
-        </section>
+        </div>
       )}
 
       {/* Week View */}
       {!loading && !failed && tab === "week" && (
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {weekDates.map((iso) => (
             <WeekCard
               key={iso}
@@ -359,7 +389,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               loadingActivities={activities.isLoading}
             />
           ))}
-        </section>
+        </div>
       )}
 
       {/* Month View */}
@@ -387,7 +417,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
 
       {/* Themes View */}
       {!loading && !failed && tab === "themes" && themes.data && (
-        <section className="space-y-4">
+        <div className="space-y-4">
           {themes.data.themes_authored === 0 && (
             <div className="rounded-[24px] bg-amber-50 border border-amber-200 p-5 text-xs font-bold text-amber-800">
               No lessons have been authored for <strong>{levelLabel(activeLevel)}</strong> yet.
@@ -396,10 +426,30 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
           )}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Themes" value={`${themes.data.themes_total}`} />
-            <Stat label="With a lesson" value={`${themes.data.themes_authored}`} />
-            <Stat label="Completed" value={`${themes.data.themes_complete}`} />
-            <Stat label="Steps taught" value={`${themes.data.steps_taught} of ${themes.data.steps_total}`} />
+            <Stat
+              label="Themes"
+              value={`${themes.data.themes_total}`}
+              variant="indigo"
+              icon={Layers}
+            />
+            <Stat
+              label="With a lesson"
+              value={`${themes.data.themes_authored}`}
+              variant="violet"
+              icon={BookOpen}
+            />
+            <Stat
+              label="Completed"
+              value={`${themes.data.themes_complete}`}
+              variant="emerald"
+              icon={Award}
+            />
+            <Stat
+              label="Steps taught"
+              value={`${themes.data.steps_taught} of ${themes.data.steps_total}`}
+              variant="violet"
+              icon={BarChart3}
+            />
           </div>
 
           <p className="px-1 text-[10px] font-bold text-[#9aa0c8]">
@@ -415,7 +465,7 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
               <ThemeRow key={`${theme.theme_id}-${theme.subject}-${index}`} theme={theme} />
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {/* Print-Only Layout */}
@@ -478,11 +528,73 @@ export default function PrimaryCoveragePage({ notify }: { notify: (message: stri
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  variant = "indigo",
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  variant?: "indigo" | "emerald" | "amber" | "violet" | "rose" | "gray";
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  const themes = {
+    indigo: {
+      border: "border-l-4 border-l-[#6e41f5]",
+      bg: "bg-gradient-to-br from-white to-[#fcfbff]",
+      iconBg: "bg-[#f3efff]",
+      iconColor: "text-[#6e41f5]",
+    },
+    emerald: {
+      border: "border-l-4 border-l-[#10b981]",
+      bg: "bg-gradient-to-br from-white to-[#fafdfb]",
+      iconBg: "bg-[#e6fcf5]",
+      iconColor: "text-[#10b981]",
+    },
+    amber: {
+      border: "border-l-4 border-l-[#f59e0b]",
+      bg: "bg-gradient-to-br from-white to-[#fffdfa]",
+      iconBg: "bg-[#fef7e0]",
+      iconColor: "text-[#f59e0b]",
+    },
+    rose: {
+      border: "border-l-4 border-l-[#ef4444]",
+      bg: "bg-gradient-to-br from-white to-[#fffbfa]",
+      iconBg: "bg-[#fee2e2]",
+      iconColor: "text-[#ef4444]",
+    },
+    violet: {
+      border: "border-l-4 border-l-[#8b5cf6]",
+      bg: "bg-gradient-to-br from-white to-[#fafbff]",
+      iconBg: "bg-[#f5f3ff]",
+      iconColor: "text-[#8b5cf6]",
+    },
+    gray: {
+      border: "border-l-4 border-l-slate-400",
+      bg: "bg-gradient-to-br from-white to-slate-50",
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-500",
+    },
+  };
+
+  const current = themes[variant] || themes.indigo;
+
   return (
-    <div className="rounded-2xl border border-[#e8e7fb] bg-white px-5 py-4 shadow-sm hover:border-[#6e41f5]/25 transition duration-150">
-      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-1 text-lg font-black text-[#171747]">{value}</p>
+    <div className={cn(
+      "rounded-2xl border border-[#e8e7fb] px-5 py-4 shadow-sm hover:border-[#6e41f5]/25 hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex items-center justify-between min-h-[90px]",
+      current.border,
+      current.bg
+    )}>
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 leading-none">{label}</p>
+        <p className="text-xl font-black text-[#171747] leading-none">{value}</p>
+      </div>
+      {Icon && (
+        <div className={cn("p-2 rounded-xl shrink-0 flex items-center justify-center", current.iconBg)}>
+          <Icon className={cn("h-5 w-5", current.iconColor)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -500,30 +612,43 @@ function WeekCard({
 }) {
   const state = day?.state || "no_plan";
   const tone = dayStateTone(state);
+
+  const leftBorder = {
+    no_plan: "border-l-slate-200",
+    plan_cleared: "border-l-slate-400",
+    not_started: "border-l-amber-400",
+    partly_taught: "border-l-blue-500",
+    taught: "border-l-emerald-500",
+    not_taught: "border-l-rose-400",
+  }[state] || "border-l-slate-200";
+
   return (
-    <article className="rounded-2xl border border-[#e8e7fb] bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:shadow transition duration-200 flex flex-col justify-between">
+    <article className={cn(
+      "rounded-2xl border-y border-r border-[#e8e7fb] border-l-4 bg-white p-4 shadow-sm hover:border-[#6e41f5]/30 hover:-translate-y-1 hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[220px]",
+      leftBorder
+    )}>
       <div>
-        <header className="flex items-start justify-between gap-2 border-b border-slate-50 pb-2 mb-3">
-          <div>
+        <header className="border-b border-slate-50 pb-2 mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-black text-[#171747]">{formatDayLabel(iso)}</p>
-            <p className="mt-0.5 text-[10px] font-bold text-slate-400 truncate max-w-[130px]">
-              {day?.theme_name || "No theme"}
-            </p>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider shrink-0",
+                tone.chip,
+                tone.text,
+              )}
+            >
+              <span className={cn("h-1 w-1 rounded-full", tone.dot)} />
+              {DAY_STATE_LABELS[state]}
+            </span>
           </div>
-          <span
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
-              tone.chip,
-              tone.text,
-            )}
-          >
-            <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
-            {DAY_STATE_LABELS[state]}
-          </span>
+          <p className="mt-1.5 text-[10px] font-bold text-slate-400 truncate w-full" title={day?.theme_name || "No theme"}>
+            {day?.theme_name || "No theme"}
+          </p>
         </header>
 
         {day && day.total > 0 && (
-          <p className="text-[10px] font-bold text-slate-400 mb-2">
+          <p className="text-[10px] font-bold text-slate-400 mb-2.5">
             {day.completed}/{day.total} done · {formatMinutes(day.minutes_completed)} of {formatMinutes(day.minutes_planned)}
           </p>
         )}
@@ -538,7 +663,7 @@ function WeekCard({
             </p>
           )}
           {activities.slice(0, 4).map((activity) => (
-            <div key={activity.id} className="flex items-start gap-2 rounded-lg bg-[#faf9ff] border border-slate-100/50 p-2">
+            <div key={activity.id} className="flex items-start gap-2 rounded-lg bg-slate-50 border border-slate-100/50 p-2 hover:bg-[#f6f4fe] transition duration-150">
               <span className="w-10 shrink-0 text-[9px] font-black text-slate-400">
                 {(activity.start_time || "").slice(0, 5) || "--:--"}
               </span>
@@ -551,7 +676,7 @@ function WeekCard({
             </div>
           ))}
           {activities.length > 4 && (
-            <p className="text-[9px] font-black text-[#6e41f5] text-right">+ {activities.length - 4} more activities</p>
+            <p className="text-[9px] font-black text-[#6e41f5] text-right mt-1">+ {activities.length - 4} more activities</p>
           )}
         </div>
       </div>
@@ -566,8 +691,10 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
     <div
       title={`${formatShortDate(iso)} — ${DAY_STATE_LABELS[state]}`}
       className={cn(
-        "min-h-[74px] rounded-2xl border p-2 flex flex-col justify-between transition hover:border-[#6e41f5]/25",
-        inMonth ? tone.chip : "border-transparent bg-transparent",
+        "min-h-[74px] rounded-2xl border p-2 flex flex-col justify-between transition duration-200",
+        inMonth 
+          ? cn(tone.chip, "shadow-sm hover:shadow hover:-translate-y-0.5 hover:border-[#6e41f5]/25 cursor-pointer") 
+          : "border-transparent bg-transparent",
       )}
     >
       <div className="flex items-center justify-between">
@@ -581,7 +708,9 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
           <p className={cn("text-[10px] font-black leading-none", tone.text)}>
             {day.completed}/{day.total}
           </p>
-          <p className="mt-1 truncate text-[8px] font-bold text-slate-400 leading-none">{day.theme_name || ""}</p>
+          <p className="mt-1 truncate text-[8px] font-bold text-slate-400 leading-none" title={day.theme_name || ""}>
+            {day.theme_name || ""}
+          </p>
         </div>
       )}
     </div>
@@ -590,6 +719,14 @@ function MonthTile({ iso, day, inMonth }: { iso: string; day?: PrimaryDayCoverag
 
 function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
   const tone = themeStateTone(theme.state);
+
+  const progressGradient = {
+    complete: "bg-gradient-to-r from-[#10b981] to-[#059669]",
+    in_progress: "bg-gradient-to-r from-[#3b82f6] to-[#6e41f5]",
+    not_started: "bg-gradient-to-r from-[#f59e0b] to-[#d97706]",
+    not_authored: "bg-slate-300",
+  }[theme.state] || "bg-slate-300";
+
   return (
     <div className="primary-theme-coverage-row flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-[#faf9ff]/45 transition duration-150">
       <div className="min-w-[190px] flex-1">
@@ -601,9 +738,9 @@ function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
       </div>
 
       <div className="min-w-[140px] flex-1 max-w-[240px]">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-50">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-50 shadow-inner">
           <div
-            className={cn("h-full rounded-full transition-all duration-300", tone.dot)}
+            className={cn("h-full rounded-full transition-all duration-300 shadow-sm", progressGradient)}
             style={{ width: `${theme.authored ? theme.completion_pct : 0}%` }}
           />
         </div>
@@ -617,7 +754,7 @@ function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
       </span>
       <span
         className={cn(
-          "w-[140px] shrink-0 rounded-full border px-2 py-0.5 text-center text-[9px] font-black uppercase tracking-wider",
+          "w-[140px] shrink-0 rounded-full border px-2 py-0.5 text-center text-[9px] font-black uppercase tracking-wider shadow-sm",
           tone.chip,
           tone.text,
         )}
@@ -627,3 +764,5 @@ function ThemeRow({ theme }: { theme: PrimaryThemeCoverage }) {
     </div>
   );
 }
+
+

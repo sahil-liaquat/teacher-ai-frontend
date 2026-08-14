@@ -39,6 +39,28 @@ test("configuration-heavy surfaces are not top-level navigation", () => {
   assert.equal(top.includes("/school-admin/academic-years"), false);
 });
 
+test("Review & Publish is a real surface, not a modal over the grid", () => {
+  // It used to be a dialog inside CurriculumWorkspace, which meant it could not
+  // be linked to, could not survive a refresh, and had no equivalent on the
+  // master side at all.
+  assert.equal(
+    existsSync(new URL("../../app/school-admin/curriculum/review/page.tsx", import.meta.url)),
+    true,
+  );
+  assert.equal(
+    existsSync(new URL("../../app/admin/organizations/master-curriculum/review/page.tsx", import.meta.url)),
+    true,
+  );
+});
+
+test("a nested curriculum stage keeps the parent section lit without stealing it", () => {
+  // `/curriculum/review` starts with `/curriculum`, so a prefix match alone
+  // would light both rows at once and never light Review on its own.
+  assert.equal(activeTopLevel("/school-admin/curriculum/review"), "/school-admin/curriculum");
+  assert.equal(activeTopLevel("/school-admin/curriculum"), "/school-admin/curriculum");
+  assert.equal(activeTopLevel("/school-admin/themes"), "/school-admin/curriculum");
+});
+
 test("the moved routes still exist and are reachable as sub-navigation", () => {
   // Removing a working authoring surface to tidy a sidebar would be a
   // regression wearing a redesign's clothes.
@@ -49,9 +71,14 @@ test("the moved routes still exist and are reachable as sub-navigation", () => {
       `${route} page was deleted rather than relocated`,
     );
   }
+  // The three stages of curriculum authoring, in the order they are worked.
   assert.deepEqual(
     SCHOOL_ADMIN_SUBNAV["/school-admin/curriculum"].map((i) => i.href),
-    ["/school-admin/curriculum", "/school-admin/themes"],
+    [
+      "/school-admin/themes",
+      "/school-admin/curriculum",
+      "/school-admin/curriculum/review",
+    ],
   );
   assert.deepEqual(
     SCHOOL_ADMIN_SUBNAV["/school-admin/calendar"].map((i) => i.href),

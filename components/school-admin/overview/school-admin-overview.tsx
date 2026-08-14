@@ -7,15 +7,14 @@ import { AlertCircle, ArrowRight, BookOpen, FileClock, FileText, Plus } from "lu
 import { backendApi, type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryLevel } from "@/lib/api";
 import {
   curriculumHref,
-  lessonIssues,
   lessonsForMonth,
-  lessonStatus,
   levelLabel,
   monthLabel,
   resourceCount,
   SCHOOL_LEVELS,
   SCHOOL_MONTHS,
 } from "@/lib/school-admin-curriculum";
+import { advisoryNotes, blockingIssues, curriculumSlots, dayStatus, monthMetrics } from "@/lib/curriculum-readiness";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AIAction, PageError, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
@@ -53,12 +52,18 @@ export function SchoolAdminOverview() {
 
   const year = yearsQuery.data?.find((item) => item.id === yearId);
   const monthLessons = useMemo(() => lessonsForMonth(lessonsQuery.data ?? [], month), [lessonsQuery.data, month]);
-  const published = monthLessons.filter((lesson) => lesson.status === "published").length;
+  const published = curriculumSlots(monthLessons).filter((slot) => slot.published).length;
   const drafts = monthLessons.filter((lesson) => lesson.scope === "school" && lesson.status === "draft");
-  const attention = monthLessons.filter((lesson) => lessonIssues(lesson).length > 0);
-  const missingResourceLessons = monthLessons.filter((lesson) => lessonIssues(lesson).some((issue) => issue.includes("resource")));
-  const readySlots = monthLessons.filter((lesson) => ["ready", "published"].includes(lessonStatus(lesson))).length;
-  const readiness = Math.round((readySlots / 25) * 100);
+  // ⚠ Server verdict, counted in slots. Was a frontend-only rule over lesson
+  // ROWS divided by a hardcoded 25 — so a duplicated day inflated readiness, and
+  // "needs attention" could disagree with what publish actually refuses.
+  const metrics = useMemo(() => monthMetrics(monthLessons), [monthLessons]);
+  const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
+  const attention = slots.filter((slot) => blockingIssues(slot.current).length > 0).map((slot) => slot.current);
+  const missingResourceLessons = slots
+    .filter((slot) => advisoryNotes(slot.current).some((note) => note.key.startsWith("step_resource")))
+    .map((slot) => slot.current);
+  const readiness = metrics.completionPct;
   const curriculumUrl = curriculumHref({ year: yearId, level, month });
 
   function openAI(operation: PrimaryAIProposalRequest["operation"], title: string) {
@@ -149,7 +154,7 @@ export function SchoolAdminOverview() {
             <p className="text-sm font-semibold text-blue-200">{monthLabel(month)} readiness</p>
             <div className="mt-2 flex items-baseline gap-3">
               <h2 id="readiness-heading" className="text-3xl font-semibold tracking-tight">{readiness}% ready</h2>
-              <span className="text-sm text-slate-300">{readySlots} of 25 teaching days</span>
+              <span className="text-sm text-slate-300">{metrics.published} of {metrics.slots} teaching days published</span>
             </div>
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15" aria-label={`${readiness}% curriculum ready`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={readiness}>
               <div className="h-full rounded-full bg-blue-400" style={{ width: `${readiness}%` }} />
@@ -170,7 +175,7 @@ export function SchoolAdminOverview() {
                   <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || `Week ${lesson.week}, day ${lesson.day}`}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{lessonIssues(lesson)[0]} · Week {lesson.week}, {lesson.day ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][lesson.day - 1] : "Day"}</span>
+                    <span className="mt-1 block text-xs text-slate-500">{blockingIssues(lesson)[0]?.detail ?? blockingIssues(lesson)[0]?.label} · Week {lesson.week}, {lesson.day ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][lesson.day - 1] : "Day"}</span>
                   </span>
                   <ArrowRight className="mt-1 h-4 w-4 text-slate-400 transition group-hover:translate-x-1 group-hover:text-blue-700" />
                 </Link>
@@ -189,7 +194,7 @@ export function SchoolAdminOverview() {
                     <p className="truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</p>
                     <p className="mt-0.5 text-xs text-slate-500">Week {lesson.week} · {lesson.steps?.length ?? 0} blocks · {resourceCount(lesson)} resources</p>
                   </div>
-                  <StatusBadge status={lessonStatus(lesson)} compact />
+                  <StatusBadge status={dayStatus(lesson)} compact />
                 </div>
               ))}
               {!monthLessons.length ? <p className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">No teaching days planned for this month yet.</p> : null}

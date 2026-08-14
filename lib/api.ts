@@ -2820,6 +2820,32 @@ export const backendApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return apiFetch<PrimaryResourceListResponse>(`/admin/master/resources${suffix}`);
   },
+  /**
+   * Resolve attached printables by id.
+   *
+   * ⚠ Use this, not `adminResources`, to render the title of something already
+   * attached. The catalog is ~861 rows paginated at 100 and ordered by title,
+   * so resolving attachments out of a search page silently failed for anything
+   * past the first page — the Day Editor showed "Attached resource" instead of
+   * the real name. Ids are chunked because they travel as repeated query params
+   * and the server caps one call at 200.
+   */
+  adminLookupResources: async (ids: string[]): Promise<PrimaryResource[]> => {
+    // Array.from, not a spread: tsconfig targets es5 and spreading a Set
+    // needs downlevelIteration.
+    const unique = Array.from(new Set(ids.filter(Boolean)));
+    if (!unique.length) return [];
+    const chunks: string[][] = [];
+    for (let index = 0; index < unique.length; index += 200) {
+      chunks.push(unique.slice(index, index + 200));
+    }
+    const pages = await Promise.all(chunks.map((chunk) => {
+      const query = new URLSearchParams();
+      chunk.forEach((id) => query.append("ids", id));
+      return apiFetch<PrimaryResource[]>(`/admin/master/resources/lookup?${query.toString()}`);
+    }));
+    return pages.flat();
+  },
   adminCreateResource: (payload: any) =>
     apiFetch<PrimaryResource>("/admin/master/resources", {
       method: "POST", body: JSON.stringify(payload),
@@ -3103,6 +3129,32 @@ export const backendApi = {
     if (params.page_size) query.set("page_size", String(params.page_size));
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return apiFetch<PrimaryResourceListResponse>(`/school-admin/resources${suffix}`);
+  },
+  /**
+   * Resolve attached printables by id.
+   *
+   * ⚠ Use this, not `schoolAdminResources`, to render the title of something already
+   * attached. The catalog is ~861 rows paginated at 100 and ordered by title,
+   * so resolving attachments out of a search page silently failed for anything
+   * past the first page — the Day Editor showed "Attached resource" instead of
+   * the real name. Ids are chunked because they travel as repeated query params
+   * and the server caps one call at 200.
+   */
+  schoolAdminLookupResources: async (ids: string[]): Promise<PrimaryResource[]> => {
+    // Array.from, not a spread: tsconfig targets es5 and spreading a Set
+    // needs downlevelIteration.
+    const unique = Array.from(new Set(ids.filter(Boolean)));
+    if (!unique.length) return [];
+    const chunks: string[][] = [];
+    for (let index = 0; index < unique.length; index += 200) {
+      chunks.push(unique.slice(index, index + 200));
+    }
+    const pages = await Promise.all(chunks.map((chunk) => {
+      const query = new URLSearchParams();
+      chunk.forEach((id) => query.append("ids", id));
+      return apiFetch<PrimaryResource[]>(`/school-admin/resources/lookup?${query.toString()}`);
+    }));
+    return pages.flat();
   },
   schoolAdminCreateResource: (payload: any) =>
     apiFetch<PrimaryResource>("/school-admin/resources", {
@@ -3843,6 +3895,38 @@ export type PrimaryLearningOutcome = {
   updated_at?: string;
 };
 
+/**
+ * One readiness criterion, decided by the server.
+ *
+ * `severity: "advisory"` means the criterion is unmet but does NOT stop a
+ * publish — today that is only a block naming a resource category with nothing
+ * attached, which is the auto-match path rather than a mistake.
+ */
+export type LessonReadinessCheck = {
+  key: string;
+  label: string;
+  ok: boolean;
+  severity: "blocking" | "advisory";
+  detail?: string | null;
+  /** Lesson field this is about, when there is one — the editor focuses it. */
+  field?: string | null;
+  /** Zero-based block index, when the check is per-block. */
+  step_position?: number | null;
+};
+
+/**
+ * ⚠ The publish gate itself, not a preview of it. `ready` is computed by the
+ * same validation call `POST .../publish` makes, so rendering it is quoting the
+ * server rather than guessing alongside it. Deciding readiness in the browser
+ * is what made "Ready" and "publishable" different claims about the same day.
+ */
+export type LessonReadiness = {
+  ready: boolean;
+  /** Blocking failures only — advisory notes are never counted here. */
+  blocking_count: number;
+  checks: LessonReadinessCheck[];
+};
+
 export type PrimaryCurriculumLesson = {
   id: string;
   scope: PrimaryCurriculumScope;
@@ -3851,6 +3935,8 @@ export type PrimaryCurriculumLesson = {
   theme_id: string;
   academic_year_id?: string | null;
   topic_id?: string | null;
+  /** The topic ROW. Readiness needs to know it is active and whose theme it is. */
+  topic?: PrimaryCurriculumTopic | null;
   title?: string | null;
   daily_focus?: string | null;
   month?: number | null;
@@ -3866,6 +3952,8 @@ export type PrimaryCurriculumLesson = {
   parent_update?: string | null;
   steps: PrimaryCurriculumStep[];
   learning_outcomes?: PrimaryLearningOutcome[];
+  /** Optional so an older backend simply yields no verdict rather than a wrong one. */
+  readiness?: LessonReadiness;
 };
 
 export type PrimaryAIOperation =

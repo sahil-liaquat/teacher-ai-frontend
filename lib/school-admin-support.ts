@@ -4,7 +4,8 @@ import type {
   PrimaryCurriculumTheme,
   PrimaryResource,
 } from "./api";
-import { curriculumHref, lessonStatus, levelLabel, monthLabel } from "./school-admin-curriculum.ts";
+import { curriculumHref, levelLabel, monthLabel } from "./school-admin-curriculum.ts";
+import { isPublishable } from "./curriculum-readiness.ts";
 
 export type Ownership = "teachpad" | "school" | "customized";
 
@@ -79,9 +80,17 @@ export function academicYearState(year: PrimaryAcademicYear, today = new Date())
   return "planning";
 }
 
+/**
+ * A year's readiness: 12 months x 25 slots.
+ *
+ * "Ready" means published, or a draft the SERVER would publish — the same
+ * verdict the publish endpoint applies, not a rule evaluated here.
+ */
 export function yearReadiness(lessons: PrimaryCurriculumLesson[], level: string) {
   const relevant = lessons.filter((lesson) => lesson.level === level && lesson.status !== "archived");
-  const ready = relevant.filter((lesson) => ["ready", "published"].includes(lessonStatus(lesson))).length;
+  const ready = relevant.filter(
+    (lesson) => lesson.status === "published" || isPublishable(lesson),
+  ).length;
   return { ready, total: 300, percent: Math.min(100, Math.round((ready / 300) * 100)) };
 }
 

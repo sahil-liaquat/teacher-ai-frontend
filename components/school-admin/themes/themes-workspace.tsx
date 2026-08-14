@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, MoreHorizontal, Palette, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Layers, MoreHorizontal, Palette, Plus, Search, Trash2 } from "lucide-react";
 import { backendApi, type PrimaryAcademicYear, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryCurriculumTopic } from "@/lib/api";
 import { curriculumHref, levelLabel, monthLabel, SCHOOL_LEVELS } from "@/lib/school-admin-curriculum";
 import { ownershipLabel, ownershipOf, themeLessons } from "@/lib/school-admin-support";
@@ -189,7 +189,7 @@ function ThemeDetail({ theme, lessons, yearId, level, onBack, onRefresh, onConfi
     <SchoolAdminPage>
       <SectionSubnav />
       <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950"><ArrowLeft className="h-4 w-4" /> All themes</button>
-      <PageHeading eyebrow={`${ownershipLabel(ownershipOf(theme))} theme`} title={`${theme.emoji || "🎨"} ${theme.name}`} description={theme.description || `Topic sequence and curriculum use for ${levelLabel(level)}.`} actions={schoolOwned ? <Button variant="outline" onClick={() => onConfirm({ kind: "archive", theme })}>Archive theme</Button> : <Button onClick={() => onConfirm({ kind: "customize", theme })}>Customize for your school</Button>} />
+      <PageHeading eyebrow={`${ownershipLabel(ownershipOf(theme))} Theme ➔ Sub-theme ➔ Topic flow`} title={`${theme.emoji || "🎨"} ${theme.name}`} description={theme.description || `Topic sequence and curriculum use for ${levelLabel(level)}.`} actions={schoolOwned ? <Button variant="outline" onClick={() => onConfirm({ kind: "archive", theme })}>Archive theme</Button> : <Button onClick={() => onConfirm({ kind: "customize", theme })}>Customize for your school</Button>} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
           <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold text-slate-950">Topic sequence</h2><p className="mt-1 text-sm text-slate-500">The order teachers encounter within this theme.</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{topics.length} topics</span></div>
@@ -211,22 +211,303 @@ function TopicRow({ topic, index, count, editable, onMove, onRefresh, isSubtheme
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(topic.name);
-  async function save() { if (!name.trim()) return; try { await backendApi.schoolAdminUpdateTopic(topic.id, { name: name.trim() }); setEditing(false); await onRefresh(); } catch (error: any) { toast({ title: "Could not rename topic", description: error?.message, variant: "error" }); } }
+  const [subtheme, setSubtheme] = useState(topic.subtheme || "");
+  async function save() { if (!name.trim()) return; try { await backendApi.schoolAdminUpdateTopic(topic.id, { name: name.trim(), subtheme: subtheme.trim() || null }); setEditing(false); await onRefresh(); } catch (error: any) { toast({ title: "Could not update topic", description: error?.message, variant: "error" }); } }
   async function archive() { try { await backendApi.schoolAdminArchiveTopic(topic.id); await onRefresh(); } catch (error: any) { toast({ title: "Could not archive topic", description: error?.message, variant: "error" }); } }
-  return <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-500">{index + 1}</span>{editing ? <><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void save(); if (event.key === "Escape") setEditing(false); }} /><Button size="sm" onClick={() => void save()}>Save</Button></> : <><button type="button" disabled={!editable} onClick={() => setEditing(true)} className="min-w-0 flex-1 text-left text-sm font-semibold text-slate-900 disabled:cursor-default">{topic.name}{isSubtheme ? <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700">Sub-theme</span> : null}</button>{editable ? <div className="flex items-center">{onAddChild ? <button type="button" aria-label={`Add a topic under ${topic.name}`} title="Add a topic under this one" onClick={onAddChild} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600"><Plus className="h-4 w-4" /></button> : null}<button type="button" aria-label={`Move ${topic.name} up`} disabled={index === 0} onClick={() => void onMove(index, -1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowUp className="h-4 w-4" /></button><button type="button" aria-label={`Move ${topic.name} down`} disabled={index === count - 1} onClick={() => void onMove(index, 1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowDown className="h-4 w-4" /></button><button type="button" aria-label={`Archive ${topic.name}`} onClick={() => void archive()} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button></div> : null}</>}</div>;
+  return <div className={cn("flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all", isSubtheme ? "bg-[#faf9fe] border-[#e9e6fd] hover:bg-[#f6f3fe]" : "bg-white border-slate-200")}><span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl text-xs font-bold", isSubtheme ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-500")}>{index + 1}</span>{isSubtheme ? <Layers className="h-4 w-4 text-violet-600 shrink-0" /> : null}{editing ? <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center"><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Topic name" className="flex-1" onKeyDown={(event) => { if (event.key === "Enter") void save(); if (event.key === "Escape") setEditing(false); }} /><Input value={subtheme} onChange={(event) => setSubtheme(event.target.value)} placeholder="Subtheme (optional)" className="w-full sm:w-48" onKeyDown={(event) => { if (event.key === "Enter") void save(); if (event.key === "Escape") setEditing(false); }} /><div className="flex gap-2"><Button size="sm" onClick={() => void save()}>Save</Button><Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button></div></div> : <><button type="button" disabled={!editable} onClick={() => { setEditing(true); setName(topic.name); setSubtheme(topic.subtheme || ""); }} className="min-w-0 flex-1 text-left text-sm font-semibold text-slate-900 disabled:cursor-default">{topic.name}{topic.subtheme ? <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">{topic.subtheme}</span> : null}{isSubtheme ? <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700">Sub-theme</span> : null}</button>{editable ? <div className="flex items-center">{onAddChild ? <button type="button" aria-label={`Add a topic under ${topic.name}`} title="Add a topic under this one" onClick={onAddChild} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600"><Plus className="h-4 w-4" /></button> : null}<button type="button" aria-label={`Move ${topic.name} up`} disabled={index === 0} onClick={() => void onMove(index, -1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowUp className="h-4 w-4" /></button><button type="button" aria-label={`Move ${topic.name} down`} disabled={index === count - 1} onClick={() => void onMove(index, 1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowDown className="h-4 w-4" /></button><button type="button" aria-label={`Archive ${topic.name}`} onClick={() => void archive()} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button></div> : null}</>}</div>;
+}
+
+function AddInlineTopicForm({ onAdd, placeholder, size = "md" }: { onAdd: (name: string) => void; placeholder: string; size?: "sm" | "md" }) {
+  const [val, setVal] = useState("");
+  const handleSubmit = () => {
+    if (!val.trim()) return;
+    onAdd(val.trim());
+    setVal("");
+  };
+  return (
+    <div className="flex gap-2">
+      <Input
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        placeholder={placeholder}
+        className={size === "sm" ? "h-8 text-xs flex-1" : "h-9 text-sm flex-1"}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+      />
+      <Button
+        type="button"
+        size="sm"
+        className={size === "sm" ? "h-8 px-3 font-bold" : "h-9 px-4 font-bold"}
+        onClick={handleSubmit}
+        disabled={!val.trim()}
+      >
+        Add
+      </Button>
+    </div>
+  );
+}
+
+interface ClientTopic {
+  id: string;
+  name: string;
+}
+
+interface ClientSubtheme {
+  id: string;
+  name: string;
+  topics: ClientTopic[];
 }
 
 function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (theme: PrimaryCurriculumTheme) => Promise<void> }) {
   const { toast } = useToast();
-  const [name, setName] = useState(""); const [description, setDescription] = useState(""); const [emoji, setEmoji] = useState(""); const [topics, setTopics] = useState(""); const [busy, setBusy] = useState(false);
-  // Empty until the admin picks one. On submit an untouched value falls back to
-  // the built-in hero matched on theme name, which is what the theme card and
-  // the teacher classroom would have resolved to anyway — so the default the
-  // admin sees and the default they get are the same image.
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [emoji, setEmoji] = useState("");
+  const [busy, setBusy] = useState(false);
+  
+  const [subthemes, setSubthemes] = useState<ClientSubtheme[]>([]);
+  const [standaloneTopics, setStandaloneTopics] = useState<ClientTopic[]>([]);
+
   const [hero, setHero] = useState("");
   const resolvedHero = hero || builtInHeroForThemeName(name).src;
-  async function create() { if (!name.trim()) return; setBusy(true); try { const theme = await backendApi.schoolAdminCreateTheme({ name: name.trim(), description: description.trim() || null, emoji: emoji.trim() || null, hero_image_url: resolvedHero }); const topicNames = topics.split("\n").map((item) => item.trim()).filter(Boolean); await Promise.all(topicNames.map((topic, position) => backendApi.schoolAdminCreateTopic(theme.id, { name: topic, subtheme: null, description: null, position, keywords: [], aliases: [], is_active: true }))); onOpenChange(false); setName(""); setDescription(""); setEmoji(""); setTopics(""); setHero(""); await onCreated(theme); } catch (error: any) { toast({ title: "Could not create theme", description: error?.message, variant: "error" }); } finally { setBusy(false); } }
-  return <ActionDialog open={open} onOpenChange={onOpenChange} title="Create theme" description="Start with the theme teachers will recognize. You can refine the topic sequence later." footer={<><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button disabled={busy || !name.trim()} onClick={() => void create()}>{busy ? "Creating…" : "Create theme"}</Button></>}><div className="space-y-4"><label className="block text-sm font-semibold text-slate-800">Theme name<Input autoFocus className="mt-2" value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Growing and Changing" /></label><label className="block text-sm font-semibold text-slate-800">Description <span className="font-normal text-slate-400">(optional)</span><Textarea className="mt-2" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What children will explore" /></label><label className="block text-sm font-semibold text-slate-800">Icon <span className="font-normal text-slate-400">(optional emoji)</span><Input className="mt-2" value={emoji} onChange={(event) => setEmoji(event.target.value)} placeholder="🌱" maxLength={8} /></label><PrimaryHeroImagePicker value={resolvedHero} onChange={setHero} uploadHero={backendApi.schoolAdminUploadThemeHero} compact /><label className="block text-sm font-semibold text-slate-800">Starting topics <span className="font-normal text-slate-400">(optional, one per line)</span><Textarea className="mt-2 min-h-28" value={topics} onChange={(event) => setTopics(event.target.value)} placeholder={"Seeds and plants\nHow living things grow"} /></label></div></ActionDialog>;
+
+  const addSubtheme = () => {
+    setSubthemes([...subthemes, { id: Math.random().toString(36).substr(2, 9), name: "", topics: [] }]);
+  };
+
+  const updateSubthemeName = (id: string, nextName: string) => {
+    setSubthemes(subthemes.map(s => s.id === id ? { ...s, name: nextName } : s));
+  };
+
+  const removeSubtheme = (id: string) => {
+    setSubthemes(subthemes.filter(s => s.id !== id));
+  };
+
+  const addTopicToSubtheme = (subthemeId: string, topicName: string) => {
+    if (!topicName.trim()) return;
+    setSubthemes(subthemes.map(s => s.id === subthemeId ? {
+      ...s,
+      topics: [...s.topics, { id: Math.random().toString(36).substr(2, 9), name: topicName.trim() }]
+    } : s));
+  };
+
+  const removeTopicFromSubtheme = (subthemeId: string, topicId: string) => {
+    setSubthemes(subthemes.map(s => s.id === subthemeId ? {
+      ...s,
+      topics: s.topics.filter(t => t.id !== topicId)
+    } : s));
+  };
+
+  const addStandaloneTopic = (topicName: string) => {
+    if (!topicName.trim()) return;
+    setStandaloneTopics([...standaloneTopics, { id: Math.random().toString(36).substr(2, 9), name: topicName.trim() }]);
+  };
+
+  const removeStandaloneTopic = (id: string) => {
+    setStandaloneTopics(standaloneTopics.filter(t => t.id !== id));
+  };
+
+  async function create() {
+    if (!name.trim()) return;
+    setBusy(true);
+    try {
+      const theme = await backendApi.schoolAdminCreateTheme({
+        name: name.trim(),
+        description: description.trim() || null,
+        emoji: emoji.trim() || null,
+        hero_image_url: resolvedHero,
+      });
+
+      let position = 0;
+
+      // 1. Create Standalone Topics
+      for (const st of standaloneTopics) {
+        await backendApi.schoolAdminCreateTopic(theme.id, {
+          name: st.name.trim(),
+          parent_topic_id: null,
+          subtheme: null,
+          description: null,
+          position: position++,
+          keywords: [],
+          aliases: [],
+          is_active: true
+        });
+      }
+
+      // 2. Create Sub-themes and nested Topics
+      for (const sub of subthemes) {
+        const parentTopic = await backendApi.schoolAdminCreateTopic(theme.id, {
+          name: sub.name.trim() || "Untitled Sub-theme",
+          parent_topic_id: null,
+          subtheme: null,
+          description: null,
+          position: position++,
+          keywords: [],
+          aliases: [],
+          is_active: true
+        });
+
+        for (let childIndex = 0; childIndex < sub.topics.length; childIndex++) {
+          const child = sub.topics[childIndex];
+          await backendApi.schoolAdminCreateTopic(theme.id, {
+            name: child.name.trim(),
+            parent_topic_id: parentTopic.id,
+            subtheme: parentTopic.name,
+            description: null,
+            position: childIndex,
+            keywords: [],
+            aliases: [],
+            is_active: true
+          });
+        }
+      }
+
+      onOpenChange(false);
+      setName("");
+      setDescription("");
+      setEmoji("");
+      setSubthemes([]);
+      setStandaloneTopics([]);
+      setHero("");
+      await onCreated(theme);
+    } catch (error: any) {
+      toast({ title: "Could not create theme", description: error?.message, variant: "error" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <ActionDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create theme"
+      description="Define the curriculum theme and build its Sub-theme and Topic structure side-by-side."
+      size="xl"
+      footer={
+        <>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={busy || !name.trim()} onClick={() => void create()}>
+            {busy ? "Creating…" : "Create theme"}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column: Theme Details */}
+        <div className="space-y-4 pr-2">
+          <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-3">Theme Metadata</h4>
+          <label className="block text-sm font-semibold text-slate-800">
+            Theme name
+            <Input
+              autoFocus
+              className="mt-2 font-semibold"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="e.g. Growing and Changing"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Description <span className="font-normal text-slate-400">(optional)</span>
+            <Textarea
+              className="mt-2 text-sm"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="What children will explore"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-800">
+            Icon <span className="font-normal text-slate-400">(optional emoji)</span>
+            <Input
+              className="mt-2"
+              value={emoji}
+              onChange={(event) => setEmoji(event.target.value)}
+              placeholder="🌱"
+              maxLength={8}
+            />
+          </label>
+          <PrimaryHeroImagePicker
+            value={resolvedHero}
+            onChange={setHero}
+            uploadHero={backendApi.schoolAdminUploadThemeHero}
+            compact
+          />
+        </div>
+
+        {/* Right Column: Subtheme & Topic Builder */}
+        <div className="flex flex-col h-full min-h-[400px] md:border-l md:border-slate-100 md:pl-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900">Curriculum Flow</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Map the Theme ➔ Sub-theme ➔ Topic sequence.</p>
+            </div>
+            <Button type="button" size="sm" className="h-8 text-xs px-2.5 bg-violet-600 hover:bg-violet-700 font-bold" onClick={addSubtheme}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Sub-theme
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto max-h-[50vh] space-y-4 pr-1">
+            {/* Standalone Topics */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between mb-3 border-b border-slate-50 pb-2">
+                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-400">Standalone Topics</h5>
+              </div>
+
+              <div className="space-y-2">
+                {standaloneTopics.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800">
+                    <span className="truncate">{t.name}</span>
+                    <button type="button" onClick={() => removeStandaloneTopic(t.id)} className="text-rose-500 hover:text-rose-700 p-0.5 rounded hover:bg-rose-50 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                ))}
+
+                <AddInlineTopicForm onAdd={addStandaloneTopic} placeholder="Add a standalone topic..." />
+              </div>
+            </div>
+
+            {/* Sub-themes and nested Topics */}
+            {subthemes.map((sub, index) => (
+              <div key={sub.id} className="rounded-2xl border border-[#e9e6fd] bg-[#faf9fe] p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="grid h-6 w-6 place-items-center rounded-lg bg-violet-600 text-[10px] font-bold text-white shrink-0">{index + 1}</span>
+                    <Input
+                      value={sub.name}
+                      onChange={(e) => updateSubthemeName(sub.id, e.target.value)}
+                      placeholder="Sub-theme Name (e.g. Anatomy)"
+                      className="h-8 text-xs font-bold bg-white border-slate-200"
+                    />
+                  </div>
+                  <button type="button" onClick={() => removeSubtheme(sub.id)} className="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-100/50 transition shrink-0"><Trash2 className="h-4 w-4" /></button>
+                </div>
+
+                <div className="ml-8 border-l border-slate-200 pl-4 space-y-2">
+                  {sub.topics.map((child) => (
+                    <div key={child.id} className="flex items-center justify-between gap-2 rounded-xl bg-white border border-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-800">
+                      <span className="truncate">{child.name}</span>
+                      <button type="button" onClick={() => removeTopicFromSubtheme(sub.id, child.id)} className="text-rose-500 hover:text-rose-700 p-0.5 rounded hover:bg-rose-50 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  ))}
+
+                  <AddInlineTopicForm onAdd={(topicName) => addTopicToSubtheme(sub.id, topicName)} placeholder="Add topic under sub-theme..." size="sm" />
+                </div>
+              </div>
+            ))}
+
+            {subthemes.length === 0 && standaloneTopics.length === 0 && (
+              <div className="text-center py-10 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400 bg-slate-50/50">
+                Build your curriculum hierarchy. Add sub-themes or standalone topics.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </ActionDialog>
+  );
 }
 
 function EmptyThemes({ filtered, onCreate }: { filtered: boolean; onCreate: () => void }) { return <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><Palette className="mx-auto h-7 w-7 text-slate-400" /><h2 className="mt-3 text-lg font-semibold text-slate-950">{filtered ? "No matching themes" : "Create your first school theme"}</h2><p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{filtered ? "Try a different search." : "School themes sit alongside TeachPad's master themes and stay owned by your school."}</p>{!filtered ? <Button className="mt-5" onClick={onCreate}><Plus className="h-4 w-4" /> Create theme</Button> : null}</div>; }
