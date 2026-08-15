@@ -31,6 +31,7 @@ import {
 import {
   backendApi,
   getRateLimitNotice,
+  isFreeQuotaError,
   isPaymentRequiredError,
   type ElifAnalysis,
   type ElifIssue,
@@ -247,6 +248,16 @@ export function LessonPlanChatbotPanel({
       }
       if (isPaymentRequiredError(error)) {
         openUpgrade(`${resourceLabel(resource)} generation requires a Pro plan.`);
+        return;
+      }
+      // The monthly cap is the one 429 waiting cannot fix, so it opens checkout
+      // here exactly as it does on the standalone generator pages — otherwise the
+      // same teacher gets a paywall from "Customize" and a "wait a moment" toast
+      // from "Generate" on the same card. The state is already back to idle above,
+      // so the post-payment resume is free to re-enter.
+      if (isFreeQuotaError(error)) {
+        const quotaMessage = getErrorMessage(error, "You've used all your free generations this month.");
+        openUpgrade(quotaMessage, { onSuccess: () => void generateResource(resource) });
         return;
       }
       const rateLimit = getRateLimitNotice(error);
