@@ -20,6 +20,7 @@ test("Hindi worksheets localize the complete fixed shell", () => {
   assert.equal(locale.instructions, "निर्देश");
   assert.match(getWorksheetInstructions(output, locale), /प्रत्येक प्रश्न/);
   assert.equal(localizeWorksheetSectionTitle("Part A: Multiple Choice Questions", locale, 0), "भाग A: बहुविकल्पीय प्रश्न");
+  assert.equal(localizeWorksheetSectionTitle("Part B: Assertion–Reason Questions", locale, 1), "भाग B: कथन–कारण प्रश्न");
   assert.equal(localizeMarks("2 marks", locale), "2 अंक");
 });
 

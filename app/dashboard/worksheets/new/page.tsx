@@ -35,7 +35,8 @@ const questionTypeOptions = [
   "Short Answer",
   "Long Answer",
   "Match the Following",
-  "Application Based Questions"
+  "Application Based Questions",
+  "Assertion–Reason"
 ];
 
 const defaultQuestionTypes = [
@@ -134,7 +135,8 @@ const defaultMarks: Record<string, number> = {
   "Short Answer": 3,
   "Long Answer": 5,
   "Match the Following": 1,
-  "Application Based Questions": 4
+  "Application Based Questions": 4,
+  "Assertion–Reason": 1
 };
 
 const questionTypeIdMap: Record<string, string> = {
@@ -145,7 +147,8 @@ const questionTypeIdMap: Record<string, string> = {
   "Short Answer": "short_answer",
   "Long Answer": "long_answer",
   "Match the Following": "match_following",
-  "Application Based Questions": "application_based"
+  "Application Based Questions": "application_based",
+  "Assertion–Reason": "assertion_reason"
 };
 
 const WORKSHEET_DRAFT_KEY = "worksheet";

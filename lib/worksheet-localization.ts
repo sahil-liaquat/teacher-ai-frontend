@@ -55,6 +55,7 @@ export type WorksheetLocale = {
     longAnswer: string;
     matchFollowing: string;
     applicationBased: string;
+    assertionReason: string;
   };
 };
 
@@ -105,7 +106,8 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
       shortAnswer: "Short Answer Questions",
       longAnswer: "Long Answer Questions",
       matchFollowing: "Match the Following",
-      applicationBased: "Application Based Questions"
+      applicationBased: "Application Based Questions",
+      assertionReason: "Assertion–Reason Questions"
     }
   },
   Hindi: {
@@ -154,7 +156,8 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
       shortAnswer: "लघु उत्तरीय प्रश्न",
       longAnswer: "दीर्घ उत्तरीय प्रश्न",
       matchFollowing: "निम्नलिखित का मिलान करें",
-      applicationBased: "अनुप्रयोग आधारित प्रश्न"
+      applicationBased: "अनुप्रयोग आधारित प्रश्न",
+      assertionReason: "कथन–कारण प्रश्न"
     }
   },
   Urdu: {
@@ -203,7 +206,8 @@ export const WORKSHEET_LOCALES: Record<WorksheetLanguage, WorksheetLocale> = {
       shortAnswer: "مختصر جوابی سوالات",
       longAnswer: "تفصیلی جوابی سوالات",
       matchFollowing: "درج ذیل کو ملائیں",
-      applicationBased: "اطلاقی سوالات"
+      applicationBased: "اطلاقی سوالات",
+      assertionReason: "دعویٰ اور وجہ کے سوالات"
     }
   }
 };
@@ -310,7 +314,8 @@ export function localizeWorksheetSectionTitle(title: unknown, locale: WorksheetL
     [/short\s+answer/i, locale.questionTypes.shortAnswer],
     [/long\s+answer/i, locale.questionTypes.longAnswer],
     [/match\s+the\s+following/i, locale.questionTypes.matchFollowing],
-    [/application(?:\s+based)?/i, locale.questionTypes.applicationBased]
+    [/application(?:\s+based)?/i, locale.questionTypes.applicationBased],
+    [/assertion\s*(?:[-–]|and\s+)?\s*reason/i, locale.questionTypes.assertionReason]
   ];
   const translated = mappings.find(([pattern]) => pattern.test(body))?.[1];
   if (!translated) return raw;
