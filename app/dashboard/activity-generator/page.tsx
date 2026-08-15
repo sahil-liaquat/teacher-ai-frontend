@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Activity, ArrowLeft, BookOpen, Boxes, Brain, Check, ClipboardCheck, ClipboardCopy, Download, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, NotebookPen, Save, Share2, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isFreeQuotaError } from "@/lib/api";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -449,9 +449,21 @@ export default function ActivityGeneratorPage() {
         );
         return;
       }
-      const message = getErrorMessage(error, "Could not generate activity.");
+      if (isFreeQuotaError(error)) {
+        setGenerating(false);
+        setGenerationStatus("");
+        // The error screen stays underneath as the fallback: dismissing the
+        // modal leaves Retry/Back rather than a blank page.
+        const quotaMessage = getErrorMessage(error, "You've used all your free generations this month.");
+        setGenerationError(quotaMessage);
+        openUpgrade(quotaMessage, { onSuccess: generate });
+        return;
+      }
+      // A throttle is not a failure of the generator — name it as the wait it is.
+      const rateLimit = getRateLimitNotice(error);
+      const message = rateLimit ? rateLimit.description : getErrorMessage(error, "Could not generate activity.");
       setGenerationError(message);
-      toast({ title: "Generation failed", description: message });
+      toast(rateLimit ?? { title: "Generation failed", description: message });
     } finally {
       window.clearTimeout(t1);
       window.clearTimeout(t2);

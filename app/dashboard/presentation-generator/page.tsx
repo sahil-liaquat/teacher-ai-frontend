@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Boxes, Check, ClipboardCheck, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Presentation, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
+import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -442,6 +442,16 @@ export default function PresentationGeneratorPage() {
         setGenerating(false);
         setGenerationStatus("");
         openUpgrade("Presentation generation requires a Pro plan.");
+        return;
+      }
+      if (isFreeQuotaError(error)) {
+        setGenerating(false);
+        setGenerationStatus("");
+        // The error screen stays underneath as the fallback: dismissing the
+        // modal leaves Retry/Back rather than a blank page.
+        const quotaMessage = getErrorMessage(error, "You've used all your free generations this month.");
+        setGenerationError(quotaMessage);
+        openUpgrade(quotaMessage, { onSuccess: generate });
         return;
       }
       const rateLimit = getRateLimitNotice(error);

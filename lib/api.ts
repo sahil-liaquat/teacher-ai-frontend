@@ -1496,6 +1496,20 @@ export function getRateLimitNotice(error: unknown): RateLimitNotice | null {
   };
 }
 
+/**
+ * True when the generation was refused because the teacher has spent their free
+ * monthly quota (backend code `FREE_QUOTA_EXHAUSTED`).
+ *
+ * This is the one 429 that waiting cannot fix — it's a payment problem, and the
+ * only one allowed to open checkout. The burst/hourly/daily 429s keep the
+ * generic `RATE_LIMITED` code and stay with `getRateLimitNotice`, because
+ * throwing a paywall at a teacher who merely clicked twice would be wrong.
+ */
+export function isFreeQuotaError(error: unknown): boolean {
+  const e = error as { status?: number; code?: string } | null;
+  return e?.status === 429 && e?.code === "FREE_QUOTA_EXHAUSTED";
+}
+
 export async function refreshSession() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;

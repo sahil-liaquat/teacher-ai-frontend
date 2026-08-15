@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { backendApi, getRateLimitNotice, isPaymentRequiredError, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
+import { backendApi, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError, LessonPlan, LessonPlanGeneratePayload, type LessonPlanDashboardSummary } from "@/lib/api";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { useToast } from "@/components/ui/toast";
@@ -85,6 +85,14 @@ export default function GeneratingLessonPlanPage() {
       if (isPaymentRequiredError(err)) {
         openUpgrade("Lesson plan generation requires a Pro plan.");
         setError("A Pro plan is required to generate lesson plans.");
+        return;
+      }
+      if (isFreeQuotaError(err)) {
+        // Stay on this page: the error state underneath keeps Retry alive if
+        // the modal is dismissed, and resuming needs the payload we hold here.
+        const quotaMessage = getErrorMessage(err, "You've used all your free generations this month.");
+        setError(quotaMessage);
+        openUpgrade(quotaMessage, { onSuccess: () => void runGeneration(nextPayload) });
         return;
       }
       const rateLimit = getRateLimitNotice(err);

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Check, ShieldCheck, Sparkles, X, Zap } from "lucide-react";
 import { backendApi } from "@/lib/api";
@@ -14,8 +14,16 @@ import { normalizeIndianMobile } from "@/lib/phone";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
+/**
+ * `onSuccess` runs once the payment has gone through and the subscription has
+ * been confirmed pro. Callers use it to resume whatever the paywall
+ * interrupted — a generator page passes its own `generate` so the teacher gets
+ * the worksheet they originally asked for instead of a re-entered form.
+ */
+type UpgradeOptions = { onSuccess?: () => void };
+
 type UpgradeModalContextValue = {
-  openUpgrade: (contextLine?: string) => void;
+  openUpgrade: (contextLine?: string, options?: UpgradeOptions) => void;
   closeUpgrade: () => void;
 };
 
@@ -32,21 +40,36 @@ export function useUpgradeModal() {
 export function UpgradeModalProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [contextLine, setContextLine] = useState<string | undefined>();
+  // A ref, not state: the callback is read once, after payment, and must not
+  // re-render the modal (or go stale behind closeUpgrade clearing it).
+  const onSuccessRef = useRef<(() => void) | undefined>(undefined);
 
-  const openUpgrade = useCallback((line?: string) => {
+  const openUpgrade = useCallback((line?: string, options?: UpgradeOptions) => {
     setContextLine(line);
+    onSuccessRef.current = options?.onSuccess;
     setOpen(true);
   }, []);
 
   const closeUpgrade = useCallback(() => {
     setOpen(false);
     setContextLine(undefined);
+    onSuccessRef.current = undefined;
   }, []);
+
+  // Dismissing the modal must not resume anything; only a completed payment
+  // does. So the callback is read before closeUpgrade clears the ref.
+  const handlePaid = useCallback(() => {
+    const resume = onSuccessRef.current;
+    closeUpgrade();
+    resume?.();
+  }, [closeUpgrade]);
 
   return (
     <UpgradeModalContext.Provider value={{ openUpgrade, closeUpgrade }}>
       {children}
-      {open && <UpgradeModalUI onClose={closeUpgrade} contextLine={contextLine} />}
+      {open && (
+        <UpgradeModalUI onClose={closeUpgrade} onPaid={handlePaid} contextLine={contextLine} />
+      )}
     </UpgradeModalContext.Provider>
   );
 }
@@ -127,11 +150,38 @@ function loadRazorpayScript(): Promise<boolean> {
   return razorpayScriptPromise;
 }
 
+/**
+ * Razorpay's `handler` fires the moment the payment is authorized, but pro
+ * access is granted by the webhook that lands separately. Poll the source of
+ * truth for a few seconds so a resumed generation isn't refused by the very
+ * quota the teacher just paid to lift. Gives up quietly — the server decides,
+ * and a second refusal simply returns them to the error screen.
+ */
+const PRO_POLL_ATTEMPTS = 3;
+const PRO_POLL_INTERVAL_MS = 2000;
+
+async function waitForProAccess(): Promise<void> {
+  for (let attempt = 0; attempt < PRO_POLL_ATTEMPTS; attempt++) {
+    try {
+      const billing = await backendApi.billingMe();
+      if (billing.is_pro) return;
+    } catch {
+      // Transient failure — treat it as "not yet" and try again.
+    }
+    // No point sleeping after the last look.
+    if (attempt < PRO_POLL_ATTEMPTS - 1) {
+      await new Promise((resolve) => setTimeout(resolve, PRO_POLL_INTERVAL_MS));
+    }
+  }
+}
+
 function UpgradeModalUI({
   onClose,
+  onPaid,
   contextLine,
 }: {
   onClose: () => void;
+  onPaid: () => void;
   contextLine?: string;
 }) {
   const { toast } = useToast();
@@ -229,17 +279,18 @@ function UpgradeModalUI({
         handler: () => {
           // Razorpay does not await this callback — wrap async work in a
           // fire-and-forget so any rejection is caught and swallowed here.
-          refetch()
-            .then(() => {
-              toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
-              onClose();
-            })
-            .catch((err) => {
-              console.error("Billing refetch after payment failed:", err);
-              // Still close the modal; the user paid successfully.
-              toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
-              onClose();
-            });
+          // The user has paid by this point, so every path below must still
+          // congratulate them and close: nothing here may strand them.
+          void (async () => {
+            try {
+              await waitForProAccess();
+              await refetch();
+            } catch (err) {
+              console.error("Billing refresh after payment failed:", err);
+            }
+            toast({ title: "Welcome to TeachPad Pro!", description: "Your subscription is now active." });
+            onPaid();
+          })();
         },
         modal: {
           ondismiss: () => {
