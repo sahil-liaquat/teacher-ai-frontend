@@ -28,6 +28,9 @@ import { PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { primaryTodayViewState } from "@/lib/primary-today-view-state";
+import { schoolContextLabel, usePrimaryTeacherMode } from "@/lib/use-primary-teacher-mode";
+import { authoredSections, provenanceLabel, stalenessNotice } from "@/lib/primary-day-content";
+import { ReportIssueControl } from "./report-issue-control";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
 import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 import { cn } from "@/lib/utils";
@@ -236,10 +239,28 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
   const [copying, setCopying] = useState(false);
 
   const { sectionId, setSectionId, hasChosen } = usePrimarySection();
+  // ⚠ The one source of truth for who this teacher is. Resolving also bridges
+  // each school assignment to a PrimarySection, which is why the sections query
+  // below is invalidated once it lands — otherwise an org teacher's classes
+  // would not appear until the next page load.
+  const teacherMode = usePrimaryTeacherMode();
   const sections = useQuery({
     queryKey: ["primary-sections", false],
     queryFn: () => backendApi.primarySections(),
   });
+
+  // An organization teacher's classes are materialised by the context resolver,
+  // so the section list has to be re-read once it reports assignments. Keyed on
+  // the assignment ids so this fires once per real change, not every render.
+  const bridgedSectionKey = teacherMode.assignedSectionIds.join(",");
+  const activeAssignment = teacherMode.assignments.find(
+    (item) => item.primary_section_id === sectionId,
+  ) ?? null;
+  const schoolLine = schoolContextLabel(teacherMode.context, activeAssignment);
+  useEffect(() => {
+    if (!bridgedSectionKey) return;
+    void queryClient.invalidateQueries({ queryKey: ["primary-sections"] });
+  }, [bridgedSectionKey, queryClient]);
 
   // A section that gets deleted (allowed once it has zero children/days)
   // leaves its id stranded in localStorage. Once the sections list has
@@ -271,6 +292,11 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   const plannerActivities = data?.planner_activities ?? [];
   const dayRecord = data?.day_record ?? null;
+  // Authored content the admin wrote, plus where it came from and whether a
+  // newer version has since been published.
+  const authored = useMemo(() => authoredSections(dayRecord), [dayRecord]);
+  const provenanceText = provenanceLabel(data?.curriculum);
+  const staleness = stalenessNotice(data?.curriculum);
 
   // Today's Plan editable summary — Class, Theme, Sub Theme and Topic pickers,
   // driven by the published curriculum so subtheme/topic resolve to real rows.
@@ -729,6 +755,30 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       </div>
 
+      {/* School context — one line, existing type scale. Present only for an
+          organization teacher; an independent teacher has no school to name. */}
+      {schoolLine && (
+        <p className="mt-3 text-[11px] font-bold text-[#596083]">
+          {schoolLine}
+          {teacherMode.context?.academic_year_name ? ` · ${teacherMode.context.academic_year_name}` : ""}
+        </p>
+      )}
+
+      {/* ⚠ An organization teacher whose school has not assigned them a class.
+          NOT the independent experience: offering them "create a class" would
+          invite a parallel classroom their school already models. They are
+          waiting on an administrator who genuinely exists. */}
+      {teacherMode.isUnassigned && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-xs font-black text-amber-900">You haven't been assigned to a class yet</p>
+          <p className="mt-1 text-[11px] font-semibold text-amber-800">
+            {teacherMode.context?.organization_name
+              ? `${teacherMode.context.organization_name} needs to assign you a class or section before you can begin teaching.`
+              : "Your school needs to assign you a class or section before you can begin teaching."}
+          </p>
+        </div>
+      )}
+
       {sections.isError && (
         <p className="mt-4 text-xs font-bold text-rose-600">
           We couldn't load your classes, so this is the day that isn't assigned to one.{" "}
@@ -738,6 +788,19 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </p>
       )}
 
+
+      {/* ⚠ A notice, not an action. The day carries this teacher's notes,
+          reflection, completion state and the observations recorded against it,
+          and no automatic update can merge those — so it says what changed and
+          leaves the decision (regenerate, or carry on) with the teacher. */}
+      {staleness && viewState !== "generating" && (
+        <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+          <p className="text-xs font-bold text-sky-900">{staleness}</p>
+          <p className="mt-1 text-[11px] font-semibold text-sky-800">
+            Your plan, notes and reflections are untouched. Regenerate this day if you want the update.
+          </p>
+        </div>
+      )}
 
       {generateError && viewState !== "generating" && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
@@ -931,12 +994,54 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                       >
                         <Eye className="h-3.5 w-3.5" /> View Activity
                       </Link>
+
+                      {/* Report an issue with this block, inline. Routed to the
+                          school admin for an organization teacher and to the
+                          platform for an independent one — resolved server-side. */}
+                      <ReportIssueControl activityId={act.id} notify={notify} />
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {/* Authored curriculum content.
+              ⚠ The generator has always copied these onto the teaching day and
+              nothing rendered them, so an admin's objectives, vocabulary,
+              homework and parent update reached no teacher. Same card shell,
+              type scale and spacing as the blocks above — only sections with
+              content are rendered, because an empty heading reads as a broken
+              feature rather than an absent field. */}
+          {authored.length > 0 && (
+            <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-4">
+                <h3 className="text-sm font-black text-[#171747]">Lesson details 📘</h3>
+                <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                  {provenanceText ? `From ${provenanceText}` : "From your curriculum"}
+                </p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {authored.map((section) => (
+                  <div key={section.key} className="rounded-2xl border border-[#f0eff9] bg-[#fbfbfe]/60 p-4">
+                    <h4 className="text-xs font-black text-[#171747]">{section.label}</h4>
+                    {section.kind === "list" ? (
+                      <ul className="mt-2 space-y-1.5">
+                        {section.items.map((item, index) => (
+                          <li key={`${section.key}-${index}`} className="flex gap-2 text-xs font-medium text-slate-600">
+                            <span className="text-[#6e41f5]">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">{section.body}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Daily Reflection */}
           <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-5 shadow-sm sm:p-6">

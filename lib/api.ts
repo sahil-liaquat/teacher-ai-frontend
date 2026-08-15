@@ -2205,6 +2205,31 @@ export const backendApi = {
     if (filters.language) params.append("language", filters.language);
     return apiFetch<PrimaryThemeCoverageReport>(`/primary/coverage/themes?${params.toString()}`);
   },
+  /**
+   * The teacher's resolved mode, school structure and curriculum source.
+   *
+   * The entry point for the whole /primary workspace — every surface reads this
+   * rather than inferring the mode from a nullable organization field.
+   */
+  /**
+   * Report a problem with a curriculum block.
+   *
+   * ⚠ Only the activity id travels. Which school, which lesson, which version
+   * and which class are all resolved server-side from the authenticated user —
+   * a client that could name its own organization could file into another
+   * school's queue.
+   */
+  submitPrimaryFeedback: (payload: {
+    activity_id: string;
+    reason: PrimaryFeedbackReason;
+    comment?: string | null;
+  }) =>
+    apiFetch<PrimaryClassroomFeedback>("/primary/feedback", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  primaryTeacherContext: () =>
+    apiFetch<PrimaryTeacherContextResolved>("/primary/me/context"),
   primarySections: (includeArchived = false) =>
     apiFetch<PrimarySection[]>(
       `/primary/sections${includeArchived ? "?include_archived=true" : ""}`,
@@ -4034,6 +4059,82 @@ export type PrimaryReflection = {
   prep_needed?: string | null;
 };
 
+/**
+ * Who this teacher is, resolved by the server.
+ *
+ * ⚠ `organization_unassigned` is NOT `independent`. The first has a school that
+ * has not finished setting them up; the second has no school at all. Any client
+ * that branches on `organization_id != null` collapses them — and then either
+ * tells an independent teacher to contact an administrator who does not exist,
+ * or invites a school teacher to hand-build a class their school already has.
+ */
+export type PrimaryTeacherMode =
+  | "independent"
+  | "organization_assigned"
+  | "organization_unassigned";
+
+export type PrimaryAssignment = {
+  assignment_id: string;
+  school_class_id: string;
+  class_section_id?: string | null;
+  class_name: string;
+  section_name?: string | null;
+  display_name: string;
+  level: PrimaryLevel;
+  level_label: string;
+  academic_year_id: string;
+  subject_id?: string | null;
+  assignment_role: string;
+  /** The teacher-side execution row bridged to this assignment. */
+  primary_section_id?: string | null;
+};
+
+export type PrimaryTeacherContextResolved = {
+  mode: PrimaryTeacherMode;
+  organization_id?: string | null;
+  organization_name?: string | null;
+  programme_name?: string | null;
+  academic_year_id?: string | null;
+  academic_year_name?: string | null;
+  /** "school" | "platform" — coarse; per-day provenance is authoritative. */
+  curriculum_source: string;
+  inherits_master: boolean;
+  assignments: PrimaryAssignment[];
+};
+
+/** What a teacher can report about a curriculum block. Closed set — an admin
+ *  needs "seven teachers said the timing is unrealistic", not seven essays. */
+export type PrimaryFeedbackReason =
+  | "instructions_unclear"
+  | "resource_mismatch"
+  | "too_difficult"
+  | "too_easy"
+  | "timing_unrealistic"
+  | "engagement_issue"
+  | "other";
+
+export const PRIMARY_FEEDBACK_REASONS: { value: PrimaryFeedbackReason; label: string }[] = [
+  { value: "instructions_unclear", label: "Instructions unclear" },
+  { value: "resource_mismatch", label: "Resource doesn't match" },
+  { value: "too_difficult", label: "Too difficult" },
+  { value: "too_easy", label: "Too easy" },
+  { value: "timing_unrealistic", label: "Timing unrealistic" },
+  { value: "engagement_issue", label: "Student engagement issue" },
+  { value: "other", label: "Other" },
+];
+
+export type PrimaryClassroomFeedback = {
+  id: string;
+  teacher_id: string;
+  organization_id?: string | null;
+  teacher_mode: string;
+  lesson_id?: string | null;
+  lesson_version?: number | null;
+  reason: string;
+  comment?: string | null;
+  created_at: string;
+};
+
 export type PrimaryTeachingDay = {
   id: string;
   user_id: string;
@@ -4165,10 +4266,29 @@ export type PrimaryTeachingContextRead = {
   updated_at: string;
 };
 
+/**
+ * Where the day came from, and whether it is still current.
+ *
+ * ⚠ `is_stale` is DETECTION ONLY. The teacher's day carries their notes,
+ * reflection, activity completion and observations; nothing updates it
+ * automatically, because no automatic merge can preserve those.
+ */
+export type PrimaryCurriculumProvenance = {
+  source: "school" | "platform";
+  organization_id?: string | null;
+  lesson_id?: string | null;
+  source_lesson_id?: string | null;
+  version?: number | null;
+  latest_version?: number | null;
+  is_stale: boolean;
+};
+
 export type PrimaryTodayRead = {
   planner_activities: PrimaryPlannerActivity[];
   day_record: PrimaryTeachingDay | null;
   context: PrimaryTeachingContextRead | null;
+  /** Null when the day was not assembled from authored curriculum. */
+  curriculum?: PrimaryCurriculumProvenance | null;
 };
 
 // ─── Primary coverage (Spec C) ──────────────────────────────────────────────

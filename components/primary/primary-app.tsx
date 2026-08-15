@@ -19,13 +19,14 @@ import { PrimaryTeachingContextProvider, usePrimaryTeachingContext, type Primary
 import { PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { cn } from "@/lib/utils";
 
-export type PrimaryPage = "home" | "today" | "library" | "settings" | "coverage";
+export type PrimaryPage = "home" | "today" | "library" | "settings" | "coverage" | "roster";
 
 import PrimaryHomePage from "./pages/primary-home-page";
 import PrimaryTodayPage from "./pages/primary-today-page";
 import PrimaryLibraryPage from "./pages/primary-library-page";
 import PrimarySettingsPage from "./pages/primary-settings-page";
 import PrimaryCoveragePage from "./pages/primary-coverage-page";
+import PrimaryRosterPage from "./pages/primary-roster-page";
 
 // Sidebar/topbar chrome for /primary/* comes from <AppShell> (components/app-shell.tsx),
 // which wraps every page via app/primary/layout.tsx — this component only owns page content.
@@ -35,6 +36,7 @@ const title: Record<PrimaryPage, [string, string]> = {
   library: ["Resource Library 📚", "Explore and search educational activities and worksheets."],
   settings: ["Settings ⚙️", "Configure your Primary Teaching context and preferences."],
   coverage: ["Curriculum Coverage 📊", "Review textbook scope and classroom progress."],
+  roster: ["My Classes 👧🧒", "Manage your classes and record what you notice about each child."],
 };
 
 export function PrimaryApp({ page }: { page: PrimaryPage }) {
@@ -53,6 +55,7 @@ function PrimaryAppContent({ page }: { page: PrimaryPage }) {
       {page === "library" && <PrimaryLibraryPage Resources={Resources} notify={notify} />}
       {page === "settings" && <PrimarySettingsPage />}
       {page === "coverage" && <PrimaryCoveragePage notify={notify} />}
+      {page === "roster" && <PrimaryRosterPage notify={notify} />}
     </main>
     {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#17206a] px-5 py-3 text-sm font-bold text-white shadow-xl">{toast}</div>}
     </div>
