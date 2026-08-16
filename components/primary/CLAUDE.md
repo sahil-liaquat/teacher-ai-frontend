@@ -39,14 +39,15 @@ at `app/admin/master-curriculum` (components in
 curriculum schools adopt from, and is not part of this directory. The route
 files are thin — the real components are here.
 
-## The 21 `lib/primary-*` modules
+## The 23 `lib/primary-*` modules
 
 More Primary logic lives in `lib/` than in this directory. Grouped by job:
 
 | Concern | Modules |
 |---|---|
 | **Teaching context** (level/subject/theme the teacher is on) | `primary-teaching-context.tsx` (React context), `primary-context-helpers.ts` |
-| **Day / activities** | `primary-activity.ts`, `primary-today-view-state.ts` |
+| **Day / activities** | `primary-activity.ts`, `primary-today-view-state.ts`, `primary-teaching-day.ts` |
+| **The school week** | `primary-teaching-week.ts` — the authoring grid's columns and week rows, from the academic year |
 | **Themes** | `primary-theme-engine.ts`, `primary-theme-content.ts`, `primary-hero-library.ts` |
 | **Resources** | `primary-resource-catalog.ts`, `primary-resource-adapter.ts`, `primary-library-taxonomy.ts`, `use-primary-resources.ts` |
 | **Saved resources** | `primary-saved-resources.ts`, `primary-saved-resources-helpers.ts` |
@@ -99,6 +100,21 @@ them rather than starting a parallel suite.
   or a payload.
 - **Errors still go through `getErrorMessage`.** Primary is not exempt from the
   gateway rule in [`../../CLAUDE.md`](../../CLAUDE.md).
+- **⚠ The curriculum authoring grid is not five columns wide.** Its day columns
+  come from the academic year's `teaching_weekdays` via
+  `lib/primary-teaching-week.ts`, so a Monday–Saturday school authors a Saturday
+  and a Monday–Friday school sees exactly what it always saw. Never re-introduce
+  `const DAYS = [1, 2, 3, 4, 5]` — a test in
+  `tests/workspace/primary-authoring-week.test.ts` fails the build if you do.
+  `day` is 1-based and ISO-aligned (Monday = 1 … Sunday = 7), which is what
+  keeps existing coordinates from shifting when a school widens its week.
+- **⚠ A non-teaching day is not an error.** `GET /primary/today` returns
+  `teaching_status` — what the school calendar says the date is — and
+  `POST /primary/today/generate` answers `200 {generated: false}` on a closed
+  date. Render it through `lib/primary-teaching-day.ts` as an ordinary empty
+  state; the rose/red palette is for failures, and a Sunday is not one. The
+  workspace stays fully usable: date navigation, resources and coverage are all
+  outside the view-state switch on purpose.
 - **Generation is metered and gated** as `GenerationKind.PRIMARY_DAY` — the same
   trial gate and past-due block as every other tool. A day generation can come
   back 402; handle it through the shared upgrade-modal seam.

@@ -1,4 +1,8 @@
-import type { PrimaryLevel, PrimaryTodayGeneratePayload } from "@/lib/api";
+import type {
+  PrimaryGenerationIntent,
+  PrimaryLevel,
+  PrimaryTodayGeneratePayload,
+} from "@/lib/api";
 
 export type PrimaryTeachingContext = {
   level: "Nursery" | "LKG" | "UKG" | "Class 1" | "Class 2" | "Class 3" | "Class 4" | "Class 5";
@@ -206,6 +210,12 @@ export function buildGeneratePayload(
   date: string,
   replace: boolean,
   topicId?: string,
+  /**
+   * ⚠ Defaults to `automatic`, matching the server. Every call site that a
+   * TEACHER triggered must pass "explicit" — that is what lets them prepare a
+   * lesson on a Sunday. Leaving it off is safe, never permissive.
+   */
+  intent: PrimaryGenerationIntent = "automatic",
 ): PrimaryTodayGeneratePayload | null {
   if (!themeId || !context.subject || !context.level) return null;
   return {
@@ -216,5 +226,6 @@ export function buildGeneratePayload(
     topic_id: topicId || context.topicId || undefined,
     language: context.language || "English",
     replace,
+    intent,
   };
 }

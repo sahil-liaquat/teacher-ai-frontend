@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { LEVEL_OPTIONS } from "./theme-list";
 import { RESOURCE_CATEGORY_OPTIONS } from "./resource-panel";
 import { cn } from "@/lib/utils";
+import { WEEK_ROWS, authoringDays, weekdayAbbr } from "@/lib/primary-teaching-week";
 
 const MONTH_OPTIONS = [
   { value: 6, label: "June" }, { value: 7, label: "July" }, { value: 8, label: "August" },
@@ -42,6 +43,14 @@ function lessonStatusLabel(lesson: PrimaryCurriculumLesson | undefined) {
   if (hasMissing) return { label: "Missing Resource", dot: "bg-rose-500", text: "text-rose-600" };
   return { label: "Draft", dot: "bg-amber-500", text: "text-amber-600" };
 }
+
+// TeachPad's own master curriculum is authored Monday–Friday, and this panel
+// has no academic year in scope to ask. Reading the shape through the shared
+// helper rather than inlining `[1,2,3,4,5]` keeps this surface honest about
+// WHY it is five wide — it is the default, not a rule — and gives it the right
+// answer for free if the master week ever changes.
+const MASTER_DAYS = authoringDays(null);
+const MASTER_WEEKS = Array.from({ length: WEEK_ROWS }, (_, index) => index + 1);
 
 export function ResourceMappingPanel() {
   const { toast } = useToast();
@@ -225,14 +234,14 @@ export function ResourceMappingPanel() {
               onChange={(e) => { setWeek(Number(e.target.value)); setDay(1); }}
               className="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500 bg-white"
             >
-              {[1, 2, 3, 4, 5].map((w) => <option key={w} value={w}>Week {w}</option>)}
+              {MASTER_WEEKS.map((w) => <option key={w} value={w}>Week {w}</option>)}
             </select>
           </div>
         </div>
 
         <div className="p-3 space-y-2 max-h-[560px] overflow-y-auto">
           {loadingLessons ? <div className="py-8 text-center text-xs text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" />Loading lessons...</div> : null}
-          {[1, 2, 3, 4, 5].map((d) => {
+          {MASTER_DAYS.map((d) => {
             const lesson = monthLessons.find((l) => l.week === week && l.day === d);
             const status = lessonStatusLabel(lesson);
             const active = lesson?.id === lessonId;
@@ -247,7 +256,7 @@ export function ResourceMappingPanel() {
                   active ? "border-blue-400 bg-blue-50" : lesson ? "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40" : "border-dashed border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed"
                 )}
               >
-                <span className="w-8 shrink-0 text-[10px] font-black text-slate-400">Day {d}</span>
+                <span className="w-10 shrink-0 text-[10px] font-black text-slate-400">{weekdayAbbr(d)}</span>
                 <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", status.dot)} />
                 <span className="min-w-0 flex-1">
                   <span className={cn("block truncate text-xs font-bold", lesson ? "text-slate-800" : status.text)}>

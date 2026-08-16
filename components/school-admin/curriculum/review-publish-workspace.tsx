@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { authoringDays, authoringWeeks, weekdayAbbr, weekdayName } from "@/lib/primary-teaching-week";
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
 
 /**
  * Review & Publish — the final QA surface for a month.
@@ -64,7 +65,14 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
   });
 
   const monthLessons = useMemo(() => lessonsForMonth(lessonsQuery.data ?? [], month), [lessonsQuery.data, month]);
-  const metrics = useMemo(() => monthMetrics(monthLessons), [monthLessons]);
+  const reviewYear = yearsQuery.data?.find((year) => year.id === yearId) ?? null;
+  const metrics = useMemo(
+    () => monthMetrics(monthLessons, {
+      weeks: authoringWeeks(reviewYear, month),
+      days: authoringDays(reviewYear).length,
+    }),
+    [monthLessons, reviewYear, month],
+  );
   const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
   const ready = useMemo(() => publishableDays(monthLessons), [monthLessons]);
   const blocked = useMemo(() => blockedDays(monthLessons), [monthLessons]);
@@ -188,7 +196,7 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
             return (
               <article key={`${slot.week}-${slot.day}`} className="flex flex-col gap-3 border-b border-slate-100 p-4 last:border-b-0 sm:flex-row sm:items-center">
                 <span className="w-24 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-400">
-                  W{slot.week} {DAY_NAMES[slot.day - 1] ?? `D${slot.day}`}
+                  W{slot.week} {weekdayAbbr(slot.day)}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-slate-950">

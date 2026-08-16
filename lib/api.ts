@@ -2359,8 +2359,11 @@ export const backendApi = {
     apiFetch<PrimaryCurriculumLesson>(
       `/primary/curriculum/lessons/${themeId}?level=${encodeURIComponent(level)}${topicId ? `&topic_id=${encodeURIComponent(topicId)}` : ""}`
     ),
+  /** 201 with a day, or 200 with `generated: false` when the school calendar
+   *  says this date carries no teaching. The second is not an error and must
+   *  not be rendered as one — see PrimaryTodayGenerateResponse. */
   generatePrimaryToday: (payload: PrimaryTodayGeneratePayload) =>
-    apiFetch<PrimaryTeachingDay>("/primary/today/generate", {
+    apiFetch<PrimaryTodayGenerateResponse>("/primary/today/generate", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -3806,6 +3809,17 @@ export type PrimaryAcademicYear = {
   starts_on: string;
   ends_on: string;
   is_active: boolean;
+  /**
+   * The school's working week — Monday = 0 … Sunday = 6 — as declared when the
+   * calendar was set up.
+   *
+   * ⚠ THIS IS THE AUTHORING GRID'S WIDTH. The curriculum grid hard-coded five
+   * columns, so a Monday–Saturday school had an open Saturday and nowhere to
+   * author it. Read it through `lib/primary-teaching-week.ts`, which falls back
+   * to Monday–Friday when it is absent — an older payload, or the platform
+   * master curriculum.
+   */
+  teaching_weekdays?: number[];
 };
 
 export type PrimaryCurriculumTopic = {
@@ -4283,12 +4297,72 @@ export type PrimaryCurriculumProvenance = {
   is_stale: boolean;
 };
 
+/**
+ * What one date IS to the school — the calendar's answer, not an error.
+ *
+ * ⚠ A teacher opening Primary on a Sunday used to get `400
+ * PRIMARY_NOT_A_TEACHING_DAY` and a red panel. A closed school is a normal
+ * state of the curriculum calendar, so it now arrives as data on a successful
+ * response and the workspace draws it calmly.
+ *
+ * `headline` and `detail` are authored server-side, beside the school calendar
+ * that decides them — the same rule the error gateway follows for `detail` on
+ * a 4xx. Render them; don't rebuild the sentence from `status`.
+ */
+export type PrimaryTeachingDayStatusValue =
+  | "teaching_day"
+  | "non_teaching_day"
+  | "school_holiday"
+  | "academic_break"
+  | "no_curriculum";
+
+export type PrimaryTeachingDayStatus = {
+  date: string;
+  status: PrimaryTeachingDayStatusValue;
+  /** Derived server-side: `no_curriculum` IS a teaching day — the school is
+   *  open and the curriculum is unfinished, which is a different problem with a
+   *  different owner than a closure. */
+  is_teaching_day: boolean;
+  /** True when generating content for this date is meaningless. The one flag
+   *  that decides whether to offer the button at all. */
+  blocks_generation: boolean;
+  /** `school_calendar` when a real School Admin row decided this;
+   *  `default_pattern` when no calendar exists and Monday–Friday was assumed. */
+  source: "school_calendar" | "default_pattern";
+  headline: string;
+  detail?: string | null;
+  /** The school's own name for the date — "Independence Day", "Winter Break". */
+  label?: string | null;
+  academic_year_id?: string | null;
+  academic_year_name?: string | null;
+  /** Where to send a teacher who has nothing to teach today. */
+  next_teaching_day?: string | null;
+};
+
 export type PrimaryTodayRead = {
   planner_activities: PrimaryPlannerActivity[];
   day_record: PrimaryTeachingDay | null;
   context: PrimaryTeachingContextRead | null;
   /** Null when the day was not assembled from authored curriculum. */
   curriculum?: PrimaryCurriculumProvenance | null;
+  /** Optional: an older backend, or a caller with no school to resolve, sends
+   *  nothing rather than guessing. Treat absence as "assume a teaching day". */
+  teaching_status?: PrimaryTeachingDayStatus | null;
+};
+
+/**
+ * The answer to "plan this day", whether or not there was one to plan.
+ *
+ * ⚠ `generated: false` is a SUCCESS. It means the school calendar says this
+ * date carries no teaching, nothing was reserved and no AI ran. Render
+ * `teaching_status`; do not treat it as a failure.
+ */
+export type PrimaryTodayGenerateResponse = {
+  generated: boolean;
+  teaching_status: PrimaryTeachingDayStatus;
+  /** Null exactly when `generated` is false. */
+  day: PrimaryTeachingDay | null;
+  code?: string | null;
 };
 
 // ─── Primary coverage (Spec C) ──────────────────────────────────────────────
@@ -4391,7 +4465,25 @@ export type PrimaryTodayGeneratePayload = {
   replace?: boolean;
   /** Omitted means the section-less day — what every teacher gets today. */
   section_id?: string | null;
+  /**
+   * WHO asked for this generation.
+   *
+   * ⚠ THE PRODUCT RULE: the school calendar controls what is DELIVERED
+   * automatically; it does not control what a teacher may CREATE.
+   *
+   *   `automatic` — the app resolved "today" by itself. A closed day (Sunday,
+   *     holiday, academic break) stops it: no reservation, no AI, no quota.
+   *   `explicit`  — a teacher filled in the curriculum form and pressed
+   *     Generate. The date is context, not permission; it costs one normal
+   *     generation because they asked for one.
+   *
+   * Omitted means `automatic`, deliberately: the restrictive default is what
+   * keeps an unattended caller from spending a teacher's quota.
+   */
+  intent?: PrimaryGenerationIntent;
 };
+
+export type PrimaryGenerationIntent = "automatic" | "explicit";
 
 export type PrimaryTodayCopyPayload = {
   date: string;

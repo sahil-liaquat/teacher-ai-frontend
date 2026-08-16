@@ -9,8 +9,9 @@ import {
   type CurriculumSlot,
 } from "@/lib/curriculum-readiness";
 import { cn } from "@/lib/utils";
+import { weekdayName, weekdayAbbr } from "@/lib/primary-teaching-week";
 
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
 
 /**
  * One cell of the month grid.
@@ -37,7 +38,7 @@ export function CurriculumDayCard({
   onOpen: (lesson: PrimaryCurriculumLesson) => void;
   onCreate: () => void;
 }) {
-  const dayName = DAY_NAMES[day - 1] ?? `Day ${day}`;
+  const dayName = weekdayName(day) ?? `Day ${day}`;
 
   if (!slot) {
     return (

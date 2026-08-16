@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowRight, CalendarDays, ChevronRight, Clock, Loader2,
+  ArrowRight, CalendarDays, CalendarOff, ChevronRight, Clock, Loader2,
   RefreshCw, Settings2, Sparkles, Star, UsersRound,
   Users, Blocks, Puzzle, Utensils, Music, BookOpen, Palette, Pencil
 } from "lucide-react";
@@ -18,6 +18,7 @@ import { illustrationFor, primaryThemeVisuals } from "@/lib/primary-theme-engine
 import { getErrorMessage } from "@/lib/errors";
 import { primaryStepImage } from "@/lib/primary-step-images";
 import { usePrimarySection } from "@/lib/use-primary-section";
+import { isNonTeachingDay, teachingDayNotice } from "@/lib/primary-teaching-day";
 import PrimaryPlanSetupModal, { type PrimaryPlanSetup } from "./primary-plan-setup-modal";
 
 const activityEmoji: Record<string, string> = {
@@ -249,6 +250,14 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
   });
   const day = todayQuery.data?.day_record;
   const activities = todayQuery.data?.planner_activities ?? [];
+  // What the school calendar says today is. The dashboard used to have no way
+  // to know — the only signal a weekend produced was a 400 from generate.
+  const teachingStatus = todayQuery.data?.teaching_status ?? null;
+  const closedForTeaching = isNonTeachingDay(teachingStatus);
+  const teachingNotice = useMemo(
+    () => teachingDayNotice(teachingStatus, today),
+    [teachingStatus, today],
+  );
   const resourceIds = useMemo(
     () => Array.from(new Set(activities.flatMap((activity) => activity.resource_ids))).slice(0, 12),
     [activities],
@@ -296,16 +305,30 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
     try {
       const saved = await updateContext(resolvedContext);
       if (!saved) notify("Your classroom is ready, but the teaching context could not be saved for next time.");
-      const payload = buildGeneratePayload(resolvedContext, setup.themeId, today, true, setup.topicId);
+      // ⚠ EXPLICIT. This is "Change classroom" → "Set up today's plan": the
+      // teacher chose the class, theme, sub-theme and topic themselves and
+      // pressed Generate. The school calendar governs what is DELIVERED
+      // automatically, not what a teacher may CREATE — so a Sunday no longer
+      // turns this into "No teaching scheduled today." and an empty screen.
+      const payload = buildGeneratePayload(
+        resolvedContext, setup.themeId, today, true, setup.topicId, "explicit",
+      );
       if (!payload) throw new Error("The selected curriculum is incomplete.");
       payload.section_id = sectionId;
-      await backendApi.generatePrimaryToday(payload);
+      const result = await backendApi.generatePrimaryToday(payload);
       setSetupOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["primary-today-workspace", today] }),
         queryClient.invalidateQueries({ queryKey: ["primary-curriculum-themes"] }),
       ]);
-      notify(`${setup.topicName} classroom is ready ✨`);
+      // `generated: false` can still happen — an older backend, or a state the
+      // server declines for its own reasons. It is a success, not a failure, so
+      // the server's own sentence is the honest thing to show.
+      notify(
+        result.generated
+          ? `${setup.topicName} classroom is ready ✨`
+          : result.teaching_status.headline,
+      );
     } catch (error) {
       notify(getErrorMessage(error, "We couldn't prepare this classroom. Please try again."));
     } finally {
@@ -475,6 +498,48 @@ export default function PrimaryHomePage({ notify }: { notify: (message: string) 
                 View full schedule <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
               </Link>
             </div>
+          </div>
+        ) : closedForTeaching ? (
+          /* ⚠ A calm state, not a red one, and not an invitation to generate a
+             day the calendar has already said does not exist. The dashboard is
+             where a teacher lands, so this is the surface the bug was reported
+             against. */
+          <div className="rounded-2xl border border-[#e8e7fb] bg-white p-8 text-center flex flex-col items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eff4ff] text-blue-500">
+              <CalendarOff className="h-5 w-5" />
+            </div>
+            <h3 className="mt-3 text-sm font-black text-[#171747]">
+              {teachingNotice?.headline ?? "No teaching scheduled today."}
+            </h3>
+            <p className="mt-1 text-xs font-bold text-slate-400">{teachingNotice?.dateLabel}</p>
+            {teachingNotice?.detail && (
+              <p className="mt-2 max-w-sm text-xs text-[#596083]">{teachingNotice.detail}</p>
+            )}
+            {teachingNotice?.nextDate && (
+              <>
+                <p className="mt-5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Next teaching day
+                </p>
+                <p className="mt-1 text-sm font-black text-[#171747]">{teachingNotice.nextDateLabel}</p>
+                <Link
+                  href={`/primary/today?date=${teachingNotice.nextDate}`}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-500 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-500/15 transition duration-150 hover:-translate-y-0.5 hover:bg-blue-600 cursor-pointer"
+                >
+                  {teachingNotice.nextActionLabel} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </>
+            )}
+            {/* ⚠ The closed day still lets a teacher prepare. "Change
+                classroom" in this card's header does the same thing; this is
+                the affordance for someone who has read the empty state and is
+                looking for what they CAN do. */}
+            <button
+              type="button"
+              onClick={() => setSetupOpen(true)}
+              className="mt-5 inline-flex items-center gap-1.5 text-xs font-black text-blue-500 transition hover:text-blue-600 cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Set up today&apos;s plan anyway
+            </button>
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-8 text-center flex flex-col items-center justify-center">

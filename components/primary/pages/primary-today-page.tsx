@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
+  CalendarOff,
   CheckCircle2,
   Copy,
   XCircle,
@@ -21,13 +22,14 @@ import {
   Save,
 } from "lucide-react";
 import { primaryStepImage } from "@/lib/primary-step-images";
-import { backendApi } from "@/lib/api";
+import { backendApi, type PrimaryGenerationIntent } from "@/lib/api";
 import { usePrimaryTeachingContext, type PrimaryTeachingContext } from "@/lib/primary-teaching-context";
 import { usePrimarySection } from "@/lib/use-primary-section";
 import { PRIMARY_LEVELS } from "@/lib/primary-theme-content";
 import { buildGeneratePayload, PRIMARY_LANGUAGES, PRIMARY_LEVEL_TO_API } from "@/lib/primary-context-helpers";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { primaryTodayViewState } from "@/lib/primary-today-view-state";
+import { isNonTeachingDay, teachingDayNotice } from "@/lib/primary-teaching-day";
 import { schoolContextLabel, usePrimaryTeacherMode } from "@/lib/use-primary-teacher-mode";
 import { authoredSections, provenanceLabel, stalenessNotice } from "@/lib/primary-day-content";
 import { ReportIssueControl } from "./report-issue-control";
@@ -292,6 +294,15 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
 
   const plannerActivities = data?.planner_activities ?? [];
   const dayRecord = data?.day_record ?? null;
+  // ⚠ What the SCHOOL CALENDAR says this date is — weekend, holiday, break, or
+  // a teaching day with nothing authored on it. It arrives on the successful
+  // GET, so the page never has to infer a closure from a failed POST.
+  const teachingStatus = data?.teaching_status ?? null;
+  const notice = useMemo(
+    () => teachingDayNotice(teachingStatus, selectedDate),
+    [teachingStatus, selectedDate],
+  );
+  const closedForTeaching = isNonTeachingDay(teachingStatus);
   // Authored content the admin wrote, plus where it came from and whether a
   // newer version has since been published.
   const authored = useMemo(() => authoredSections(dayRecord), [dayRecord]);
@@ -391,8 +402,21 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     themeId?: string;
     topicId?: string;
     replace?: boolean;
+    /**
+     * ⚠ WHO ASKED. `explicit` means a teacher filled in the curriculum form and
+     * pressed Generate, which the school calendar does not get a vote on — the
+     * calendar governs what is DELIVERED, not what a teacher may CREATE.
+     * `automatic` is anything the app resolved by itself, and a closed day
+     * stops it. Defaults to automatic so a new call site is safe by omission.
+     */
+    intent?: PrimaryGenerationIntent;
   } = {}) => {
-    const { context: overrideContext, date: overrideDate, replace = false } = options;
+    const {
+      context: overrideContext,
+      date: overrideDate,
+      replace = false,
+      intent = "automatic",
+    } = options;
     const ctx = overrideContext ?? context;
     const date = overrideDate ?? selectedDate;
 
@@ -426,7 +450,7 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         : themes.find((t) => t.name === ctx.theme)?.id ?? selectedThemeId;
     }
 
-    const payload = buildGeneratePayload(ctx, themeId, date, replace, options.topicId);
+    const payload = buildGeneratePayload(ctx, themeId, date, replace, options.topicId, intent);
     // Nothing to generate from — either the context is incomplete, or its theme
     // name has no curriculum row behind it. A teacher can't tell those apart
     // from an error line, and the second one looks like a lie when the pickers
@@ -439,13 +463,37 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     }
     payload.section_id = sectionId;
 
+    // ⚠ ONLY THE AUTOMATIC PATH IS REFUSED HERE. A closed day stops the app
+    // from resolving "today" by itself — the server refuses it too, reserving
+    // nothing — but it must never stop a teacher who deliberately chose a
+    // class, theme, sub-theme and topic and pressed Generate. Preparing
+    // Monday's lesson on a Sunday is most of what a Sunday is for.
+    //
+    // `blocks_generation` is the server's own derived flag: a teaching day with
+    // no curriculum still generates, because the theme fallback can find a
+    // lesson for it.
+    if (intent === "automatic" && date === selectedDate && teachingStatus?.blocks_generation) {
+      setGenerateError(null);
+      return;
+    }
+
     setGenerateError(null);
     setGenerating(true);
     try {
       // One atomic server call. It resolves the published lesson, upserts the
       // day, matches a printable per step and writes the activities in a single
       // transaction — which is why regenerating no longer duplicates a day.
-      await backendApi.generatePrimaryToday(payload);
+      const result = await backendApi.generatePrimaryToday(payload);
+      // ⚠ A 200 with `generated: false` is a SUCCESS: the school calendar says
+      // this date carries no teaching, nothing was reserved and no AI ran.
+      // Refetch so the page picks up the state and draws it calmly — treating
+      // it as an error here would restore the red panel by another route.
+      if (!result.generated) {
+        await queryClient.invalidateQueries({
+          queryKey: ["primary-today-workspace", date],
+        });
+        return;
+      }
       notify("Plan ready ✨");
       await queryClient.invalidateQueries({
         queryKey: ["primary-today-workspace", date],
@@ -482,7 +530,12 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       const saved = await updateContext(resolvedContext);
       if (!saved) notify("We couldn't save this class for next time, but today's plan will use it.");
       setSelectedDate(todayDate);
-      await runGenerate({ context: resolvedContext, date: todayDate, themeId: themeRow?.id, topicId: topicRow?.id });
+      // The teacher picked class/theme/subtheme/topic and pressed "View full
+      // plan" — explicit by construction.
+      await runGenerate({
+        context: resolvedContext, date: todayDate, themeId: themeRow?.id,
+        topicId: topicRow?.id, intent: "explicit",
+      });
     } finally {
       setSavingContext(false);
     }
@@ -511,7 +564,11 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
       setSetupOpen(false);
       // The modal picked a real curriculum row, so hand its id straight to the
       // generator rather than round-tripping through a name lookup.
-      await runGenerate({ context: resolvedContext, themeId: setup.themeId, topicId: setup.topicId });
+      // "Set up today's plan" — the teacher chose every input in the modal.
+      await runGenerate({
+        context: resolvedContext, themeId: setup.themeId,
+        topicId: setup.topicId, intent: "explicit",
+      });
     } finally {
       setSetupSubmitting(false);
     }
@@ -609,6 +666,9 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
     dayFailed: isError,
     generating,
     activityCount: plannerActivities.length,
+    // Undefined rather than false when the backend sent nothing, so an older
+    // API leaves the page behaving exactly as it did.
+    isTeachingDay: teachingStatus ? teachingStatus.is_teaching_day : undefined,
   });
 
   // Format time as 12-hour AM/PM
@@ -808,6 +868,22 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
         </div>
       )}
 
+      {/* ⚠ A plan the teacher built on a day their school is closed. Not a
+          warning and not an error — they did this on purpose. It says why the
+          date looks unusual so the plan never reads as a mistake, and it only
+          appears once a plan actually exists. */}
+      {closedForTeaching && viewState === "plan" && (
+        <div className="rounded-2xl border border-[#e8e7fb] bg-[#faf9ff] px-4 py-3">
+          <p className="text-xs font-bold text-[#171747]">
+            {notice?.headline ?? "No teaching scheduled today."} You built this plan yourself.
+          </p>
+          <p className="mt-1 text-[11px] font-semibold text-[#596083]">
+            It stays on {notice?.dateLabel ?? formattedDate} and is yours to teach, edit or
+            copy to another day.
+          </p>
+        </div>
+      )}
+
       {viewState === "loading" ? (
         <div className="flex h-72 items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-[#6e41f5]" />
@@ -835,9 +911,108 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
             Try again
           </button>
         </div>
+      ) : viewState === "no-teaching" ? (
+        /* ⚠ NOT AN ERROR, and the styling is the argument. This is the state a
+           400 used to occupy: a teacher opened Primary on a Sunday and was
+           shown "Sunday isn't a teaching day. Pick a weekday to plan." in the
+           rose error palette. A closed school is a normal state of the
+           curriculum calendar, so it gets the workspace's ordinary card, the
+           school's own words for the date, and somewhere to go next.
+
+           Everything above this switch — the date arrows, the class picker, the
+           theme/topic selectors, the workspace nav — stays live. A non-teaching
+           day empties the plan; it does not close the product. */
+        <div className="rounded-[28px] border border-[#e8e7fb] bg-white p-10 text-center shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f3f0ff] text-[#6e41f5]">
+            <CalendarOff className="h-6 w-6" />
+          </div>
+          <p className="mt-4 text-base font-extrabold text-[#171747]">
+            {notice?.headline ?? "No teaching scheduled today."}
+          </p>
+          <p className="mt-1 text-sm font-bold text-slate-400">{notice?.dateLabel ?? formattedDate}</p>
+          {notice?.detail && (
+            <p className="mx-auto mt-2 max-w-md text-xs font-semibold text-[#596083]">{notice.detail}</p>
+          )}
+
+          {notice?.nextDate && (
+            <div className="mt-6 border-t border-[#ecebf7] pt-5">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Next teaching day
+              </p>
+              <p className="mt-1 text-sm font-black text-[#171747]">{notice.nextDateLabel}</p>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(notice.nextDate!)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#7c5dff] to-[#5a39eb] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#6e41f5]/20 transition-all duration-200 hover:-translate-y-0.5 hover:from-[#6e41f5] hover:to-[#4e29db] cursor-pointer"
+              >
+                {notice.nextActionLabel} <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* ⚠ Preparation is not teaching, and this is the button that says so.
+              A closed day is exactly when a teacher gets ahead — so the
+              explicit "choose a class, theme and topic" flow stays available
+              here, and generating from it is allowed. What the calendar stops
+              is the app deciding to generate on its own. */}
+          <div className="mt-6 border-t border-[#ecebf7] pt-5">
+            <p className="text-[11px] font-bold text-slate-400">
+              Preparing ahead? You can still build a plan for this date.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSetupOpen(true)}
+              disabled={generating}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-5 py-2.5 text-xs font-black text-[#6e41f5] shadow-sm transition hover:bg-[#faf9ff] disabled:opacity-60 cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Set up today&apos;s plan
+            </button>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/primary/library"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2 text-[11px] font-black text-[#6e41f5] transition hover:bg-[#faf9ff] cursor-pointer"
+            >
+              Browse resources
+            </Link>
+            <Link
+              href="/primary/coverage"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e7fb] bg-white px-4 py-2 text-[11px] font-black text-[#6e41f5] transition hover:bg-[#faf9ff] cursor-pointer"
+            >
+              Review coverage
+            </Link>
+          </div>
+
+          {teachingStatus?.source === "default_pattern" && (
+            /* Honest about which authority answered. A school that teaches on
+               Saturdays and has not set its calendar up is being guessed at,
+               and saying so is what stops the guess reading as a decree. */
+            <p className="mt-5 text-[10px] font-semibold text-slate-400">
+              Based on a standard Monday–Friday week. Your school can set its own
+              working days, holidays and terms in the school calendar.
+            </p>
+          )}
+        </div>
       ) : viewState === "empty" ? (
         <div className="rounded-[28px] border border-dashed border-[#cfc8ef] bg-[#faf9ff] p-10 text-center">
-          <p className="text-sm font-semibold text-slate-400">No activities planned for this day yet.</p>
+          {/* ⚠ Two different sentences, because they are two different facts.
+              "No curriculum planned for this day" means the school IS open and
+              nobody authored a teaching day at this date's slot — a curriculum
+              gap the school admin owns. "No activities planned yet" means the
+              teacher simply hasn't generated theirs. Generation stays offered
+              either way: the planner's theme fallback ignores the calendar
+              coordinate and can still find a lesson. */}
+          <p className="text-sm font-semibold text-slate-400">
+            {teachingStatus?.status === "no_curriculum"
+              ? "No curriculum planned for this day."
+              : "No activities planned for this day yet."}
+          </p>
+          {teachingStatus?.status === "no_curriculum" && (
+            <p className="mx-auto mt-1 max-w-md text-xs font-semibold text-[#596083]">
+              {teachingStatus.detail ?? "Your school teaches on this date, but no teaching day has been published for it yet."}
+            </p>
+          )}
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
@@ -915,7 +1090,10 @@ export default function PrimaryTodayPage({ notify }: { notify: (s: string) => vo
                         date: selectedDate,
                         themeId: themeRow?.id,
                         topicId: context.topicId || undefined,
-                        replace: true
+                        replace: true,
+                        // The teacher clicked "Sync from Curriculum" and
+                        // confirmed an overwrite. Nothing automatic about it.
+                        intent: "explicit",
                       });
                     }
                   }}

@@ -87,8 +87,24 @@ export function focusTarget(check: LessonReadinessCheck): string | null {
 
 export const WEEKS_PER_MONTH = 5;
 export const DAYS_PER_WEEK = 5;
-/** The month grid is 5 weeks x 5 teaching days. Both ends agree on this. */
+/**
+ * The DEFAULT month grid: 5 weeks x 5 teaching days. Both ends agree on this.
+ *
+ * ⚠ A default, not a law. A school that teaches Monday–Saturday authors 5 x 6,
+ * and a month whose teaching days span six weeks authors 6 x 6 — see
+ * `lib/primary-teaching-week.ts`. Pass the real shape to `monthMetrics`; this
+ * constant is what a caller with no academic year to ask about falls back to,
+ * which is still the common case.
+ */
 export const SLOTS_PER_MONTH = WEEKS_PER_MONTH * DAYS_PER_WEEK;
+
+/** The grid a month is being authored in — weeks x days. */
+export type MonthGrid = { weeks: number; days: number };
+
+export const DEFAULT_MONTH_GRID: MonthGrid = {
+  weeks: WEEKS_PER_MONTH,
+  days: DAYS_PER_WEEK,
+};
 
 /**
  * One curriculum slot — a (week, day) pair — and the versions living in it.
@@ -125,7 +141,7 @@ export type MonthMetrics = {
   /** Slots whose working draft has blocking issues. */
   needsAttention: number;
   empty: number;
-  /** Published slots as a percentage of SLOTS_PER_MONTH. Never above 100. */
+  /** Published slots as a percentage of the month's own slot count. Never above 100. */
   completionPct: number;
 };
 
@@ -173,7 +189,15 @@ function byVersionDescending(a: PrimaryCurriculumLesson, b: PrimaryCurriculumLes
   return a.id < b.id ? 1 : -1;
 }
 
-export function monthMetrics(lessons: PrimaryCurriculumLesson[]): MonthMetrics {
+/**
+ * `grid` is the school's own shape. Omitted means 5 x 5, so every existing
+ * caller and every Monday–Friday school reads exactly what it read before.
+ */
+export function monthMetrics(
+  lessons: PrimaryCurriculumLesson[],
+  grid: MonthGrid = DEFAULT_MONTH_GRID,
+): MonthMetrics {
+  const total = Math.max(grid.weeks * grid.days, 1);
   const slots = curriculumSlots(lessons);
   let ready = 0;
   let published = 0;
@@ -186,15 +210,15 @@ export function monthMetrics(lessons: PrimaryCurriculumLesson[]): MonthMetrics {
     }
   }
   return {
-    slots: SLOTS_PER_MONTH,
+    slots: total,
     created: slots.length,
     ready,
     published,
     needsAttention,
-    empty: Math.max(SLOTS_PER_MONTH - slots.length, 0),
+    empty: Math.max(total - slots.length, 0),
     // Clamped as well as slot-based. The backend accepts week <= 6, so a stray
     // week-6 row is legal data that must not push this over 100.
-    completionPct: Math.min(100, Math.round((published / SLOTS_PER_MONTH) * 100)),
+    completionPct: Math.min(100, Math.round((published / total) * 100)),
   };
 }
 

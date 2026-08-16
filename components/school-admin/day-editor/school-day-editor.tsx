@@ -53,11 +53,11 @@ import { SchoolAdminPage } from "@/components/school-admin/shared/page-primitive
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 import { ResourcePicker } from "@/components/school-admin/day-editor/resource-picker";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
+import { weekdayName, weekdayAbbr } from "@/lib/primary-teaching-week";
 
 type EditableStep = PrimaryCurriculumStep & { id: string };
 type PickerTarget = { stepIndex: number; detail?: { key: string; multi: boolean } };
 
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export function SchoolDayEditor({
   lessonId,
@@ -366,7 +366,7 @@ export function SchoolDayEditor({
   if (lessonQuery.isLoading) return <SchoolAdminPage><Skeleton className="h-28" /><Skeleton className="h-40" /><Skeleton className="h-[500px]" /></SchoolAdminPage>;
   if (lessonQuery.isError || !lesson || !localLesson) return <SchoolAdminPage><button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-bold text-blue-700"><ArrowLeft className="h-4 w-4" /> Back to curriculum</button><div className="rounded-2xl bg-rose-50 p-5 text-sm text-rose-800">This teaching day could not be loaded.</div></SchoolAdminPage>;
 
-  const dayName = lesson.day ? DAY_NAMES[lesson.day - 1] : "Teaching day";
+  const dayName = lesson.day ? weekdayName(lesson.day) : "Teaching day";
   const status = dayStatus(lesson);
 
   return (

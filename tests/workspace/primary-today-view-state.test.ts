@@ -59,3 +59,56 @@ test("generating beats a stale error, so a retry doesn't show the old failure", 
     "generating"
   );
 });
+
+// ── The school calendar's states ────────────────────────────────────────────
+// A teacher opening Primary on a Sunday used to get a 400 and a red panel. The
+// calendar state now arrives on the successful GET, and the page has somewhere
+// calm to put it.
+
+test("a non-teaching day is its own state, not an empty one", () => {
+  // "No activities planned for this day yet" + a Generate button invites the
+  // teacher to make a request the server will decline. Sunday is not an empty
+  // day; it is a closed one.
+  assert.equal(
+    primaryTodayViewState({ ...BASE, isTeachingDay: false }),
+    "no-teaching"
+  );
+});
+
+test("a teaching day with nothing on it is still just empty", () => {
+  assert.equal(primaryTodayViewState({ ...BASE, isTeachingDay: true }), "empty");
+});
+
+test("a plan on a non-teaching day still renders", () => {
+  // A Saturday catch-up class the teacher already planned, or a date the school
+  // closed after the fact. Hiding work they can still teach from is worse than
+  // showing it under a calendar that disagrees.
+  assert.equal(
+    primaryTodayViewState({ ...BASE, isTeachingDay: false, activityCount: 4 }),
+    "plan"
+  );
+});
+
+test("loading and generating still beat the calendar state", () => {
+  assert.equal(
+    primaryTodayViewState({ ...BASE, isTeachingDay: false, dayLoading: true }),
+    "loading"
+  );
+  assert.equal(
+    primaryTodayViewState({ ...BASE, isTeachingDay: false, generating: true }),
+    "generating"
+  );
+});
+
+test("a failed fetch is still an error, even on a Sunday", () => {
+  // The calendar state comes from the response that just failed, so trusting a
+  // stale one would paint a confident "no teaching today" over an outage.
+  assert.equal(
+    primaryTodayViewState({ ...BASE, isTeachingDay: false, dayFailed: true }),
+    "error"
+  );
+});
+
+test("an API that sends no calendar state behaves exactly as before", () => {
+  assert.equal(primaryTodayViewState(BASE), "empty");
+});

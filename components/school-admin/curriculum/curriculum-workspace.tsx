@@ -22,6 +22,12 @@ import {
   monthMetrics,
   type CurriculumSlot,
 } from "@/lib/curriculum-readiness";
+import {
+  authoringDays,
+  weekdayAbbr,
+  weekdayName,
+  weekRows,
+} from "@/lib/primary-teaching-week";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,8 +40,12 @@ import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 
-const WEEKS = [1, 2, 3, 4, 5];
-const DAYS = [1, 2, 3, 4, 5];
+// ⚠ NOT CONSTANTS ANY MORE. `const DAYS = [1,2,3,4,5]` here, and its copies in
+// the review screen and the platform master admin, were the front half of the
+// five-day limitation: a school could declare Monday–Saturday in its calendar,
+// get an open Saturday in the teacher planner, and still have no column to
+// author it in. Both axes now come from the academic year — see
+// `lib/primary-teaching-week.ts`.
 const DEFAULT_MONTH = new Date().getMonth() + 1;
 
 export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAdminScope }) {
@@ -86,7 +96,16 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   // lesson ROWS against a frontend rule the publish endpoint did not share, so a
   // published day and the draft opened to edit it were counted twice and
   // "N of 25 ready" could exceed 25. See lib/curriculum-readiness.ts.
-  const metrics = useMemo(() => monthMetrics(monthLessons), [monthLessons]);
+  // The year the grid is being authored in decides its shape: one column per
+  // teaching weekday, and a sixth week row for the rare month whose teaching
+  // days genuinely span six weeks.
+  const activeYear = yearsQuery.data?.find((year) => year.id === yearId) ?? null;
+  const DAYS = useMemo(() => authoringDays(activeYear), [activeYear]);
+  const WEEKS = useMemo(() => weekRows(activeYear, month), [activeYear, month]);
+  const metrics = useMemo(
+    () => monthMetrics(monthLessons, { weeks: WEEKS.length, days: DAYS.length }),
+    [monthLessons, WEEKS.length, DAYS.length],
+  );
   const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
   const slotFor = (week: number, day: number) => slots.find((slot) => slot.week === week && slot.day === day);
   // Review & Publish is a real surface, not a modal over the grid. It carries
@@ -270,7 +289,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h2 id={`week-${week}-heading`} className="text-base font-semibold text-slate-950">Week {week}</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">{DAYS.filter((day) => slotFor(week, day)).length} of 5 days planned</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{DAYS.filter((day) => slotFor(week, day)).length} of {DAYS.length} days planned</p>
                 </div>
                 <details className="relative">
                   <summary className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl text-slate-500 hover:bg-white" aria-label={`Week ${week} actions`}><MoreHorizontal className="h-5 w-5" /></summary>
@@ -280,7 +299,13 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
                   </div>
                 </details>
               </div>
-              <div className="hidden grid-cols-5 gap-3 xl:grid">
+              {/* One column per teaching day. Tailwind cannot see a computed
+                  class name, so the track count is an inline style — which also
+                  keeps six columns fitting the same row rather than scrolling. */}
+              <div
+                className="hidden gap-3 xl:grid"
+                style={{ gridTemplateColumns: `repeat(${DAYS.length}, minmax(0, 1fr))` }}
+              >
                 {DAYS.map((day) => {
                   const slot = slotFor(week, day);
                   const highlighted = Boolean(slot && (
@@ -294,11 +319,11 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
                 {DAYS.map((day) => {
                   const slot = slotFor(week, day);
                   const lesson = slot?.current;
-                  const dayName = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day - 1];
+                  const dayName = weekdayName(day);
                   const issues = slot ? blockingIssues(slot.current).length : 0;
                   return (
                     <button key={day} type="button" onClick={() => lesson ? updateContext({ day: lesson.id }) : openCreateDay(week, day)} className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">{dayName.slice(0, 3).toUpperCase()}</span>
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">{weekdayAbbr(day)}</span>
                       <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-slate-500">{dayName}</span><span className="block truncate text-sm font-semibold text-slate-950">{lesson?.title || lesson?.daily_focus || "Not planned"}</span></span>
                       <span className="text-xs font-bold text-blue-700">{slot ? (issues ? `${issues} ${issues === 1 ? "issue" : "issues"}` : DAY_STATUS_LABELS[slot.status]) : "+ Create"}</span>
                     </button>
@@ -315,6 +340,8 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
           month={month}
           level={level}
           week={previewScope === "month" ? null : previewScope}
+          weeks={WEEKS}
+          days={DAYS}
           lessons={monthLessons}
           onClose={() => setPreviewScope(null)}
           onOpenDay={(lessonId) => {
@@ -352,17 +379,19 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   );
 }
 
-function CurriculumPreview({ month, level, week, lessons, onClose, onOpenDay }: {
+function CurriculumPreview({ month, level, week, weeks, days, lessons, onClose, onOpenDay }: {
   month: number;
   level: string;
   week: number | null;
+  weeks: number[];
+  days: number[];
   lessons: PrimaryCurriculumLesson[];
   onClose: () => void;
   onOpenDay: (lessonId: string) => void;
 }) {
-  const visibleWeeks = week ? [week] : WEEKS;
+  const visibleWeeks = week ? [week] : weeks;
   const planned = lessons.filter((lesson) => week === null || lesson.week === week).length;
-  const total = visibleWeeks.length * DAYS.length;
+  const total = visibleWeeks.length * days.length;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="curriculum-preview-title">
       <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7">
@@ -378,10 +407,13 @@ function CurriculumPreview({ month, level, week, lessons, onClose, onOpenDay }: 
           {visibleWeeks.map((weekNumber) => (
             <section key={weekNumber} aria-labelledby={`preview-week-${weekNumber}`}>
               <h3 id={`preview-week-${weekNumber}`} className="mb-3 text-sm font-semibold text-slate-950">Week {weekNumber}</h3>
-              <div className="grid gap-2 sm:grid-cols-5">
-                {DAYS.map((day) => {
+              <div
+                className="grid gap-2"
+                style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
+              >
+                {days.map((day) => {
                   const lesson = slotOccupant(lessons, weekNumber, day);
-                  const dayName = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day - 1];
+                  const dayName = weekdayName(day);
                   return lesson ? (
                     <button key={day} type="button" onClick={() => onOpenDay(lesson.id)} className="rounded-2xl border border-slate-200 p-3 text-left transition hover:border-blue-300 hover:bg-blue-50/40">
                       <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-400">{dayName}</span>

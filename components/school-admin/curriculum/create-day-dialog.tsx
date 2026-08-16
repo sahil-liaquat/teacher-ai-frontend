@@ -25,8 +25,9 @@ import type { StepDraft } from "@/lib/primary-authoring";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { weekdayName, weekdayAbbr } from "@/lib/primary-teaching-week";
 
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
 
 export type CreateDayRequest = {
   themeId: string;
@@ -137,7 +138,7 @@ export function CreateDayDialog({
               Create Teaching Day
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Week {week}, {DAY_NAMES[day - 1] ?? `day ${day}`}
+              Week {week}, {weekdayName(day) ?? `day ${day}`}
             </p>
           </div>
           <button

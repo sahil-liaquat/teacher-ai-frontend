@@ -15,6 +15,7 @@ import {
   SCHOOL_MONTHS,
 } from "@/lib/school-admin-curriculum";
 import { advisoryNotes, blockingIssues, curriculumSlots, dayStatus, monthMetrics } from "@/lib/curriculum-readiness";
+import { authoringDays, authoringWeeks } from "@/lib/primary-teaching-week";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AIAction, PageError, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
@@ -57,7 +58,12 @@ export function SchoolAdminOverview() {
   // ⚠ Server verdict, counted in slots. Was a frontend-only rule over lesson
   // ROWS divided by a hardcoded 25 — so a duplicated day inflated readiness, and
   // "needs attention" could disagree with what publish actually refuses.
-  const metrics = useMemo(() => monthMetrics(monthLessons), [monthLessons]);
+  // The month's own grid — one column per teaching weekday this year declares.
+  const grid = useMemo(
+    () => ({ weeks: authoringWeeks(year, month), days: authoringDays(year).length }),
+    [year, month],
+  );
+  const metrics = useMemo(() => monthMetrics(monthLessons, grid), [monthLessons, grid]);
   const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
   const attention = slots.filter((slot) => blockingIssues(slot.current).length > 0).map((slot) => slot.current);
   const missingResourceLessons = slots

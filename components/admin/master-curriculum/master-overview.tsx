@@ -7,6 +7,7 @@ import { AlertTriangle, ArrowRight, BookOpen, Library, Palette, Sparkles } from 
 import { backendApi, type PrimaryCurriculumLesson } from "@/lib/api";
 import { lessonsForMonth, monthLabel, SCHOOL_LEVELS, SCHOOL_MONTHS } from "@/lib/school-admin-curriculum";
 import { blockingIssues, curriculumSlots, monthMetrics } from "@/lib/curriculum-readiness";
+import { authoringDays, authoringWeeks } from "@/lib/primary-teaching-week";
 import { EmptyState, LoadingState, MetricCard } from "@/components/admin/admin-ui";
 
 const ROOT = "/admin/organizations/master-curriculum";
@@ -23,7 +24,17 @@ export function MasterOverview() {
   // ⚠ Slot-based, from the server's verdict. This counted lesson ROWS against a
   // frontend-only rule and divided by a hardcoded 25 with no clamp, so a month
   // where published days had been duplicated into drafts could report over 100%.
-  const metrics = useMemo(() => monthMetrics(visible), [visible]);
+  // The platform master curriculum is Monday–Friday, but it is read from the
+  // year like everywhere else rather than assumed — the master is a
+  // PrimaryAcademicYear too, and one day it may not be.
+  const masterYear = years.data?.find((year) => year.id === yearId) ?? null;
+  const metrics = useMemo(
+    () => monthMetrics(visible, {
+      weeks: authoringWeeks(masterYear, month),
+      days: authoringDays(masterYear).length,
+    }),
+    [visible, masterYear, month],
+  );
   const slots = useMemo(() => curriculumSlots(visible), [visible]);
   const issues = slots.flatMap((slot) => blockingIssues(slot.current).map((issue) => ({ lesson: slot.current, issue })));
   const mapped = slots.reduce((count, slot) => count + (slot.current.steps ?? []).filter((step) => (step.resource_ids?.length ?? 0) > 0).length, 0);

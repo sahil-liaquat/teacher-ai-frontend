@@ -62,21 +62,19 @@ describe("V2 Sidebar Navigation Structure", () => {
     "home",
     "today",
     "library",
-    "create",
-    "progress",
-    "saved",
+    "roster",
+    "coverage",
     "settings",
   ];
 
-  it("contains exactly the required 7 navigation items", () => {
-    assert.equal(primaryNavKeys.length, 7);
+  it("contains exactly the required 6 navigation items", () => {
+    assert.equal(primaryNavKeys.length, 6);
     assert.deepEqual(primaryNavKeys, [
       "home",
       "today",
       "library",
-      "create",
-      "progress",
-      "saved",
+      "roster",
+      "coverage",
       "settings",
     ]);
   });
