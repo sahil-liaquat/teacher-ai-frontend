@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Eye, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import type { PrimaryAcademicYear, PrimaryCurriculumLesson } from "@/lib/api";
 import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import {
@@ -15,12 +15,15 @@ import {
   blockedDays,
 } from "@/lib/curriculum-readiness";
 import { describeOutcome, runBulkPublish } from "@/lib/curriculum-bulk-publish";
-import { levelLabel, lessonsForMonth, monthLabel, SCHOOL_LEVELS, SCHOOL_MONTHS } from "@/lib/school-admin-curriculum";
+import { levelLabel as compiledLevelLabel, lessonsForMonth, monthLabel, SCHOOL_LEVELS, SCHOOL_MONTHS } from "@/lib/school-admin-curriculum";
+import { defaultLevel, useSchoolLevels } from "@/lib/use-school-levels";
 import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { ActionDialog } from "@/components/school-admin/shared/action-dialog";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { authoringDays, authoringWeeks, weekdayAbbr, weekdayName } from "@/lib/primary-teaching-week";
 
 
@@ -47,7 +50,14 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
-  const level = searchParams.get("level") ?? "nursery";
+  // Scope-aware, matching CurriculumWorkspace: the master curriculum keeps the
+  // compiled list because it is authored against the compiled definition.
+  const schoolLevels = useSchoolLevels();
+  const levelOptions = scope === "platform"
+    ? SCHOOL_LEVELS.map((item) => ({ value: item.value, label: item.label }))
+    : schoolLevels.curriculumLevels;
+  const levelLabel = scope === "platform" ? compiledLevelLabel : schoolLevels.labelFor;
+  const level = searchParams.get("level") ?? defaultLevel(levelOptions as never);
   const rawMonth = Number(searchParams.get("month") ?? new Date().getMonth() + 1);
   const month = SCHOOL_MONTHS.some((item) => item.value === rawMonth) ? rawMonth : new Date().getMonth() + 1;
   const requestedYear = searchParams.get("year") ?? "";
@@ -132,11 +142,12 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
   }
 
   if (yearsQuery.isLoading || (yearId && lessonsQuery.isLoading)) {
-    return <SchoolAdminPage><Skeleton className="h-24" /><Skeleton className="h-32" /><Skeleton className="h-[420px]" /></SchoolAdminPage>;
+    return <SchoolAdminPage><SectionSubnav /><Skeleton className="h-24" /><Skeleton className="h-32" /><Skeleton className="h-[420px]" /></SchoolAdminPage>;
   }
   if (yearsQuery.isError || lessonsQuery.isError) {
     return (
       <SchoolAdminPage>
+        <SectionSubnav />
         <PageHeading title="Review &amp; Publish" description="Final check before teachers receive this curriculum." />
         <PageError description="The curriculum could not be loaded." onRetry={() => { void yearsQuery.refetch(); void lessonsQuery.refetch(); }} />
       </SchoolAdminPage>
@@ -145,6 +156,7 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <button type="button" onClick={() => router.push(`${curriculumRoot}?year=${yearId}&level=${level}&month=${month}`)} className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-700">
         <ArrowLeft className="h-4 w-4" /> Back to {monthLabel(month)} curriculum
       </button>
@@ -164,7 +176,7 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
         <label className="flex-1">
           <span className="sr-only">Level</span>
           <select value={level} onChange={(event) => updateContext({ level: event.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold">
-            {SCHOOL_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            {levelOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <label className="flex-1">
@@ -228,8 +240,9 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
                   )}
                 </span>
                 <span className="flex shrink-0 flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => openDay(lesson.id)}>Open</Button>
-                  <Button variant="outline" onClick={() => openDay(lesson.id)}><Eye className="h-4 w-4" /> Preview</Button>
+                  {/* One action, because there was only ever one behaviour:
+                      "Open" and "Preview" both called openDay(lesson.id). */}
+                  <Button variant="outline" onClick={() => openDay(lesson.id)}>Open day</Button>
                   {slot.draft ? (
                     <Button disabled={Boolean(issues.length) || busy} onClick={() => void publishOne(slot.draft as PrimaryCurriculumLesson)}>Publish</Button>
                   ) : null}
@@ -240,40 +253,36 @@ export function ReviewPublishWorkspace({ scope = "school" }: { scope?: Curriculu
         </div>
       )}
 
-      {confirmOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="bulk-publish-title">
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Publish curriculum</p>
-                <h2 id="bulk-publish-title" className="mt-1 text-lg font-semibold text-slate-950">
-                  {levelLabel(level)} · {monthLabel(month)}
-                </h2>
-              </div>
-              <button type="button" aria-label="Cancel" onClick={() => setConfirmOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
-            </div>
-            <p className="mt-5 text-sm text-slate-700">
-              {ready.length} curriculum {ready.length === 1 ? "day is" : "days are"} ready and will be published.
+      <ActionDialog
+        open={confirmOpen}
+        onOpenChange={(next) => { if (!next && !busy) setConfirmOpen(false); }}
+        size="sm"
+        title={`${levelLabel(level)} · ${monthLabel(month)}`}
+        description={`${ready.length} curriculum ${ready.length === 1 ? "day is" : "days are"} ready and will be published.`}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={busy}>Cancel</Button>
+            <Button onClick={() => void publishAllReady()} disabled={busy || !ready.length}>
+              {busy ? "Publishing…" : `Publish ${ready.length} Ready ${ready.length === 1 ? "Day" : "Days"}`}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2 text-sm text-slate-600">
+          <p>Teachers receive these immediately. Published days already live are replaced by their newer version.</p>
+          {blocked.length ? (
+            <p>
+              {blocked.length} curriculum {blocked.length === 1 ? "day still has issues and will remain a draft" : "days still have issues and will remain drafts"}.
             </p>
-            {blocked.length ? (
-              <p className="mt-2 text-sm text-slate-600">
-                {blocked.length} curriculum {blocked.length === 1 ? "day still has issues and will remain a draft" : "days still have issues and will remain drafts"}.
-              </p>
-            ) : null}
-            {progress ? (
-              <p className="mt-4 text-xs font-semibold text-slate-500 tabular-nums">
-                Publishing {progress.done} of {progress.total}…
-              </p>
-            ) : null}
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={busy}>Cancel</Button>
-              <Button onClick={() => void publishAllReady()} disabled={busy || !ready.length}>
-                {busy ? "Publishing…" : `Publish ${ready.length} Ready ${ready.length === 1 ? "Day" : "Days"}`}
-              </Button>
-            </div>
-          </div>
+          ) : null}
+          {progress ? (
+            <p aria-live="polite" className="text-xs font-semibold text-slate-500 tabular-nums">
+              Publishing {progress.done} of {progress.total}…
+            </p>
+          ) : null}
         </div>
-      ) : null}
+      </ActionDialog>
+
     </SchoolAdminPage>
   );
 }

@@ -2,6 +2,7 @@
 
 import { ClipboardCheck, FileText, Camera, FolderOpen, MessageSquare, Mic } from "lucide-react";
 import { PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 
 /**
  * Assessments — architectural foundation, not yet an operational surface.
@@ -24,8 +25,9 @@ const EVIDENCE_KINDS = [
 export default function SchoolAssessmentsPage() {
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <PageHeading
-        eyebrow="Assessments"
+        eyebrow="Teaching"
         title="Assessment & evidence"
         description="How this school checks what students have learned, tied to the curriculum outcomes it teaches."
       />

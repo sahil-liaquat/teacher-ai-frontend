@@ -12,8 +12,8 @@ import {
   curriculumSourceLabel,
   formatDate,
   formatDateTime,
-  teacherLevelLabel,
 } from "@/lib/school-admin-teachers";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -77,6 +77,7 @@ export function TeacherDetailDrawer({
 }
 
 function DetailBody({ detail, onAssign }: { detail: SchoolTeacherDetail; onAssign: (teacher: SchoolTeacherDetail) => void }) {
+  const { labelFor: teacherLevelLabel } = useSchoolLevels();
   const account = ACCOUNT_STATUS_COPY[detail.account_status] ?? ACCOUNT_STATUS_COPY.inactive;
   const gaps = detail.curriculum.filter((slot) => slot.source === "none");
 

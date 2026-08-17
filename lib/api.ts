@@ -1961,6 +1961,27 @@ export type CurriculumStructure = {
 /** What this school calls things. Never hardcode "Class" — read this. */
 export type SchoolTerminology = Record<string, string>;
 
+/**
+ * The school's own identity and contacts.
+ *
+ * ⚠ `school_code` is readable but not writable — it is a unique identifier
+ * other records key on. Plan, subscription status and entitlement live on the
+ * same row and are absent from both shapes: a school that could edit those
+ * could grant itself access it has not bought.
+ */
+export type SchoolProfile = {
+  name: string;
+  school_code: string | null;
+  country: string | null;
+  state: string | null;
+  city: string | null;
+  primary_contact: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+};
+
+export type SchoolProfileUpdate = Partial<Omit<SchoolProfile, "school_code">>;
+
 export type AcademicProfile = {
   school_name: string;
   framework: AcademicFramework | null;
@@ -1992,6 +2013,113 @@ export type SchoolLevel = {
   scope: "platform" | "school";
   sort_order: number;
   programme_id: string | null;
+};
+
+/**
+ * A level as School Admin should select it: platform rows plus the school's own,
+ * with a school row shadowing the platform row of the same code.
+ *
+ * ⚠ `supports_curriculum` is not decoration. `primary_curriculum_lessons` has a
+ * CHECK constraint pinning `level` to the eight compiled codes, and the
+ * curriculum routes validate the same set as a pydantic Literal — so a
+ * school-defined level can hold classes, sections and teachers but cannot yet
+ * hold curriculum. The flag lets a surface offer the level and say so, instead
+ * of hiding it or walking the admin into a 422.
+ */
+export type TeachableSchoolLevel = SchoolLevel & {
+  supports_curriculum: boolean;
+};
+
+
+// ── Curriculum planning (/school-admin/planning) ────────────────────────────
+//
+// ⚠ Dates on the wire, never calendar-day UUIDs. An admin plans "20 August",
+// and the server resolves that to its own calendar row — refusing dates the
+// school has no opinion about. Sending a row id from the browser would move
+// that resolution to the least-informed place.
+
+export type CurriculumPlan = {
+  id: string;
+  academic_year_id: string;
+  calendar_day_id: string;
+  lesson_id: string;
+  grade_level_id: string | null;
+  level: string;
+  section_id: string | null;
+  subject_id: string | null;
+  status: "planned" | "cancelled";
+  source: "manual" | "ai_proposal";
+  notes: string | null;
+  cancelled_at: string | null;
+};
+
+export type PlanningTeachingDay = {
+  id: string;
+  date: string;
+  day_type: string;
+  label: string | null;
+};
+
+export type PlanningTerm = {
+  id: string;
+  name: string;
+  starts_on: string;
+  ends_on: string;
+  position: number;
+};
+
+export type PlanningContext = {
+  academic_year_id: string;
+  academic_year_name: string;
+  terms: PlanningTerm[];
+  teaching_days: PlanningTeachingDay[];
+  plans: CurriculumPlan[];
+};
+
+/**
+ * ⚠ Planned, not taught. This counts how much of the year has something
+ * scheduled on it — intent, not delivery. Whether a lesson was actually taught
+ * belongs to the teaching-execution layer and is deliberately absent here.
+ */
+export type CurriculumCoverage = {
+  teaching_days: number;
+  days_with_plans: number;
+  days_without_plans: number;
+  plans: number;
+  unplanned_dates: string[];
+};
+
+/** Domain codes the planning service refuses with. */
+export const PLANNING_ERROR_CODES = {
+  DAY_NOT_IN_CALENDAR: "DAY_NOT_IN_CALENDAR",
+  NOT_A_TEACHING_DAY: "NOT_A_TEACHING_DAY",
+  OUTSIDE_TERMS: "OUTSIDE_TERMS",
+  SLOT_TAKEN: "PLAN_SLOT_TAKEN",
+  LEVEL_MISMATCH: "PLAN_LEVEL_MISMATCH",
+} as const;
+
+export const CURRICULUM_PLANS_QUERY_KEY = ["school-admin", "plans"] as const;
+
+/**
+ * What the school's teachers recorded delivering.
+ *
+ * ⚠ Distinct from `CurriculumCoverage`, and the pair must never be merged.
+ * Coverage counts what is SCHEDULED; this counts what HAPPENED. A date passing
+ * is not evidence a lesson was taught.
+ *
+ * ⚠ `delivered_pct` is nullable on purpose: zero recorded activities is "no
+ * data", not "0% delivered".
+ */
+export type ExecutionSummary = {
+  start: string;
+  end: string;
+  by_status: Record<string, number>;
+  recorded: number;
+  delivered: number;
+  delivered_pct: number | null;
+  assigned_teachers: number;
+  reporting_teachers: number;
+  daily: { date: string; status: string; count: number }[];
 };
 
 /** Derived from real rows on every read — never a stored checklist. */
@@ -2901,6 +3029,60 @@ export const backendApi = {
   // master helpers are guarded by get_current_admin and 403 for an org admin —
   // that mismatch is what broke every School Admin write. Keep the two sets
   // separate: never make one helper switch URL on the caller's role.
+  // ---- curriculum planning -------------------------------------------------
+  // Consumes the existing /school-admin/planning service. Calendar validity,
+  // collision and term boundaries are all enforced server-side; nothing here
+  // re-implements them.
+  schoolAdminPlanningContext: (params: { academic_year_id: string; start?: string; end?: string }) => {
+    const query = new URLSearchParams({ academic_year_id: params.academic_year_id });
+    if (params.start) query.set("start", params.start);
+    if (params.end) query.set("end", params.end);
+    return apiFetch<PlanningContext>(`/school-admin/planning/context?${query}`);
+  },
+  schoolAdminPlans: (params: {
+    academic_year_id?: string;
+    level?: string;
+    section_id?: string;
+    status?: string;
+    start?: string;
+    end?: string;
+  } = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => { if (value) query.set(key, value); });
+    return apiFetch<CurriculumPlan[]>(`/school-admin/planning/plans${query.size ? `?${query}` : ""}`);
+  },
+  schoolAdminExecution: (params: { start: string; end: string; academic_year_id?: string }) => {
+    const query = new URLSearchParams({ start: params.start, end: params.end });
+    if (params.academic_year_id) query.set("academic_year_id", params.academic_year_id);
+    return apiFetch<ExecutionSummary>(`/school-admin/planning/execution?${query}`);
+  },
+  schoolAdminCoverage: (academicYearId: string, level?: string) => {
+    const query = new URLSearchParams({ academic_year_id: academicYearId });
+    if (level) query.set("level", level);
+    return apiFetch<CurriculumCoverage>(`/school-admin/planning/coverage?${query}`);
+  },
+  schoolAdminCreatePlan: (payload: {
+    academic_year_id: string;
+    lesson_id: string;
+    date: string;
+    section_id?: string | null;
+    subject_id?: string | null;
+    notes?: string | null;
+  }) => apiFetch<CurriculumPlan>("/school-admin/planning/plans", {
+    method: "POST", body: JSON.stringify(payload),
+  }),
+  schoolAdminReschedulePlan: (planId: string, date: string) =>
+    apiFetch<CurriculumPlan>(`/school-admin/planning/plans/${planId}/reschedule`, {
+      method: "PUT", body: JSON.stringify({ date }),
+    }),
+  schoolAdminUpdatePlan: (planId: string, payload: { notes?: string | null; subject_id?: string | null; clear_subject?: boolean }) =>
+    apiFetch<CurriculumPlan>(`/school-admin/planning/plans/${planId}`, {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
+  /** Cancels rather than deletes — the row survives with status `cancelled`. */
+  schoolAdminCancelPlan: (planId: string) =>
+    apiFetch<CurriculumPlan>(`/school-admin/planning/plans/${planId}`, { method: "DELETE" }),
+
   // ---- academic identity (/school-admin/academic) --------------------------
   // One call for the framework, programmes, terminology and starting point:
   // every School Admin screen needs all four to draw a heading, and three
@@ -2922,6 +3104,17 @@ export const backendApi = {
   // This school's OWN levels, not the shared TeachPad catalogue.
   schoolAdminLevels: (includeInactive = false) =>
     apiFetch<SchoolLevel[]>(`/school-admin/academic/levels${includeInactive ? "?include_inactive=true" : ""}`),
+  /**
+   * The canonical level list for every School Admin surface.
+   *
+   * ⚠ Not `schoolAdminLevels` — that returns only rows the school itself
+   * created, so a school which never adopted from the catalogue gets `[]` and
+   * every level dropdown built on it would render empty.
+   */
+  schoolAdminAvailableLevels: (includeInactive = false) =>
+    apiFetch<TeachableSchoolLevel[]>(
+      `/school-admin/academic/levels/available${includeInactive ? "?include_inactive=true" : ""}`,
+    ),
   schoolAdminLevelCatalogue: () =>
     apiFetch<SchoolLevel[]>("/school-admin/academic/levels/catalogue"),
   schoolAdminCreateLevel: (payload: {
@@ -2978,6 +3171,12 @@ export const backendApi = {
     apiFetch<CurriculumStructure | null>(
       `/school-admin/academic/programmes/${programmeId}/structure`,
     ),
+  schoolAdminSchoolProfile: () =>
+    apiFetch<SchoolProfile>("/school-admin/academic/school-profile"),
+  schoolAdminUpdateSchoolProfile: (payload: SchoolProfileUpdate) =>
+    apiFetch<SchoolProfile>("/school-admin/academic/school-profile", {
+      method: "PUT", body: JSON.stringify(payload),
+    }),
   schoolAdminSetTerminology: (terminology: SchoolTerminology) =>
     apiFetch<SchoolTerminology>("/school-admin/academic/terminology", {
       method: "PUT", body: JSON.stringify({ terminology }),
@@ -3378,6 +3577,15 @@ export type SchoolClassAssignmentSummary = {
   level: string;
   assignment_role: TeacherAssignmentRole;
   is_active: boolean;
+  /**
+   * The assignment's own dates. Optional because an older backend omits them.
+   *
+   * ⚠ Load-bearing for `AssignmentDialog`. `PUT /teacher-assignments/bulk`
+   * REPLACES the assignment set, so a field the dialog cannot read back is a
+   * field it silently clears on the next save.
+   */
+  starts_on?: string | null;
+  ends_on?: string | null;
 };
 
 export type SchoolTeacher = {

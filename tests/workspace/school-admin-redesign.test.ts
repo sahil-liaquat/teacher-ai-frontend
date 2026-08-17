@@ -96,11 +96,21 @@ test("curriculum context and selected day are deep-linkable", () => {
 });
 
 test("overview is operational rather than an analytics dashboard", () => {
+  // ⚠ Rewritten for the command centre. This asserted two named cards —
+  // "Drafts waiting" and "Missing resources" — from the original layout. Both
+  // are now entries in one computed attention list, which drops any item with
+  // nothing to report rather than showing a reassuring zero.
+  //
+  // The INTENT is unchanged and is what is asserted here: the page reports
+  // things to do, each with somewhere to go, and no vanity metrics.
   const overview = source("components/school-admin/overview/school-admin-overview.tsx");
   assert.match(overview, /Needs attention/);
-  assert.match(overview, /Drafts waiting/);
-  assert.match(overview, /Missing resources/);
-  assert.match(overview, /curriculumHref/);
+  assert.match(overview, /const attention = \[/, "attention must be computed, not hardcoded");
+  // Asserted on the computed value, not the rendered phrase: the wording
+  // splits across a singular/plural template expression.
+  assert.match(overview, /missingResources/, "resource gaps must still surface");
+  assert.match(overview, /resourceIssues\(/, "and must use the one shared rule");
+  assert.match(overview, /curriculumHref/, "items must deep-link into curriculum");
   assert.doesNotMatch(overview, /Revenue|Engagement chart|Resource Mapping/);
 });
 
@@ -166,16 +176,19 @@ test("academic year state makes the active year unambiguous", () => {
 });
 
 test("Phase 2 routes use school-admin workspaces instead of legacy authoring panels", () => {
-  assert.match(source("app/school-admin/themes/page.tsx"), /ThemesWorkspace/);
-  assert.match(source("app/school-admin/resources/page.tsx"), /ResourcesWorkspace/);
-  assert.match(source("app/school-admin/academic-years/page.tsx"), /AcademicYearsWorkspace/);
+  assert.match(source("app/school-admin/(shell)/themes/page.tsx"), /ThemesWorkspace/);
+  assert.match(source("app/school-admin/(shell)/resources/page.tsx"), /ResourcesWorkspace/);
+  assert.match(source("app/school-admin/(shell)/academic-years/page.tsx"), /AcademicYearsWorkspace/);
   const settings = source("components/school-admin/settings/settings-workspace.tsx");
-  // Settings now spans the full academic architecture, so the old "only
-  // settings backed by real behavior appear here" claim no longer holds — the
-  // sections DO appear. The guarantee it protected is unchanged and stronger:
-  // a section that cannot be configured says so rather than rendering a
-  // control the product will not honour.
-  assert.match(settings, /Not configurable here yet/);
-  assert.match(settings, /NotConfigurableYet/);
-  assert.doesNotMatch(settings, /type="checkbox"|Save settings/);
+  // ⚠ Rewritten twice now. It first asserted that unconfigurable sections were
+  // absent; then that they appeared with a `NotConfigurableYet` panel. Both
+  // encoded a mechanism. The guarantee underneath has never changed: a school
+  // must never be shown a control the product will not honour.
+  //
+  // Settings now states availability on the INDEX, before the click, so an
+  // area with nothing behind it is not even a link — which serves the same
+  // guarantee one navigation earlier.
+  assert.match(settings, /availability === "unavailable"/, "emptiness is declared");
+  assert.match(settings, /Not available yet/, "and stated in words");
+  assert.match(settings, /View only/, "read-only is distinguished from missing");
 });

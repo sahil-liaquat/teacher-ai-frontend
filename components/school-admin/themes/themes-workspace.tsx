@@ -6,7 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Layers, MoreHorizontal, Palette, Plus, Search, Trash2 } from "lucide-react";
 import { backendApi, type PrimaryAcademicYear, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryCurriculumTopic } from "@/lib/api";
-import { curriculumHref, levelLabel, monthLabel, SCHOOL_LEVELS } from "@/lib/school-admin-curriculum";
+import { curriculumHref, monthLabel } from "@/lib/school-admin-curriculum";
+import { defaultLevel, useSchoolLevels } from "@/lib/use-school-levels";
+import { useCurriculumContext } from "@/lib/use-curriculum-context";
 import { ownershipLabel, ownershipOf, themeLessons } from "@/lib/school-admin-support";
 import { primaryThemeVisuals } from "@/lib/primary-theme-engine";
 import { builtInHeroForThemeName } from "@/lib/primary-hero-library";
@@ -20,6 +22,7 @@ import { ActionDialog, ConfirmDialog } from "@/components/school-admin/shared/ac
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { getErrorMessage } from "@/lib/errors";
+import { ActionMenu, ActionMenuItem } from "@/components/ui/action-menu";
 import { cn } from "@/lib/utils";
 
 type ConfirmAction = { kind: "customize" | "archive" | "delete"; theme: PrimaryCurriculumTheme } | null;
@@ -34,7 +37,13 @@ export function ThemesWorkspace() {
   const [createOpen, setCreateOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmAction>(null);
   const [busy, setBusy] = useState(false);
-  const level = params.get("level") ?? "nursery";
+  const { curriculumLevels, labelFor: levelLabel } = useSchoolLevels();
+  const level = params.get("level") ?? defaultLevel(curriculumLevels);
+  // ⚠ Labels come from the programme definition, not from literals. A
+  // subject-based programme renders "Subjects" here through this same code.
+  const { vocabulary } = useCurriculumContext(level);
+  const nodeLabel = vocabulary.labelFor(vocabulary.nodes[0]?.key ?? "theme");
+  const childLabel = vocabulary.labelFor(vocabulary.nodes[1]?.key ?? "topic");
   const selectedId = params.get("theme");
 
   const years = useQuery<PrimaryAcademicYear[]>({ queryKey: ["school-admin", "academic-years"], queryFn: backendApi.schoolAdminAcademicYears });
@@ -81,7 +90,7 @@ export function ThemesWorkspace() {
       }
       setConfirm(null);
     } catch (error: any) {
-      toast({ title: "The theme could not be changed", description: error?.message, variant: "error" });
+      toast({ title: "The theme could not be changed", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally { setBusy(false); }
   }
 
@@ -90,15 +99,15 @@ export function ThemesWorkspace() {
   return (
     <SchoolAdminPage>
       <SectionSubnav />
-      <PageHeading eyebrow="Curriculum building blocks" title="Themes" description="Organize the ideas and topic sequences used across your school curriculum." actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create theme</Button>} />
+      <PageHeading eyebrow="Curriculum" title="Structure" description={`The ${nodeLabel.toLowerCase()}s and ${childLabel.toLowerCase()} sequences your school curriculum is built from.`} actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Create {nodeLabel.toLowerCase()}</Button>} />
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row">
-        <label className="relative flex-1"><Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" /><span className="sr-only">Search themes</span><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search themes" className="h-11 pl-9" /></label>
-        <label className="relative sm:w-48"><span className="sr-only">Level</span><select value={level} onChange={(event) => updateUrl({ level: event.target.value, theme: null })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold">{SCHOOL_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+        <label className="relative flex-1"><Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" /><span className="sr-only">Search {nodeLabel.toLowerCase()}s</span><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${nodeLabel.toLowerCase()}s`} className="h-11 pl-9" /></label>
+        <label className="relative sm:w-48"><span className="sr-only">Level</span><select value={level} onChange={(event) => updateUrl({ level: event.target.value, theme: null })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold">{curriculumLevels.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       </div>
       {themes.isError || lessons.isError || years.isError ? <PageError description="Themes and their curriculum usage could not be loaded." onRetry={() => { void themes.refetch(); void lessons.refetch(); void years.refetch(); }} /> : themes.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <Skeleton key={item} className="h-64 rounded-3xl" />)}</div> : visible.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((theme) => <ThemeCard key={theme.id} theme={theme} count={themeLessons(theme, lessons.data ?? []).length} onOpen={() => updateUrl({ theme: theme.id })} onConfirm={setConfirm} onDuplicate={async () => {
-            try { const copy = await backendApi.schoolAdminDuplicateTheme(theme.id); await refresh(); updateUrl({ theme: copy.id }); } catch (error: any) { toast({ title: "Could not duplicate theme", description: error?.message, variant: "error" }); }
+            try { const copy = await backendApi.schoolAdminDuplicateTheme(theme.id); await refresh(); updateUrl({ theme: copy.id }); } catch (error: any) { toast({ title: "Could not duplicate theme", description: getErrorMessage(error, "Try again."), variant: "error" }); }
           }} />)}
         </div>
       ) : <EmptyThemes filtered={Boolean(search)} onCreate={() => setCreateOpen(true)} />}
@@ -124,7 +133,7 @@ function ThemeCard({ theme, count, onOpen, onConfirm, onDuplicate }: { theme: Pr
       <div className="relative h-28 overflow-hidden bg-gradient-to-br from-blue-50 via-violet-50 to-amber-50 p-5">{heroImage ? <img src={heroImage} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /> : null}<span className="relative text-4xl drop-shadow-[0_1px_2px_rgba(15,23,42,0.35)]" aria-hidden="true">{theme.emoji || "🎨"}</span><span className={cn("absolute right-4 top-4 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm", ownership === "teachpad" ? "bg-white text-blue-700" : ownership === "customized" ? "bg-violet-100 text-violet-700" : "bg-emerald-100 text-emerald-700")}>{ownershipLabel(ownership)}</span></div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold text-slate-950">{theme.name}</h2><p className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-slate-500">{theme.description || "A curriculum theme ready for topic planning."}</p></div>
-          <details className="relative"><summary aria-label={`Actions for ${theme.name}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl hover:bg-slate-100"><MoreHorizontal className="h-4 w-4" /></summary><div className="absolute right-0 z-10 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-xl">{ownership === "teachpad" ? <button className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={() => onConfirm({ kind: "customize", theme })}>Customize</button> : <><button className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={onDuplicate}>Duplicate</button><button className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50" onClick={() => onConfirm({ kind: count ? "archive" : "delete", theme })}>{count ? "Archive" : "Delete"}</button></>}</div></details>
+          <ActionMenu label={`Actions for ${theme.name}`}>{ownership === "teachpad" ? <ActionMenuItem onSelect={() => onConfirm({ kind: "customize", theme })}>Customize</ActionMenuItem> : <><ActionMenuItem onSelect={onDuplicate}>Duplicate</ActionMenuItem><ActionMenuItem destructive onSelect={() => onConfirm({ kind: count ? "archive" : "delete", theme })}>{count ? "Archive" : "Delete"}</ActionMenuItem></>}</ActionMenu>
         </div>
         <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4"><span className="text-xs font-semibold text-slate-500">{theme.topics.filter((topic) => topic.is_active).length} topics · {count ? `${count} ${count === 1 ? "day" : "days"}` : "Not used"}</span><Button variant="outline" size="sm" onClick={onOpen}>Open</Button></div>
       </div>
@@ -134,6 +143,7 @@ function ThemeCard({ theme, count, onOpen, onConfirm, onDuplicate }: { theme: Pr
 
 function ThemeDetail({ theme, lessons, yearId, level, onBack, onRefresh, onConfirm, confirm, busy, runConfirmed }: { theme: PrimaryCurriculumTheme; lessons: PrimaryCurriculumLesson[]; yearId: string; level: string; onBack: () => void; onRefresh: () => Promise<void>; onConfirm: (action: ConfirmAction) => void; confirm: ConfirmAction; busy: boolean; runConfirmed: () => Promise<void> }) {
   const { toast } = useToast();
+  const { labelFor: levelLabel } = useSchoolLevels();
   const [newTopic, setNewTopic] = useState("");
   const [saving, setSaving] = useState(false);
   const schoolOwned = theme.scope === "school";
@@ -163,7 +173,7 @@ function ThemeDetail({ theme, lessons, yearId, level, onBack, onRefresh, onConfi
     if (!newTopic.trim()) return;
     setSaving(true);
     try { await backendApi.schoolAdminCreateTopic(theme.id, { name: newTopic.trim(), parent_topic_id: null, subtheme: null, description: null, position: roots.length, keywords: [], aliases: [], is_active: true }); setNewTopic(""); await onRefresh(); }
-    catch (error: any) { toast({ title: "Could not add topic", description: error?.message, variant: "error" }); } finally { setSaving(false); }
+    catch (error: any) { toast({ title: "Could not add topic", description: getErrorMessage(error, "Try a different name."), variant: "error" }); } finally { setSaving(false); }
   }
 
   // Nesting a topic under an existing one turns that one into a sub-theme.
@@ -182,7 +192,7 @@ function ThemeDetail({ theme, lessons, yearId, level, onBack, onRefresh, onConfi
     const target = index + direction;
     if (target < 0 || target >= topics.length) return;
     try { await Promise.all([backendApi.schoolAdminUpdateTopic(topics[index].id, { position: target }), backendApi.schoolAdminUpdateTopic(topics[target].id, { position: index })]); await onRefresh(); }
-    catch (error: any) { toast({ title: "Could not reorder topics", description: error?.message, variant: "error" }); }
+    catch (error: any) { toast({ title: "Could not reorder topics", description: getErrorMessage(error, "Try again."), variant: "error" }); }
   }
 
   return (
@@ -212,8 +222,8 @@ function TopicRow({ topic, index, count, editable, onMove, onRefresh, isSubtheme
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(topic.name);
   const [subtheme, setSubtheme] = useState(topic.subtheme || "");
-  async function save() { if (!name.trim()) return; try { await backendApi.schoolAdminUpdateTopic(topic.id, { name: name.trim(), subtheme: subtheme.trim() || null }); setEditing(false); await onRefresh(); } catch (error: any) { toast({ title: "Could not update topic", description: error?.message, variant: "error" }); } }
-  async function archive() { try { await backendApi.schoolAdminArchiveTopic(topic.id); await onRefresh(); } catch (error: any) { toast({ title: "Could not archive topic", description: error?.message, variant: "error" }); } }
+  async function save() { if (!name.trim()) return; try { await backendApi.schoolAdminUpdateTopic(topic.id, { name: name.trim(), subtheme: subtheme.trim() || null }); setEditing(false); await onRefresh(); } catch (error: any) { toast({ title: "Could not update topic", description: getErrorMessage(error, "Try a different name."), variant: "error" }); } }
+  async function archive() { try { await backendApi.schoolAdminArchiveTopic(topic.id); await onRefresh(); } catch (error: any) { toast({ title: "Could not archive topic", description: getErrorMessage(error, "Try again."), variant: "error" }); } }
   return <div className={cn("flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all", isSubtheme ? "bg-[#faf9fe] border-[#e9e6fd] hover:bg-[#f6f3fe]" : "bg-white border-slate-200")}><span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl text-xs font-bold", isSubtheme ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-500")}>{index + 1}</span>{isSubtheme ? <Layers className="h-4 w-4 text-violet-600 shrink-0" /> : null}{editing ? <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center"><Input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Topic name" className="flex-1" onKeyDown={(event) => { if (event.key === "Enter") void save(); if (event.key === "Escape") setEditing(false); }} /><Input value={subtheme} onChange={(event) => setSubtheme(event.target.value)} placeholder="Subtheme (optional)" className="w-full sm:w-48" onKeyDown={(event) => { if (event.key === "Enter") void save(); if (event.key === "Escape") setEditing(false); }} /><div className="flex gap-2"><Button size="sm" onClick={() => void save()}>Save</Button><Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button></div></div> : <><button type="button" disabled={!editable} onClick={() => { setEditing(true); setName(topic.name); setSubtheme(topic.subtheme || ""); }} className="min-w-0 flex-1 text-left text-sm font-semibold text-slate-900 disabled:cursor-default">{topic.name}{topic.subtheme ? <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">{topic.subtheme}</span> : null}{isSubtheme ? <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-700">Sub-theme</span> : null}</button>{editable ? <div className="flex items-center">{onAddChild ? <button type="button" aria-label={`Add a topic under ${topic.name}`} title="Add a topic under this one" onClick={onAddChild} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600"><Plus className="h-4 w-4" /></button> : null}<button type="button" aria-label={`Move ${topic.name} up`} disabled={index === 0} onClick={() => void onMove(index, -1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowUp className="h-4 w-4" /></button><button type="button" aria-label={`Move ${topic.name} down`} disabled={index === count - 1} onClick={() => void onMove(index, 1)} className="grid h-8 w-8 place-items-center rounded-lg disabled:opacity-25 hover:bg-slate-100"><ArrowDown className="h-4 w-4" /></button><button type="button" aria-label={`Archive ${topic.name}`} onClick={() => void archive()} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button></div> : null}</>}</div>;
 }
 
@@ -314,6 +324,21 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
   async function create() {
     if (!name.trim()) return;
     setBusy(true);
+    // ⚠ This is N+1 sequential writes with no transaction: one theme, then one
+    // POST per standalone topic, per sub-theme and per nested topic. A failure
+    // at write #4 leaves the theme and three topics already committed, and the
+    // old catch reported "Could not create theme" — false, and it left the
+    // admin with a half-built theme they were never told about.
+    //
+    // The theme is tracked separately from the topics so the recovery can be
+    // honest: keep what exists, say exactly what did not get made, and still
+    // navigate to the theme so the rest can be added by hand.
+    let created: PrimaryCurriculumTheme | null = null;
+    let topicsMade = 0;
+    const topicsWanted =
+      standaloneTopics.length +
+      subthemes.length +
+      subthemes.reduce((total, sub) => total + sub.topics.length, 0);
     try {
       const theme = await backendApi.schoolAdminCreateTheme({
         name: name.trim(),
@@ -321,6 +346,7 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
         emoji: emoji.trim() || null,
         hero_image_url: resolvedHero,
       });
+      created = theme;
 
       let position = 0;
 
@@ -336,6 +362,7 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
           aliases: [],
           is_active: true
         });
+        topicsMade += 1;
       }
 
       // 2. Create Sub-themes and nested Topics
@@ -350,6 +377,7 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
           aliases: [],
           is_active: true
         });
+        topicsMade += 1;
 
         for (let childIndex = 0; childIndex < sub.topics.length; childIndex++) {
           const child = sub.topics[childIndex];
@@ -363,6 +391,7 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
             aliases: [],
             is_active: true
           });
+          topicsMade += 1;
         }
       }
 
@@ -375,7 +404,19 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
       setHero("");
       await onCreated(theme);
     } catch (error: any) {
-      toast({ title: "Could not create theme", description: error?.message, variant: "error" });
+      if (created) {
+        // The theme exists. Saying otherwise would send the admin to create a
+        // duplicate; the topics are what is missing, so name that instead.
+        await onCreated(created);
+        onOpenChange(false);
+        toast({
+          title: `${created.name} was created, but not all of its topics`,
+          description: `${topicsMade} of ${topicsWanted} topics were added. ${getErrorMessage(error, "Add the rest from the theme.")}`,
+          variant: "error",
+        });
+      } else {
+        toast({ title: "Could not create theme", description: getErrorMessage(error, "Check the name and try again."), variant: "error" });
+      }
     } finally {
       setBusy(false);
     }

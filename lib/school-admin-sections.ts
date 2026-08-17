@@ -176,3 +176,51 @@ export function existingTargetKey(
   const fallback = schoolClass ? defaultSectionId(schoolClass) : null;
   return targetKey(assignment.school_class_id, fallback);
 }
+
+/** One row of the assignment dialog's editable draft. */
+export type AssignmentDraft = {
+  selected: boolean;
+  role: string;
+  starts_on: string;
+  ends_on: string;
+};
+
+/**
+ * Seed the assignment dialog from a teacher's real assignments.
+ *
+ * ⚠ Every field an assignment carries must be seeded here, because
+ * `PUT /teacher-assignments/bulk` REPLACES the assignment set: whatever the
+ * dialog sends becomes the row. `starts_on`/`ends_on` used to be hardcoded to
+ * `""` inline in the component while `role` was seeded correctly, so opening
+ * the dialog and pressing Save rewrote both dates to NULL — on assignments the
+ * server's own response then counted as "unchanged". A field that is not
+ * round-tripped through a replace endpoint is a field that gets destroyed.
+ *
+ * Extracted from the component so this invariant is unit-testable; the dialog
+ * is the form around it, the same way `CreateDayDialog` wraps
+ * `curriculum-day-draft`.
+ */
+export function seedAssignmentDrafts(
+  assigned: Array<{
+    school_class_id: string;
+    class_section_id?: string | null;
+    assignment_role: string;
+    starts_on?: string | null;
+    ends_on?: string | null;
+  }>,
+  classes: SchoolClass[],
+  targets: AssignmentTarget[],
+): Record<string, AssignmentDraft> {
+  const byKey = new Map(assigned.map((item) => [existingTargetKey(item, classes), item]));
+  const drafts: Record<string, AssignmentDraft> = {};
+  for (const target of targets) {
+    const existing = byKey.get(target.key);
+    drafts[target.key] = {
+      selected: Boolean(existing),
+      role: existing?.assignment_role ?? "lead",
+      starts_on: existing?.starts_on ?? "",
+      ends_on: existing?.ends_on ?? "",
+    };
+  }
+  return drafts;
+}

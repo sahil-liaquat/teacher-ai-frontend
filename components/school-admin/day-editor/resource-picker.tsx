@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, FileText, Search, Upload, X } from "lucide-react";
+import { Check, FileText, Search, Upload } from "lucide-react";
 import { type PrimaryResource } from "@/lib/api";
 import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
+import { getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
+import { ActionDialog } from "@/components/school-admin/shared/action-dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
@@ -57,20 +59,22 @@ export function ResourcePicker({
       toast({ title: "Resource uploaded and attached" });
       onClose();
     } catch (error: any) {
-      toast({ title: "Upload failed", description: error?.message, variant: "error" });
+      toast({ title: "Upload failed", description: getErrorMessage(error, "Check the file and try again."), variant: "error" });
     } finally {
       setUploading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="resource-picker-title">
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-7">
-          <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Classroom block</p><h2 id="resource-picker-title" className="mt-1 text-xl font-semibold text-slate-950">Add a resource</h2><p className="mt-1 text-sm text-slate-500">Choose from your school or TeachPad library. Attachment stays with this teaching day.</p></div>
-          <button type="button" aria-label="Close resource picker" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
-        </div>
-        <div className="border-b border-slate-200 px-5 pt-4 sm:px-7">
+    <ActionDialog
+      open
+      onOpenChange={(next) => { if (!next && !uploading) onClose(); }}
+      size="lg"
+      title="Add a resource"
+      description="Choose from your school or TeachPad library. Attachment stays with this teaching day."
+    >
+      <div className="flex flex-col">
+        <div className="border-b border-slate-200 pb-1">
           <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label="Resource sources">
             {([
               ["recommended", "Recommended"],
@@ -118,6 +122,6 @@ export function ResourcePicker({
           </>
         )}
       </div>
-    </div>
+    </ActionDialog>
   );
 }

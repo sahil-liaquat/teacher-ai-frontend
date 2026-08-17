@@ -44,12 +44,24 @@ import {
   satisfiedChecks,
 } from "@/lib/curriculum-readiness";
 import { applySelectionChange, topicOptions } from "@/lib/curriculum-day-draft";
+import {
+  addObjective,
+  updateObjective,
+  objectiveCoverage,
+  objectivesOf,
+  removeObjective,
+  stepTeaches,
+  toggleStepObjective,
+  uncoveredObjectives,
+} from "@/lib/curriculum-objectives";
 import { getErrorMessage } from "@/lib/errors";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { ActionDialog } from "@/components/school-admin/shared/action-dialog";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
 import { ResourcePicker } from "@/components/school-admin/day-editor/resource-picker";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
@@ -77,6 +89,7 @@ export function SchoolDayEditor({
   scope?: CurriculumAdminScope;
 }) {
   const adapter = curriculumAdminAdapter(scope);
+  const { labelFor: schoolLevelLabel } = useSchoolLevels();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -149,6 +162,8 @@ export function SchoolDayEditor({
   const theme = activeThemes.find((item) => item.id === themeId || item.source_theme_id === themeId);
   const topics = topicOptions(activeThemes, { themeId, subthemeId: "" });
   const duration = steps.reduce((sum, step) => sum + (step.duration_minutes || 0), 0);
+  const uncovered = uncoveredObjectives(objectives, steps);
+  const coverage = objectiveCoverage(objectives, steps);
   const localLesson = lesson ? ({ ...lesson, title, daily_focus: dailyFocus, theme_id: themeId || lesson.theme_id, topic_id: topicId || null, objectives, steps } as PrimaryCurriculumLesson) : null;
   /**
    * ⚠ Issues come from the SERVER's verdict on the SAVED row — never from a
@@ -221,7 +236,7 @@ export function SchoolDayEditor({
       onLessonChanged(draft.id);
       toast({ title: "School draft created", description: "TeachPad curriculum remains unchanged." });
     } catch (error: any) {
-      toast({ title: "Could not customize this day", description: error?.message, variant: "error" });
+      toast({ title: "Could not customize this day", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -236,7 +251,7 @@ export function SchoolDayEditor({
       onLessonChanged(draft.id);
       toast({ title: "New draft created", description: "The published version remains unchanged for teachers until you review and publish this draft." });
     } catch (error: any) {
-      toast({ title: "Could not start a new draft", description: error?.message, variant: "error" });
+      toast({ title: "Could not start a new draft", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -378,7 +393,7 @@ export function SchoolDayEditor({
           <div className="mb-3 flex flex-wrap items-center gap-2"><StatusBadge status={status} /><span className="text-xs font-semibold text-slate-500">{isMaster ? "TeachPad curriculum" : "Customized for your school"}</span></div>
           <p className="text-sm font-semibold text-slate-500">{dayName} · Week {lesson.week ?? "—"}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-[-0.025em] text-slate-950 sm:text-3xl">{title || dailyFocus || "Untitled teaching day"}</h1>
-          <p className="mt-2 text-sm text-slate-500">{levelLabel(lesson.level)}{theme ? ` · ${theme.name}` : ""} · {saved ? "All changes saved" : "Unsaved changes"}</p>
+          <p className="mt-2 text-sm text-slate-500">{schoolLevelLabel(lesson.level)}{theme ? ` · ${theme.name}` : ""} · {saved ? "All changes saved" : "Unsaved changes"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setPreviewOpen(true)}><Eye className="h-4 w-4" /> Preview as Teacher</Button>
@@ -437,7 +452,7 @@ export function SchoolDayEditor({
               </label>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              {levelLabel(lesson.level)} · {lesson.month ? monthLabel(lesson.month) : "month"} · week {lesson.week ?? "—"}, day {lesson.day ?? "—"}
+              {schoolLevelLabel(lesson.level)} · {lesson.month ? monthLabel(lesson.month) : "month"} · week {lesson.week ?? "—"}, day {lesson.day ?? "—"}
             </p>
           </div>
 
@@ -454,23 +469,28 @@ export function SchoolDayEditor({
             <div id="field-objectives" className="mt-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-700">Learning objectives</h3>
-                {!readOnly ? <button type="button" onClick={() => { setObjectives((current) => [...current, ""]); markChanged(); }} className="text-xs font-bold text-blue-700">+ Add objective</button> : null}
+                {!readOnly ? <button type="button" onClick={() => { setObjectives((current) => addObjective(current)); markChanged(); }} className="text-xs font-bold text-blue-700">+ Add objective</button> : null}
               </div>
               <div className="mt-2 space-y-2">
-                {objectives.map((objective, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="w-5 shrink-0 text-xs font-bold text-slate-400">{index + 1}.</span>
-                    <Input disabled={readOnly} value={objective} onChange={(event) => { setObjectives((current) => current.map((item, position) => position === index ? event.target.value : item)); markChanged(); }} />
+                {objectivesOf(objectives).map((objective) => (
+                  // Keyed on the objective's own key, not its array index: the
+                  // list allows removal from the middle, and index keys made
+                  // React reuse the wrong input's DOM node.
+                  <div key={objective.key} className="flex items-center gap-2">
+                    <span className="w-5 shrink-0 text-xs font-bold text-slate-400">{objective.index + 1}.</span>
+                    <Input disabled={readOnly} value={objective.text} onChange={(event) => { setObjectives((current) => updateObjective(current, objective.index, event.target.value)); markChanged(); }} />
                     {!readOnly ? (
                       <button
                         type="button"
-                        aria-label={`Remove objective ${index + 1}`}
+                        aria-label={`Remove objective ${objective.index + 1}`}
                         onClick={() => {
-                          setObjectives((current) => current.filter((_, position) => position !== index));
-                          // Blocks index INTO this list, so removing an objective
-                          // has to reindex every block or they silently point at
-                          // the wrong one.
-                          setSteps((current) => current.map((step) => ({ ...step, objective_indexes: (step.objective_indexes ?? []).filter((value) => value !== index).map((value) => value > index ? value - 1 : value) })));
+                          // ⚠ Objectives and steps change TOGETHER. Blocks index
+                          // into this list by position, so a removal that did
+                          // not reindex would silently repoint every block above
+                          // it. `removeObjective` owns that pairing.
+                          const next = removeObjective({ objectives, steps }, objective.index);
+                          setObjectives(next.objectives);
+                          setSteps(next.steps);
                           markChanged();
                         }}
                         className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
@@ -478,7 +498,22 @@ export function SchoolDayEditor({
                     ) : null}
                   </div>
                 ))}
-                {!objectives.length ? <p className="text-sm text-slate-500">No learning objectives yet.</p> : null}
+                {!objectives.length ? (
+                  <p className="text-sm text-slate-500">
+                    No learning objectives yet. Add what children should be able to do by the end of this day.
+                  </p>
+                ) : null}
+                {/* ⚠ Advisory, never a readiness rule. Readiness is the
+                    server's single verdict and this must not become a second
+                    one — an uncovered objective can be perfectly intentional. */}
+                {uncovered.length ? (
+                  <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
+                    {uncovered.length === 1
+                      ? "1 objective is not taught by any block yet."
+                      : `${uncovered.length} objectives are not taught by any block yet.`}{" "}
+                    Tick them inside the blocks that cover them.
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -489,6 +524,7 @@ export function SchoolDayEditor({
           issues={issues}
           notes={notes}
           passing={passing}
+          coverage={coverage}
           stale={!saved}
           blocks={steps.length}
           minutes={duration}
@@ -569,7 +605,7 @@ export function SchoolDayEditor({
  * while there are unsaved edits the panel says so instead of re-scoring against
  * a rule the publish endpoint does not share.
  */
-function ReadinessPanel({ ready, issues, notes, passing, stale, blocks, minutes, onFocus }: {
+function ReadinessPanel({ ready, issues, notes, passing, stale, blocks, minutes, coverage, onFocus }: {
   ready: boolean;
   issues: LessonReadinessCheck[];
   notes: LessonReadinessCheck[];
@@ -577,6 +613,8 @@ function ReadinessPanel({ ready, issues, notes, passing, stale, blocks, minutes,
   stale: boolean;
   blocks: number;
   minutes: number;
+  /** Advisory only — see the note where it renders. */
+  coverage: { total: number; covered: number; percent: number };
   onFocus: (target: string) => void;
 }) {
   return (
@@ -585,6 +623,15 @@ function ReadinessPanel({ ready, issues, notes, passing, stale, blocks, minutes,
         {ready ? "Ready to publish" : `Needs attention`}
       </h3>
       <p className="mt-1 text-xs text-slate-500">{blocks} blocks · {minutes} minutes</p>
+      {/* ⚠ Rendered BELOW the server's verdict and never folded into it.
+          Objective coverage is the author's own signal about intent, not a
+          publish criterion — the server decides readiness and this panel has
+          exactly one job beyond rendering it. */}
+      {coverage.total ? (
+        <p className="mt-1 text-xs text-slate-500">
+          {coverage.covered} of {coverage.total} objectives taught by a block
+        </p>
+      ) : null}
 
       {stale ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-2.5 py-2 text-[11px] font-semibold text-amber-800">
@@ -720,7 +767,7 @@ function BlockCard({ step, index, objectives, expanded, readOnly, resourceMap, b
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-950">What are children learning?</h3>
-                <div className="mt-3 space-y-2">{objectives.map((objective, objectiveIndex) => <label key={objectiveIndex} className="flex items-start gap-2 text-sm text-slate-700"><input disabled={readOnly} type="checkbox" checked={(step.objective_indexes ?? []).includes(objectiveIndex)} onChange={(event) => onUpdate({ objective_indexes: event.target.checked ? [...(step.objective_indexes ?? []), objectiveIndex] : (step.objective_indexes ?? []).filter((value) => value !== objectiveIndex) })} className="mt-0.5 h-4 w-4 rounded border-slate-300" />{objective}</label>)}{!objectives.length ? <p className="text-xs text-slate-500">Add objectives in the Day summary first.</p> : null}</div>
+                <div className="mt-3 space-y-2">{objectivesOf(objectives).map((objective) => <label key={objective.key} className="flex items-start gap-2 text-sm text-slate-700"><input disabled={readOnly} type="checkbox" checked={stepTeaches(step, objective.index)} onChange={(event) => onUpdate({ objective_indexes: toggleStepObjective(step, objective.index, event.target.checked) })} className="mt-0.5 h-4 w-4 rounded border-slate-300" />{objective.text || <span className="italic text-slate-400">Untitled objective</span>}</label>)}{!objectives.length ? <p className="text-xs text-slate-500">Add objectives in the Day summary first.</p> : null}</div>
               </div>
               <div>
                 <div className="flex items-center justify-between"><div><h3 className="text-sm font-semibold text-slate-950">What will the teacher need?</h3><p className="mt-1 text-xs text-slate-500">Resources are attached directly to this classroom block.</p></div><button type="button" onClick={() => onAI("suggest_resources", "Suggest resources")} className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700"><Sparkles className="h-3.5 w-3.5" /> Find with AI</button></div>
@@ -796,18 +843,15 @@ function DayPreview({ lesson, resourceMap, onClose }: { lesson: PrimaryCurriculu
   const total = cursor - PREVIEW_DAY_START_MINUTES;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="day-preview-title">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Preview as teacher</p>
-            <h2 id="day-preview-title" className="mt-1 text-xl font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {levelLabel(lesson.level)} · {lesson.topic?.name ? `${lesson.topic.name} · ` : ""}{ordered.length} blocks · {total} minutes
-            </p>
-          </div>
-          <button type="button" aria-label="Close preview" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
-        </div>
+    <ActionDialog
+      open
+      onOpenChange={(next: boolean) => { if (!next) onClose(); }}
+      size="lg"
+      title={lesson.title || lesson.daily_focus || "Untitled teaching day"}
+      description={`Preview as teacher · ${levelLabel(lesson.level)} · ${lesson.topic?.name ? `${lesson.topic.name} · ` : ""}${ordered.length} blocks · ${total} minutes`}
+      footer={<Button variant="outline" onClick={onClose}>Close preview</Button>}
+    >
+      <div>
 
         {lesson.objectives.filter((item) => item.trim()).length ? (
           <div className="mt-6 rounded-2xl bg-slate-50 p-4">
@@ -852,10 +896,8 @@ function DayPreview({ lesson, resourceMap, onClose }: { lesson: PrimaryCurriculu
           })}
           {!ordered.length ? <p className="py-10 text-center text-sm text-slate-500">This day has no blocks yet, so a teacher would receive an empty timetable.</p> : null}
         </div>
-
-        <Button variant="outline" className="mt-7 w-full" onClick={onClose}>Close preview</Button>
       </div>
-    </div>
+    </ActionDialog>
   );
 }
 
@@ -865,5 +907,38 @@ function PublishReview({ lesson, initial, issues, saving, onClose, onPublish }: 
   if (!initial || JSON.stringify(initial.objectives) !== JSON.stringify(lesson.objectives)) changes.push("Learning objectives updated");
   lesson.steps.forEach((step, index) => { const before = initial?.steps[index]; if (!before) changes.push(`${step.title} added`); else if (JSON.stringify(before.instructions) !== JSON.stringify(step.instructions)) changes.push(`${step.title}: teacher instructions updated`); });
   if (!initial || resourceCount(initial) !== resourceCount(lesson)) changes.push(`${resourceCount(lesson)} resources now attached`);
-  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="publish-review-title"><div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Safe publishing</p><h2 id="publish-review-title" className="mt-1 text-xl font-semibold text-slate-950">Review changes</h2><p className="mt-2 text-sm text-slate-600">Teachers will receive this school version only after you confirm.</p></div><button type="button" aria-label="Close publish review" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button></div>{issues.length ? <div className="mt-6 rounded-2xl bg-rose-50 p-4"><p className="text-sm font-semibold text-rose-800">Finish these items before publishing</p><ul className="mt-2 space-y-1 text-sm text-rose-700">{issues.map((issue) => <li key={issue.key}>• {issue.detail ?? issue.label}</li>)}</ul></div> : <div className="mt-6"><p className="text-sm font-semibold text-slate-950">{changes.length} {changes.length === 1 ? "change" : "changes"}</p><div className="mt-3 divide-y divide-slate-200 border-y border-slate-200">{(changes.length ? changes : ["Curriculum reviewed with no unsaved content changes"]).map((change) => <p key={change} className="py-3 text-sm text-slate-700">{change}</p>)}</div></div>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={onClose}>Continue editing</Button><Button disabled={Boolean(issues.length) || saving} onClick={onPublish}>{saving ? "Publishing…" : "Publish to teachers"}</Button></div></div></div>;
+  return (
+    <ActionDialog
+      open
+      onOpenChange={(next: boolean) => { if (!next && !saving) onClose(); }}
+      title="Review changes"
+      description="Teachers will receive this school version only after you confirm."
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>Continue editing</Button>
+          <Button disabled={Boolean(issues.length) || saving} onClick={onPublish}>
+            {saving ? "Publishing…" : "Publish to teachers"}
+          </Button>
+        </>
+      }
+    >
+      {issues.length ? (
+        <div className="rounded-2xl bg-rose-50 p-4">
+          <p className="text-sm font-semibold text-rose-800">Finish these items before publishing</p>
+          <ul className="mt-2 space-y-1 text-sm text-rose-700">
+            {issues.map((issue) => <li key={issue.key}>• {issue.detail ?? issue.label}</li>)}
+          </ul>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm font-semibold text-slate-950">{changes.length} {changes.length === 1 ? "change" : "changes"}</p>
+          <div className="mt-3 divide-y divide-slate-200 border-y border-slate-200">
+            {(changes.length ? changes : ["Curriculum reviewed with no unsaved content changes"]).map((change) => (
+              <p key={change} className="py-3 text-sm text-slate-700">{change}</p>
+            ))}
+          </div>
+        </div>
+      )}
+    </ActionDialog>
+  );
 }

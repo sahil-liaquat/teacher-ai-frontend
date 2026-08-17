@@ -1,15 +1,15 @@
 "use client";
 
-import { AlertTriangle, MailCheck, MoreHorizontal, UserMinus, UserPlus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, Eye, MailCheck, UserMinus, UserPlus } from "lucide-react";
 import type { SchoolTeacher } from "@/lib/api";
 import {
   ACCOUNT_STATUS_COPY,
   CURRICULUM_STATUS_COPY,
   curriculumStatus,
   formatDate,
-  teacherLevelLabel,
 } from "@/lib/school-admin-teachers";
+import { ActionMenu, ActionMenuItem } from "@/components/ui/action-menu";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -87,6 +87,7 @@ export function TeacherTable({
 }
 
 function TeacherRow({ teacher, onAction }: { teacher: SchoolTeacher; onAction: (action: TeacherRowAction, teacher: SchoolTeacher) => void }) {
+  const { labelFor: teacherLevelLabel } = useSchoolLevels();
   const invited = teacher.account_status === "invited";
   const account = ACCOUNT_STATUS_COPY[teacher.account_status] ?? ACCOUNT_STATUS_COPY.inactive;
   const curriculum = CURRICULUM_STATUS_COPY[curriculumStatus(teacher)];
@@ -143,25 +144,19 @@ function TeacherRow({ teacher, onAction }: { teacher: SchoolTeacher; onAction: (
 }
 
 function RowMenu({ teacher, invited, onAction }: { teacher: SchoolTeacher; invited: boolean; onAction: (action: TeacherRowAction, teacher: SchoolTeacher) => void }) {
-  const [open, setOpen] = useState(false);
-  const container = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function close(event: MouseEvent) {
-      if (!container.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
-
+  // ⚠ Portalled, via ActionMenu. This used to be a hand-rolled useState +
+  // mousedown menu positioned `absolute` inside the table's
+  // `overflow-hidden > overflow-x-auto` wrapper. Because `overflow-x: auto`
+  // makes `overflow-y: visible` compute to `auto`, the panel was clipped and
+  // scrolled rather than overlaying — the last rows of a full roster could not
+  // reach their own actions.
   const items: Array<{ action: TeacherRowAction; label: string; icon: typeof UserPlus; destructive?: boolean }> = invited
     ? [
         { action: "resend", label: "Resend invitation", icon: MailCheck },
         { action: "cancel", label: "Cancel invitation", icon: UserMinus, destructive: true },
       ]
     : [
-        { action: "view", label: "View teacher details", icon: MoreHorizontal },
+        { action: "view", label: "View teacher details", icon: Eye },
         {
           action: teacher.assigned_classes.length ? "edit" : "assign",
           label: teacher.assigned_classes.length ? "Edit assignment" : "Assign classes",
@@ -171,39 +166,20 @@ function RowMenu({ teacher, invited, onAction }: { teacher: SchoolTeacher; invit
       ];
 
   return (
-    <div ref={container} className="relative inline-block text-left">
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={`Actions for ${invited ? teacher.email : teacher.full_name}`}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-      {open ? (
-        <div role="menu" className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 shadow-xl">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.action}
-                type="button"
-                role="menuitem"
-                onClick={() => { setOpen(false); onAction(item.action, teacher); }}
-                className={cn(
-                  "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold hover:bg-slate-50",
-                  item.destructive ? "text-rose-600 hover:bg-rose-50" : "text-slate-700",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+    <ActionMenu label={`Actions for ${invited ? teacher.email : teacher.full_name}`}>
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <ActionMenuItem
+            key={item.action}
+            destructive={item.destructive}
+            onSelect={() => onAction(item.action, teacher)}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </ActionMenuItem>
+        );
+      })}
+    </ActionMenu>
   );
 }

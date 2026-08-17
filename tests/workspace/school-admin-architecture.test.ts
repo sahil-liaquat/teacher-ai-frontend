@@ -8,15 +8,17 @@ function source(relativePath: string) {
 
 test("school administration uses URL-driven workspace routes", () => {
   for (const route of ["curriculum", "themes", "resources", "academic-years", "settings"]) {
-    assert.equal(existsSync(new URL(`../../app/school-admin/${route}/page.tsx`, import.meta.url)), true);
+    assert.equal(existsSync(new URL(`../../app/school-admin/(shell)/${route}/page.tsx`, import.meta.url)), true);
   }
-  const overview = source("app/school-admin/page.tsx");
+  const overview = source("app/school-admin/(shell)/page.tsx");
   assert.doesNotMatch(overview, /useState<Tab>/);
   assert.doesNotMatch(overview, /ResourceMappingPanel/);
 });
 
 test("school administration has a dedicated product shell", () => {
-  const layout = source("app/school-admin/layout.tsx");
+  // The shell moved into the `(shell)` route group so guided setup can render
+  // without it. The URL is unchanged; only which layout wraps setup differs.
+  const layout = source("app/school-admin/(shell)/layout.tsx");
   const shell = source("components/school-admin/school-admin-shell.tsx");
   assert.match(layout, /SchoolAdminShell/);
   assert.doesNotMatch(layout, /AppShell|DashboardBillingShell/);

@@ -3,16 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ChevronDown, Eye, MoreHorizontal, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Eye, Sparkles, X } from "lucide-react";
 import { type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryCurriculumTheme, type PrimaryLevel } from "@/lib/api";
 import { curriculumAdminAdapter, type CurriculumAdminScope } from "@/lib/curriculum-admin-adapter";
 import {
   lessonsForMonth,
-  levelLabel,
+  levelLabel as compiledLevelLabel,
   monthLabel,
   SCHOOL_LEVELS,
   SCHOOL_MONTHS,
 } from "@/lib/school-admin-curriculum";
+import { defaultLevel, useSchoolLevels } from "@/lib/use-school-levels";
 import {
   DAY_STATUS_LABELS,
   blockingIssues,
@@ -20,6 +21,7 @@ import {
   slotOccupant,
   curriculumSlots,
   monthMetrics,
+  resourceIssues,
   type CurriculumSlot,
 } from "@/lib/curriculum-readiness";
 import {
@@ -36,9 +38,11 @@ import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-adm
 import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { CurriculumDayCard } from "@/components/school-admin/curriculum/curriculum-day-card";
 import { CreateDayDialog, type CreateDayRequest } from "@/components/school-admin/curriculum/create-day-dialog";
+import { ActionDialog } from "@/components/school-admin/shared/action-dialog";
 import { SchoolDayEditor } from "@/components/school-admin/day-editor/school-day-editor";
 import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
 import { StatusBadge } from "@/components/school-admin/shared/status-badge";
+import { ActionMenu, ActionMenuItem } from "@/components/ui/action-menu";
 
 // ⚠ NOT CONSTANTS ANY MORE. `const DAYS = [1,2,3,4,5]` here, and its copies in
 // the review screen and the platform master admin, were the front half of the
@@ -62,7 +66,14 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   const [creating, setCreating] = useState(false);
 
   const requestedYear = searchParams.get("year") ?? "";
-  const level = searchParams.get("level") ?? "nursery";
+  // ⚠ Scope-aware. School scope reads the school's own enabled levels; the
+  // platform master curriculum has no school and keeps the compiled list.
+  const schoolLevels = useSchoolLevels();
+  const levelOptions = scope === "platform"
+    ? SCHOOL_LEVELS.map((item) => ({ value: item.value, label: item.label }))
+    : schoolLevels.curriculumLevels;
+  const levelLabel = scope === "platform" ? compiledLevelLabel : schoolLevels.labelFor;
+  const level = searchParams.get("level") ?? defaultLevel(levelOptions as never);
   const rawMonth = Number(searchParams.get("month") ?? DEFAULT_MONTH);
   const month = SCHOOL_MONTHS.some((item) => item.value === rawMonth) ? rawMonth : DEFAULT_MONTH;
   const selectedDayId = searchParams.get("day");
@@ -259,7 +270,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
             <label className="relative">
               <span className="sr-only">Level or class</span>
               <select value={level} onChange={(event) => updateContext({ level: event.target.value, day: null })} className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-sm font-semibold text-slate-900">
-                {SCHOOL_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                {levelOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
               </select><ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
             </label>
             <label className="relative">
@@ -291,13 +302,14 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
                   <h2 id={`week-${week}-heading`} className="text-base font-semibold text-slate-950">Week {week}</h2>
                   <p className="mt-0.5 text-xs text-slate-500">{DAYS.filter((day) => slotFor(week, day)).length} of {DAYS.length} days planned</p>
                 </div>
-                <details className="relative">
-                  <summary className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl text-slate-500 hover:bg-white" aria-label={`Week ${week} actions`}><MoreHorizontal className="h-5 w-5" /></summary>
-                  <div className="absolute right-0 z-10 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                    <button type="button" onClick={() => openAI("fill_week", `Fill week ${week} with AI`, week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Fill week with AI</button>
-                    <button type="button" onClick={() => setPreviewScope(week)} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-slate-50">Preview week</button>
-                  </div>
-                </details>
+                <ActionMenu label={`Week ${week} actions`}>
+                  <ActionMenuItem onSelect={() => openAI("fill_week", `Fill week ${week} with AI`, week)}>
+                    <Sparkles className="h-4 w-4" /> Fill week with AI
+                  </ActionMenuItem>
+                  <ActionMenuItem onSelect={() => setPreviewScope(week)}>
+                    <Eye className="h-4 w-4" /> Preview week
+                  </ActionMenuItem>
+                </ActionMenu>
               </div>
               {/* One column per teaching day. Tailwind cannot see a computed
                   class name, so the track count is an inline style — which also
@@ -309,7 +321,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
                 {DAYS.map((day) => {
                   const slot = slotFor(week, day);
                   const highlighted = Boolean(slot && (
-                    (issueFilter === "resources" && blockingIssues(slot.current).some((issue) => issue.key.startsWith("step_resource")))
+                    (issueFilter === "resources" && resourceIssues(slot.current).length > 0)
                     || (issueFilter === "drafts" && slot.current.scope === scope && slot.current.status === "draft")
                   ));
                   return <CurriculumDayCard key={day} day={day} slot={slot} highlighted={highlighted} onOpen={(item) => updateContext({ day: item.id })} onCreate={() => openCreateDay(week, day)} />;
@@ -340,6 +352,7 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
           month={month}
           level={level}
           week={previewScope === "month" ? null : previewScope}
+          levelLabel={levelLabel}
           weeks={WEEKS}
           days={DAYS}
           lessons={monthLessons}
@@ -379,9 +392,10 @@ export function CurriculumWorkspace({ scope = "school" }: { scope?: CurriculumAd
   );
 }
 
-function CurriculumPreview({ month, level, week, weeks, days, lessons, onClose, onOpenDay }: {
+function CurriculumPreview({ month, level, levelLabel, week, weeks, days, lessons, onClose, onOpenDay }: {
   month: number;
   level: string;
+  levelLabel: (code: string) => string;
   week: number | null;
   weeks: number[];
   days: number[];
@@ -393,17 +407,16 @@ function CurriculumPreview({ month, level, week, weeks, days, lessons, onClose, 
   const planned = lessons.filter((lesson) => week === null || lesson.week === week).length;
   const total = visibleWeeks.length * days.length;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="curriculum-preview-title">
-      <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Curriculum preview</p>
-            <h2 id="curriculum-preview-title" className="mt-1 text-xl font-semibold text-slate-950">{week ? `${monthLabel(month)} · Week ${week}` : `${monthLabel(month)} curriculum`}</h2>
-            <p className="mt-2 text-sm text-slate-600">{levelLabel(level)} · {planned} of {total} teaching days planned</p>
-          </div>
-          <button type="button" aria-label="Close curriculum preview" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"><X className="h-5 w-5" /></button>
-        </div>
-        <div className="mt-6 space-y-6">
+    <ActionDialog
+      open
+      onOpenChange={(next) => { if (!next) onClose(); }}
+      size="xl"
+      title={week ? `${monthLabel(month)} · Week ${week}` : `${monthLabel(month)} curriculum`}
+      description={`${levelLabel(level)} · ${planned} of ${total} teaching days planned`}
+      footer={<Button variant="outline" onClick={onClose}>Close preview</Button>}
+    >
+      <div>
+        <div className="space-y-6">
           {visibleWeeks.map((weekNumber) => (
             <section key={weekNumber} aria-labelledby={`preview-week-${weekNumber}`}>
               <h3 id={`preview-week-${weekNumber}`} className="mb-3 text-sm font-semibold text-slate-950">Week {weekNumber}</h3>
@@ -432,8 +445,7 @@ function CurriculumPreview({ month, level, week, weeks, days, lessons, onClose, 
             </section>
           ))}
         </div>
-        <Button variant="outline" className="mt-7 w-full" onClick={onClose}>Close preview</Button>
       </div>
-    </div>
+    </ActionDialog>
   );
 }

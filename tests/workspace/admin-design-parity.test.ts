@@ -36,6 +36,8 @@ function code(relativePath: string) {
 }
 
 const adminLayout = source("app/admin/layout.tsx");
+// The typography wrapper stayed on the ROOT school-admin layout when the shell
+// moved into the `(shell)` group, so it now covers guided setup too.
 const schoolLayout = source("app/school-admin/layout.tsx");
 const adminShell = source("components/admin/admin-shell.tsx");
 const schoolShell = source("components/school-admin/school-admin-shell.tsx");

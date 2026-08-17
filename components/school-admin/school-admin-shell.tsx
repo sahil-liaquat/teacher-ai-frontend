@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, LogOut, Menu, X } from "lucide-react";
 import {
+  backendApi,
   CURRENT_USER_QUERY_KEY,
   clearToken,
   ensureSession,
@@ -14,6 +15,8 @@ import {
   type ApiUser,
 } from "@/lib/api";
 import { SCHOOL_ADMIN_NAV, isNavItemActive } from "@/lib/school-admin-nav";
+import { hasDeferredSetup, shouldRedirectToSetup } from "@/lib/school-admin-onboarding";
+import type { OnboardingState } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 // Nav lives in lib/school-admin-nav.ts so the shell and the architecture test
@@ -47,6 +50,35 @@ export function SchoolAdminShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  /**
+   * ⚠ A school that has not finished setup does not get the ERP.
+   *
+   * Nine navigation items, every one of which leads to an empty state or a
+   * "create an academic year first" wall, is not a product — it is a maze. The
+   * wizard is where an unconfigured school belongs.
+   *
+   * `retry: false` and the undefined guard matter: on an unknown state the
+   * shell holds rather than guessing, so a configured school is never bounced
+   * through the wizard on a cold load or a flaky request.
+   */
+  const onboarding = useQuery<OnboardingState>({
+    queryKey: ["school-admin", "onboarding"],
+    queryFn: backendApi.schoolAdminOnboarding,
+    enabled: sessionReady && user?.role === "org_admin",
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (shouldRedirectToSetup({
+      isComplete: onboarding.data?.is_complete,
+      deferred: hasDeferredSetup(),
+      pathname,
+    })) {
+      router.replace("/school-admin/setup");
+    }
+  }, [onboarding.data?.is_complete, pathname, router]);
 
   useEffect(() => {
     if (isError) router.replace(`/login?next=${encodeURIComponent(pathname)}`);

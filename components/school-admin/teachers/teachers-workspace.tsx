@@ -18,11 +18,11 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { academicYearState } from "@/lib/school-admin-support";
 import {
-  TEACHER_LEVELS,
   filtersFromSearchParams,
   filtersToSearchParams,
   type TeacherFilters,
 } from "@/lib/school-admin-teachers";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -30,8 +30,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/school-admin/shared/action-dialog";
 import { PageError, PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
+import { SectionSubnav } from "@/components/school-admin/shared/section-subnav";
 import { AssignmentDialog } from "@/components/school-admin/teachers/assignment-dialog";
-import { ClassManager } from "@/components/school-admin/teachers/class-manager";
 import { InviteTeacherDialog } from "@/components/school-admin/teachers/invite-teacher-dialog";
 import { TeacherDetailDrawer } from "@/components/school-admin/teachers/teacher-detail-drawer";
 import { TeacherTable, type TeacherRowAction } from "@/components/school-admin/teachers/teacher-table";
@@ -43,6 +43,9 @@ export function TeachersWorkspace() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Staffing reads the SAME level list as curriculum. These were two
+  // independent vocabularies: five levels here, eight there.
+  const { levels: schoolLevels } = useSchoolLevels();
   const filters = useMemo(() => filtersFromSearchParams(searchParams), [searchParams]);
   const [searchDraft, setSearchDraft] = useState(filters.search);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -182,8 +185,9 @@ export function TeachersWorkspace() {
 
   return (
     <SchoolAdminPage>
+      <SectionSubnav />
       <PageHeading
-        eyebrow="School staff"
+        eyebrow="People"
         title="Teachers"
         description="Invite teachers, group them into classes, and let the published school curriculum reach them automatically."
         actions={<Button onClick={() => setInviteOpen(true)}><MailPlus className="h-4 w-4" /> Invite teacher</Button>}
@@ -215,7 +219,7 @@ export function TeachersWorkspace() {
             </label>
             <FilterSelect label="Level" value={filters.level} onChange={(value) => setFilters({ level: value, page: 1 })}>
               <option value="">All levels</option>
-              {TEACHER_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              {schoolLevels.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </FilterSelect>
             <FilterSelect label="Class" value={filters.schoolClassId} onChange={(value) => setFilters({ schoolClassId: value, page: 1 })}>
               <option value="">All classes</option>
@@ -249,12 +253,13 @@ export function TeachersWorkspace() {
             onPageChange={(page) => setFilters({ page })}
           />
 
-          <ClassManager
-            classes={classes.data ?? []}
-            isLoading={classes.isLoading}
-            academicYear={activeYear}
-            onChanged={refresh}
-          />
+          {/* ⚠ Class management deliberately does NOT render here any more.
+              It rendered both on this page and at /school-admin/classes — two
+              doors into the same CRUD, with the Classes page telling the admin
+              to come here to assign. Classes now live at People → Classes &
+              Sections; this page keeps the roster and assignment, which is what
+              it is actually for. `classes` is still queried because the filter
+              and the assignment dialog both need it. */}
         </>
       )}
 

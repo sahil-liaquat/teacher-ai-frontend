@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
+import {
+  SCHOOL_ADMIN_SUBNAV,
+  activeTopLevel,
+} from "../../lib/school-admin-nav.ts";
+
 const root = process.cwd();
 const read = (path: string) => readFileSync(`${root}/${path}`, "utf8");
 
@@ -11,14 +16,21 @@ const WORKSPACE = "components/school-admin/calendar/calendar-workspace.tsx";
 // stops there. Scheduled teaching days, curriculum-to-date mapping and the
 // teacher surface belong to Phase 3.
 
-test("the calendar page exists and is in the School Admin navigation", () => {
-  assert.equal(existsSync(`${root}/app/school-admin/calendar/page.tsx`), true);
-  // The nav moved out of the shell into lib/school-admin-nav.ts so the shell
-  // and the tests read one definition. Calendar is still top level; academic
-  // years became its sub-navigation.
+test("the calendar page exists and is reachable from Curriculum", () => {
+  assert.equal(existsSync(`${root}/app/school-admin/(shell)/calendar/page.tsx`), true);
+  // ⚠ Calendar is no longer top level. Deciding WHEN teaching happens is part
+  // of building curriculum, not a separate job an admin arrives wanting to do,
+  // so it became Curriculum sub-navigation. The URL is unchanged.
   const nav = read("lib/school-admin-nav.ts");
   assert.match(nav, /href: "\/school-admin\/calendar", label: "Calendar"/);
-  assert.match(nav, /"\/school-admin\/calendar": \[/);
+  assert.equal(
+    SCHOOL_ADMIN_SUBNAV["/school-admin/curriculum/overview"].some(
+      (item) => item.href === "/school-admin/calendar",
+    ),
+    true,
+    "Calendar must be reachable from the Curriculum section",
+  );
+  assert.equal(activeTopLevel("/school-admin/calendar"), "/school-admin/curriculum/overview");
 });
 
 test("every calendar helper is on the school surface", () => {

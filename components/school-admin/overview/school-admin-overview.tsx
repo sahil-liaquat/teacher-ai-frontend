@@ -1,120 +1,166 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, BookOpen, FileClock, FileText, Plus } from "lucide-react";
-import { backendApi, type PrimaryAcademicYear, type PrimaryAIProposalRequest, type PrimaryCurriculumLesson, type PrimaryLevel } from "@/lib/api";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  curriculumHref,
-  lessonsForMonth,
-  levelLabel,
-  monthLabel,
-  resourceCount,
-  SCHOOL_LEVELS,
-  SCHOOL_MONTHS,
-} from "@/lib/school-admin-curriculum";
-import { advisoryNotes, blockingIssues, curriculumSlots, dayStatus, monthMetrics } from "@/lib/curriculum-readiness";
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  GraduationCap,
+  Users,
+} from "lucide-react";
+import {
+  backendApi,
+  SCHOOL_TEACHERS_QUERY_KEY,
+  type CurriculumCoverage,
+  type ExecutionSummary,
+  type PrimaryCurriculumLesson,
+  type SchoolTeacherRosterResponse,
+} from "@/lib/api";
+import { curriculumHref, lessonsForMonth, monthLabel } from "@/lib/school-admin-curriculum";
+import { blockingIssues, curriculumSlots, monthMetrics, resourceIssues } from "@/lib/curriculum-readiness";
 import { authoringDays, authoringWeeks } from "@/lib/primary-teaching-week";
-import { useToast } from "@/components/ui/toast";
+import { defaultLevel } from "@/lib/school-admin-levels";
+import { useCurriculumContext } from "@/lib/use-curriculum-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AIAction, PageError, PageHeading, SchoolAdminPage, SectionHeading } from "@/components/school-admin/shared/page-primitives";
-import { StatusBadge } from "@/components/school-admin/shared/status-badge";
-import { AIProposalDialog } from "@/components/school-admin/ai/ai-proposal-dialog";
+import { PageHeading, SchoolAdminPage } from "@/components/school-admin/shared/page-primitives";
 import { SetupPrompt } from "@/components/school-admin/onboarding/setup-prompt";
+import { cn } from "@/lib/utils";
 
+/**
+ * School Admin Overview — the command centre.
+ *
+ * ⚠ Built LAST on purpose. Every figure here is integrated from a workflow that
+ * actually works: curriculum readiness from the server's verdict, scheduling
+ * from the planning layer, delivery from statuses teachers set. A dashboard
+ * assembled before those existed would have been decoration, and the brief was
+ * explicit that decoration is worse than nothing.
+ *
+ * ⚠ THE THREE DEFECTS THIS REPLACES, all from the original audit and all
+ * unfixed until now because the page was going to be rebuilt:
+ *
+ *   · It was titled "Primary Curriculum" while the sidebar item said Overview.
+ *   · "Recent curriculum" was `lessonsForMonth(...).slice(0, 4)` — no ordering
+ *     at all — presented as "recently published days".
+ *   · It computed a `published` slot count and never read it.
+ *
+ * ⚠ EVERY NUMBER LINKS SOMEWHERE. The test for whether a figure belongs is
+ * whether there is a destination when it looks wrong. There is no figure here
+ * without one.
+ */
 const DEFAULT_MONTH = new Date().getMonth() + 1;
 
+function isoDaysAgo(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 export function SchoolAdminOverview() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [yearId, setYearId] = useState("");
-  const [level, setLevel] = useState("nursery");
-  const [month, setMonth] = useState(DEFAULT_MONTH);
-  const [aiRequest, setAIRequest] = useState<PrimaryAIProposalRequest | null>(null);
-  const [aiTitle, setAITitle] = useState("AI curriculum proposal");
+  const { year, curriculumLevels, labelFor, vocabulary, isLoading } = useCurriculumContext();
+  const level = defaultLevel(curriculumLevels);
+  const month = DEFAULT_MONTH;
 
-  const yearsQuery = useQuery<PrimaryAcademicYear[]>({
-    queryKey: ["school-admin", "academic-years"],
-    queryFn: () => backendApi.schoolAdminAcademicYears(),
+  const lessons = useQuery<PrimaryCurriculumLesson[]>({
+    queryKey: ["school-admin", "lessons", year?.id, level],
+    queryFn: () => backendApi.schoolAdminCurriculum({ academic_year_id: year!.id, level }),
+    enabled: Boolean(year?.id && level),
+  });
+  const coverage = useQuery<CurriculumCoverage>({
+    queryKey: ["school-admin", "coverage", year?.id, level],
+    queryFn: () => backendApi.schoolAdminCoverage(year!.id, level),
+    enabled: Boolean(year?.id),
+  });
+  const execution = useQuery<ExecutionSummary>({
+    queryKey: ["school-admin", "execution", "overview", year?.id],
+    queryFn: () =>
+      backendApi.schoolAdminExecution({
+        start: isoDaysAgo(30),
+        end: new Date().toISOString().slice(0, 10),
+        academic_year_id: year?.id,
+      }),
+  });
+  const roster = useQuery<SchoolTeacherRosterResponse>({
+    queryKey: [...SCHOOL_TEACHERS_QUERY_KEY, "overview"],
+    queryFn: () => backendApi.adminSchoolTeachers({}),
   });
 
-  useEffect(() => {
-    if (!yearId && yearsQuery.data?.length) {
-      setYearId(yearsQuery.data.find((year) => year.is_active)?.id ?? yearsQuery.data[0].id);
-    }
-  }, [yearId, yearsQuery.data]);
-
-  const lessonsQuery = useQuery<PrimaryCurriculumLesson[]>({
-    queryKey: ["school-admin", "lessons", yearId, level],
-    queryFn: () => backendApi.schoolAdminCurriculum({ academic_year_id: yearId, level }),
-    enabled: Boolean(yearId),
-  });
-
-  const year = yearsQuery.data?.find((item) => item.id === yearId);
-  const monthLessons = useMemo(() => lessonsForMonth(lessonsQuery.data ?? [], month), [lessonsQuery.data, month]);
-  const published = curriculumSlots(monthLessons).filter((slot) => slot.published).length;
-  const drafts = monthLessons.filter((lesson) => lesson.scope === "school" && lesson.status === "draft");
-  // ⚠ Server verdict, counted in slots. Was a frontend-only rule over lesson
-  // ROWS divided by a hardcoded 25 — so a duplicated day inflated readiness, and
-  // "needs attention" could disagree with what publish actually refuses.
-  // The month's own grid — one column per teaching weekday this year declares.
-  const grid = useMemo(
-    () => ({ weeks: authoringWeeks(year, month), days: authoringDays(year).length }),
-    [year, month],
+  const monthLessons = useMemo(
+    () => lessonsForMonth(lessons.data ?? [], month),
+    [lessons.data, month],
   );
-  const metrics = useMemo(() => monthMetrics(monthLessons, grid), [monthLessons, grid]);
+  const metrics = useMemo(
+    () => monthMetrics(monthLessons, {
+      weeks: authoringWeeks(year ?? null, month),
+      days: authoringDays(year ?? null).length,
+    }),
+    [monthLessons, year, month],
+  );
   const slots = useMemo(() => curriculumSlots(monthLessons), [monthLessons]);
-  const attention = slots.filter((slot) => blockingIssues(slot.current).length > 0).map((slot) => slot.current);
-  const missingResourceLessons = slots
-    .filter((slot) => advisoryNotes(slot.current).some((note) => note.key.startsWith("step_resource")))
-    .map((slot) => slot.current);
-  const readiness = metrics.completionPct;
-  const curriculumUrl = curriculumHref({ year: yearId, level, month });
+  const blocked = slots.filter((slot) => blockingIssues(slot.current).length > 0);
+  const missingResources = slots.filter((slot) => resourceIssues(slot.current).length > 0);
 
-  function openAI(operation: PrimaryAIProposalRequest["operation"], title: string) {
-    if (!yearId) return;
-    setAITitle(title);
-    setAIRequest({ operation, academic_year_id: yearId, level: level as PrimaryLevel, month });
-  }
+  const href = (extra: Record<string, string | number> = {}) =>
+    curriculumHref({ year: year?.id, level, month, ...extra });
 
-  if (yearsQuery.isLoading) {
-    return <OverviewSkeleton />;
-  }
+  /**
+   * What needs attention, in the order it blocks the school.
+   *
+   * ⚠ Assembled only from things that are TRUE and ACTIONABLE. A count of zero
+   * contributes nothing rather than rendering a reassuring green row, because
+   * a list of nine satisfied checks buries the one that is not.
+   */
+  const attention = [
+    blocked.length && {
+      key: "blocked",
+      icon: AlertTriangle,
+      label: `${blocked.length} teaching ${blocked.length === 1 ? "day has" : "days have"} unresolved issues`,
+      detail: `${monthLabel(month)} · ${labelFor(level)}`,
+      href: href({ issue: "drafts" }),
+    },
+    missingResources.length && {
+      key: "resources",
+      icon: BookOpen,
+      label: `${missingResources.length} ${missingResources.length === 1 ? "day needs" : "days need"} resources`,
+      detail: "Blocks with a resource type but nothing attached",
+      href: href({ issue: "resources" }),
+    },
+    (roster.data?.metrics?.unassigned_teachers ?? 0) > 0 && {
+      key: "unassigned",
+      icon: Users,
+      label: `${roster.data!.metrics.unassigned_teachers} ${roster.data!.metrics.unassigned_teachers === 1 ? "teacher is" : "teachers are"} not assigned to a class`,
+      detail: "They receive no published curriculum until they are",
+      href: "/school-admin/teachers?assignment=unassigned",
+    },
+    (coverage.data?.days_without_plans ?? 0) > 0 && {
+      key: "unscheduled",
+      icon: CalendarClock,
+      label: `${coverage.data!.days_without_plans} teaching ${coverage.data!.days_without_plans === 1 ? "day has" : "days have"} nothing scheduled`,
+      detail: "Curriculum is published but not placed on the calendar",
+      href: "/school-admin/planning",
+    },
+    (execution.data?.by_status?.skipped ?? 0) > 0 && {
+      key: "skipped",
+      icon: AlertTriangle,
+      label: `${execution.data!.by_status.skipped} ${execution.data!.by_status.skipped === 1 ? "lesson was" : "lessons were"} skipped`,
+      detail: "In the last 30 days",
+      href: "/school-admin/teaching",
+    },
+  ].filter(Boolean) as {
+    key: string;
+    icon: typeof AlertTriangle;
+    label: string;
+    detail: string;
+    href: string;
+  }[];
 
-  if (yearsQuery.isError) {
+  if (isLoading) {
     return (
       <SchoolAdminPage>
-      <SetupPrompt />
-        <PageHeading title="Primary Curriculum" description="We could not load your school curriculum." />
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
-          Refresh the page to try again. If this continues, check that your school has access to curriculum administration.
-        </div>
-      </SchoolAdminPage>
-    );
-  }
-
-  if (!yearsQuery.data?.length) {
-    return (
-      <SchoolAdminPage>
-      <SetupPrompt />
-        <PageHeading title="Primary Curriculum" description="Start by setting up the academic year your school will teach." />
-        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center">
-          <BookOpen className="mx-auto h-8 w-8 text-blue-600" />
-          <h2 className="mt-4 text-xl font-semibold text-slate-950">No academic year is set up yet</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Create your school year before reviewing or customizing TeachPad curriculum.</p>
-          <Link href="/school-admin/academic-years" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white">Set up academic year <ArrowRight className="h-4 w-4" /></Link>
-        </div>
-      </SchoolAdminPage>
-    );
-  }
-
-  if (lessonsQuery.isError) {
-    return (
-      <SchoolAdminPage>
-      <SetupPrompt />
-        <PageHeading title="Primary Curriculum" description={`${year?.name ?? "Academic year"} · ${levelLabel(level)} · ${monthLabel(month)}`} />
-        <PageError description="The curriculum summary could not be loaded." onRetry={() => void lessonsQuery.refetch()} />
+        <Skeleton className="h-24" /><Skeleton className="h-32" /><Skeleton className="h-64" />
       </SchoolAdminPage>
     );
   }
@@ -123,147 +169,163 @@ export function SchoolAdminOverview() {
     <SchoolAdminPage>
       <SetupPrompt />
       <PageHeading
-        eyebrow="School programme"
-        title="Primary Curriculum"
-        description={`${year?.name ?? "Academic year"} · ${levelLabel(level)} · ${monthLabel(month)}`}
-        actions={(
-          <div className="flex flex-wrap gap-2">
-            <label className="sr-only" htmlFor="overview-year">Academic year</label>
-            <select id="overview-year" value={yearId} onChange={(event) => setYearId(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
-              {yearsQuery.data.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-            <label className="sr-only" htmlFor="overview-level">Level</label>
-            <select id="overview-level" value={level} onChange={(event) => setLevel(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
-              {SCHOOL_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-            </select>
-            <label className="sr-only" htmlFor="overview-month">Month</label>
-            <select id="overview-month" value={month} onChange={(event) => setMonth(Number(event.target.value))} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
-              {SCHOOL_MONTHS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-            </select>
-          </div>
-        )}
+        eyebrow="School"
+        title="Overview"
+        description={
+          year
+            ? `${year.name} · ${labelFor(level)} · ${monthLabel(month)}`
+            : "Set up an academic year to start planning curriculum."
+        }
       />
 
-      <section aria-labelledby="ai-actions-heading">
-        <SectionHeading title="Build and improve with AI" description="AI actions use the curriculum context selected above." />
-        <h2 id="ai-actions-heading" className="sr-only">AI curriculum actions</h2>
-        <div className="grid gap-3 md:grid-cols-3">
-          <AIAction title="Create curriculum with AI" description="Prepare a structured programme for this class and academic year." onClick={() => openAI("create_month", "Create curriculum with AI")} />
-          <AIAction title="Fill this month with AI" description={`Complete unplanned teaching days in ${monthLabel(month)} while preserving existing work.`} onClick={() => openAI("fill_month", "Fill this month with AI")} muted />
-          <AIAction title="Fix missing content" description="Find incomplete objectives, instructions, activities, and resources." onClick={() => openAI("fix_missing", "Fix missing curriculum content")} muted />
-        </div>
+      {/* The four stages of the loop, each reporting its own real state. */}
+      <section aria-labelledby="loop-heading" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <h2 id="loop-heading" className="sr-only">School status</h2>
+        <LoopCard
+          icon={BookOpen}
+          label="Curriculum"
+          value={`${metrics.completionPct}%`}
+          caption={`${metrics.published} of ${metrics.slots} days published`}
+          ok={metrics.slots > 0 && metrics.published === metrics.slots}
+          href="/school-admin/curriculum/overview"
+          loading={lessons.isLoading}
+        />
+        <LoopCard
+          icon={CalendarClock}
+          label="Scheduled"
+          value={coverage.data ? `${coverage.data.days_with_plans}` : "—"}
+          caption={
+            coverage.data
+              ? `${coverage.data.days_without_plans} teaching days still free`
+              : "Not loaded"
+          }
+          ok={Boolean(coverage.data && coverage.data.days_without_plans === 0)}
+          href="/school-admin/planning"
+          loading={coverage.isLoading}
+        />
+        <LoopCard
+          icon={GraduationCap}
+          label="Delivered"
+          /* ⚠ Null is "no records", never 0%. */
+          value={execution.data?.delivered_pct === null ? "No data" : `${execution.data?.delivered_pct ?? "—"}%`}
+          caption={
+            execution.data
+              ? `${execution.data.reporting_teachers} of ${execution.data.assigned_teachers} teachers recording`
+              : "Not loaded"
+          }
+          ok={Boolean(execution.data?.delivered_pct !== null && (execution.data?.delivered_pct ?? 0) >= 80)}
+          href="/school-admin/teaching"
+          loading={execution.isLoading}
+        />
+        <LoopCard
+          icon={Users}
+          label="People"
+          value={`${roster.data?.metrics?.total_teachers ?? "—"}`}
+          caption={
+            roster.data
+              ? `${roster.data.metrics.unassigned_teachers} unassigned`
+              : "Not loaded"
+          }
+          ok={Boolean(roster.data && roster.data.metrics.unassigned_teachers === 0)}
+          href="/school-admin/teachers"
+          loading={roster.isLoading}
+        />
       </section>
 
-      <section className="rounded-3xl bg-slate-950 px-5 py-6 text-white sm:px-7" aria-labelledby="readiness-heading">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-blue-200">{monthLabel(month)} readiness</p>
-            <div className="mt-2 flex items-baseline gap-3">
-              <h2 id="readiness-heading" className="text-3xl font-semibold tracking-tight">{readiness}% ready</h2>
-              <span className="text-sm text-slate-300">{metrics.published} of {metrics.slots} teaching days published</span>
-            </div>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15" aria-label={`${readiness}% curriculum ready`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={readiness}>
-              <div className="h-full rounded-full bg-blue-400" style={{ width: `${readiness}%` }} />
-            </div>
-            <p className="mt-3 text-sm text-slate-300">{attention.length ? `${attention.length} ${attention.length === 1 ? "day needs" : "days need"} attention` : "No incomplete days in this month."}</p>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold tracking-[-0.015em] text-slate-950">Needs attention</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Everything here is something you can act on, and opens where it is fixed.
+            </p>
           </div>
-          <Link href={curriculumUrl} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-slate-950">Open curriculum <ArrowRight className="h-4 w-4" /></Link>
+          {attention.length ? (
+            <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+              {attention.length}
+            </span>
+          ) : null}
         </div>
-      </section>
 
-      {lessonsQuery.isLoading ? <Skeleton className="h-64 w-full" /> : (
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_.85fr]">
-          <section>
-            <SectionHeading title="Needs attention" description="Open an item at the exact teaching day that needs work." />
-            <div className="divide-y divide-slate-200 border-y border-slate-200">
-              {attention.slice(0, 5).map((lesson) => (
-                <Link key={lesson.id} href={curriculumHref({ year: yearId, level, month, day: lesson.id })} className="group flex items-start gap-3 py-4">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || `Week ${lesson.week}, day ${lesson.day}`}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{blockingIssues(lesson)[0]?.detail ?? blockingIssues(lesson)[0]?.label} · Week {lesson.week}, {lesson.day ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][lesson.day - 1] : "Day"}</span>
-                  </span>
-                  <ArrowRight className="mt-1 h-4 w-4 text-slate-400 transition group-hover:translate-x-1 group-hover:text-blue-700" />
-                </Link>
-              ))}
-              {!attention.length ? <p className="py-8 text-sm text-slate-500">Nothing needs attention in {monthLabel(month)}.</p> : null}
-            </div>
-          </section>
-
-          <section>
-            <SectionHeading title="Recent curriculum" description="Continue with school drafts and recently published days." />
-            <div className="space-y-3">
-              {monthLessons.slice(0, 4).map((lesson) => (
-                <div key={lesson.id} className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600"><FileText className="h-4 w-4" /></div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-950">{lesson.title || lesson.daily_focus || "Untitled teaching day"}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">Week {lesson.week} · {lesson.steps?.length ?? 0} blocks · {resourceCount(lesson)} resources</p>
-                  </div>
-                  <StatusBadge status={dayStatus(lesson)} compact />
-                </div>
-              ))}
-              {!monthLessons.length ? <p className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">No teaching days planned for this month yet.</p> : null}
-            </div>
-          </section>
-        </div>
-      )}
-      <AIProposalDialog
-        open={Boolean(aiRequest)}
-        onOpenChange={(open) => { if (!open) setAIRequest(null); }}
-        request={aiRequest}
-        title={aiTitle}
-        onApplied={async () => {
-          await queryClient.invalidateQueries({ queryKey: ["school-admin", "lessons", yearId, level] });
-          toast({ title: "AI changes applied to school drafts", description: "Teachers will not see them until you publish." });
-        }}
-      />
-
-      <div className="grid gap-5 md:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex items-start gap-3">
-            <FileClock className="h-5 w-5 text-amber-600" />
-            <div className="flex-1">
-              <h2 className="font-semibold text-slate-950">Drafts waiting</h2>
-              <p className="mt-1 text-sm text-slate-600">{drafts.length ? `${drafts.length} changed ${drafts.length === 1 ? "day is" : "days are"} waiting for review.` : "No school drafts are waiting."}</p>
-              {drafts.length ? <Link href={`${curriculumUrl}&issue=drafts`} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">Review changes <ArrowRight className="h-4 w-4" /></Link> : null}
-            </div>
-          </div>
-        </section>
-        {missingResourceLessons.length ? (
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex items-start gap-3">
-              <BookOpen className="h-5 w-5 text-rose-600" />
-              <div className="flex-1">
-                <h2 className="font-semibold text-slate-950">Missing resources</h2>
-                <p className="mt-1 text-sm text-slate-600">{missingResourceLessons.length} curriculum {missingResourceLessons.length === 1 ? "day has" : "days have"} blocks that need resources.</p>
-                <Link href={`${curriculumUrl}&issue=resources`} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-blue-700">Review missing resources <ArrowRight className="h-4 w-4" /></Link>
-              </div>
-            </div>
-          </section>
+        {attention.length ? (
+          <ul className="mt-5 divide-y divide-slate-100">
+            {attention.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.key}>
+                  <Link href={item.href} className="group flex items-start gap-3 py-3.5">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-slate-950">{item.label}</span>
+                      <span className="mt-0.5 block text-xs text-slate-500">{item.detail}</span>
+                    </span>
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-700" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         ) : (
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="font-semibold text-slate-950">Quick actions</h2>
-            <div className="mt-3 flex flex-wrap gap-3 text-sm font-bold text-blue-700">
-              <Link href={curriculumUrl} className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Add teaching day</Link>
-              <Link href="/school-admin/themes" className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Create theme</Link>
-              <Link href="/school-admin/resources" className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Add resource</Link>
-            </div>
-          </section>
+          <div className="mt-5 rounded-2xl border border-dashed border-slate-300 px-5 py-10 text-center">
+            <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-600" />
+            <p className="mt-3 text-sm font-semibold text-slate-900">Nothing needs your attention</p>
+            <p className="mx-auto mt-1.5 max-w-md text-sm leading-6 text-slate-500">
+              Curriculum is published, scheduled and being delivered, and every teacher has a class.
+            </p>
+            <Link
+              href="/school-admin/curriculum/overview"
+              className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-800 hover:border-blue-200 hover:text-blue-700"
+            >
+              Plan ahead in Curriculum <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         )}
-      </div>
+      </section>
+
+      <p className="text-xs leading-5 text-slate-500">
+        Scheduled counts what is placed on the calendar; delivered counts what teachers recorded
+        teaching. A date passing is never treated as a {vocabulary.lessonNoun} taught.
+      </p>
     </SchoolAdminPage>
   );
 }
 
-function OverviewSkeleton() {
+function LoopCard({
+  icon: Icon,
+  label,
+  value,
+  caption,
+  ok,
+  href,
+  loading,
+}: {
+  icon: typeof BookOpen;
+  label: string;
+  value: string;
+  caption: string;
+  ok: boolean;
+  href: string;
+  loading: boolean;
+}) {
   return (
-    <SchoolAdminPage>
-      <SetupPrompt />
-      <Skeleton className="h-24 w-full" />
-      <div className="grid gap-3 md:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
-      <Skeleton className="h-48 w-full" />
-      <div className="grid gap-6 lg:grid-cols-2"><Skeleton className="h-56" /><Skeleton className="h-56" /></div>
-    </SchoolAdminPage>
+    <Link
+      href={href}
+      className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-200 hover:shadow-sm"
+    >
+      <span className="flex items-center justify-between gap-3">
+        <span className="text-xs font-bold uppercase tracking-[0.1em] text-slate-500">{label}</span>
+        <Icon className="h-4 w-4 text-slate-300" aria-hidden="true" />
+      </span>
+      {loading ? (
+        <Skeleton className="mt-2 h-8 w-16 rounded-lg" />
+      ) : (
+        <span className="mt-2 block text-2xl font-semibold tabular-nums text-slate-950">{value}</span>
+      )}
+      {/* Status carried by an icon and wording, never by colour alone. */}
+      <span className={cn("mt-1 flex items-center gap-1.5 text-xs font-semibold", ok ? "text-emerald-700" : "text-slate-500")}>
+        {ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+        {caption}
+      </span>
+    </Link>
   );
 }

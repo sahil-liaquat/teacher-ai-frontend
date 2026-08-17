@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Layers, X } from "lucide-react";
+import { ChevronDown, Layers } from "lucide-react";
 import type { PrimaryCurriculumLesson, PrimaryCurriculumTheme } from "@/lib/api";
 import {
   EMPTY_SELECTION,
@@ -20,9 +20,11 @@ import {
   templateSteps,
   type DayTemplateId,
 } from "@/lib/primary-day-templates";
-import { levelLabel, monthLabel } from "@/lib/school-admin-curriculum";
+import { monthLabel } from "@/lib/school-admin-curriculum";
 import type { StepDraft } from "@/lib/primary-authoring";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
+import { ActionDialog } from "@/components/school-admin/shared/action-dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { weekdayName, weekdayAbbr } from "@/lib/primary-teaching-week";
@@ -71,6 +73,7 @@ export function CreateDayDialog({
   onCancel: () => void;
   onCreate: (request: CreateDayRequest) => void;
 }) {
+  const { labelFor: levelLabel } = useSchoolLevels();
   const [selection, setSelection] = useState<DayDraftSelection>(EMPTY_SELECTION);
   const [dailyFocus, setDailyFocus] = useState("");
   const [template, setTemplate] = useState<DayTemplateId>("standard_routine");
@@ -122,36 +125,24 @@ export function CreateDayDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-day-title"
+    <ActionDialog
+      open={open}
+      onOpenChange={(next) => { if (!next && !busy) onCancel(); }}
+      title="Create Teaching Day"
+      description={`${levelLabel(level)} · ${monthLabel(month)} · Week ${week}, ${weekdayName(day) ?? `day ${day}`}`}
+      footer={
+        <>
+          <Button variant="outline" onClick={onCancel} disabled={busy}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={!ready}>
+            {busy ? "Creating…" : "Create Teaching Day"}
+          </Button>
+        </>
+      }
     >
-      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
-              {levelLabel(level)} · {monthLabel(month)}
-            </p>
-            <h2 id="create-day-title" className="mt-1 text-xl font-semibold text-slate-950">
-              Create Teaching Day
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Week {week}, {weekdayName(day) ?? `day ${day}`}
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Cancel"
-            onClick={onCancel}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="mt-6 space-y-5">
+      <div>
+        <div className="space-y-5">
           <Field label="Theme" required htmlFor="create-day-theme">
             <Select
               id="create-day-theme"
@@ -264,17 +255,8 @@ export function CreateDayDialog({
             {SELECTION_PROBLEM_MESSAGES[problem]}
           </p>
         ) : null}
-
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={onCancel} disabled={busy}>
-            Cancel
-          </Button>
-          <Button onClick={submit} disabled={!ready}>
-            {busy ? "Creating…" : "Create Teaching Day"}
-          </Button>
-        </div>
       </div>
-    </div>
+    </ActionDialog>
   );
 }
 

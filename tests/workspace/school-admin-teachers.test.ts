@@ -3,6 +3,12 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  SCHOOL_ADMIN_NAV,
+  SCHOOL_ADMIN_SUBNAV,
+  activeTopLevel,
+} from "../../lib/school-admin-nav.ts";
+
+import {
   ACCOUNT_STATUS_COPY,
   CURRICULUM_STATUS_COPY,
   DEFAULT_TEACHER_FILTERS,
@@ -61,28 +67,24 @@ function schoolClass(overrides: Record<string, unknown> = {}) {
 
 // ── navigation ─────────────────────────────────────────────────────────────
 
-test("Teachers sits inside the operating loop and before Settings in the nav", () => {
-  // Reads lib/school-admin-nav.ts: the nav left the shell so one definition
-  // serves the sidebar and the tests.
-  const nav = source("lib/school-admin-nav.ts");
-  // Array.from, not spread: tsconfig targets es5, where iterating a matchAll
-  // result needs downlevelIteration.
-  const order = Array.from(nav.matchAll(/href: "(\/school-admin[^"]*)"/g)).map((match) => match[1]);
-  const at = (href: string) => order.indexOf(href);
+test("Teachers sits under People, alongside the classes it staffs", () => {
+  // ⚠ Rewritten twice now, and the direction of travel is the point. Teachers
+  // was top-level navigation; before that the assertion keyed on Academic Years
+  // preceding it. Staffing is not a job an administrator arrives wanting to do
+  // in isolation — it is half of "who teaches what", so it sits under People
+  // beside Classes & Sections rather than occupying its own sidebar slot.
+  const people = SCHOOL_ADMIN_SUBNAV["/school-admin/people"];
+  assert.ok(people, "the People section must exist");
+  assert.deepEqual(
+    people.map((item) => item.href),
+    ["/school-admin/people", "/school-admin/teachers"],
+    "classes come first, then the teachers assigned to them",
+  );
+  assert.equal(activeTopLevel("/school-admin/teachers"), "/school-admin/people");
 
-  assert.ok(at("/school-admin/teachers") > -1, "the Teachers nav item is missing");
-  // The old assertion keyed on Academic Years preceding Teachers. Academic
-  // Years is no longer top-level navigation — it is calendar sub-navigation —
-  // so the surviving invariant is that staffing follows the classes it staffs
-  // and still precedes Settings.
-  assert.ok(
-    at("/school-admin/classes") < at("/school-admin/teachers"),
-    "Teachers should follow Classes & Sections",
-  );
-  assert.ok(
-    at("/school-admin/teachers") < at("/school-admin/settings"),
-    "Settings stays last",
-  );
+  // Settings stays last in the top-level order.
+  const top = SCHOOL_ADMIN_NAV.map((item) => item.href);
+  assert.equal(top[top.length - 1], "/school-admin/settings");
 });
 
 test("the Teachers workspace is only reachable inside the school-admin shell", () => {
@@ -90,7 +92,7 @@ test("the Teachers workspace is only reachable inside the school-admin shell", (
   // page under /school-admin is what makes the surface school-admin-only.
   const shell = source("components/school-admin/school-admin-shell.tsx");
   assert.match(shell, /user\.role !== "org_admin"/);
-  assert.ok(source("app/school-admin/teachers/page.tsx").includes("TeachersWorkspace"));
+  assert.ok(source("app/school-admin/(shell)/teachers/page.tsx").includes("TeachersWorkspace"));
 });
 
 // ── levels ─────────────────────────────────────────────────────────────────

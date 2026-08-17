@@ -6,11 +6,10 @@ import { backendApi, type PrimaryAcademicYear, type SchoolClass } from "@/lib/ap
 import { getErrorMessage } from "@/lib/errors";
 import {
   ASSIGNMENT_ROLE_LABELS,
-  TEACHER_LEVELS,
   classWarning,
   groupClassesByLevel,
-  teacherLevelLabel,
 } from "@/lib/school-admin-teachers";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -34,6 +33,7 @@ export function ClassManager({
   onChanged: () => Promise<void> | void;
 }) {
   const { toast } = useToast();
+  const { labelFor: teacherLevelLabel } = useSchoolLevels();
   const [createOpen, setCreateOpen] = useState(false);
   const [archiving, setArchiving] = useState<SchoolClass | null>(null);
   const [managingSections, setManagingSections] = useState<SchoolClass | null>(null);
@@ -158,6 +158,7 @@ function ClassCard({
   onArchive: () => void;
   onManageSections: () => void;
 }) {
+  const { labelFor: teacherLevelLabel } = useSchoolLevels();
   const warning = classWarning(schoolClass);
   const groups = groupTeachersBySection(schoolClass);
   const showSectionHeadings = groups.length > 1;
@@ -246,12 +247,14 @@ function CreateClassDialog({
 }) {
   const { toast } = useToast();
   const [name, setName] = useState("");
-  const [level, setLevel] = useState<string>(TEACHER_LEVELS[0].value);
+  const { levels: schoolLevels, labelFor: teacherLevelLabel } = useSchoolLevels();
+  const [level, setLevel] = useState<string>("");
   const [section, setSection] = useState("");
   const [subjects, setSubjects] = useState("");
   const [busy, setBusy] = useState(false);
 
   const duplicate = existing.some((item) => item.name.trim().toLowerCase() === name.trim().toLowerCase());
+  const resolvedLevel = level || schoolLevels[0]?.value || "";
 
   async function create() {
     if (!name.trim() || duplicate) return;
@@ -259,7 +262,7 @@ function CreateClassDialog({
     try {
       const created = await backendApi.adminCreateSchoolClass({
         name: name.trim(),
-        level,
+        level: resolvedLevel,
         academic_year_id: academicYear?.id,
         section: section.trim() || null,
         subjects: subjects.split(",").map((item) => item.trim()).filter(Boolean),
@@ -290,7 +293,7 @@ function CreateClassDialog({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={busy || !name.trim() || duplicate} onClick={() => void create()}>
+          <Button disabled={busy || !name.trim() || duplicate || !resolvedLevel} onClick={() => void create()}>
             {busy ? "Creating…" : "Create class"}
           </Button>
         </>
@@ -304,8 +307,8 @@ function CreateClassDialog({
         </label>
         <label className="text-sm font-semibold text-slate-900">
           Level
-          <Select className="mt-2" value={level} onChange={(event) => setLevel(event.target.value)}>
-            {TEACHER_LEVELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          <Select className="mt-2" value={resolvedLevel} onChange={(event) => setLevel(event.target.value)}>
+            {schoolLevels.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </Select>
         </label>
         <label className="text-sm font-semibold text-slate-900">

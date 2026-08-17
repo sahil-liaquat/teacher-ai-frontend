@@ -37,6 +37,22 @@ export function advisoryNotes(lesson?: PrimaryCurriculumLesson | null): LessonRe
   );
 }
 
+/**
+ * Failing resource checks, whatever their severity.
+ *
+ * ⚠ Deliberately severity-agnostic, and that is the fix it exists for. The
+ * Overview card counted these out of `advisoryNotes` while the curriculum grid
+ * highlighted them out of `blockingIssues` — two disjoint sets, so "N days have
+ * blocks that need resources" linked to a grid that highlighted nothing. One
+ * question deserves one rule; whether a missing resource blocks a publish is a
+ * separate matter the server still decides.
+ */
+export function resourceIssues(lesson?: PrimaryCurriculumLesson | null): LessonReadinessCheck[] {
+  return (lesson?.readiness?.checks ?? []).filter(
+    (check) => !check.ok && check.key.startsWith("step_resource"),
+  );
+}
+
 export function satisfiedChecks(lesson?: PrimaryCurriculumLesson | null): LessonReadinessCheck[] {
   return (lesson?.readiness?.checks ?? []).filter((check) => check.ok);
 }

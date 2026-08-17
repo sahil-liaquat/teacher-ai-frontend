@@ -91,6 +91,28 @@ const nextConfig = {
         destination: "/dashboard",
         permanent: false
       },
+      // School Admin information architecture: nine top-level items became five
+      // jobs. Almost every URL stayed put — only these two genuinely moved.
+      //
+      // /school-admin/classes rendered the SAME ClassManager as the foot of the
+      // Teachers workspace: two doors into one CRUD. Classes now live under
+      // People, and this keeps the old address working.
+      //
+      // /school-admin/progress became Teaching → Coverage, which is where the
+      // question it asked actually belongs once execution data is wired in.
+      //
+      // Non-permanent on purpose: a 308 would pin these in admins' browsers,
+      // and the People/Teaching grouping is newer than the routes it replaces.
+      {
+        source: "/school-admin/classes",
+        destination: "/school-admin/people",
+        permanent: false
+      },
+      {
+        source: "/school-admin/progress",
+        destination: "/school-admin/teaching",
+        permanent: false
+      },
       // Renamed in the Master Curriculum cutover: this page administers the
       // platform-owned master curriculum (/admin/master/*), not the school one.
       // Kept non-permanent so a stale 308 can't pin the old path in admins'

@@ -13,14 +13,13 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   classWarning,
   groupClassesByLevel,
-  teacherLevelLabel,
 } from "@/lib/school-admin-teachers";
 import {
   type AssignmentTarget,
   assignmentTargets,
-  existingTargetKey,
-  targetKey,
+  seedAssignmentDrafts,
 } from "@/lib/school-admin-sections";
+import { useSchoolLevels } from "@/lib/use-school-levels";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -49,6 +48,7 @@ export function AssignmentDialog({
   onSaved: () => Promise<void> | void;
 }) {
   const { toast } = useToast();
+  const { labelFor: teacherLevelLabel } = useSchoolLevels();
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [busy, setBusy] = useState(false);
 
@@ -59,21 +59,15 @@ export function AssignmentDialog({
     // Keyed by TARGET — (class, section) — not by class. Keying on the class
     // made the second section of a class overwrite the first, so it could never
     // be submitted however well the backend understood sections.
-    const assigned = new Map(
-      teacher.assigned_classes.map((item) => [existingTargetKey(item, classes), item]),
-    );
+    //
+    // The seeding rule itself lives in lib/school-admin-sections so the
+    // "every field must round-trip a REPLACE" invariant is unit-testable.
     setDrafts(
-      Object.fromEntries(
-        assignmentTargets(classes).map((target) => {
-          const existing = assigned.get(target.key);
-          return [target.key, {
-            selected: Boolean(existing),
-            role: (existing?.assignment_role ?? "lead") as TeacherAssignmentRole,
-            starts_on: "",
-            ends_on: "",
-          } satisfies Draft];
-        }),
-      ),
+      seedAssignmentDrafts(
+        teacher.assigned_classes,
+        classes,
+        assignmentTargets(classes),
+      ) as Record<string, Draft>,
     );
   }, [open, teacher, classes]);
 

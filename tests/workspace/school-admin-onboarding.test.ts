@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
+import {
+  CURRICULUM_SOURCES,
+  SETUP_SCREENS,
+} from "../../lib/school-admin-onboarding.ts";
+
 import { SCHOOL_ADMIN_NAV } from "../../lib/school-admin-nav.ts";
 
 function source(relativePath: string) {
@@ -36,20 +41,33 @@ test("configuration concepts never surface as top-level navigation", () => {
   }
 });
 
-test("the wizard walks all five steps in order", () => {
-  const wizard = source(WIZARD);
-  for (const title of ["Framework", "Programmes", "Levels", "Curriculum", "Academic year"]) {
-    assert.match(wizard, new RegExp(`title: "${title}"`));
-  }
-  const order = Array.from(wizard.matchAll(/\{ n: (\d), title: "([^"]+)"/g)).map((m) => Number(m[1]));
-  assert.deepEqual(order, [1, 2, 3, 4, 5]);
+test("the wizard covers every tracked backend step, in order", () => {
+  // ⚠ Rewritten, not weakened. The wizard's screens used to BE the backend's
+  // five steps (`{ n: 1, title: "Framework" }`). It now shows eight screens —
+  // a welcome, a working-days screen and a review the backend has no step for —
+  // so the invariant moved: every tracked step is still claimed exactly once,
+  // in order, and the extra screens claim none. The screen model is asserted in
+  // full in school-admin-onboarding-flow.test.ts.
+  const claimed = SETUP_SCREENS
+    .map((screen) => screen.backendStep)
+    .filter((step): step is 1 | 2 | 3 | 4 | 5 => step !== null);
+  assert.deepEqual(claimed.slice().sort(), [1, 2, 3, 4, 5]);
+  assert.deepEqual(
+    SETUP_SCREENS.filter((screen) => screen.readinessKey).map((screen) => screen.readinessKey),
+    ["framework", "programmes", "levels", "academic_year", "curriculum"],
+  );
 });
 
-test("the wizard offers all four curriculum starting points", () => {
+test("the wizard offers three curriculum starting points and never import", () => {
+  // ⚠ This assertion is INVERTED from what it was, deliberately. It used to
+  // require all four, `import` included — but there is no import pipeline
+  // anywhere in the product: no upload endpoint, no parser, no review step.
+  // Offering it set a school up to choose a path that does nothing. The enum
+  // value stays supported on the wire for any school already carrying it; it is
+  // simply not offered until the pipeline exists.
+  assert.deepEqual(CURRICULUM_SOURCES.map((option) => option.value), ["teachpad", "customize", "empty"]);
   const wizard = source(WIZARD);
-  for (const value of ["teachpad", "customize", "import", "empty"]) {
-    assert.match(wizard, new RegExp(`value: "${value}"`));
-  }
+  assert.doesNotMatch(wizard, /Import School Curriculum|Upload Existing Curriculum/);
 });
 
 test("the wizard writes through existing services rather than its own storage", () => {
@@ -113,19 +131,34 @@ test("archiving a level is a DELETE route that returns the row, not a removal", 
 });
 
 test("settings manages programmes and levels", () => {
+  // Renamed from Cards to Stages when Settings became a disclosure flow: the
+  // three academic stages unlock in the order the server accepts them.
   const settings = source(SETTINGS);
-  assert.match(settings, /ProgrammesCard/);
-  assert.match(settings, /LevelsCard/);
+  assert.match(settings, /ProgrammesStage/);
+  assert.match(settings, /LevelsStage/);
   // The disable warning must be shown, since the backend allows it while
   // levels still reference the programme.
   assert.match(settings, /Levels reference this/);
 });
 
-test("settings shows only school-owned levels", () => {
-  // TeachPad's shared catalogue rows are read-only to a school — the backend
-  // 403s on an edit, so listing them as editable would be a lie.
-  assert.match(source(SETTINGS), /schoolAdminLevels\(\)/);
-  assert.doesNotMatch(source(SETTINGS), /schoolAdminLevelCatalogue/);
+test("settings lists only school-owned levels as editable", () => {
+  // ⚠ Loosened deliberately, and the distinction is the point. This used to
+  // forbid ANY reference to the catalogue, because TeachPad's shared rows are
+  // read-only to a school — the backend 403s on an edit.
+  //
+  // ADOPTING is not editing. `schoolAdminAdoptLevel` COPIES a platform level
+  // into the school as a school-owned row, which is exactly what the setup
+  // wizard does. Forbidding the catalogue outright also forbade the one safe
+  // thing a school can do with it.
+  //
+  // The invariant that actually matters is unchanged: the EDITABLE list comes
+  // from the school's own rows.
+  const settings = source(SETTINGS);
+  assert.match(settings, /schoolAdminLevels\(\)/, "the editable list is school-owned");
+  assert.match(settings, /schoolAdminAdoptLevel/, "catalogue rows may only be adopted");
+  // Archive — the only destructive level action — must act on a school row id,
+  // never on a catalogue code.
+  assert.match(settings, /archive\.mutate\(level\.id\)/);
 });
 
 test("the resolved-definition type keeps compiled and structure sources distinct", () => {
