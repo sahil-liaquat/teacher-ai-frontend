@@ -5,7 +5,9 @@ browse the textbook catalogue, generate lesson plans / worksheets /
 presentations, and export them. See the root [`../CLAUDE.md`](../CLAUDE.md) for
 product context and flows. This file is the frontend's working manual.
 
-- **Next `16.2.4`, React `19.2.5`, TS `5.6`, Tailwind `3.4`**, Turbopack.
+- **Next `16.2.4`, React `19.2.5`, TS `5.6.3`, Tailwind `3.4.14`.** `next.config.mjs`
+  carries a `turbopack` block, but the `dev` script passes `--webpack` — dev builds
+  run on webpack.
 - UI: Radix primitives (`@radix-ui/*`) + Tailwind + `lucide-react`,
   `class-variance-authority` + `clsx` + `tailwind-merge` for variants/classes.
 - Forms: `react-hook-form` + `zod` (`@hookform/resolvers`).
@@ -16,12 +18,17 @@ product context and flows. This file is the frontend's working manual.
 
 ```bash
 npm install
-npm run dev        # next dev on http://localhost:3000
+npm run dev        # next dev -p 3000 --webpack  (⚠ dev runs WEBPACK, not Turbopack)
 npm run build      # next build
 npm run lint       # ⚠ this is `tsc --noEmit` (typecheck), NOT eslint
-npm run test       # ⚠ this is `next build` — there is no real test suite
+npm run test       # node --test over tests/**/*.test.ts — 6 real test files
+npm run test:routes  # scripts/smoke-routes.mjs — route smoke check
 npm run icons      # regenerate the favicon/PWA icon set from the master (see below)
 ```
+
+⚠ **Port `:3000` is frequently taken by an unrelated app on this machine** (the
+dev server then lands on `:3002`). Read the actual port off the dev-server output
+before doing any runtime check or browser automation — don't assume 3000.
 
 Set `NEXT_PUBLIC_API_URL` in `.env` to point at the backend. If unset, the
 client falls back to the **Render dev backend**
@@ -66,7 +73,7 @@ Path alias **`@/*` → `./*`** (see `tsconfig.json`), e.g. `@/components/...`,
 
 ## `lib/` — the important non-UI code
 
-- **`api.ts` (~700 lines) is the single backend client and the source of truth
+- **`api.ts` (~2,340 lines) is the single backend client and the source of truth
   for API types.** Everything talks to the backend through it. It:
   - resolves the API base (`NEXT_PUBLIC_API_URL` → `…/api/v1`);
   - manages Supabase tokens in `localStorage` (`access_token`/`refresh_token`,
@@ -103,10 +110,11 @@ Path alias **`@/*` → `./*`** (see `tsconfig.json`), e.g. `@/components/...`,
 
 ## Gaps / cruft specific to the frontend
 
-- **Notes & Activity generators are not backed by the API:** the pages
-  (`app/dashboard/notes-generator`, `.../activity-generator`) and payload types in
-  `api.ts` exist, but the **backend has no notes/activity routes** — treat these
-  as WIP until the backend catches up.
+- ~~Notes & Activity generators are not backed by the API.~~ **Fixed** — the
+  backend mounts `/api/v1/notes` and `/api/v1/activities`, and both are live,
+  metered generation tools. The still-unfinished one is **Live Quiz**: the
+  backend's `quiz.py` is 0 bytes and unmounted, so the live-quiz pages run on
+  mock data.
 - Default API base points at a **remote Render server** — easy to forget you're
   not hitting local. Set `NEXT_PUBLIC_API_URL` explicitly when developing.
 - Committed artifacts to clean up: `login-design-check.png` at the project root,
