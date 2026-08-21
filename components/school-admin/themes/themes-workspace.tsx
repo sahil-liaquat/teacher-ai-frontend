@@ -44,6 +44,7 @@ export function ThemesWorkspace() {
   const { vocabulary } = useCurriculumContext(level);
   const nodeLabel = vocabulary.labelFor(vocabulary.nodes[0]?.key ?? "theme");
   const childLabel = vocabulary.labelFor(vocabulary.nodes[1]?.key ?? "topic");
+  const leafLabel = vocabulary.labelFor(vocabulary.nodes[2]?.key ?? "lesson");
   const selectedId = params.get("theme");
 
   const years = useQuery<PrimaryAcademicYear[]>({ queryKey: ["school-admin", "academic-years"], queryFn: backendApi.schoolAdminAcademicYears });
@@ -111,7 +112,14 @@ export function ThemesWorkspace() {
           }} />)}
         </div>
       ) : <EmptyThemes filtered={Boolean(search)} onCreate={() => setCreateOpen(true)} />}
-      <CreateThemeDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={async (theme) => { await refresh(); updateUrl({ theme: theme.id }); }} />
+      <CreateThemeDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        rootLabel={nodeLabel}
+        groupLabel={childLabel}
+        itemLabel={leafLabel}
+        onCreated={async (theme) => { await refresh(); updateUrl({ theme: theme.id }); }}
+      />
       <ConfirmDialog open={Boolean(confirm)} onOpenChange={(open) => { if (!open) setConfirm(null); }} busy={busy} onConfirm={runConfirmed}
         title={confirm?.kind === "customize" ? "Create a school copy?" : confirm?.kind === "delete" ? "Delete this unused theme?" : "Archive this theme?"}
         description={confirm?.kind === "customize" ? "TeachPad's master stays unchanged. Your school gets an editable copy of the theme and its topics." : confirm?.kind === "delete" ? "This permanently removes the theme. Themes with lesson history can only be archived." : "The theme will leave active planning lists, while existing curriculum history remains available."}
@@ -272,7 +280,21 @@ interface ClientSubtheme {
   topics: ClientTopic[];
 }
 
-function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (theme: PrimaryCurriculumTheme) => Promise<void> }) {
+function CreateThemeDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  rootLabel,
+  groupLabel,
+  itemLabel,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (theme: PrimaryCurriculumTheme) => Promise<void>;
+  rootLabel: string;
+  groupLabel: string;
+  itemLabel: string;
+}) {
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -284,6 +306,9 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
 
   const [hero, setHero] = useState("");
   const resolvedHero = hero || builtInHeroForThemeName(name).src;
+  const rootNoun = rootLabel.toLowerCase();
+  const groupNoun = groupLabel.toLowerCase();
+  const itemNoun = itemLabel.toLowerCase();
 
   const addSubtheme = () => {
     setSubthemes([...subthemes, { id: Math.random().toString(36).substr(2, 9), name: "", topics: [] }]);
@@ -410,12 +435,12 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
         await onCreated(created);
         onOpenChange(false);
         toast({
-          title: `${created.name} was created, but not all of its topics`,
-          description: `${topicsMade} of ${topicsWanted} topics were added. ${getErrorMessage(error, "Add the rest from the theme.")}`,
+          title: `${created.name} was created, but its structure is incomplete`,
+          description: `${topicsMade} of ${topicsWanted} structure items were added. ${getErrorMessage(error, `Add the rest from the ${rootNoun}.`)}`,
           variant: "error",
         });
       } else {
-        toast({ title: "Could not create theme", description: getErrorMessage(error, "Check the name and try again."), variant: "error" });
+        toast({ title: `Could not create ${rootNoun}`, description: getErrorMessage(error, "Check the name and try again."), variant: "error" });
       }
     } finally {
       setBusy(false);
@@ -426,24 +451,24 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
     <ActionDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Create theme"
-      description="Define the curriculum theme and build its Sub-theme and Topic structure side-by-side."
+      title={`Create ${rootNoun}`}
+      description={`Define the curriculum ${rootNoun} and build its ${groupLabel} and ${itemLabel} structure side-by-side.`}
       size="xl"
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button disabled={busy || !name.trim()} onClick={() => void create()}>
-            {busy ? "Creating…" : "Create theme"}
+            {busy ? "Creating…" : `Create ${rootNoun}`}
           </Button>
         </>
       }
     >
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Left Column: Theme Details */}
+        {/* Left Column: root curriculum node details */}
         <div className="space-y-4 pr-2">
-          <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-3">Theme Metadata</h4>
+          <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2 mb-3">{rootLabel} metadata</h4>
           <label className="block text-sm font-semibold text-slate-800">
-            Theme name
+            {rootLabel} name
             <Input
               autoFocus
               className="mt-2 font-semibold"
@@ -479,23 +504,23 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
           />
         </div>
 
-        {/* Right Column: Subtheme & Topic Builder */}
+        {/* Right Column: nested curriculum structure builder */}
         <div className="flex flex-col h-full min-h-[400px] md:border-l md:border-slate-100 md:pl-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
             <div>
               <h4 className="text-sm font-semibold text-slate-900">Curriculum Flow</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Map the Theme ➔ Sub-theme ➔ Topic sequence.</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Map the {rootLabel} ➔ {groupLabel} ➔ {itemLabel} sequence.</p>
             </div>
             <Button type="button" size="sm" className="h-8 text-xs px-2.5 bg-violet-600 hover:bg-violet-700 font-bold" onClick={addSubtheme}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Sub-theme
+              <Plus className="h-3.5 w-3.5 mr-1" /> {groupLabel}
             </Button>
           </div>
 
           <div className="flex-1 overflow-y-auto max-h-[50vh] space-y-4 pr-1">
-            {/* Standalone Topics */}
+            {/* Standalone leaf nodes */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center justify-between mb-3 border-b border-slate-50 pb-2">
-                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-400">Standalone Topics</h5>
+                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-400">Standalone {itemLabel}s</h5>
               </div>
 
               <div className="space-y-2">
@@ -506,11 +531,11 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
                   </div>
                 ))}
 
-                <AddInlineTopicForm onAdd={addStandaloneTopic} placeholder="Add a standalone topic..." />
+                <AddInlineTopicForm onAdd={addStandaloneTopic} placeholder={`Add a standalone ${itemNoun}…`} />
               </div>
             </div>
 
-            {/* Sub-themes and nested Topics */}
+            {/* Groups and their nested leaf nodes */}
             {subthemes.map((sub, index) => (
               <div key={sub.id} className="rounded-2xl border border-[#e9e6fd] bg-[#faf9fe] p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
@@ -519,7 +544,7 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
                     <Input
                       value={sub.name}
                       onChange={(e) => updateSubthemeName(sub.id, e.target.value)}
-                      placeholder="Sub-theme Name (e.g. Anatomy)"
+                      placeholder={`${groupLabel} name`}
                       className="h-8 text-xs font-bold bg-white border-slate-200"
                     />
                   </div>
@@ -534,14 +559,14 @@ function CreateThemeDialog({ open, onOpenChange, onCreated }: { open: boolean; o
                     </div>
                   ))}
 
-                  <AddInlineTopicForm onAdd={(topicName) => addTopicToSubtheme(sub.id, topicName)} placeholder="Add topic under sub-theme..." size="sm" />
+                  <AddInlineTopicForm onAdd={(topicName) => addTopicToSubtheme(sub.id, topicName)} placeholder={`Add ${itemNoun} under ${groupNoun}…`} size="sm" />
                 </div>
               </div>
             ))}
 
             {subthemes.length === 0 && standaloneTopics.length === 0 && (
               <div className="text-center py-10 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400 bg-slate-50/50">
-                Build your curriculum hierarchy. Add sub-themes or standalone topics.
+                Build your curriculum hierarchy. Add {groupLabel.toLowerCase()}s or standalone {itemLabel.toLowerCase()}s.
               </div>
             )}
           </div>

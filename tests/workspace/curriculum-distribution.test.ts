@@ -246,11 +246,20 @@ test("the workspace previews before it writes", () => {
   const workspace = source("components/school-admin/planning/planning-workspace.tsx");
   assert.ok(workspace.includes("proposeDistribution("), "it must generate a proposal");
   assert.ok(workspace.includes("setPreview("), "the proposal must land in a preview");
-  // The apply path must be reachable only from the preview dialog's action.
+  // The apply path must be reachable only from the preview dialog's selected
+  // proposals, never by generating a second proposal behind the admin's back.
   assert.ok(
-    /onClick=\{\(\) => void apply\(preview\?\.proposals/.test(workspace),
+    /onClick=\{\(\) => void apply\(selectedProposals\)\}/.test(workspace),
     "applying must take the previewed proposals, never a freshly generated set",
   );
+});
+
+test("the schedule review can apply one proposed day without changing the rest", () => {
+  const workspace = source("components/school-admin/planning/planning-workspace.tsx");
+  assert.match(workspace, /selectedProposalIds/);
+  assert.match(workspace, /type="checkbox"/);
+  assert.match(workspace, /onClick=\{\(\) => void apply\(selectedProposals\)\}/);
+  assert.match(workspace, /Schedule \$\{selectedProposals\.length\}/);
 });
 
 test("planning never re-implements the server's calendar rules", () => {

@@ -143,6 +143,18 @@ test("the structure page renders the definition's own words", () => {
   );
 });
 
+test("the structure creation dialog keeps the resolved curriculum vocabulary", () => {
+  const structure = source("components/school-admin/themes/themes-workspace.tsx");
+  assert.ok(structure.includes("rootLabel={nodeLabel}"), "the dialog does not receive the root node label");
+  assert.ok(structure.includes("groupLabel={childLabel}"), "the dialog does not receive the group node label");
+  assert.ok(structure.includes("itemLabel={leafLabel}"), "the dialog does not receive the leaf node label");
+  assert.ok(structure.includes("title={`Create ${rootNoun}`}"), "the dialog title is still hard-coded to Theme");
+  assert.ok(
+    structure.includes("Map the {rootLabel} ➔ {groupLabel} ➔ {itemLabel} sequence."),
+    "the builder still describes a fixed Theme hierarchy",
+  );
+});
+
 test("a subject-based definition drives entirely different labels", () => {
   // The behavioural half: same code, different programme, different words.
   const themed = vocabularyFrom(

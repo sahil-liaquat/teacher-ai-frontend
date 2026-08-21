@@ -199,6 +199,7 @@ function HeroSection() {
                   height={941}
                   priority
                   className="h-auto w-full drop-shadow-[0_28px_48px_rgba(47,79,129,0.15)]"
+                  style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
                 />
               </div>
             </motion.div>

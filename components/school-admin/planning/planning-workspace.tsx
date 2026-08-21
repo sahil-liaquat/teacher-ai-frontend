@@ -54,6 +54,7 @@ export function PlanningWorkspace() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [preview, setPreview] = useState<ReturnType<typeof proposeDistribution> | null>(null);
+  const [selectedProposalIds, setSelectedProposalIds] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [rescheduling, setRescheduling] = useState<{ planId: string; label: string } | null>(null);
@@ -120,13 +121,23 @@ export function PlanningWorkspace() {
    * reverse, so the preview is not optional.
    */
   function generate() {
-    setPreview(
-      proposeDistribution({
-        lessons: schedulable,
-        teachingDays: context.data?.teaching_days ?? [],
-        existingPlans: context.data?.plans ?? [],
-      }),
-    );
+    const next = proposeDistribution({
+      lessons: schedulable,
+      teachingDays: context.data?.teaching_days ?? [],
+      existingPlans: context.data?.plans ?? [],
+    });
+    setPreview(next);
+    setSelectedProposalIds(new Set(next.proposals.map((proposal) => proposal.lesson.id)));
+  }
+
+  const selectedProposals = useMemo(
+    () => preview?.proposals.filter((proposal) => selectedProposalIds.has(proposal.lesson.id)) ?? [],
+    [preview, selectedProposalIds],
+  );
+
+  function closePreview() {
+    setPreview(null);
+    setSelectedProposalIds(new Set());
   }
 
   async function apply(proposals: DistributionProposal[]) {
@@ -152,7 +163,7 @@ export function PlanningWorkspace() {
         description: summary.description,
         variant: summary.tone === "success" ? "success" : summary.tone === "error" ? "error" : undefined,
       });
-      setPreview(null);
+      closePreview();
     } finally {
       setBusy(false);
       setProgress(null);
@@ -385,20 +396,20 @@ export function PlanningWorkspace() {
       {/* ⚠ Preview before apply. Never a silent mass write. */}
       <ActionDialog
         open={Boolean(preview)}
-        onOpenChange={(next) => { if (!next && !busy) setPreview(null); }}
+        onOpenChange={(next) => { if (!next && !busy) closePreview(); }}
         size="lg"
         title="Review the proposed schedule"
         description="Nothing is written until you apply this. Days already on the calendar are left exactly where they are."
         footer={
           <>
-            <Button variant="outline" disabled={busy} onClick={() => setPreview(null)}>Cancel</Button>
+            <Button variant="outline" disabled={busy} onClick={closePreview}>Cancel</Button>
             <Button
-              disabled={busy || !preview?.proposals.length}
-              onClick={() => void apply(preview?.proposals ?? [])}
+              disabled={busy || !selectedProposals.length}
+              onClick={() => void apply(selectedProposals)}
             >
               {busy
                 ? `Scheduling ${progress?.done ?? 0} of ${progress?.total ?? 0}…`
-                : `Schedule ${preview?.proposals.length ?? 0} ${preview?.proposals.length === 1 ? "day" : "days"}`}
+                : `Schedule ${selectedProposals.length} ${selectedProposals.length === 1 ? "day" : "days"}`}
             </Button>
           </>
         }
@@ -406,15 +417,48 @@ export function PlanningWorkspace() {
         {preview ? (
           <div className="space-y-4">
             <p className="text-sm text-slate-700">
-              {preview.proposals.length} {preview.proposals.length === 1 ? "day" : "days"} will be placed on the
-              next free teaching days, in curriculum order. {preview.remainingDays} teaching{" "}
+              Choose which proposed days to place. {selectedProposals.length} of {preview.proposals.length} selected;
+              dates stay in curriculum order. {preview.remainingDays} teaching{" "}
               {preview.remainingDays === 1 ? "day stays" : "days stay"} free.
             </p>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedProposalIds(new Set(preview.proposals.map((proposal) => proposal.lesson.id)))}
+              >
+                Select all
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedProposalIds(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
 
             <div className="max-h-64 overflow-y-auto rounded-2xl border border-slate-200">
               <ul className="divide-y divide-slate-100">
                 {preview.proposals.slice(0, 40).map((proposal) => (
                   <li key={proposal.lesson.id} className="flex items-center gap-3 px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      aria-label={`Schedule ${proposal.lesson.title || proposal.lesson.daily_focus || "teaching day"}`}
+                      checked={selectedProposalIds.has(proposal.lesson.id)}
+                      onChange={(event) => {
+                        setSelectedProposalIds((current) => {
+                          const next = new Set(current);
+                          if (event.target.checked) next.add(proposal.lesson.id);
+                          else next.delete(proposal.lesson.id);
+                          return next;
+                        });
+                      }}
+                      className="h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
                     <span className="w-20 shrink-0 text-xs font-bold tabular-nums text-slate-500">
                       {formatDate(proposal.date)}
                     </span>
