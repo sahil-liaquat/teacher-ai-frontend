@@ -22,7 +22,8 @@ import {
   X,
   ChevronRight,
   Calendar,
-  Bell
+  Bell,
+  School,
 } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, logout as logoutSession, refreshSession, type ApiUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ type AdminNavItem = {
 
 const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/school-excellence-leads", label: "School Leads", icon: School },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/influencers", label: "Influencers", icon: Megaphone },
   { href: "/admin/billing", label: "Billing", icon: Ticket },

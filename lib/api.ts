@@ -871,6 +871,53 @@ export type AdminFeedbackParams = {
   limit?: number;
 };
 
+export type SchoolExcellenceLeadStatus = "new" | "contacted" | "qualified" | "closed";
+export type SchoolExcellenceLeadIntent = "consultation" | "pilot";
+
+export type AdminSchoolExcellenceLead = {
+  id: string;
+  school_name: string;
+  city: string;
+  contact_person: string;
+  role: string;
+  phone: string;
+  email: string;
+  student_strength: string;
+  grades: string;
+  board: string;
+  priorities: string[];
+  priority_note: string | null;
+  intent: SchoolExcellenceLeadIntent;
+  status: SchoolExcellenceLeadStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminSchoolExcellenceLeadsResponse = {
+  items: AdminSchoolExcellenceLead[];
+  total: number;
+  skip: number;
+  limit: number;
+  summary: {
+    total: number;
+    new: number;
+    contacted: number;
+    qualified: number;
+    closed: number;
+    consultation: number;
+    pilot: number;
+  };
+};
+
+export type AdminSchoolExcellenceLeadsParams = {
+  q?: string;
+  status?: SchoolExcellenceLeadStatus;
+  intent?: SchoolExcellenceLeadIntent;
+  skip?: number;
+  limit?: number;
+};
+
 export type AdminUserDetail = {
   account: {
     id: string;
@@ -1834,6 +1881,24 @@ export const backendApi = {
     const suffix = qs.toString() ? `?${qs.toString()}` : "";
     return apiFetch<AdminFeedbackResponse>(`/admin/feedback${suffix}`);
   },
+  adminSchoolExcellenceLeads: (params: AdminSchoolExcellenceLeadsParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.status) qs.set("status", params.status);
+    if (params.intent) qs.set("intent", params.intent);
+    if (params.skip != null) qs.set("skip", String(params.skip));
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<AdminSchoolExcellenceLeadsResponse>(`/admin/school-excellence-leads${suffix}`);
+  },
+  adminUpdateSchoolExcellenceLead: (
+    leadId: string,
+    payload: { status?: SchoolExcellenceLeadStatus; admin_notes?: string | null }
+  ) =>
+    apiFetch<AdminSchoolExcellenceLead>(`/admin/school-excellence-leads/${leadId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   adminUsage: (params: AdminUsageParams = {}) => {
     const qs = new URLSearchParams();
     if (params.start) qs.set("start", params.start);

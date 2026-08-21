@@ -66,6 +66,24 @@ const nextConfig = {
     );
     return config;
   },
+  images: {
+    // Preserve the extra detail in the School Excellence illustration set and
+    // existing high-resolution brand marks. Next 16 only serves explicitly
+    // allowed quality levels; otherwise a requested quality silently falls
+    // back to the default 75.
+    qualities: [75, 92, 100],
+    // Primary's 861 printables are served from Cloudinary, not /public.
+    // next/image refuses external hosts unless they are listed here, and it
+    // fails at RUNTIME — `next build` passes either way, so a missing entry
+    // ships a Library page of broken images.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/wzdp7tgg/**"
+      }
+    ]
+  },
   async redirects() {
     return [
       ...signupRedirectSources.map((source) => ({

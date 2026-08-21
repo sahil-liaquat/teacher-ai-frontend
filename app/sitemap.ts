@@ -5,6 +5,7 @@ const siteUrl = "https://teachpad.in";
 const routes = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" },
   { path: "/ai-tools", priority: 0.9, changeFrequency: "weekly" },
+  { path: "/school-excellence", priority: 0.9, changeFrequency: "monthly" },
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
   { path: "/boards-curriculums", priority: 0.8, changeFrequency: "monthly" },
   { path: "/lesson-plan-generator", priority: 0.8, changeFrequency: "weekly" },
