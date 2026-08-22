@@ -1276,6 +1276,28 @@ export type TrialGateInfo = {
   remaining: Record<string, number>;
 };
 
+/**
+ * State of a failed recurring payment. Present on BillingMe only while a charge
+ * is failing, so its presence alone is the signal to show the payment-problem
+ * surface — never infer "payment failed" from `is_pro: false`, which is also
+ * true for an ordinary expired trial.
+ */
+export type PastDueInfo = {
+  // "retrying" — Razorpay is still auto-retrying the charge and the teacher
+  // still has access. "halted" — retries exhausted, access is paused.
+  stage: "retrying" | "halted" | string;
+  since: string | null;
+  grace_until: string | null;
+  // Computed server-side so the UI never has to reason about clock skew.
+  in_grace: boolean;
+  // Razorpay-hosted invoice link — one tap to clear the outstanding charge.
+  invoice_url: string | null;
+  amount_inr: number | null;
+  attempts: number;
+  // Razorpay's reason for the last failure, e.g. "Insufficient balance".
+  last_error: string | null;
+};
+
 export type BillingMe = {
   status: string;
   plan_code: string;
@@ -1304,6 +1326,8 @@ export type BillingMe = {
   // Per-tool free-generation state during a gated trial; null when the gate
   // does not apply (comped/paid/gate-off).
   trial_gate?: TrialGateInfo | null;
+  // Present only while a recurring payment is failing; null when healthy.
+  past_due?: PastDueInfo | null;
 };
 
 export type PromoKind = "trial" | "comp" | "discount";

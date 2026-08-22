@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { backendApi } from "@/lib/api";
+import type { BillingMe } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useBilling } from "@/lib/use-billing";
 import { useUpgradeModal } from "@/components/billing/upgrade-modal";
@@ -156,6 +157,10 @@ export default function BillingPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           {/* ── Left column ─────────────────────────────────────────────────── */}
           <div className="space-y-4">
+            {/* Failed recurring payment — top of the page, above everything,
+                because nothing else here matters until it's cleared. */}
+            {data.past_due && <PastDueBanner pastDue={data.past_due} />}
+
             {/* Influencer-comp auto-convert nudge — add a card now, charged at comp-end */}
             {data.can_setup_mandate && (
               <MandateNudge
@@ -202,6 +207,93 @@ export default function BillingPage() {
   );
 }
 
+// ─── Past-due banner (failed recurring payment) ───────────────────────────────
+
+/**
+ * The full account of a failed recurring payment: what happened, what it means
+ * for access right now, and the one-tap way out.
+ *
+ * Only rendered when `past_due` is present — never derived from `is_pro`, which
+ * is equally false for an ordinary expired trial.
+ */
+function PastDueBanner({ pastDue }: { pastDue: NonNullable<BillingMe["past_due"]> }) {
+  const amount = pastDue.amount_inr != null ? `₹${pastDue.amount_inr.toLocaleString("en-IN")}` : null;
+  const inGrace = pastDue.in_grace;
+
+  return (
+    <div
+      className={cn(
+        "rounded-[22px] border p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)]",
+        inGrace ? "border-amber-200 bg-amber-50/80" : "border-rose-200 bg-rose-50/80"
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <span
+          className={cn(
+            "grid h-12 w-12 shrink-0 place-items-center rounded-[16px]",
+            inGrace ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-[#eb3b5a]"
+          )}
+        >
+          <AlertTriangle className="h-6 w-6" />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <h3 className={cn("text-base font-extrabold", inGrace ? "text-amber-900" : "text-rose-900")}>
+            {inGrace ? "Your renewal payment failed" : "Your plan is paused"}
+          </h3>
+
+          <p className={cn("mt-1 text-sm font-medium leading-5", inGrace ? "text-amber-800" : "text-rose-800")}>
+            {inGrace ? (
+              <>
+                We couldn&apos;t collect {amount ? <>your {amount} renewal</> : "your renewal"}. You still
+                have full access until{" "}
+                <span className="font-bold">{formatDate(pastDue.grace_until)}</span> — clear the
+                payment before then and nothing changes.
+              </>
+            ) : (
+              <>
+                We couldn&apos;t collect {amount ? <>your {amount} renewal</> : "your renewal"} after{" "}
+                {pastDue.attempts > 1 ? `${pastDue.attempts} attempts` : "a failed attempt"}, so
+                generation is paused. Everything you&apos;ve made is still saved and waiting.
+              </>
+            )}
+          </p>
+
+          {pastDue.last_error && (
+            <p className={cn("mt-1.5 text-xs font-semibold", inGrace ? "text-amber-700" : "text-rose-700")}>
+              Reason from your bank: {pastDue.last_error}
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {pastDue.invoice_url ? (
+              <a
+                href={pastDue.invoice_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-teachpad-blue px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                <CreditCard className="h-4 w-4" />
+                {amount ? `Pay ${amount} now` : "Pay pending amount"}
+              </a>
+            ) : (
+              <p className="text-xs font-semibold text-teachpad-muted">
+                Your bank will retry automatically. Make sure your account has
+                enough balance, or cancel below and start a fresh subscription.
+              </p>
+            )}
+            {pastDue.since && (
+              <span className="text-xs font-medium text-teachpad-muted">
+                First failed on {formatDate(pastDue.since)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Mandate nudge (influencer comp → add a card to auto-convert) ─────────────
 
 function MandateNudge({
@@ -238,7 +330,7 @@ function PlanCard({
   data: ReturnType<typeof useBilling>["data"] & object;
   onUpgrade: () => void;
 }) {
-  const { is_pro, status, plan_code, price_inr, access_until, gift, paid_starts_at } = data;
+  const { is_pro, status, plan_code, price_inr, access_until, gift, paid_starts_at, past_due } = data;
 
   // gift.granted is a permanent historical marker on the backend, not "still
   // active" — gate on is_pro here too so an expired gift doesn't hide the
@@ -246,16 +338,24 @@ function PlanCard({
   const isGift = gift.granted && is_pro;
   const isTrial = status === "trialing";
   const hasUpgraded = Boolean(paid_starts_at);
+  // A subscriber mid-payment-failure still HAS a plan — it's the charge that
+  // failed. Without this they'd read as "Free plan / Upgrade" directly under a
+  // banner explaining their Pro renewal bounced.
+  const isPastDue = Boolean(past_due);
   // An un-upgraded trial is presented purely as an upgrade surface: no trial
   // badge, no expiry, no days-remaining — only the value prop + Upgrade button.
   const trialPending = isTrial && !hasUpgraded;
-  const isActivePaid = is_pro && !isTrial && !isGift;
-  // Show the upgrade CTA for free/expired users AND during an active (un-upgraded) trial.
-  const showUpgrade = trialPending || (!is_pro && !isGift);
+  const isActivePaid = is_pro && !isTrial && !isGift && !isPastDue;
+  // Show the upgrade CTA for free/expired users AND during an active (un-upgraded)
+  // trial — but never while past due: the banner above owns that action, and it
+  // settles the existing mandate instead of opening a second one.
+  const showUpgrade = !isPastDue && (trialPending || (!is_pro && !isGift));
   // "Pro" visual treatment for genuine paid access, a scheduled upgrade, or a gift.
   const proLook = isActivePaid || hasUpgraded || isGift;
 
-  const title = isGift
+  const title = isPastDue
+    ? "TeachPad Pro"
+    : isGift
     ? "TeachPad Pro"
     : trialPending
       ? "Upgrade to TeachPad Pro"
@@ -263,7 +363,11 @@ function PlanCard({
         ? "TeachPad Pro"
         : "Free plan";
 
-  const subtitle = isGift
+  const subtitle = isPastDue
+    ? past_due?.in_grace
+      ? "Renewal payment pending — access continues for now"
+      : "Paused until your renewal payment clears"
+    : isGift
     ? "Gifted Pro access — enjoy all features"
       : hasUpgraded
         ? "You're all set — Pro is scheduled to begin"

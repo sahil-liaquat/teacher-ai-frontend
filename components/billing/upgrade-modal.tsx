@@ -2,8 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Check, ShieldCheck, Sparkles, X, Zap } from "lucide-react";
+import { AlertTriangle, Check, CreditCard, ShieldCheck, Sparkles, X, Zap } from "lucide-react";
 import { backendApi } from "@/lib/api";
+import type { BillingMe } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useBilling } from "@/lib/use-billing";
 import { cn } from "@/lib/utils";
@@ -236,6 +237,13 @@ function UpgradeModalUI({
   const [contact, setContact] = useState("");
   const needsPhone = !billing?.billing_phone;
 
+  // A past-due subscriber is not shopping for a plan — they already bought one
+  // and the debit bounced. Selling them a second subscription would leave two
+  // mandates on the same account, so the whole body swaps to "clear the charge
+  // you already owe". Every generator 402 routes through this modal, so this one
+  // branch fixes the messaging everywhere at once.
+  const pastDue = billing?.past_due ?? null;
+
   async function handleUpgrade() {
     setLoading(true);
     // Tracks whether we successfully handed off to Razorpay. If true, loading
@@ -339,24 +347,40 @@ function UpgradeModalUI({
         </button>
 
         {/* Header */}
-        <div className="relative shrink-0 overflow-hidden rounded-t-[28px] bg-gradient-to-br from-[#1677ff] to-[#0040d9] px-6 py-7">
+        <div
+          className={cn(
+            "relative shrink-0 overflow-hidden rounded-t-[28px] px-6 py-7",
+            pastDue
+              ? "bg-gradient-to-br from-[#eb3b5a] to-[#a4133c]"
+              : "bg-gradient-to-br from-[#1677ff] to-[#0040d9]"
+          )}
+        >
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
           <div className="absolute -bottom-6 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full bg-white/5" />
           <div className="relative flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-white/20 shadow-inner">
-              <Sparkles className="h-6 w-6 text-white" />
+              {pastDue ? (
+                <AlertTriangle className="h-6 w-6 text-white" />
+              ) : (
+                <Sparkles className="h-6 w-6 text-white" />
+              )}
             </span>
             <div>
               <h2 id="upgrade-modal-title" className="text-xl font-extrabold text-white">
-                Upgrade to Pro
+                {pastDue ? "Payment didn't go through" : "Upgrade to Pro"}
               </h2>
-              <p className="mt-0.5 text-sm font-medium text-blue-100">
-                Unlock the full power of TeachPad AI
+              <p className={cn("mt-0.5 text-sm font-medium", pastDue ? "text-rose-100" : "text-blue-100")}>
+                {pastDue
+                  ? "Clear the pending amount to restore your plan"
+                  : "Unlock the full power of TeachPad AI"}
               </p>
             </div>
           </div>
         </div>
 
+        {pastDue ? (
+          <PastDueBody pastDue={pastDue} onSetUpAgain={handleUpgrade} loading={loading} />
+        ) : (
         <div className="overflow-y-auto p-6">
           {/* Context line (e.g. "Presentations require a Pro plan") */}
           {contextLine && (
@@ -487,7 +511,96 @@ function UpgradeModalUI({
             .
           </p>
         </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─── Past-due body ────────────────────────────────────────────────────────────
+
+/**
+ * Shown instead of the plan picker when the teacher's recurring payment failed.
+ *
+ * The primary action is Razorpay's hosted invoice link, which settles the charge
+ * against the mandate they already authorized. `onSetUpAgain` is only a fallback
+ * for when we never captured that link — it starts a fresh checkout, which does
+ * work but leaves the old subscription behind at Razorpay.
+ */
+function PastDueBody({
+  pastDue,
+  onSetUpAgain,
+  loading,
+}: {
+  pastDue: NonNullable<BillingMe["past_due"]>;
+  onSetUpAgain: () => void;
+  loading: boolean;
+}) {
+  const amount = pastDue.amount_inr != null ? `₹${pastDue.amount_inr.toLocaleString("en-IN")}` : null;
+
+  return (
+    <div className="overflow-y-auto p-6">
+      <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5">
+        <p className="text-sm font-semibold leading-5 text-rose-900">
+          {pastDue.in_grace ? (
+            <>
+              We couldn&apos;t collect {amount ? <>your {amount} renewal</> : "your renewal"}. Your
+              account still works for now, but it will pause if the payment
+              doesn&apos;t clear.
+            </>
+          ) : (
+            <>
+              We couldn&apos;t collect {amount ? <>your {amount} renewal</> : "your renewal"}, so
+              your plan is paused. Everything you&apos;ve made is still saved.
+            </>
+          )}
+        </p>
+        {pastDue.last_error && (
+          <p className="mt-1.5 text-xs font-medium text-rose-700">
+            Bank said: {pastDue.last_error}
+          </p>
+        )}
+      </div>
+
+      <ul className="mb-5 space-y-2">
+        {[
+          "Pay once — your existing plan resumes immediately",
+          "Nothing you've generated has been deleted",
+          "You can cancel the subscription anytime from Billing",
+        ].map((line) => (
+          <li key={line} className="flex items-center gap-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dbeafe]">
+              <Check className="h-3 w-3 text-teachpad-blue" />
+            </span>
+            <span className="text-sm font-semibold text-teachpad-ink">{line}</span>
+          </li>
+        ))}
+      </ul>
+
+      {pastDue.invoice_url ? (
+        <a
+          href={pastDue.invoice_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-teachpad-blue text-base font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          <CreditCard className="h-4 w-4" />
+          {amount ? `Pay ${amount} now` : "Pay pending amount"}
+        </a>
+      ) : (
+        <Button className="h-12 w-full rounded-[14px] text-base" disabled={loading} onClick={onSetUpAgain}>
+          <CreditCard className="h-4 w-4" />
+          {loading ? "Opening payment..." : "Set up payment again"}
+        </Button>
+      )}
+
+      <p className="mt-3 text-center text-xs font-medium leading-5 text-teachpad-muted">
+        Secure payment via Razorpay.{" "}
+        <a href="/dashboard/billing" className="font-semibold text-teachpad-blue underline underline-offset-2">
+          Manage or cancel from Billing
+        </a>
+        .
+      </p>
     </div>
   );
 }
