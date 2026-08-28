@@ -12,7 +12,7 @@ import { resendConfirmation, signup } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
-import { phoneSchema } from "@/lib/phone";
+import { normalizeIndianMobile } from "@/lib/phone";
 import { GoogleButton } from "@/components/auth/google-button";
 import { REFERRAL_PROMO_CODE_KEY, clearStoredReferralPromoCode, getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
@@ -21,7 +21,10 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   name: z.string().min(2, "Enter your full name."),
   email: z.string().email("Enter a valid email address."),
-  phone: phoneSchema,
+  phone: z
+    .string()
+    .optional()
+    .refine((v) => !v || normalizeIndianMobile(v) !== null, "Enter a valid 10-digit Indian mobile number."),
   password: z.string().min(8, "Password must be at least 8 characters."),
   promo_code: z.string().optional()
 });
@@ -68,7 +71,7 @@ function SignupForm() {
     try {
       const storedCode = getStoredReferralPromoCode();
       const promoCode = values.promo_code?.trim() || storedCode || undefined;
-      const created = await signup(values.name, values.email, values.password, values.phone, {
+      const created = await signup(values.name, values.email, values.password, values.phone ?? "", {
         promo_code: promoCode
       });
       const baseMessage = created.email_confirmed
