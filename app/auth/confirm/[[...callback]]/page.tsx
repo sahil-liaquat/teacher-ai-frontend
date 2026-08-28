@@ -8,6 +8,7 @@ import { AlertTriangle, CheckCircle2, Loader2, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
+import { translateOAuthError } from "@/lib/oauth-errors";
 
 type ConfirmationState =
   | { status: "checking"; message: string }
@@ -47,10 +48,7 @@ function getConfirmationErrorMessage(params: URLSearchParams, type: string) {
       : "This email confirmation link has expired or has already been used. Please sign up again or request a fresh confirmation email.";
   }
 
-  if (description) return description.replace(/\+/g, " ");
-  return type === "recovery"
-    ? "We could not verify this password reset link. Please request a fresh reset link and try again."
-    : "We could not verify this email confirmation link. Please request a fresh confirmation email and try again.";
+  return translateOAuthError(code);
 }
 
 export default function ConfirmEmailPage() {

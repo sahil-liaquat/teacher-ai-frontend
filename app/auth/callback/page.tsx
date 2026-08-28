@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CURRENT_USER_QUERY_KEY, completeTokenLogin, type ApiUser } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { getSafeNextPath } from "@/lib/auth-redirect";
+import { translateOAuthError } from "@/lib/oauth-errors";
 import { clearSupabaseOAuthStorage, getSupabaseClient } from "@/lib/supabase";
 
 type State =
@@ -36,15 +37,15 @@ export default function GoogleCallbackPage() {
 
     async function run() {
       const params = new URLSearchParams(window.location.search);
-      const errorDescription = params.get("error_description") || params.get("error");
+      const errorCode = params.get("error");
       const code = params.get("code");
       const next = getSafeNextPath(params.get("next"));
 
       // Strip the code/error/next from the URL so they never linger in history.
       window.history.replaceState(null, "", window.location.pathname);
 
-      if (errorDescription) {
-        setState({ status: "error", message: errorDescription.replace(/\+/g, " ") });
+      if (errorCode) {
+        setState({ status: "error", message: translateOAuthError(errorCode) });
         return;
       }
 
