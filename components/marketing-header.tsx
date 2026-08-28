@@ -135,7 +135,7 @@ export function MarketingHeader({ active }: { active?: string }) {
           </Link>
           <Link
             href="/signup"
-            className="hidden h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-xs font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:bg-blue-700 min-[390px]:inline-flex sm:h-11 sm:px-5 sm:text-sm"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-2.5 text-xs font-black text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:bg-blue-700 sm:px-5 sm:text-sm"
           >
             <span className="sm:hidden">Sign Up</span>
             <span className="hidden sm:inline">Sign Up Free</span>
@@ -195,6 +195,23 @@ export function MarketingHeader({ active }: { active?: string }) {
                 </div>
               );
             })}
+            <div className="mt-1 grid gap-2 border-t border-slate-200 pt-3">
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center rounded-lg border border-slate-200 px-3 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-50 hover:text-blue-600"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between rounded-lg bg-blue-600 px-3 py-3 text-sm font-black text-white transition hover:bg-blue-700"
+              >
+                Sign Up Free
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </nav>
       ) : null}
