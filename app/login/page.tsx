@@ -11,6 +11,7 @@ import { z } from "zod";
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail, MailCheck, Quote } from "lucide-react";
 import { CURRENT_USER_QUERY_KEY, clearToken, ensureSession, getCurrentUser, hasStoredAuthTokens, login, requestPasswordReset, resendConfirmation, type ApiUser } from "@/lib/api";
 import { getSafeNextPath } from "@/lib/auth-redirect";
+import { deriveAuthState, type AuthState } from "@/lib/auth-state";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -18,8 +19,8 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
-  email: z.string().min(3, "Enter your email address."),
-  password: z.string().min(8, "Password must be at least 8 characters.")
+  email: z.string().email("Enter a valid email address."),
+  password: z.string().min(1, "Enter your password.")
 });
 
 const forgotPasswordSchema = z.object({
@@ -40,6 +41,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetSentEmail, setResetSentEmail] = useState("");
   const [resendingReset, setResendingReset] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>({ kind: "idle" } as AuthState);
   const resendCooldown = useResendCooldown();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -49,6 +51,11 @@ export default function LoginPage() {
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" }
   });
+
+  const watchedEmail = form.watch("email");
+  useEffect(() => {
+    setAuthState((current) => (current.kind === "idle" ? current : ({ kind: "idle" } as AuthState)));
+  }, [watchedEmail]);
 
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
@@ -90,7 +97,8 @@ export default function LoginPage() {
         if (cancelled) return;
 
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user);
-        router.replace(dashboardForRole(user.role));
+        const next = getSafeNextPath(new URLSearchParams(window.location.search).get("next"));
+        router.replace(next ?? dashboardForRole(user.role));
       } catch {
         // Intentionally silent: a stale/invalid stored session should land on the login form, not an error.
         clearToken();
@@ -115,7 +123,7 @@ export default function LoginPage() {
       router.replace(next ?? dashboardForRole(user.role));
       router.refresh();
     } catch (error) {
-      toast({ title: "Login failed", description: getErrorMessage(error, "Try again"), variant: "error" });
+      setAuthState(deriveAuthState(error, values.email));
     }
   }
 
@@ -236,18 +244,49 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </button>
-                <button
-                  type="button"
-                  disabled={resendingConfirmation || resendCooldown.secondsLeft("confirmation") > 0}
-                  onClick={handleResendConfirmation}
-                  className="block text-sm font-semibold text-slate-500 transition hover:text-blue-600 disabled:opacity-60"
-                >
-                  {resendingConfirmation
-                    ? "Resending…"
-                    : resendCooldown.secondsLeft("confirmation") > 0
-                      ? `Resend in ${resendCooldown.secondsLeft("confirmation")}s`
-                      : "Didn't get the confirmation email? Resend"}
-                </button>
+                {authState.kind !== "idle" && (
+                  <div role="alert" className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+                    <p className="font-semibold text-slate-900">{authState.message}</p>
+                    <div className="mt-3 flex flex-wrap gap-3">
+                      {authState.canResend && (
+                        <button
+                          type="button"
+                          disabled={resendingConfirmation || resendCooldown.secondsLeft(authState.email) > 0}
+                          onClick={handleResendConfirmation}
+                          className="font-black text-blue-600 disabled:opacity-60"
+                        >
+                          {resendingConfirmation
+                            ? "Sending…"
+                            : resendCooldown.secondsLeft(authState.email) > 0
+                              ? `Resend in ${resendCooldown.secondsLeft(authState.email)}s`
+                              : "Resend the link"}
+                        </button>
+                      )}
+                      {authState.showOpenGmail && (
+                        <a className="font-black text-blue-600" href="https://mail.google.com" target="_blank" rel="noreferrer">
+                          Open Gmail
+                        </a>
+                      )}
+                      {authState.showSetPassword && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            forgotPasswordForm.setValue("email", authState.email);
+                            setMode("forgot");
+                          }}
+                          className="font-black text-slate-600"
+                        >
+                          Set a password instead
+                        </button>
+                      )}
+                    </div>
+                    {authState.showGoogle && (
+                      <div className="mt-3">
+                        <GoogleButton />
+                      </div>
+                    )}
+                  </div>
+                )}
                 <AuthButton type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
                 </AuthButton>
