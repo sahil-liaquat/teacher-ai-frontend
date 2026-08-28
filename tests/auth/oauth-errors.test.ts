@@ -25,3 +25,11 @@ test("null and undefined fall back to fixed copy", () => {
 test("attacker-supplied text is never returned", () => {
   assert.equal(translateOAuthError("Call 1-800-SCAM to restore your account"), GENERIC);
 });
+
+// A bare object literal also resolves Object.prototype keys, and "constructor" and
+// "__proto__" survive toLowerCase(). Both return a non-string that `?? GENERIC`
+// does not catch, which crashes the render.
+test("inherited object keys do not leak a non-string", () => {
+  assert.equal(translateOAuthError("constructor"), GENERIC);
+  assert.equal(translateOAuthError("__proto__"), GENERIC);
+});

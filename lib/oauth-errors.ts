@@ -17,5 +17,9 @@ const MESSAGES: Record<string, string> = {
 
 export function translateOAuthError(errorCode: string | null | undefined): string {
   if (!errorCode) return GENERIC;
-  return MESSAGES[errorCode.toLowerCase()] ?? GENERIC;
+  const key = errorCode.toLowerCase();
+  // Own-property check: a plain object also resolves Object.prototype keys, and
+  // "constructor"/"__proto__" survive toLowerCase(). Both yield a non-string that
+  // `?? GENERIC` would not catch, crashing the render on a crafted link.
+  return Object.prototype.hasOwnProperty.call(MESSAGES, key) ? MESSAGES[key] : GENERIC;
 }
