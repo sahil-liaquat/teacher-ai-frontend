@@ -357,9 +357,7 @@ export function OnboardingWizard() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                      {ONBOARDING_BOARD_OPTIONS.filter((opt) =>
-                        ["cbse", "jkbose", "other"].includes(opt.value)
-                      ).map((opt) => {
+                      {ONBOARDING_BOARD_OPTIONS.map((opt) => {
                         const isRealLogo = opt.value === "cbse" || opt.value === "jkbose";
                         return (
                           <OptionCard

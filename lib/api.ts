@@ -105,8 +105,8 @@ export type PaginatedResponse<T> = {
   pages: number;
 };
 
-export type Board = { id: string; code: string; name: string; description?: string; is_active?: boolean };
-export type ClassItem = { id: string; board_id: string; grade_number?: number; name: string; description?: string; is_active?: boolean };
+export type Board = { id: string; code: string; name: string; description?: string; is_active?: boolean; ingested_books?: number };
+export type ClassItem = { id: string; board_id: string; grade_number?: number; name: string; description?: string; is_active?: boolean; ingested_books?: number };
 export type Book = { id: string; class_id: string; title: string; subject: string; is_ingested?: boolean; is_active?: boolean; pinecone_index?: string };
 export type Chapter = { id: string; book_id: string; chapter_number?: number; chapter_title: string; title?: string };
 export type WorkspaceResourceType = "lesson_plan" | "presentation" | "worksheet" | "activity" | "notes";

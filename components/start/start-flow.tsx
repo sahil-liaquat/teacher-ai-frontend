@@ -14,6 +14,8 @@ import {
   type StartAnswers,
   type StartStep
 } from "@/lib/start-flow";
+import { hasIngestedContent, usableClasses } from "@/lib/board-availability";
+import { BoardMissing } from "@/components/start/board-missing";
 import { StepShell, type StepOption } from "@/components/start/step-shell";
 import { Button } from "@/components/ui/button";
 
@@ -27,6 +29,11 @@ const START_TOOLS: ToolDefinition[] = START_TOOL_IDS
   .filter((tool): tool is ToolDefinition => Boolean(tool));
 
 const DEFAULT_BOARD_KEY = "teachpad_default_board_id";
+
+// Not a board row — the escape hatch for the teacher whose board we have never
+// ingested. /boards only returns boards that exist, so without this the ICSE or
+// UP Board teacher has no way to tell us they are here.
+const OTHER_BOARD = "other";
 
 export function StartFlow() {
   const router = useRouter();
@@ -65,11 +72,16 @@ export function StartFlow() {
     staleTime: Infinity
   });
 
+  const chosenBoard = boardsQuery.data?.find((item) => item.id === boardId);
+  const boardIsEmpty = boardId === OTHER_BOARD || Boolean(chosenBoard && !hasIngestedContent(chosenBoard));
+
   const classesQuery = useQuery({
     queryKey: ["start-classes", boardId],
     queryFn: () => backendApi.classesByBoard(boardId, 0, 100).then((res) => res.items.filter((item) => item.is_active !== false)),
     staleTime: Infinity,
-    enabled: Boolean(boardId)
+    // OTHER_BOARD is not a UUID, and a board with no textbooks has no classes
+    // worth asking for — neither should reach the API.
+    enabled: Boolean(boardId) && !boardIsEmpty
   });
 
   const booksQuery = useQuery({
@@ -107,7 +119,10 @@ export function StartFlow() {
   );
 
   const handleBack = useCallback(() => {
-    if (stepIndex <= 0) return;
+    // The board step normally has nowhere to go back to, but once a board we
+    // have no textbook for is chosen there is: the board list itself.
+    const previous = stepIndex <= 0 ? "board" : START_STEP_ORDER[stepIndex - 1];
+    if (stepIndex <= 0 && !boardId) return;
     if (pushCount.current > 0) {
       pushCount.current -= 1;
       router.back();
@@ -115,17 +130,38 @@ export function StartFlow() {
     }
     // Deep-linked mid-flow in a fresh tab: there is no history entry of ours to
     // pop, so walk back explicitly rather than bouncing the teacher off the site.
-    const previous = START_STEP_ORDER[stepIndex - 1];
     const params = new URLSearchParams(searchParams.toString());
     for (const key of ANSWER_PARAMS_FROM[previous]) params.delete(key);
     params.set("step", previous);
     router.replace(`/start?${params.toString()}`);
-  }, [router, searchParams, stepIndex]);
+  }, [boardId, router, searchParams, stepIndex]);
 
   function chooseBoard(value: string) {
+    if (value === OTHER_BOARD) {
+      notePreference(OTHER_BOARD, queryClient);
+      goTo("board", { board: OTHER_BOARD });
+      return;
+    }
     const board = boardsQuery.data?.find((item) => item.id === value);
-    if (board) rememberBoard(board, queryClient);
+    if (!board) return;
+    if (!hasIngestedContent(board)) {
+      // Record the demand, then stop here. Walking on would affirm the choice
+      // three more times before an empty chapter list did the telling.
+      notePreference(board.code || board.name, queryClient);
+      goTo("board", { board: value });
+      return;
+    }
+    rememberBoard(board, queryClient);
     goTo("class", { board: value });
+  }
+
+  function browseCbse() {
+    const cbse = boardsQuery.data?.find((item) => item.code?.toLowerCase() === "cbse");
+    if (!cbse) return;
+    // Deliberately leaves board_preference alone: the board we just recorded is
+    // the teacher's real one, and CBSE is only what they are borrowing today.
+    localStorage.setItem(DEFAULT_BOARD_KEY, cbse.id);
+    goTo("class", { board: cbse.id });
   }
 
   function chooseClass(value: string) {
@@ -160,6 +196,25 @@ export function StartFlow() {
 
   const subjectOptions = useMemo(() => buildSubjectOptions(booksQuery.data ?? []), [booksQuery.data]);
 
+  // Said at the first tap, not three affirming taps later at an empty list.
+  if (boardIsEmpty) {
+    const cbse = (boardsQuery.data ?? []).find(
+      (item) => item.code?.toLowerCase() === "cbse" && hasIngestedContent(item)
+    );
+    return (
+      <BoardMissing
+        boardName={boardId === OTHER_BOARD ? "another board" : chosenBoard?.name ?? "that board"}
+        onNameBoard={
+          boardId === OTHER_BOARD
+            ? (name) => notePreference(`${OTHER_BOARD}:${name}`, queryClient)
+            : undefined
+        }
+        onBrowseCbse={cbse ? browseCbse : undefined}
+        onPickAnother={handleBack}
+      />
+    );
+  }
+
   if (step === "board") {
     return (
       <StepShell
@@ -167,7 +222,12 @@ export function StartFlow() {
         totalSteps={START_STEP_ORDER.length}
         title="Which board do you teach?"
         subtitle="We use this to pull the right textbooks."
-        options={(boardsQuery.data ?? []).map((board) => ({ value: board.id, label: board.name, hint: board.code }))}
+        options={[
+          ...(boardsQuery.data ?? []).map((board) => ({ value: board.id, label: board.name, hint: board.code })),
+          ...(boardsQuery.data?.length
+            ? [{ value: OTHER_BOARD, label: "My board isn't listed", hint: "Tell us which one" }]
+            : [])
+        ]}
         onSelect={chooseBoard}
         loading={boardsQuery.isPending}
         error={boardsQuery.isError ? getErrorMessage(boardsQuery.error, "Could not load boards.") : ""}
@@ -183,7 +243,7 @@ export function StartFlow() {
         stepIndex={stepIndex}
         totalSteps={START_STEP_ORDER.length}
         title="Which class?"
-        options={(classesQuery.data ?? []).map((item) => ({ value: item.id, label: item.name }))}
+        options={usableClasses(classesQuery.data ?? []).map((item) => ({ value: item.id, label: item.name }))}
         onSelect={chooseClass}
         loading={classesQuery.isPending}
         error={classesQuery.isError ? getErrorMessage(classesQuery.error, "Could not load classes.") : ""}
@@ -290,9 +350,14 @@ function buildSubjectOptions(books: Book[]): StepOption[] {
 
 function rememberBoard(board: Board, queryClient: ReturnType<typeof useQueryClient>) {
   localStorage.setItem(DEFAULT_BOARD_KEY, board.id);
-  submitOnboarding({ board_preference: (board.code || board.name).slice(0, 30).toLowerCase() })
+  notePreference(board.code || board.name, queryClient);
+}
+
+/** board_preference is String(30), so an "other:up board" answer is truncated. */
+function notePreference(preference: string, queryClient: ReturnType<typeof useQueryClient>) {
+  submitOnboarding({ board_preference: preference.slice(0, 30).toLowerCase() })
     .then((updated) => queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updated))
     // A background preference save is not worth interrupting the corridor for —
-    // the local key above is what actually prefills the generator form.
+    // DEFAULT_BOARD_KEY is what actually prefills the generator form.
     .catch(() => undefined);
 }
