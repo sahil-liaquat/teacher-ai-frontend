@@ -1854,7 +1854,7 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function resendConfirmation(email: string) {
-  return apiFetch<{ message: string }>("/auth/resend-confirmation", {
+  return apiFetch<{ message: string; sent: boolean; retry_after: number }>("/auth/resend-confirmation", {
     method: "POST",
     body: JSON.stringify({ email })
   });

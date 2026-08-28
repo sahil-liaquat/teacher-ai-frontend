@@ -65,12 +65,16 @@ export default function LoginPage() {
       toast({ title: "Enter your email", description: "Type your email above, then resend the confirmation link." });
       return;
     }
-    if (resendingConfirmation || resendCooldown.secondsLeft("confirmation") > 0) return;
+    if (resendingConfirmation || resendCooldown.secondsLeft(email) > 0) return;
     setResendingConfirmation(true);
     try {
       const res = await resendConfirmation(email);
-      toast({ title: "Confirmation re-sent", description: res.message, variant: "success" });
-      resendCooldown.start("confirmation");
+      if (res.sent) {
+        resendCooldown.start(email);
+        toast({ title: "Link sent", description: res.message, variant: "success" });
+      } else {
+        setAuthState(deriveAuthState(Object.assign(new Error(res.message), { code: "RATE_LIMITED" }), email));
+      }
     } catch (error) {
       toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {

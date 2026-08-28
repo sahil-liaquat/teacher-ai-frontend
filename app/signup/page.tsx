@@ -76,7 +76,7 @@ function SignupForm() {
         : created.message || "Check your email to confirm your account before logging in.";
       const message = created.coupon_message ? `${created.coupon_message} ${baseMessage}` : baseMessage;
       setConfirmation({ email: created.email, message });
-      if (!created.email_confirmed) resendCooldown.start();
+      if (!created.email_confirmed) resendCooldown.start(created.email);
       clearStoredReferralPromoCode();
       form.reset({ name: "", email: "", phone: "", password: "", promo_code: "" });
       toast({ title: "Account created", description: message, variant: "success" });
@@ -113,14 +113,18 @@ function SignupForm() {
               </p>
               <button
                 type="button"
-                disabled={resending || resendCooldown.secondsLeft() > 0}
+                disabled={resending || resendCooldown.secondsLeft(confirmation.email) > 0}
                 onClick={async () => {
-                  if (resending || resendCooldown.secondsLeft() > 0) return;
+                  if (resending || resendCooldown.secondsLeft(confirmation.email) > 0) return;
                   setResending(true);
                   try {
                     const res = await resendConfirmation(confirmation.email);
-                    toast({ title: "Confirmation re-sent", description: res.message, variant: "success" });
-                    resendCooldown.start();
+                    if (res.sent) {
+                      resendCooldown.start(confirmation.email);
+                      toast({ title: "Link sent", description: res.message, variant: "success" });
+                    } else {
+                      toast({ title: "Please wait a moment", description: res.message, variant: "error" });
+                    }
                   } catch (error) {
                     toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
                   } finally {
@@ -129,7 +133,7 @@ function SignupForm() {
                 }}
                 className="mt-5 text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:opacity-60"
               >
-                {resending ? "Resending…" : resendCooldown.secondsLeft() > 0 ? `Resend in ${resendCooldown.secondsLeft()}s` : "Didn't get the email? Resend"}
+                {resending ? "Resending…" : resendCooldown.secondsLeft(confirmation.email) > 0 ? `Resend in ${resendCooldown.secondsLeft(confirmation.email)}s` : "Didn't get the email? Resend"}
               </button>
               <Link href="/login" className="mt-3 block">
                 <AuthButton type="button">
