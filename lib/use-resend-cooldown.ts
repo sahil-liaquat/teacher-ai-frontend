@@ -1,31 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// Supabase GoTrue accepts one auth email per address per 60 seconds.
-export const RESEND_COOLDOWN_SECONDS = 60;
+import { COOLDOWN_MS, cooldownRemaining, startCooldown } from "./resend-cooldown.ts";
 
-export function useResendCooldown(durationSeconds = RESEND_COOLDOWN_SECONDS) {
-  const [expiries, setExpiries] = useState<Record<string, number>>({});
+export const RESEND_COOLDOWN_SECONDS = COOLDOWN_MS / 1000;
+
+const read = (key: string) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const write = (key: string, value: string) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* private mode / storage disabled — degrade to no cooldown */
+  }
+};
+
+/** Per-email resend cooldown, shared across the login and signup screens. */
+export function useResendCooldown() {
   const [, setTick] = useState(0);
 
-  const hasActive = Object.values(expiries).some((expiry) => expiry > Date.now());
-
   useEffect(() => {
-    if (!hasActive) return;
-    const timer = setInterval(() => setTick((tick) => tick + 1), 1000);
+    const timer = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(timer);
-  }, [hasActive]);
+  }, []);
 
-  function start(key = "default") {
-    setExpiries((current) => ({ ...current, [key]: Date.now() + durationSeconds * 1000 }));
-  }
-
-  function secondsLeft(key = "default") {
-    const expiry = expiries[key];
-    if (!expiry) return 0;
-    return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
-  }
+  const start = useCallback((email: string) => startCooldown(email, Date.now(), write), []);
+  const secondsLeft = useCallback((email: string) => {
+    if (typeof window === "undefined" || !email) return 0;
+    return cooldownRemaining(email, Date.now(), read);
+  }, []);
 
   return { start, secondsLeft };
 }
