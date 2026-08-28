@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, KeyRound } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/field";
@@ -37,6 +37,7 @@ export default function ResetPasswordPage() {
   const { toast } = useToast();
   const [accessToken, setAccessToken] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { password: "", confirmPassword: "" }
@@ -95,20 +96,42 @@ export default function ResetPasswordPage() {
         ) : hasToken ? (
           <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
             <Field label="New password" error={form.formState.errors.password?.message}>
-              <Input
-                type="password"
-                {...form.register("password")}
-                placeholder="••••••••"
-                className="h-14 rounded-[18px] px-5 text-base font-semibold"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  {...form.register("password")}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  className="h-14 rounded-[18px] px-5 pr-12 text-base font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-[#8e98b2] transition hover:bg-[#edf6ff] hover:text-[#147eff]"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                </button>
+              </div>
             </Field>
             <Field label="Confirm password" error={form.formState.errors.confirmPassword?.message}>
-              <Input
-                type="password"
-                {...form.register("confirmPassword")}
-                placeholder="••••••••"
-                className="h-14 rounded-[18px] px-5 text-base font-semibold"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  {...form.register("confirmPassword")}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  className="h-14 rounded-[18px] px-5 pr-12 text-base font-semibold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-[#8e98b2] transition hover:bg-[#edf6ff] hover:text-[#147eff]"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                </button>
+              </div>
             </Field>
             <Button className="h-14 w-full rounded-[16px] text-base font-black" type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "Updating..." : "Update password"}
