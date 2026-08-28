@@ -81,6 +81,11 @@ export default function RefundPolicyPage() {
           cancellation, for change of mind, or for dissatisfaction with the Service.
         </p>
         <p>
+          <strong>Exception — the ₹5 mandate authorisation.</strong> When you start a subscription,
+          your bank places a ₹5 authorisation charge to confirm the UPI mandate. We refund
+          that ₹5 in full, every time, automatically.
+        </p>
+        <p>
           When you cancel, you keep access until the end of the period you have already
           paid for (see Section 3); no refund is issued for the remaining time.
         </p>

@@ -296,6 +296,15 @@ function PlansSection() {
           </StaggerScaleItem>
         ))}
       </StaggerGroup>
+
+      <RevealOnScroll>
+        <p className="mx-auto mt-10 max-w-2xl text-center text-sm font-semibold leading-6 text-slate-600">
+          <strong className="text-slate-900">About the ₹5 you will see.</strong> Indian subscriptions run on UPI
+          AutoPay. To set the mandate up, your bank charges ₹5 and we refund it immediately — it is a
+          confirmation, not a fee. Your bank or UPI app will ask you to approve the mandate; if you dismiss that
+          request, the subscription will not start.
+        </p>
+      </RevealOnScroll>
     </section>
   );
 }

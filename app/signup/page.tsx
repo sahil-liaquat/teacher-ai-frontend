@@ -226,6 +226,17 @@ function SignupForm() {
                 <AuthSubmit type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
                 </AuthSubmit>
+                <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm font-semibold leading-6 text-slate-600">
+                  <p className="font-black text-slate-900">Free for 7 days. No card needed to start.</p>
+                  <p className="mt-1">
+                    After the trial you keep <strong>5 free generations a month</strong>, for as long as you like.
+                    Unlimited is <strong>₹299 a month</strong>, or ₹1,699 for a year.
+                  </p>
+                  <p className="mt-1">
+                    When you do subscribe, your bank confirms the UPI mandate with a <strong>₹5 debit — it is
+                    refunded.</strong> You will see it leave and come back.
+                  </p>
+                </div>
                 <p className="text-center text-xs font-semibold leading-5 text-slate-500">
                   By creating an account, you agree to our{" "}
                   <Link href="/terms" className="font-bold text-blue-600 transition hover:text-blue-700">
