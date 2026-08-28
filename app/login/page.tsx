@@ -14,6 +14,7 @@ import { getSafeNextPath } from "@/lib/auth-redirect";
 import { deriveAuthState, type AuthState } from "@/lib/auth-state";
 import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { AuthField, AuthSubmit } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -216,17 +217,33 @@ export default function LoginPage() {
           {mode === "login" ? (
             <>
               <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-                <AuthInput
+                <AuthField
                   label="Email address"
                   icon={<Mail className="h-6 w-6" />}
                   error={form.formState.errors.email?.message}
-                  inputProps={{ ...form.register("email"), placeholder: "you@school.edu", type: "email" }}
+                  inputProps={{
+                    ...form.register("email"),
+                    placeholder: "you@school.edu",
+                    type: "email",
+                    autoComplete: "username",
+                    inputMode: "email",
+                    autoCapitalize: "none",
+                    autoCorrect: "off",
+                    spellCheck: false,
+                    autoFocus: true
+                  }}
                 />
-                <AuthInput
+                <AuthField
                   label="Password"
                   icon={<LockKeyhole className="h-6 w-6" />}
                   error={form.formState.errors.password?.message}
-                  inputProps={{ ...form.register("password"), placeholder: "••••••••", type: showPassword ? "text" : "password" }}
+                  inputProps={{
+                    ...form.register("password"),
+                    placeholder: "••••••••",
+                    type: showPassword ? "text" : "password",
+                    autoComplete: "current-password",
+                    enterKeyHint: "go"
+                  }}
                   action={
                     <button
                       type="button"
@@ -291,9 +308,9 @@ export default function LoginPage() {
                     )}
                   </div>
                 )}
-                <AuthButton type="submit" disabled={form.formState.isSubmitting}>
+                <AuthSubmit type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
-                </AuthButton>
+                </AuthSubmit>
               </form>
 
               <div className="my-5 flex items-center gap-3">
@@ -344,15 +361,25 @@ export default function LoginPage() {
                 <ArrowLeft className="h-4 w-4" />
                 Back to login
               </button>
-              <AuthInput
+              <AuthField
                 label="Email address"
                 icon={<Mail className="h-6 w-6" />}
                 error={forgotPasswordForm.formState.errors.email?.message}
-                inputProps={{ ...forgotPasswordForm.register("email"), placeholder: "you@school.edu", type: "email" }}
+                inputProps={{
+                  ...forgotPasswordForm.register("email"),
+                  placeholder: "you@school.edu",
+                  type: "email",
+                  autoComplete: "username",
+                  inputMode: "email",
+                  autoCapitalize: "none",
+                  autoCorrect: "off",
+                  spellCheck: false,
+                  autoFocus: true
+                }}
               />
-              <AuthButton type="submit" disabled={forgotPasswordForm.formState.isSubmitting}>
+              <AuthSubmit type="submit" disabled={forgotPasswordForm.formState.isSubmitting}>
                 {forgotPasswordForm.formState.isSubmitting ? "Sending..." : "Send reset link"}
-              </AuthButton>
+              </AuthSubmit>
             </form>
           )}
         </div>
@@ -386,52 +413,6 @@ function TeachPadWordmark({ compact = false }: { compact?: boolean }) {
       className={cn("h-auto", compact ? "w-36" : "w-44")}
       priority
     />
-  );
-}
-
-function AuthInput({
-  label,
-  icon,
-  action,
-  error,
-  inputProps
-}: {
-  label: string;
-  icon: React.ReactNode;
-  action?: React.ReactNode;
-  error?: string;
-  inputProps: React.InputHTMLAttributes<HTMLInputElement>;
-}) {
-  return (
-    <label className="grid gap-2">
-      <span className="text-sm font-black text-slate-900">{label}</span>
-      <span className={cn(
-        "flex h-[52px] min-h-[52px] items-center gap-3 rounded-lg border bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition",
-        error ? "border-red-200 ring-4 ring-red-50" : "border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70"
-      )}>
-        <span className="shrink-0">{icon}</span>
-        <input
-          {...inputProps}
-          className="auth-form-input min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
-        />
-        {action}
-      </span>
-      {error ? <span className="text-sm font-semibold text-red-600">{error}</span> : null}
-    </label>
-  );
-}
-
-function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...props}
-      className={cn(
-        "flex h-[52px] min-h-[52px] w-full items-center justify-center gap-3 rounded-lg bg-blue-600 px-5 text-base font-black text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_20px_42px_rgba(37,99,235,0.32)] disabled:pointer-events-none disabled:opacity-60",
-        props.className
-      )}
-    >
-      {children}
-    </button>
   );
 }
 

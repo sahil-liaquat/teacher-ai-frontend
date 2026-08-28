@@ -13,10 +13,10 @@ import { getErrorMessage } from "@/lib/errors";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { suggestEmailCorrection } from "@/lib/email-typo";
 import { normalizeIndianMobile } from "@/lib/phone";
+import { AuthField, AuthSubmit } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
 import { REFERRAL_PROMO_CODE_KEY, clearStoredReferralPromoCode, getStoredReferralPromoCode } from "@/components/referral-capture";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
 
 const schema = z.object({
   name: z.string().min(2, "Enter your full name."),
@@ -139,26 +139,40 @@ function SignupForm() {
                 {resending ? "Resending…" : resendCooldown.secondsLeft(confirmation.email) > 0 ? `Resend in ${resendCooldown.secondsLeft(confirmation.email)}s` : "Didn't get the email? Resend"}
               </button>
               <Link href="/login" className="mt-3 block">
-                <AuthButton type="button">
+                <AuthSubmit type="button">
                   Go to login
-                </AuthButton>
+                </AuthSubmit>
               </Link>
             </div>
           ) : (
             <>
               <form className="space-y-3.5" onSubmit={form.handleSubmit(onSubmit)}>
-                <AuthInput
+                <AuthField
                   label="Full name"
                   icon={<UserRound className="h-5 w-5" />}
                   error={form.formState.errors.name?.message}
-                  inputProps={{ ...form.register("name"), placeholder: "Your Name" }}
+                  inputProps={{
+                    ...form.register("name"),
+                    placeholder: "Your Name",
+                    autoComplete: "name",
+                    autoCapitalize: "words"
+                  }}
                 />
                 <div>
-                  <AuthInput
+                  <AuthField
                     label="Email address"
                     icon={<Mail className="h-5 w-5" />}
                     error={form.formState.errors.email?.message}
-                    inputProps={{ ...form.register("email"), placeholder: "you@school.edu", type: "email" }}
+                    inputProps={{
+                      ...form.register("email"),
+                      placeholder: "you@school.edu",
+                      type: "email",
+                      autoComplete: "username",
+                      inputMode: "email",
+                      autoCapitalize: "none",
+                      autoCorrect: "off",
+                      spellCheck: false
+                    }}
                   />
                   {emailSuggestion ? (
                     <button
@@ -170,17 +184,28 @@ function SignupForm() {
                     </button>
                   ) : null}
                 </div>
-                <AuthInput
+                <AuthField
                   label="Mobile number"
                   icon={<Phone className="h-5 w-5" />}
                   error={form.formState.errors.phone?.message}
-                  inputProps={{ ...form.register("phone"), type: "tel", inputMode: "numeric", placeholder: "Your number" }}
+                  inputProps={{
+                    ...form.register("phone"),
+                    type: "tel",
+                    inputMode: "numeric",
+                    placeholder: "Your number",
+                    autoComplete: "tel"
+                  }}
                 />
-                <AuthInput
+                <AuthField
                   label="Password"
                   icon={<LockKeyhole className="h-5 w-5" />}
                   error={form.formState.errors.password?.message}
-                  inputProps={{ ...form.register("password"), placeholder: "Password", type: showPassword ? "text" : "password" }}
+                  inputProps={{
+                    ...form.register("password"),
+                    placeholder: "Password",
+                    type: showPassword ? "text" : "password",
+                    autoComplete: "new-password"
+                  }}
                   action={
                     <button
                       type="button"
@@ -192,15 +217,15 @@ function SignupForm() {
                     </button>
                   }
                 />
-                <AuthInput
+                <AuthField
                   label="Coupon code (optional)"
                   icon={<Sparkles className="h-5 w-5" />}
                   error={form.formState.errors.promo_code?.message}
                   inputProps={{ ...form.register("promo_code"), placeholder: "Enter Coupon" }}
                 />
-                <AuthButton type="submit" disabled={form.formState.isSubmitting}>
+                <AuthSubmit type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? "Creating..." : "Create account"}
-                </AuthButton>
+                </AuthSubmit>
                 <p className="text-center text-xs font-semibold leading-5 text-slate-500">
                   By creating an account, you agree to our{" "}
                   <Link href="/terms" className="font-bold text-blue-600 transition hover:text-blue-700">
@@ -269,52 +294,6 @@ function TeachPadWordmark() {
       className="h-auto w-36 lg:w-44"
       priority
     />
-  );
-}
-
-function AuthInput({
-  label,
-  icon,
-  action,
-  error,
-  inputProps
-}: {
-  label: string;
-  icon: React.ReactNode;
-  action?: React.ReactNode;
-  error?: string;
-  inputProps: React.InputHTMLAttributes<HTMLInputElement>;
-}) {
-  return (
-    <label className="grid gap-2">
-      <span className="text-sm font-black text-slate-900">{label}</span>
-      <span className={cn(
-        "flex h-[50px] min-h-[50px] items-center gap-3 rounded-lg border bg-slate-50 px-4 text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition",
-        error ? "border-red-200 ring-4 ring-red-50" : "border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100/70"
-      )}>
-        <span className="shrink-0">{icon}</span>
-        <input
-          {...inputProps}
-          className="auth-form-input min-w-0 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
-        />
-        {action}
-      </span>
-      {error ? <span className="text-sm font-semibold text-red-600">{error}</span> : null}
-    </label>
-  );
-}
-
-function AuthButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...props}
-      className={cn(
-        "flex h-[52px] min-h-[52px] w-full items-center justify-center gap-3 rounded-lg bg-blue-600 px-5 text-base font-black text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_20px_42px_rgba(37,99,235,0.32)] disabled:pointer-events-none disabled:opacity-60",
-        props.className
-      )}
-    >
-      {children}
-    </button>
   );
 }
 
