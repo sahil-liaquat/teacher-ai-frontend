@@ -11,6 +11,7 @@ import {
   type ApiUser
 } from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
+import { claimGlobalCard, releaseGlobalCard } from "@/lib/global-card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
@@ -68,6 +69,8 @@ export function FeedbackPromptModal() {
         const current = queryClient.getQueryData<ApiUser>(CURRENT_USER_QUERY_KEY);
         if (!current || current.role === "admin") return;
         if (current.feedback_tools?.includes(tool)) return;
+        // Yields to the phone ask: one card at a time, and that one comes first.
+        if (!claimGlobalCard("feedback")) return;
         setActiveTool(tool);
         setRating(0);
         setHover(0);
@@ -80,12 +83,18 @@ export function FeedbackPromptModal() {
       window.removeEventListener(GENERATION_COMPLETED_EVENT, onGenerationCompleted);
       pendingTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
       pendingTimeoutsRef.current = [];
+      releaseGlobalCard("feedback");
     };
   }, [queryClient]);
 
   if (!activeTool) return null;
 
   const label = TOOL_LABELS[activeTool] ?? "lesson";
+
+  function close() {
+    setActiveTool(null);
+    releaseGlobalCard("feedback");
+  }
 
   function markHandled(tool: string) {
     queryClient.setQueryData<ApiUser>(CURRENT_USER_QUERY_KEY, (old) =>
@@ -105,7 +114,7 @@ export function FeedbackPromptModal() {
       });
       markHandled(activeTool);
       toast({ title: "Thanks for the feedback!", variant: "success" });
-      setActiveTool(null);
+      close();
     } catch (err) {
       toast({
         title: "Could not send feedback",
@@ -123,7 +132,7 @@ export function FeedbackPromptModal() {
     // Best-effort: record the dismissal so it isn't shown again, then close
     // immediately regardless of the request outcome.
     markHandled(tool);
-    setActiveTool(null);
+    close();
     void backendApi.submitFeedback({ tool, dismissed: true }).catch(() => {});
   }
 

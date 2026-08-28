@@ -51,6 +51,7 @@ export type ApiUser = {
   pending_school_name?: string | null;
   feedback_tools?: string[];
   avatar_key?: ProfileAvatarKey;
+  first_run_v2?: boolean;
 };
 
 export type NotificationSeverity = "info" | "success" | "warning" | "urgent";
@@ -1812,6 +1813,14 @@ export async function updateProfile(payload: {
     method: "PATCH",
     body: JSON.stringify(payload)
   });
+}
+
+/**
+ * Dismiss the phone ask for good. `phone_prompt_state` is computed server-side,
+ * so a client-only dismissal re-fires on the next page load.
+ */
+export async function skipPhone(): Promise<ApiUser> {
+  return apiFetch<ApiUser>("/auth/me/skip-phone", { method: "POST" });
 }
 
 export async function submitOnboarding(payload: {
