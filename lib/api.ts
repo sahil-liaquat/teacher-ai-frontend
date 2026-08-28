@@ -1266,7 +1266,15 @@ function normalizeError(error: any) {
 async function parseError(res: Response) {
   const error = await res.json().catch(() => ({ detail: res.statusText }));
   const code = typeof (error as { code?: unknown })?.code === "string" ? (error as { code: string }).code : undefined;
-  return Object.assign(new Error(normalizeError(error)), { status: res.status, code });
+  const providerHint =
+    typeof (error as { provider_hint?: unknown })?.provider_hint === "string"
+      ? (error as { provider_hint: string }).provider_hint
+      : undefined;
+  return Object.assign(new Error(normalizeError(error)), {
+    status: res.status,
+    code,
+    provider_hint: providerHint
+  });
 }
 
 // ─── Billing types ────────────────────────────────────────────────────────────
