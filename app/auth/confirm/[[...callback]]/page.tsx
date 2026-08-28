@@ -39,7 +39,7 @@ function isExpiredConfirmation(code: string, description: string) {
 }
 
 function getConfirmationErrorMessage(params: URLSearchParams, type: string) {
-  const code = params.get("error_code") || params.get("code") || "";
+  const code = params.get("error_code") || params.get("code") || params.get("error") || "";
   const description = params.get("error_description") || params.get("error") || "";
 
   if (isExpiredConfirmation(code, description)) {
