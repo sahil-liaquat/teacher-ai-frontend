@@ -24,7 +24,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       toast: (toast: Omit<Toast, "id">) => {
         const id = createToastId();
         setToasts((items) => [...items, { ...toast, id }]);
-        window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3500);
+        // Errors stay until dismissed. An error a teacher did not see in 3.5
+        // seconds is an error she never saw.
+        if (toast.variant !== "error") {
+          window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3500);
+        }
       }
     }),
     []
@@ -32,12 +36,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <Context.Provider value={value}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex w-80 flex-col gap-2">
+      {/* Top on a phone, because the software keyboard covers the bottom of
+          the viewport — a teacher who just submitted a form never saw the old
+          bottom-right toast. Bottom-right from sm: up, where it belongs. */}
+      <div
+        role="status"
+        aria-live="assertive"
+        aria-atomic="true"
+        className="pointer-events-none fixed inset-x-4 top-4 z-50 flex flex-col gap-2 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:top-auto sm:w-80"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={cn(
-              "rounded-lg border bg-white p-4 shadow-soft",
+              "pointer-events-auto rounded-card border bg-white p-4 shadow-e3",
               toast.variant === "error" && "border-red-200 bg-red-50/60",
               toast.variant === "success" && "border-emerald-200",
               !toast.variant && "border-border"
@@ -55,6 +67,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <Button
                 size="icon"
                 variant="ghost"
+                aria-label="Dismiss notification"
                 onClick={() => setToasts((items) => items.filter((item) => item.id !== toast.id))}
               >
                 <X className="h-4 w-4" />

@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DashboardMyClasses } from "@/components/dashboard/my-classes-section";
 import { FirstRunEmpty } from "@/components/dashboard/first-run-empty";
 
@@ -667,10 +668,11 @@ export default function DashboardClient() {
                     </span>
                   </Link>
                 )) : (
-                  <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                    <FileText className="mx-auto h-10 w-10 text-slate-300" />
-                    <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
-                  </div>
+                  <EmptyState
+                    icon={FileText}
+                    message="No recent generations yet."
+                    action={{ label: "Create a worksheet", href: "/dashboard/worksheets/new" }}
+                  />
                 )}
               </div>
             </div>
@@ -1030,10 +1032,11 @@ export default function DashboardClient() {
                   </span>
                 </Link>
               )) : (
-                <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                  <FileText className="mx-auto h-10 w-10 text-slate-300" />
-                  <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  message="No recent generations yet."
+                  action={{ label: "Create a worksheet", href: "/dashboard/worksheets/new" }}
+                />
               )}
             </div>
           </div>
