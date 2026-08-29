@@ -36,6 +36,15 @@ const EXCLUDED_APP_DIRS = new Set([
 
 const EXCLUDED_APP_FILES = new Set(["page.tsx"]);
 
+// components/ counterparts of the same marketing/pre-auth exclusion: these
+// are exclusively imported by the excluded app/ routes above (verified —
+// school-excellence/** backs app/school-excellence, legal/** backs
+// app/(legal), landing-client.tsx backs app/page.tsx, and
+// marketing-header/footer are the shared chrome for all of the above plus
+// every "-generator" landing page).
+const EXCLUDED_COMPONENT_DIRS = new Set(["school-excellence", "legal"]);
+const EXCLUDED_COMPONENT_FILES = new Set(["marketing-header.tsx", "marketing-footer.tsx", "landing-client.tsx"]);
+
 function listFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -50,16 +59,15 @@ function listFiles(dir) {
   return out;
 }
 
-function collectAppFiles() {
-  const appDir = join(root, "app");
+function collectDir(dir, excludedDirs, excludedFiles) {
   const out = [];
-  for (const entry of readdirSync(appDir)) {
-    const full = join(appDir, entry);
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
     const info = statSync(full);
     if (info.isDirectory()) {
-      if (EXCLUDED_APP_DIRS.has(entry)) continue;
+      if (excludedDirs.has(entry)) continue;
       out.push(...listFiles(full));
-    } else if (SCAN_EXTENSIONS.has(entry.slice(entry.lastIndexOf("."))) && !EXCLUDED_APP_FILES.has(entry)) {
+    } else if (SCAN_EXTENSIONS.has(entry.slice(entry.lastIndexOf("."))) && !excludedFiles.has(entry)) {
       out.push(full);
     }
   }
@@ -67,8 +75,10 @@ function collectAppFiles() {
 }
 
 function collectFiles() {
-  const componentsDir = join(root, "components");
-  return [...collectAppFiles(), ...listFiles(componentsDir)];
+  return [
+    ...collectDir(join(root, "app"), EXCLUDED_APP_DIRS, EXCLUDED_APP_FILES),
+    ...collectDir(join(root, "components"), EXCLUDED_COMPONENT_DIRS, EXCLUDED_COMPONENT_FILES)
+  ];
 }
 
 // arbitrary-font-size / arbitrary-radius / arbitrary-shadow are one-off style
