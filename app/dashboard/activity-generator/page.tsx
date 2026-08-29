@@ -755,7 +755,7 @@ export default function ActivityGeneratorPage() {
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -923,7 +923,7 @@ export default function ActivityGeneratorPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-[#c9f7fb] pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#c9f7fb] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#16a9b6] hover:text-[#16a9b6] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#c9f7fb] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#16a9b6] hover:text-[#16a9b6] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
@@ -934,7 +934,7 @@ export default function ActivityGeneratorPage() {
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="activity" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Activity
                   </button>

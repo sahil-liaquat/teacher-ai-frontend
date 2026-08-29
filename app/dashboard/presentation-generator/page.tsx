@@ -675,7 +675,7 @@ export default function PresentationGeneratorPage() {
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -850,7 +850,7 @@ export default function PresentationGeneratorPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
                 <button type="button" onClick={() => { setStep(1); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
@@ -860,7 +860,7 @@ export default function PresentationGeneratorPage() {
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
                 </div>
                 <button type="button" onClick={() => { setStep(3); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -1007,7 +1007,7 @@ export default function PresentationGeneratorPage() {
               {/* Step 3 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9de] pt-6">
                 <button type="button" onClick={() => { setStep(2); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9de] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
@@ -1019,7 +1019,7 @@ export default function PresentationGeneratorPage() {
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="presentation" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Presentation
                   </button>

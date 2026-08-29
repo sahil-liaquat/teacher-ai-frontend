@@ -701,7 +701,7 @@ export default function NewLessonPlanPage() {
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -888,7 +888,7 @@ export default function NewLessonPlanPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-cardBorder pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-white px-5 text-sm font-semibold text-teachpad-muted shadow-sm transition-all duration-200 hover:border-teachpad-blue hover:text-teachpad-blue max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-white px-5 text-sm font-semibold text-teachpad-muted shadow-sm transition-all duration-200 hover:border-teachpad-blue hover:text-teachpad-blue max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
@@ -899,7 +899,7 @@ export default function NewLessonPlanPage() {
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="lesson_plan" />
                   <button type="button" disabled={!canGenerate} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:h-10 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Lesson Plan
                   </button>
