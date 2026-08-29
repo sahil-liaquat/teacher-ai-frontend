@@ -92,7 +92,7 @@ function countViolations() {
     }
   }
   const counts = {};
-  for (const rule of Object.keys(occurrences)) {
+  for (const rule of Object.keys(occurrences).sort()) {
     counts[rule] = DISTINCT_RULES.has(rule) ? distinctValues[rule].size : occurrences[rule];
   }
   return counts;
@@ -104,7 +104,7 @@ const counts = countViolations();
 if (writeBaseline) {
   writeFileSync(baselinePath, `${JSON.stringify(counts, null, 2)}\n`);
   process.stdout.write(`Wrote ${baselinePath}\n`);
-  for (const [rule, count] of Object.entries(counts).sort()) {
+  for (const [rule, count] of Object.entries(counts)) {
     process.stdout.write(`  ${rule}: ${count}\n`);
   }
   process.exit(0);
