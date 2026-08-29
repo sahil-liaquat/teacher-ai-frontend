@@ -13,6 +13,12 @@ type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
  * A single native select keeps keyboard, screen-reader and form behavior in
  * one control. The earlier native-plus-Radix implementation exposed multiple
  * comboboxes for every visible field.
+ *
+ * This is deliberate, and "shared Select renders one accessible native
+ * combobox" in tests/workspace/audit-regressions.test.ts enforces it. Do not
+ * rebuild this on the Radix listbox primitive: native gets the Android OS
+ * picker for free, which is what most sessions here are. The unused Radix
+ * dependency stays installed on purpose.
  */
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, disabled, isLoading = false, loadingLabel = "Loading...", ...props }, forwardedRef) => (
@@ -22,8 +28,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         disabled={disabled || isLoading}
         aria-busy={isLoading || undefined}
         className={cn(
-          "tat-select-trigger h-10 w-full min-w-0 max-w-full appearance-none truncate rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 pr-10 text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-teachpad-tag disabled:text-[var(--teachpad-placeholderText)] sm:text-sm",
-          className
+          "tat-select-trigger h-11 w-full min-w-0 max-w-full appearance-none truncate rounded-control border border-teachpad-cardBorder bg-teachpad-input px-3.5 pr-10 text-base font-semibold text-teachpad-ink shadow-e1 outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-teachpad-tag disabled:text-[var(--teachpad-placeholderText)] aria-[invalid=true]:border-rose-500 sm:text-sm"
         )}
         {...props}
       >
