@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { WorkspaceHomeTopic, WorkspaceResourceType } from "@/lib/api";
+import { CHART_GRID, PROGRESS_RAMP } from "@/lib/chart-colors";
 import { cn } from "@/lib/utils";
 import { resourceLabels, relativeTime } from "@/lib/workspace/formatters";
 import { getMissionProgress, missionResourceOrder } from "@/lib/workspace/mission-control";
@@ -34,12 +35,12 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
   const workspaceHref = topicWorkspaceRoute(item.workspace_id, item.topic.id);
   const statusLabel = progress.status === "ready" ? "Ready" : progress.status === "not_started" ? "Not Started" : "In Progress";
   const resourceNoun = progress.createdCount === 1 ? "resource" : "resources";
-  const progressColor = ["#ef4444", "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#10b981"][progress.createdCount] ?? "#ef4444";
+  const progressColor = PROGRESS_RAMP[progress.createdCount] ?? PROGRESS_RAMP[0];
 
   return (
     <section
       aria-labelledby="continue-preparing-title"
-      className="overflow-hidden rounded-[24px] border border-[#e8edf5] bg-white px-4 pb-4 pt-4 shadow-[0_16px_42px_rgba(54,83,150,0.10)] sm:px-5 sm:pb-5 sm:pt-5"
+      className="overflow-hidden rounded-[24px] border border-slate-100 bg-white px-4 pb-4 pt-4 shadow-[0_16px_42px_rgba(54,83,150,0.10)] sm:px-5 sm:pb-5 sm:pt-5"
     >
       <div className="flex items-center justify-between gap-4 px-1 sm:px-0">
         <div className="flex min-w-0 items-center gap-3">
@@ -47,7 +48,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
             <BookOpen className="h-6 w-6" strokeWidth={1.9} />
           </span>
           <div className="min-w-0">
-            <h2 id="continue-preparing-title" className="text-lg font-black tracking-[-0.035em] text-[#0b1430] sm:text-xl">
+            <h2 id="continue-preparing-title" className="text-lg font-black tracking-[-0.035em] text-fg sm:text-xl">
               Continue Preparing
             </h2>
             <p className="mt-0.5 text-micro font-medium text-slate-500 sm:text-xs">Pick up where you left off and finish strong.</p>
@@ -79,7 +80,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
               {statusLabel}
             </span>
 
-            <h3 className="mt-5 text-h3 font-black leading-[1.12] tracking-[-0.04em] text-[#09132f] sm:text-h3">{item.chapter_title}</h3>
+            <h3 className="mt-5 text-h3 font-black leading-[1.12] tracking-[-0.04em] text-fg sm:text-h3">{item.chapter_title}</h3>
 
             <div className="mt-5 flex flex-nowrap items-center gap-x-2 text-micro font-medium text-slate-500">
               <span className="inline-flex shrink-0 items-center gap-1.5"><GraduationCap className="h-[18px] w-[18px]" />{item.class_name}</span>
@@ -89,7 +90,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
               <span className="shrink-0">{item.board_code.toUpperCase()}</span>
             </div>
 
-            <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-xs font-black text-emerald-800">
+            <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-card bg-emerald-50 px-3.5 py-2.5 text-xs font-black text-emerald-800">
               <BookOpen className="h-[18px] w-[18px]" strokeWidth={2} /> Chapter {item.chapter_number}
             </span>
 
@@ -103,7 +104,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
               className="group mt-auto inline-flex h-[50px] w-full max-w-[285px] items-center justify-between rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_11px_24px_rgba(16,185,129,0.25)] transition hover:-translate-y-0.5 hover:from-emerald-700 hover:to-emerald-600"
             >
               Continue Preparing
-              <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/55 text-emerald-800 transition group-hover:translate-x-0.5">
+              <span className="grid h-8 w-8 place-items-center rounded-card bg-white/55 text-emerald-800 transition group-hover:translate-x-0.5">
                 <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
               </span>
             </Link>
@@ -111,7 +112,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
           <div className="grid min-h-[330px] place-items-center border-t border-slate-200/80 px-4 py-6 md:border-l md:border-t-0 xl:min-h-0">
             <div className="flex h-full w-full flex-col items-center justify-center">
-              <p className="mb-5 text-center text-xs font-black text-[#101936]">Preparation Progress</p>
+              <p className="mb-5 text-center text-xs font-black text-fg">Preparation Progress</p>
               <div
                 role="progressbar"
                 aria-label="Preparation progress"
@@ -121,7 +122,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
                 className="relative mx-auto grid aspect-square w-full max-w-[176px] place-items-center rounded-full bg-white p-2 shadow-[0_14px_32px_rgba(15,23,42,0.10),inset_0_0_0_1px_rgba(226,232,240,0.7)]"
               >
                 <svg aria-hidden="true" viewBox="0 0 140 140" className="absolute inset-2 h-[calc(100%_-_16px)] w-[calc(100%_-_16px)] -rotate-90 overflow-visible">
-                  <circle cx="70" cy="70" r="53" pathLength="100" fill="none" stroke="#e9eef6" strokeWidth="18" />
+                  <circle cx="70" cy="70" r="53" pathLength="100" fill="none" stroke={CHART_GRID} strokeWidth="18" />
                   {progress.percentage > 0 && (
                     <circle
                       cx="70"
@@ -140,13 +141,13 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
                 <div className="relative z-10 grid h-[112px] w-[112px] place-items-center rounded-full border border-white bg-gradient-to-br from-white via-white to-emerald-50/70 text-center shadow-[0_8px_22px_rgba(30,64,175,0.08),inset_0_0_0_1px_rgba(226,232,240,0.65)]">
                   <div>
-                    <p className="tracking-[-0.055em] text-[#0b1430]"><span className="text-h1 font-black">{progress.createdCount}</span><span className="ml-0.5 text-base font-extrabold text-slate-400">/5</span></p>
+                    <p className="tracking-[-0.055em] text-fg"><span className="text-h1 font-black">{progress.createdCount}</span><span className="ml-0.5 text-base font-extrabold text-slate-400">/5</span></p>
                     <p className="mt-0.5 text-micro font-extrabold leading-[14px] text-slate-500">resources ready</p>
                   </div>
                 </div>
               </div>
-              <div className="mt-auto hidden w-full items-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-slate-50 px-3 py-3 text-slate-500 xl:flex">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-100/80 text-emerald-700"><TrendingUp className="h-5 w-5" /></span>
+              <div className="mt-auto hidden w-full items-center gap-2.5 rounded-card bg-gradient-to-r from-emerald-50 to-slate-50 px-3 py-3 text-slate-500 xl:flex">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-emerald-100/80 text-emerald-700"><TrendingUp className="h-5 w-5" /></span>
                 <p className="text-micro font-medium leading-[14px]"><strong className="block font-black text-slate-600">Keep going!</strong>You&apos;re making great progress.</p>
               </div>
             </div>
@@ -162,11 +163,11 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
               return (
                 <div key={type} className={cn("flex min-h-[68px] flex-1 items-center gap-3", index < missionResourceOrder.length - 1 && "border-b border-slate-200/80")}>
-                  <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", visual.shell, visual.iconColor)}>
+                  <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-card", visual.shell, visual.iconColor)}>
                     <Icon className="h-5 w-5" strokeWidth={1.9} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black leading-4 text-[#0d1631]">{resourceLabels[type]}</p>
+                    <p className="text-xs font-black leading-4 text-fg">{resourceLabels[type]}</p>
                     <p className={cn("mt-0.5 text-micro font-bold", created ? "text-emerald-600" : generating ? "text-blue-600" : "text-orange-600")}>
                       {created ? "Created" : generating ? "Generating" : "Not created"}
                     </p>

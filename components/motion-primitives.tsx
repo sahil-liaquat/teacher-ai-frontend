@@ -2,6 +2,7 @@
 
 import { type ReactNode, useRef, useState, useCallback } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { BRAND_BLUE } from "@/lib/chart-colors";
 import {
   EASE_PREMIUM,
   DURATION_REVEAL,
@@ -391,9 +392,9 @@ export function StrokeLine({ className }: { className?: string }) {
       />
       <defs>
         <linearGradient id="line-gradient" x1="0" y1="0" x2="1200" y2="0">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-          <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.8} />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.3} />
+          <stop offset="0%" stopColor={BRAND_BLUE} stopOpacity={0.3} />
+          <stop offset="50%" stopColor={BRAND_BLUE} stopOpacity={0.8} />
+          <stop offset="100%" stopColor={BRAND_BLUE} stopOpacity={0.3} />
         </linearGradient>
       </defs>
     </motion.svg>

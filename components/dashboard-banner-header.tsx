@@ -18,16 +18,16 @@ export function DashboardBannerHeader({
   return (
     <header
       className={cn(
-        "reveal-card relative min-h-[190px] overflow-hidden rounded-[32px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)] sm:min-h-[214px] sm:px-8 lg:min-h-[232px] lg:px-12",
+        "reveal-card relative min-h-[190px] overflow-hidden rounded-[32px] border border-blue-200 bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)] sm:min-h-[214px] sm:px-8 lg:min-h-[232px] lg:px-12",
         className
       )}
     >
       <div className="relative z-10 flex min-h-[150px] flex-col justify-center sm:min-h-[174px] lg:min-h-[190px]">
         <div className="max-w-[620px] pr-0 lg:pr-[260px]">
-          <h1 className="text-h2 font-black leading-[1.1] tracking-normal text-[#071b49] min-[390px]:text-h1 sm:text-display lg:text-display">
+          <h1 className="text-h2 font-black leading-[1.1] tracking-normal text-fg min-[390px]:text-h1 sm:text-display lg:text-display">
             <span className="block">{titleTop}</span>
             <span className="block sm:whitespace-nowrap">
-              <span className="text-[#126de8]">{titleHighlight}</span>
+              <span className="text-brand">{titleHighlight}</span>
               {titleSuffix ? ` ${titleSuffix}` : ""}
             </span>
           </h1>
@@ -45,9 +45,9 @@ export function DashboardBannerHeader({
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute left-[55%] top-[70px] hidden h-1.5 w-1.5 rounded-full bg-[#93a7c5] opacity-70 lg:block" />
-      <div className="pointer-events-none absolute left-[58%] top-[102px] hidden text-xl font-black text-[#8bb8f5] lg:block">*</div>
-      <div className="pointer-events-none absolute right-[30%] top-[54px] hidden text-2xl font-black text-[#b5c5df] lg:block">*</div>
+      <div className="pointer-events-none absolute left-[55%] top-[70px] hidden h-1.5 w-1.5 rounded-full bg-slate-400 opacity-70 lg:block" />
+      <div className="pointer-events-none absolute left-[58%] top-[102px] hidden text-xl font-black text-blue-300 lg:block">*</div>
+      <div className="pointer-events-none absolute right-[30%] top-[54px] hidden text-2xl font-black text-blue-300 lg:block">*</div>
     </header>
   );
 }

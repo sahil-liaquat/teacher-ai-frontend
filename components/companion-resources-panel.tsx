@@ -118,7 +118,7 @@ export function CompanionResourcesPanel({
   return (
     <aside className={cn("max-h-none self-start overflow-visible", className)} aria-label="Companion resources">
       <div className="max-h-none overflow-visible rounded-[20px] border border-teachpad-cardBorder bg-white shadow-[0_18px_48px_var(--teachpad-shadowCard)]">
-        <div className="border-b border-[#eceef3] bg-gradient-to-br from-[#f8ffff] via-white to-[#f3fff8] px-5 py-5">
+        <div className="border-b border-teachpad-cardBorder bg-gradient-to-br from-teachpad-panel via-white to-emerald-50 px-5 py-5">
           <div className="flex items-start gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-gradient-to-br from-teachpad-blue to-blue-600 text-white shadow-[0_14px_28px_var(--teachpad-shadowBlue)]">
               <Layers3 className="h-5 w-5" />
@@ -154,15 +154,15 @@ export function CompanionResourcesPanel({
                     <span className="block text-sm font-black text-teachpad-ink">{resource.title}</span>
                     <span className="mt-1 block text-xs font-semibold leading-5 text-teachpad-muted">{resource.description}</span>
                   </span>
-                  <ArrowRight className={cn("h-4 w-4 shrink-0 text-[#9ca0aa] transition group-hover:translate-x-0.5", arrowColor(resource.color))} />
+                  <ArrowRight className={cn("h-4 w-4 shrink-0 text-fg-muted transition group-hover:translate-x-0.5", arrowColor(resource.color))} />
                 </button>
               );
             })}
           </div>
 
-          <section className="rounded-[16px] border border-[#ffe1d2] bg-gradient-to-br from-[#fffaf0] to-white p-4">
+          <section className="rounded-[16px] border border-teachpad-peach bg-gradient-to-br from-amber-50 to-white p-4">
             <div className="flex items-start gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[#fff0bf] text-[#b97800]">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-teachpad-yellow text-amber-700">
                 <Lightbulb className="h-4 w-4" />
               </span>
               <div>

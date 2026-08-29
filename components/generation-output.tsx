@@ -152,17 +152,17 @@ function LessonPlanDocumentOutput({
         }
       `}</style>
 
-      <div className="no-print mb-5 border-b border-[#dffafa] bg-white pb-4">
+      <div className="no-print mb-5 border-b border-teachpad-aqua bg-white pb-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-fg-muted">
             {isNew ? (
-              <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-[#1677ff]">
+              <Link href="/dashboard/lesson-plans/new" className="inline-flex items-center gap-1 text-brand">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Inputs
               </Link>
             ) : (
-              <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#1677ff]">
+              <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-brand">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back
               </button>
@@ -170,10 +170,10 @@ function LessonPlanDocumentOutput({
             <span>/</span>
             <span>Lesson Plan Output</span>
           </div>
-          <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-h2">
+          <h1 className="mt-2 break-words text-2xl font-black leading-tight text-fg sm:text-h2">
             {chapterDisplay}
           </h1>
-          <p className="mt-2 text-sm font-medium text-[#6d6f78]">
+          <p className="mt-2 text-sm font-medium text-fg-muted">
             {formatGradeValue(draft.metadata.class)} • {formatMetadataValue(draft.metadata.subject)} • {formatMetadataValue(draft.metadata.chapter)}
           </p>
         </div>
@@ -199,7 +199,7 @@ function LessonPlanDocumentOutput({
       <div className="min-w-0">
         <article
           onClick={highlightedSections.length ? onClearHighlights : undefined}
-          className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm"
+          className="lesson-plan-print-page min-w-0 border border-violet-200 bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm"
         >
           <header className="grid min-w-0 gap-4 border-b border-slate-300 pb-5 font-sans sm:gap-6">
             <div className="grid gap-5">
@@ -500,17 +500,17 @@ function LessonHeaderMeta({
   return (
     <div className="hidden min-w-0 justify-self-end text-right md:grid md:gap-1">
       {rows.map((row) => (
-        <div key={row.label} className="min-w-0 text-xs leading-5 text-[#5f5a73]">
-          <span className="font-black uppercase tracking-[0.08em] text-[#5b7194]">{row.label}: </span>
+        <div key={row.label} className="min-w-0 text-xs leading-5 text-fg-muted">
+          <span className="font-black uppercase tracking-[0.08em] text-slate-500">{row.label}: </span>
           {isEditing && draft ? (
             <InlineTextInput
               value={draft.metadata[row.field] || ""}
               onChange={(nextValue) => setDraft({ ...draft, metadata: { ...draft.metadata, [row.field]: nextValue } })}
-              className="ml-1 inline-block max-w-[190px] text-right text-xs font-bold text-[#25262b]"
+              className="ml-1 inline-block max-w-[190px] text-right text-xs font-bold text-fg"
               ariaLabel={row.label}
             />
           ) : (
-            <span className="font-bold text-[#25262b]">{formatMetadataValue(row.value)}</span>
+            <span className="font-bold text-fg">{formatMetadataValue(row.value)}</span>
           )}
         </div>
       ))}
@@ -534,17 +534,17 @@ function LessonDetailRow({
   isEditing: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-[12px] border border-[#eee9f7] bg-[#f8ffff] p-3">
-      <p className="text-micro font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
+    <div className="min-w-0 rounded-[12px] border border-violet-50 bg-teachpad-panel p-3">
+      <p className="text-micro font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
       {isEditing && draft ? (
         <InlineTextInput
           value={draft.metadata[field] || ""}
           onChange={(nextValue) => setDraft({ ...draft, metadata: { ...draft.metadata, [field]: nextValue } })}
-          className="mt-1 text-sm font-bold text-[#25262b]"
+          className="mt-1 text-sm font-bold text-fg"
           ariaLabel={label}
         />
       ) : (
-        <p className="mt-1 break-words text-sm font-bold text-[#25262b]">{formatMetadataValue(value)}</p>
+        <p className="mt-1 break-words text-sm font-bold text-fg">{formatMetadataValue(value)}</p>
       )}
     </div>
   );
@@ -552,9 +552,9 @@ function LessonDetailRow({
 
 function CompactDetail({ label, value }: { label: string; value?: unknown }) {
   return (
-    <div className="min-w-0 border-b border-[#eceef3] pb-3 last:border-b-0 last:pb-0">
-      <p className="text-micro font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
-      <p className="mt-1 break-words text-sm font-bold text-[#25262b]">{formatMetadataValue(value)}</p>
+    <div className="min-w-0 border-b border-teachpad-cardBorder pb-3 last:border-b-0 last:pb-0">
+      <p className="text-micro font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
+      <p className="mt-1 break-words text-sm font-bold text-fg">{formatMetadataValue(value)}</p>
     </div>
   );
 }
@@ -609,7 +609,7 @@ function InlineTextInput({
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className={`w-full min-w-0 rounded-[8px] border border-[#c9f7fb] bg-white px-2 py-1 text-base outline-none ring-[#1677ff]/20 transition focus:ring-4 sm:text-sm ${className || ""}`}
+      className={`w-full min-w-0 rounded-[8px] border border-teachpad-sky bg-white px-2 py-1 text-base outline-none ring-brand/20 transition focus:ring-4 sm:text-sm ${className || ""}`}
     />
   );
 }
@@ -629,7 +629,7 @@ function InlineTextArea({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       rows={Math.max(2, Math.min(7, value.split(/\n/).length + Math.ceil(value.length / 90)))}
-      className="w-full min-w-0 resize-y rounded-[10px] border border-[#c9f7fb] bg-white px-3 py-2 text-base leading-7 text-[#4f4a66] outline-none ring-[#1677ff]/20 transition focus:ring-4 sm:text-sm"
+      className="w-full min-w-0 resize-y rounded-[10px] border border-teachpad-sky bg-white px-3 py-2 text-base leading-7 text-fg-muted outline-none ring-brand/20 transition focus:ring-4 sm:text-sm"
     />
   );
 }
@@ -950,19 +950,19 @@ export function LessonPlanOutput({
 
   return (
     <div className="mx-auto min-w-0 max-w-[1180px] 2xl:max-w-[1440px]">
-      <div className="overflow-hidden rounded-[24px] border border-[#dffafa] bg-white shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#f8ffff] to-white px-4 py-6 sm:px-8 sm:py-8">
+      <div className="overflow-hidden rounded-[24px] border border-teachpad-aqua bg-white shadow-[0_18px_50px_rgba(39,30,91,0.08)]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-teachpad-panel to-white px-4 py-6 sm:px-8 sm:py-8">
           <Link href="/dashboard/lesson-plans/new">
-            <Button variant="outline" size="sm" className="mb-7 border-[#c9f7fb] text-[#1677ff]">
+            <Button variant="outline" size="sm" className="mb-7 border-teachpad-sky text-brand">
               Back to Inputs
             </Button>
           </Link>
           <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-lg font-black text-[#25262b]">Generated Lesson Plan</h1>
+                <h1 className="text-lg font-black text-fg">Generated Lesson Plan</h1>
               </div>
-              <h2 className="mt-4 max-w-4xl break-words text-h2 font-black tracking-tight text-[#25262b] 2xl:mt-5 2xl:text-4xl">
+              <h2 className="mt-4 max-w-4xl break-words text-h2 font-black tracking-tight text-fg 2xl:mt-5 2xl:text-4xl">
                 {typedTitle}
                 {!stream.done("title") ? <TypingCursor /> : null}
               </h2>
@@ -994,7 +994,7 @@ export function LessonPlanOutput({
         <div className="grid min-w-0 gap-5 px-4 pb-5 pt-5 sm:px-6 sm:pb-6 2xl:gap-6 2xl:px-8 2xl:pb-8 2xl:pt-6">
           {stream.visible("objectives") ? (
             <NumericCard number="1" title="Learning Objectives" icon={Target} tone="blue">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-control border border-slate-200 bg-slate-50 p-4">
                 <ul className="grid gap-3 text-sm leading-6 text-slate-700">
                   {streamLines(stream, "objectives", objectives.length ? objectives : []).map((item, index) => (
                     <li key={index} className="flex gap-3">
@@ -1019,7 +1019,7 @@ export function LessonPlanOutput({
             <>
           {stream.visible("outline") ? (
             <NumericCard number="2" title="Lesson Outline" icon={ClipboardCheck} tone="blue">
-              <div className="grid gap-0 overflow-hidden rounded-lg border border-slate-200">
+              <div className="grid gap-0 overflow-hidden rounded-control border border-slate-200">
                 {outline.map((item: any, index: number) => {
                 const tone = timelineTones[index % timelineTones.length];
                 const textBudget = Math.max(0, stream.count("outline") - outline.slice(0, index).reduce((sum: number, previous: any) => sum + `${previous.phase}. ${previous.teacher_action}. ${previous.student_action}`.length, 0));
@@ -1081,8 +1081,8 @@ export function LessonPlanOutput({
             <NumericCard number="5" title="Assessment Questions" icon={ClipboardCheck} tone="amber">
               <div className="grid gap-3">
                 {streamLines(stream, "assessment", (output?.assessment_questions || []).slice(0, 5).map((item: any) => item.question)).map((question: string, index: number) => (
-                  <div key={index} className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)] items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-                    <span className="grid h-8 w-8 place-items-center rounded-lg border-2 border-amber-300 bg-white font-black text-amber-600 text-xs">{index + 1}</span>
+                  <div key={index} className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)] items-start gap-3 rounded-control border border-slate-200 bg-slate-50 p-3 text-sm">
+                    <span className="grid h-8 w-8 place-items-center rounded-control border-2 border-amber-300 bg-white font-black text-amber-600 text-xs">{index + 1}</span>
                     <div className="min-w-0">
                       <p className="font-medium text-slate-900">{question}{index === streamLines(stream, "assessment", []).length - 1 && !stream.done("assessment") ? <TypingCursor /> : null}</p>
                       <p className="text-xs text-slate-500 mt-1">({output?.assessment_questions?.[index]?.marks || 1} mark{(output?.assessment_questions?.[index]?.marks || 1) > 1 ? 's' : ''})</p>
@@ -1097,7 +1097,7 @@ export function LessonPlanOutput({
             <NumericCard number="6" title="Materials Needed" icon={Box} tone="cyan">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {streamLines(stream, "materials", materials).map((item: string, index: number) => (
-                  <div key={index} className="grid min-h-24 place-items-center rounded-lg border border-slate-200 bg-slate-50 p-4 text-center hover:bg-cyan-50 transition-colors">
+                  <div key={index} className="grid min-h-24 place-items-center rounded-control border border-slate-200 bg-slate-50 p-4 text-center hover:bg-cyan-50 transition-colors">
                     <div>
                       <BookOpen className="mb-2 h-6 w-6 text-cyan-600 mx-auto" />
                       <span className="text-sm font-semibold text-slate-900">{item}</span>
@@ -1116,7 +1116,7 @@ export function LessonPlanOutput({
                     <Badge className="justify-center bg-blue-100 py-2 text-xs font-semibold text-blue-700">
                       {formatDifferentiationLabel(key)}
                     </Badge>
-                    <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700">{stream.text("differentiation", String(value))}</div>
+                    <div className="rounded-control border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700">{stream.text("differentiation", String(value))}</div>
                   </div>
                 ))}
               </div>
@@ -1127,7 +1127,7 @@ export function LessonPlanOutput({
         </div>
 
         <div className="px-4 pb-6 sm:px-8 sm:pb-8">
-          <div className="rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-white p-6">
+          <div className="rounded-control border border-amber-200 bg-gradient-to-r from-amber-50 to-white p-6">
             <div className="flex items-start gap-4">
               <div className="grid h-10 w-10 place-items-center rounded-full bg-amber-100 text-amber-600 flex-shrink-0">
                 <FileText className="h-5 w-5" />
@@ -1146,7 +1146,7 @@ export function LessonPlanOutput({
                       </p>
                     ) : <p className="mt-3 text-sm font-medium text-slate-500">Waiting for teacher notes<TypingCursor /></p>}
                   </div>
-                  <div className="hidden rotate-3 rounded-lg bg-amber-300 px-4 py-3 text-center text-xs font-black shadow-md md:block flex-shrink-0">
+                  <div className="hidden rotate-3 rounded-control bg-amber-300 px-4 py-3 text-center text-xs font-black shadow-md md:block flex-shrink-0">
                     Great<br />Teaching!
                   </div>
                 </div>
@@ -1285,17 +1285,17 @@ export function WorksheetOutput({
         }
       `}</style>
 
-      <div className="no-print mb-5 border-b border-[#dffafa] bg-white pb-4">
+      <div className="no-print mb-5 border-b border-teachpad-aqua bg-white pb-4">
         <div dir={locale.dir} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#6d6f78]">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-fg-muted">
               {isNew ? (
-                <Link href="/dashboard/worksheets/new" className="inline-flex items-center gap-1 text-[#159565]">
+                <Link href="/dashboard/worksheets/new" className="inline-flex items-center gap-1 text-emerald-700">
                   <ArrowLeft className="h-3.5 w-3.5" />
                   {locale.backToInputs}
                 </Link>
               ) : (
-                <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-[#159565]">
+                <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-emerald-700">
                   <ArrowLeft className="h-3.5 w-3.5" />
                   {locale.back}
                 </button>
@@ -1303,8 +1303,8 @@ export function WorksheetOutput({
               <span>/</span>
               <span>{locale.worksheetOutput}</span>
             </div>
-            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-h2">{locale.generatedWorksheet}</h1>
-            <p className="mt-2 text-sm font-medium text-[#6d6f78]">{grade} • {subject} • {chapter}</p>
+            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-fg sm:text-h2">{locale.generatedWorksheet}</h1>
+            <p className="mt-2 text-sm font-medium text-fg-muted">{grade} • {subject} • {chapter}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => onCopy?.(worksheetOutput)}><Copy className="h-4 w-4" /> {locale.copy}</Button>
@@ -1326,12 +1326,12 @@ export function WorksheetOutput({
 
         {languageSwitcher ? <div className="mt-4">{languageSwitcher}</div> : null}
 
-        <div className="mt-4 flex rounded-[12px] border border-[#dffafa] bg-[#f8ffff] p-1">
+        <div className="mt-4 flex rounded-[12px] border border-teachpad-aqua bg-teachpad-panel p-1">
           {worksheetTabs.map((item) => (
             <button
               key={item.key}
               onClick={() => setTab(item.key)}
-              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item.key ? "bg-[#25262b] text-white shadow-sm" : "text-[#6d6f78]"}`}
+              className={`h-10 flex-1 rounded-[8px] text-sm font-bold ${tab === item.key ? "bg-fg text-white shadow-sm" : "text-fg-muted"}`}
             >
               {item.label}
             </button>
@@ -1340,7 +1340,7 @@ export function WorksheetOutput({
       </div>
 
       {tab === "Worksheet" ? (
-        <article dir={locale.dir} lang={locale.localeCode} className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm">
+        <article dir={locale.dir} lang={locale.localeCode} className="worksheet-print-page w-full max-w-none border border-violet-200 bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm">
           <header className="grid min-w-0 gap-4 font-sans sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-6">
             <div className="min-w-0">
               <h2 className="break-words text-lead font-black leading-tight text-black sm:text-h3">
@@ -1582,21 +1582,21 @@ function AnswerKeyView({
   }
 
   return (
-    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#25262b]">{locale.answerKey}</h2>
+    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-violet-200 bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
+      <h2 className="text-xl font-black text-fg">{locale.answerKey}</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
-          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
+          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-teachpad-aqua bg-white p-4">
             <BilingualText
               as="h3"
               value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, index)}
               languages={languages}
               onCommit={(section_title) => updateSection(index, { ...section, section_title })}
-              className="font-black text-[#25262b]"
+              className="font-black text-fg"
               ariaLabel={`Answer key section ${index + 1}`}
               singleLine
             />
-            <ol className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
+            <ol className="mt-3 grid gap-2 text-sm font-medium text-fg">
               {(section.answers || []).map((answer: any, answerIndex: number) => (
                 <li key={answerIndex} className="flex gap-2">
                   <span className="font-black">{answerIndex + 1}.</span>
@@ -1636,27 +1636,27 @@ function MarkingSchemeView({
   }
 
   return (
-    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-[#d8d3e5] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
-      <h2 className="text-xl font-black text-[#25262b]">{locale.markingScheme}</h2>
+    <section dir={locale.dir} lang={locale.localeCode} className="rounded-[12px] border border-violet-200 bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-7">
+      <h2 className="text-xl font-black text-fg">{locale.markingScheme}</h2>
       <div className="mt-5 grid gap-4">
         {items.map((section, index) => (
-          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-[#dffafa] bg-white p-4">
+          <div key={`${section.section_title}-${index}`} className="rounded-[10px] border border-teachpad-aqua bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <BilingualText
                 as="h3"
                 value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, index)}
                 languages={languages}
                 onCommit={(section_title) => updateSection(index, { ...section, section_title })}
-                className="font-black text-[#25262b]"
+                className="font-black text-fg"
                 ariaLabel={`Marking scheme section ${index + 1}`}
                 singleLine
               />
               {section.marks_per_question ? <Badge>{localizeMarks(section.marks_per_question, locale)}</Badge> : null}
             </div>
-            <ul className="mt-3 grid gap-2 text-sm font-medium text-[#33304a]">
+            <ul className="mt-3 grid gap-2 text-sm font-medium text-fg">
               {(section.guidelines || []).map((item: any, itemIndex: number) => (
                 <li key={itemIndex} className="flex gap-2">
-                  <span className="font-black text-[#25262b]">•</span>
+                  <span className="font-black text-fg">•</span>
                   <BilingualText
                     as="span"
                     value={item}
@@ -1692,12 +1692,12 @@ function InfoCard({
 }) {
   const colors = sectionTones[tone];
   return (
-    <section className={`rounded-xl border border-[#e4e8f3] bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
+    <section className={`rounded-card border border-slate-100 bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
       <div className="mb-5 flex items-center gap-3">
         <div className={`grid h-10 w-10 place-items-center rounded-full ${colors.icon}`}>
           <Icon className="h-5 w-5" />
         </div>
-        <h3 className="text-lg font-black text-[#081436]">{title}</h3>
+        <h3 className="text-lg font-black text-fg">{title}</h3>
       </div>
       {children}
     </section>
@@ -1721,7 +1721,7 @@ function NumericCard({
 }) {
   const colors = numericCardTones[tone];
   return (
-    <section className={`rounded-[18px] border border-[#dffafa] bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-6 ${className || ""}`}>
+    <section className={`rounded-[18px] border border-teachpad-aqua bg-white p-5 shadow-[0_12px_30px_rgba(39,30,91,0.04)] 2xl:p-6 ${className || ""}`}>
       <div className="mb-5 flex items-center gap-3">
         <div className={`grid h-10 w-10 place-items-center rounded-full font-black text-white text-sm ${colors.badge}`}>
           {number}
@@ -1752,7 +1752,7 @@ function MetaBadge({
 
 function ConceptCard({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[14px] border border-[#f4c8d0] bg-[#fff3f6] p-4 text-sm leading-6 text-[#55516e]">
+    <div className="rounded-[14px] border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-fg-muted">
       <CheckCircle2 className="mb-3 h-4 w-4 text-rose-500" />
       {children}
     </div>
@@ -1784,7 +1784,7 @@ function StructuredSectionContent({
   return (
     <ul className="grid gap-3 text-sm leading-6 text-slate-700">
       {visibleLines.map((line, index) => (
-        <li key={`${streamKeyName}-${index}`} className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <li key={`${streamKeyName}-${index}`} className="flex gap-3 rounded-control border border-slate-200 bg-slate-50 p-3">
           <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500" />
           <span>
             {line}
@@ -1798,24 +1798,24 @@ function StructuredSectionContent({
 
 function StreamingPlaceholder({ title, className }: { title: string; className?: string }) {
   return (
-    <section className={`rounded-[18px] border border-[#dffafa] bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
+    <section className={`rounded-[18px] border border-teachpad-aqua bg-white p-5 shadow-[0_12px_30px_rgba(31,42,87,0.04)] ${className || ""}`}>
       <div className="mb-5 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-[#dffafa] text-[#1677ff]">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-teachpad-aqua text-brand">
           <SparkleDot />
         </div>
-        <h3 className="text-lg font-black text-[#081436]">{title}</h3>
+        <h3 className="text-lg font-black text-fg">{title}</h3>
       </div>
-      <p className="text-sm font-medium leading-6 text-[#67728a]">Waiting for {title.toLowerCase()}<TypingCursor /></p>
+      <p className="text-sm font-medium leading-6 text-slate-500">Waiting for {title.toLowerCase()}<TypingCursor /></p>
     </section>
   );
 }
 
 function SparkleDot() {
-  return <span className="h-2.5 w-2.5 animate-ping rounded-full bg-[#1677ff]" />;
+  return <span className="h-2.5 w-2.5 animate-ping rounded-full bg-brand" />;
 }
 
 function TypingCursor() {
-  return <span className="ml-1 inline-block h-4 w-1 translate-y-0.5 animate-pulse rounded-full bg-[#1677ff]" />;
+  return <span className="ml-1 inline-block h-4 w-1 translate-y-0.5 animate-pulse rounded-full bg-brand" />;
 }
 
 function textLength(value: unknown): number {
@@ -1923,18 +1923,18 @@ function streamLines(stream: ReturnType<typeof useProgressiveStream>, key: strin
 }
 
 const metaTones = {
-  blue: "bg-[#dffafa] text-[#1677ff]",
-  cyan: "bg-[#e3f8ff] text-[#1482a8]",
-  emerald: "bg-[#e5ffc6] text-[#8ec63f]",
-  amber: "bg-[#fff0bf] text-[#f4b400]"
+  blue: "bg-teachpad-aqua text-brand",
+  cyan: "bg-cyan-50 text-cyan-700",
+  emerald: "bg-teachpad-green text-lime-500",
+  amber: "bg-teachpad-yellow text-amber-500"
 };
 
 const numericCardTones = {
-  blue: { badge: "bg-[#1677ff]" },
-  pink: { badge: "bg-[#f05b7a]" },
-  emerald: { badge: "bg-[#8ec63f]" },
-  amber: { badge: "bg-[#f4b400]" },
-  cyan: { badge: "bg-[#2c75d0]" }
+  blue: { badge: "bg-brand" },
+  pink: { badge: "bg-rose-400" },
+  emerald: { badge: "bg-lime-500" },
+  amber: { badge: "bg-amber-500" },
+  cyan: { badge: "bg-blue-600" }
 };
 
 const sectionTones = {

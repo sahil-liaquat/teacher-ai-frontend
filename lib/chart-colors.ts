@@ -30,3 +30,10 @@ export const CHART_LABEL_STRONG = "#475569";
 /** Pass/fail colouring on the activation-rate figures. green-600 / red-600. */
 export const CHART_GOOD = "#16a34a";
 export const CHART_BAD = "#dc2626";
+
+/**
+ * Progress ramp for the "continue preparing" ring, indexed by how many steps a
+ * teacher has finished. red-500 → orange-500 → amber-500 → lime-500 →
+ * emerald-500, each an exact stock Tailwind step.
+ */
+export const PROGRESS_RAMP = ["#ef4444", "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#10b981"] as const;

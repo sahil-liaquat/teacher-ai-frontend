@@ -128,16 +128,16 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
         role="dialog"
         aria-modal="true"
         aria-labelledby="streak-drawer-title"
-        className="absolute right-0 top-0 flex h-[100dvh] w-full max-w-full flex-col border-l border-[#d9e5f3] bg-[linear-gradient(180deg,#f4f9ff_0%,#ffffff_210px)] shadow-2xl sm:w-[420px]"
+        className="absolute right-0 top-0 flex h-[100dvh] w-full max-w-full flex-col border-l border-blue-200 bg-[linear-gradient(180deg,#f4f9ff_0%,#ffffff_210px)] shadow-2xl sm:w-[420px]"
       >
-        <header className="relative flex min-h-[96px] items-start justify-between overflow-hidden border-b border-[#dbeafe] px-4 py-4 min-[390px]:min-h-[108px] min-[390px]:px-5 min-[390px]:py-5 sm:px-6">
+        <header className="relative flex min-h-[96px] items-start justify-between overflow-hidden border-b border-blue-100 px-4 py-4 min-[390px]:min-h-[108px] min-[390px]:px-5 min-[390px]:py-5 sm:px-6">
           <div className="relative z-10">
-            <p className="text-micro font-black uppercase tracking-[0.18em] text-[#f45f98]">Keep showing up</p>
-            <h2 id="streak-drawer-title" className="mt-1 text-xl font-black text-[#071b49]">Your Teaching Streak</h2>
-            <span className="mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-[#1677ff] to-[#16a9b6]" />
+            <p className="text-micro font-black uppercase tracking-[0.18em] text-pink-500">Keep showing up</p>
+            <h2 id="streak-drawer-title" className="mt-1 text-xl font-black text-fg">Your Teaching Streak</h2>
+            <span className="mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-brand to-cyan-600" />
           </div>
           <img src="/avatars/elif-celebrate.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-10 right-11 hidden h-28 w-28 object-contain opacity-95 min-[350px]:block min-[390px]:-bottom-12 min-[390px]:right-12 min-[390px]:h-32 min-[390px]:w-32" />
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="relative z-10 grid h-9 w-9 place-items-center rounded-xl bg-white/80 text-[#6d6f78] shadow-sm ring-1 ring-white transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff]">
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="relative z-10 grid h-9 w-9 place-items-center rounded-card bg-white/80 text-fg-muted shadow-sm ring-1 ring-white transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
             <X className="h-5 w-5" />
           </button>
         </header>
@@ -145,10 +145,10 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 min-[390px]:px-5 min-[390px]:py-5 sm:px-6">
           {!summary ? <DrawerSkeleton /> : (
             <>
-              <section className="rounded-[22px] border border-white/80 bg-gradient-to-br from-[#fffaf0] via-white to-[#eff6ff] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
-                <p className="text-4xl font-black tracking-tight text-[#071b49]">🔥 {summary.current_streak} {summary.current_streak === 1 ? "day" : "days"}</p>
-                <p className="mt-2 text-sm font-semibold leading-6 text-[#6d6f78]">{drawerCopy(summary)}</p>
-                <p className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#126de8] shadow-sm ring-1 ring-[#dbeafe]">Best streak: {summary.best_streak} {summary.best_streak === 1 ? "day" : "days"}</p>
+              <section className="rounded-[22px] border border-white/80 bg-gradient-to-br from-amber-50 via-white to-blue-50 p-5 shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
+                <p className="text-4xl font-black tracking-tight text-fg">🔥 {summary.current_streak} {summary.current_streak === 1 ? "day" : "days"}</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-fg-muted">{drawerCopy(summary)}</p>
+                <p className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-brand shadow-sm ring-1 ring-blue-100">Best streak: {summary.best_streak} {summary.best_streak === 1 ? "day" : "days"}</p>
               </section>
 
               <section className="mt-6">
@@ -174,14 +174,14 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
                 ) : null}
               </section>
 
-              <section className={cn("mt-6 rounded-[22px] border p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]", unlocked ? "border-[#c7f7ed] bg-gradient-to-br from-[#ecfff6] to-white" : "border-[#dbeafe] bg-gradient-to-br from-[#eff6ff] to-white")}>
+              <section className={cn("mt-6 rounded-[22px] border p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]", unlocked ? "border-teachpad-mint bg-gradient-to-br from-emerald-50 to-white" : "border-blue-100 bg-gradient-to-br from-blue-50 to-white")}>
                 <div className="flex items-center gap-2 text-sm font-black text-slate-900"><Gift className="h-4 w-4 text-blue-600" /> Next reward</div>
                 {rewards.isError ? <RetryState label="Could not load rewards" onRetry={() => void rewards.refetch()} /> : nextReward ? (
                   <div className="mt-3">
                     <p className="text-lg font-black text-slate-950">{nextReward.status === "unlocked" ? "Reward unlocked" : remainingCopy(nextReward)}</p>
                     <p className="mt-1 text-sm font-semibold text-slate-600">🎁 Unlock {nextReward.reward_label}</p>
                     {nextReward.status === "unlocked" ? (
-                      <Link href="/dashboard/streak" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#24b77a] to-[#159565] px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(36,183,122,0.18)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#24b77a] focus-visible:ring-offset-2">View certificate <ArrowRight className="h-4 w-4" /></Link>
+                      <Link href="/dashboard/streak" onClick={onClose} className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-card bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(36,183,122,0.18)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">View certificate <ArrowRight className="h-4 w-4" /></Link>
                     ) : (
                       <Link
                         href="/dashboard/classroom-tools"
@@ -189,7 +189,7 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
                           onClose();
                           void backendApi.trackStreakEvent({ event_name: "streak_cta_clicked", current_streak: summary.current_streak, milestone: nextReward.milestone_days }).catch(() => undefined);
                         }}
-                        className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1677ff] to-[#0969e8] px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff] focus-visible:ring-offset-2"
+                        className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-card bg-gradient-to-r from-brand to-blue-600 px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                       >
                         {summary.has_started ? "Create today’s resource" : "Create your first resource"}<ArrowRight className="h-4 w-4" />
                       </Link>
@@ -201,13 +201,13 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[#edf2f8] bg-white/90 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur min-[390px]:px-5 min-[390px]:pb-[calc(1rem+env(safe-area-inset-bottom))] min-[390px]:pt-4 sm:px-6">
+        <footer className="shrink-0 border-t border-slate-100 bg-white/90 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur min-[390px]:px-5 min-[390px]:pb-[calc(1rem+env(safe-area-inset-bottom))] min-[390px]:pt-4 sm:px-6">
           <Link
             href="/dashboard/streak"
             onClick={() => {
               onClose();
             }}
-            className="flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-bold text-[#126de8] transition hover:bg-[#eef6ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff]"
+            className="flex h-10 items-center justify-center gap-2 rounded-card text-sm font-bold text-brand transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             View full journey <ArrowRight className="h-4 w-4" />
           </Link>
@@ -239,7 +239,7 @@ function DrawerSkeleton() {
 }
 
 function RetryState({ label, onRetry }: { label: string; onRetry: () => void }) {
-  return <button type="button" onClick={onRetry} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-white"><RotateCcw className="h-3.5 w-3.5" />{label}. Retry</button>;
+  return <button type="button" onClick={onRetry} className="mt-4 flex w-full items-center justify-center gap-2 rounded-card border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-white"><RotateCcw className="h-3.5 w-3.5" />{label}. Retry</button>;
 }
 
 function drawerCopy(summary: StreakSummary) {

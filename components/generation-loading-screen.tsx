@@ -46,8 +46,8 @@ export function GenerationLoadingScreen({
   }, [state, status]);
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-[#ffffff] px-4 py-6 text-slate-900 [color-scheme:light] sm:px-5 lg:px-8">
-      <section className="relative w-full overflow-hidden bg-[#ffffff]">
+    <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-full items-center justify-center bg-white px-4 py-6 text-slate-900 [color-scheme:light] sm:px-5 lg:px-8">
+      <section className="relative w-full overflow-hidden bg-white">
 
         {state === "error" ? (
           <div className="relative flex min-h-[420px] flex-col items-center justify-center gap-5 px-5 py-10 text-center">
@@ -134,7 +134,7 @@ function BookLoadingLoader() {
   }, []);
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center bg-[#ffffff] [color-scheme:light]">
+    <div className="relative flex h-full w-full items-center justify-center bg-white [color-scheme:light]">
       <div
         ref={containerRef}
         aria-hidden="true"

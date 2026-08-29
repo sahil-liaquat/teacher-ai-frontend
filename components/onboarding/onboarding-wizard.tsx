@@ -142,14 +142,14 @@ function OptionCard({
       className={cn(
         "flex items-center justify-start w-full h-[56px] sm:h-[72px] px-3 sm:px-5 rounded-[14px] sm:rounded-[18px] border transition-all duration-200 text-left active:scale-[0.98] group",
         selected
-          ? "border-[#2563EB] bg-[#2563EB]/[0.04] shadow-sm"
+          ? "border-blue-600 bg-blue-600/[0.04] shadow-sm"
           : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50/50"
       )}
       style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}
     >
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <div className={cn(
-          "w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 overflow-hidden",
+          "w-8 h-8 sm:w-11 sm:h-11 rounded-control sm:rounded-card flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 overflow-hidden",
           imgSrc ? "bg-slate-50 border border-slate-100 p-1" : theme?.bg
         )}>
           {imgSrc ? (
@@ -288,9 +288,9 @@ export function OnboardingWizard() {
                       className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-200",
                         index === step
-                          ? "border-2 border-[#2563EB] bg-white text-[#2563EB]"
+                          ? "border-2 border-blue-600 bg-white text-blue-600"
                           : index < step
-                          ? "bg-[#2563EB] text-white"
+                          ? "bg-blue-600 text-white"
                           : "border border-slate-200 text-slate-400 bg-white"
                       )}
                     >
@@ -300,7 +300,7 @@ export function OnboardingWizard() {
                       <div
                         className={cn(
                           "h-[2px] w-8 transition-all duration-200 mx-1",
-                          index < step ? "bg-[#2563EB]" : "bg-slate-100"
+                          index < step ? "bg-blue-600" : "bg-slate-100"
                         )}
                       />
                     )}
@@ -396,7 +396,7 @@ export function OnboardingWizard() {
                         placeholder="Enter your school's name"
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
-                        className="h-11 sm:h-14 rounded-xl border-slate-200 px-4 text-sm sm:text-base focus-visible:ring-[#2563EB]"
+                        className="h-11 sm:h-14 rounded-card border-slate-200 px-4 text-sm sm:text-base focus-visible:ring-blue-600"
                       />
                     </div>
                   </div>
@@ -476,7 +476,7 @@ export function OnboardingWizard() {
                     type="button"
                     onClick={handleFinishStep}
                     disabled={submitting}
-                    className="flex items-center gap-1.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full px-6 h-11 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 shadow-sm"
+                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 h-11 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 shadow-sm"
                   >
                     {submitting ? "Saving…" : createFirst ? "Let's go" : "Finish"}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -489,7 +489,7 @@ export function OnboardingWizard() {
                       (step === 0 && !role) ||
                       (step === 1 && !board)
                     }
-                    className="flex items-center gap-1.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full px-6 h-11 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 shadow-sm"
+                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 h-11 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 shadow-sm"
                   >
                     Continue
                     <ArrowRight className="w-3.5 h-3.5" />

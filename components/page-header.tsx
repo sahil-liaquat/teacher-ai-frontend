@@ -22,13 +22,13 @@ export function PageHeader({
         isHero ? "rounded-[32px] px-5 py-5 sm:px-6 lg:min-h-[180px]" : "rounded-[24px] px-4 py-4 sm:px-5"
       )}
     >
-      <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#bfdbfe]/25 blur-2xl" />
-      <div className="pointer-events-none absolute right-8 top-6 hidden text-2xl font-black text-[#b5c5df] sm:block">*</div>
+      <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-blue-200/25 blur-2xl" />
+      <div className="pointer-events-none absolute right-8 top-6 hidden text-2xl font-black text-blue-300 sm:block">*</div>
       {illustration ? <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] lg:block">{illustration}</div> : null}
       <div className={cn("relative z-10 min-w-0 flex-1", illustration ? "lg:max-w-[64%]" : "")}>
         <h1 className={cn(
           "font-black tracking-normal",
-          isHero ? "max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02] text-transparent" : "text-h3 leading-tight text-[#071b49] sm:text-h3"
+          isHero ? "max-w-3xl bg-gradient-to-r from-blue-800 via-brand to-cyan-600 bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02] text-transparent" : "text-h3 leading-tight text-fg sm:text-h3"
         )}>{title}</h1>
         {description ? (
           <p className={cn("max-w-2xl text-teachpad-muted", isHero ? "mt-3 text-sm font-semibold leading-6 sm:text-base" : "mt-2 text-sm font-semibold leading-6")}>

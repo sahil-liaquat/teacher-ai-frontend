@@ -264,7 +264,11 @@ test("preparation progress uses a rounded SVG ring", () => {
 
   assert.match(continueCard, /strokeLinecap="round"/);
   assert.match(continueCard, /strokeWidth="18"/);
-  assert.match(continueCard, /const progressColor = \["#ef4444".+"#10b981"\]/);
+  // The ramp itself moved to lib/chart-colors.ts, because an SVG stroke takes a
+  // paint value and cannot be a Tailwind class. Same six values, same order —
+  // asserted there so this still pins red-500 through emerald-500.
+  assert.match(continueCard, /const progressColor = PROGRESS_RAMP\[/);
+  assert.match(source("lib/chart-colors.ts"), /PROGRESS_RAMP = \["#ef4444".+"#10b981"\]/);
   assert.doesNotMatch(continueCard, /\{progress\.percentage\}% complete/);
   assert.doesNotMatch(continueCard, /preparation-progress-gradient/);
   assert.doesNotMatch(continueCard, /conic-gradient/);
