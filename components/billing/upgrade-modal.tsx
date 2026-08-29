@@ -344,9 +344,11 @@ function UpgradeModalUI({
         <div
           className={cn(
             "relative shrink-0 overflow-hidden px-6 py-7",
+            // Dark enough that 14px text on it clears AA. On the old
+            // #1677ff even pure white only reached 4.10:1.
             pastDue
-              ? "bg-gradient-to-br from-[#eb3b5a] to-[#a4133c]"
-              : "bg-gradient-to-br from-[#1677ff] to-[#0040d9]"
+              ? "bg-gradient-to-br from-rose-700 to-rose-900"
+              : "bg-gradient-to-br from-blue-600 to-blue-800"
           )}
         >
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
@@ -363,7 +365,7 @@ function UpgradeModalUI({
               <p aria-hidden="true" className="text-lead font-extrabold text-white">
                 {pastDue ? "Payment didn't go through" : "Upgrade to Pro"}
               </p>
-              <p className={cn("mt-0.5 text-sm font-medium", pastDue ? "text-rose-100" : "text-blue-100")}>
+              <p className={cn("mt-0.5 text-sm font-medium", pastDue ? "text-rose-100" : "text-blue-50")}>
                 {pastDue
                   ? "Clear the pending amount to restore your plan"
                   : "Unlock the full power of TeachPad AI"}
