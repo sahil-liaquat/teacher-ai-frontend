@@ -45,51 +45,51 @@ const statCards = [
 
 const cardStyles: Record<string, { card: string; hoverCard: string; iconBox: string; iconShadow: string; glow: string }> = {
   blue: {
-    card: "bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white",
-    hoverCard: "hover:from-[#dbeafe] hover:via-[#eff6ff] hover:to-white",
-    iconBox: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+    card: "bg-gradient-to-br from-blue-50 via-blue-50 to-white",
+    hoverCard: "hover:from-blue-100 hover:via-blue-50 hover:to-white",
+    iconBox: "bg-blue-50 text-blue-500 ring-blue-100",
     iconShadow: "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
-    glow: "bg-[#bfdbfe]/30"
+    glow: "bg-blue-200/30"
   },
   green: {
     card: "bg-gradient-to-br from-white via-emerald-50/70 to-white",
     hoverCard: "hover:from-emerald-100 hover:via-emerald-50/80 hover:to-white",
-    iconBox: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100",
+    iconBox: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     iconShadow: "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-emerald-200/30"
   },
   yellow: {
-    card: "bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white",
-    hoverCard: "hover:from-[#fef3c7] hover:via-amber-50/90 hover:to-white",
-    iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+    card: "bg-gradient-to-br from-amber-50 via-amber-50/80 to-white",
+    hoverCard: "hover:from-amber-100 hover:via-amber-50/90 hover:to-white",
+    iconBox: "bg-amber-50 text-amber-500 ring-amber-100",
     iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-amber-200/30"
   },
   pink: {
     card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
     hoverCard: "hover:from-pink-100 hover:via-pink-50/80 hover:to-white",
-    iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
+    iconBox: "bg-pink-50 text-pink-500 ring-pink-100",
     iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-pink-200/30"
   },
   red: {
     card: "bg-gradient-to-br from-white via-rose-50/80 to-white",
     hoverCard: "hover:from-rose-100 hover:via-rose-50/90 hover:to-white",
-    iconBox: "bg-[#fff7f8] text-[#eb3b5a] ring-[#ffd9de]",
+    iconBox: "bg-rose-50 text-rose-500 ring-teachpad-red",
     iconShadow: "shadow-[0_14px_30px_rgba(235,59,90,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-rose-200/30"
   },
   aqua: {
-    card: "bg-gradient-to-br from-[#f0fdff] via-cyan-50/70 to-white",
-    hoverCard: "hover:from-[#cff7fb] hover:via-cyan-50/80 hover:to-white",
-    iconBox: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb]",
+    card: "bg-gradient-to-br from-cyan-50 via-cyan-50/70 to-white",
+    hoverCard: "hover:from-cyan-100 hover:via-cyan-50/80 hover:to-white",
+    iconBox: "bg-cyan-50 text-cyan-600 ring-teachpad-sky",
     iconShadow: "shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-cyan-200/30"
   },
   orange: {
     card: "bg-gradient-to-br from-white via-amber-50/50 to-white",
     hoverCard: "hover:from-amber-100 hover:via-amber-50/70 hover:to-white",
-    iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+    iconBox: "bg-amber-50 text-amber-500 ring-amber-100",
     iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
     glow: "bg-amber-200/30"
   }
@@ -193,8 +193,8 @@ const dashboardTools = [
 
 const recentTypeClasses: Record<string, { iconBg: string; pill: string }> = {
   "Lesson Plan": {
-    iconBg: "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]",
-    pill: "bg-[#eff6ff] text-[#1d4ed8]"
+    iconBg: "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600",
+    pill: "bg-blue-50 text-blue-700"
   },
   Worksheet: {
     iconBg: "bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600",
@@ -433,7 +433,7 @@ export default function DashboardClient() {
             <button 
               type="button"
               onClick={() => setIsCustomizing(false)}
-              className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-655 transition"
+              className="p-1.5 rounded-card hover:bg-slate-100 text-slate-400 hover:text-slate-655 transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -467,7 +467,7 @@ export default function DashboardClient() {
                   )}>
                     <Check className="h-3.5 w-3.5 stroke-[3]" />
                   </div>
-                  <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
+                  <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-card", toneClass(item.tone))}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -484,7 +484,7 @@ export default function DashboardClient() {
             <button
               type="button"
               onClick={() => setTempSelectedIds(["lesson-planner", "worksheet-generator", "notes-generator", "saved-resources", "classroom-tools"])}
-              className="text-xs font-bold text-[#159565] hover:underline"
+              className="text-xs font-bold text-emerald-700 hover:underline"
             >
               Reset to Defaults
             </button>
@@ -492,7 +492,7 @@ export default function DashboardClient() {
               <button
                 type="button"
                 onClick={() => setIsCustomizing(false)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+                className="px-4 py-2 rounded-card border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
@@ -500,7 +500,7 @@ export default function DashboardClient() {
                 type="button"
                 onClick={handleSave}
                 disabled={tempSelectedIds.length === 0}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="px-4 py-2 rounded-card bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Save Changes
               </button>
@@ -556,7 +556,7 @@ export default function DashboardClient() {
               <>
                 {[0, 1, 2, 3].map((i) => (
                   <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
-                    <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
+                    <div className="flex h-12 w-12 rounded-card bg-red-100 items-center justify-center sm:h-14 sm:w-14">
                       <span className="text-red-400 text-xl">!</span>
                     </div>
                     <div className="flex-1">
@@ -620,31 +620,31 @@ export default function DashboardClient() {
             <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
-                <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+                <Link href="/dashboard/recent-generations" className="rounded-card border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
                   View All
                 </Link>
               </div>
               <div className="space-y-2">
                 {statsLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
-                      <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
+                    <div key={i} className="flex items-center gap-3 rounded-card p-2.5 animate-pulse">
+                      <div className="h-10 w-10 shrink-0 rounded-card bg-slate-200" />
                       <div className="min-w-0 flex-1 space-y-2">
                         <div className="h-4 w-3/4 rounded bg-slate-200" />
                         <div className="h-3 w-1/2 rounded bg-slate-100" />
                       </div>
-                      <div className="h-6 w-16 rounded-lg bg-slate-100" />
+                      <div className="h-6 w-16 rounded-control bg-slate-100" />
                     </div>
                   ))
                 ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
                   <Link
                     key={`${item.type}-${item.id || item.topic}-${index}`}
                     href={item.href}
-                    className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
+                    className="clickable-card premium-hover-sm flex items-center gap-3 rounded-card p-2.5 transition-all duration-200 [--clickable-card-hover-bg:theme(colors.blue.100)] w-full min-w-0"
                   >
                     <div className={cn(
-                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                      recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-card",
+                      recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"
                     )}>
                       {item.type === "Worksheet"
                         ? <FileText className="h-5 w-5" />
@@ -661,8 +661,8 @@ export default function DashboardClient() {
                       <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
                     </div>
                     <span className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
-                      recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
+                      "rounded-control px-2.5 py-1 text-xs font-semibold shrink-0",
+                      recentTypeClasses[item.type]?.pill || "bg-blue-50 text-blue-700"
                     )}>
                       {item.type}
                     </span>
@@ -685,7 +685,7 @@ export default function DashboardClient() {
             </div>
             {statsLoading ? (
               <div className="grid flex-1 gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-                <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col animate-pulse">
+                <div className="rounded-card border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col animate-pulse">
                   <div className="mb-3 h-4 w-24 rounded bg-slate-200" />
                   <div className="flex-1 flex items-center justify-center gap-4">
                     <div className="h-[108px] w-[108px] rounded-full bg-slate-200" />
@@ -695,7 +695,7 @@ export default function DashboardClient() {
             ) : (
               <>
                 <div className="grid flex-1 gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-                  <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col justify-center">
+                  <div className="rounded-card border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col justify-center">
                     <p className="mb-3 text-sm font-bold text-slate-900">Your Usage</p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                       <div className="relative shrink-0" style={{ width: "108px", height: "108px" }}>
@@ -712,7 +712,7 @@ export default function DashboardClient() {
                       </div>
                       <div className="space-y-3 text-xs font-semibold text-slate-650">
                         <div className="flex items-center gap-2">
-                          <span className="h-3 w-3 rounded-full bg-[#3b82f6]" />
+                          <span className="h-3 w-3 rounded-full bg-blue-500" />
                           <span>Lessons: {lessonMonthlyTotal}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -735,7 +735,7 @@ export default function DashboardClient() {
                     </div>
                   </div>
                   
-                  <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col">
+                  <div className="rounded-card border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 flex flex-col">
                     <p className="mb-3 text-sm font-bold text-slate-900">Daily Generations</p>
                     <div className="flex-1 flex items-end justify-between gap-2 px-1 min-h-[96px]">
                       {last7DaysBars.map((bar, i) => {
@@ -744,16 +744,15 @@ export default function DashboardClient() {
                         return (
                           <div key={bar.label} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
                             <div
-                              className="w-full max-w-[40px] rounded-t-lg"
-                              style={{
-                                height: `${pct}%`,
-                                background: isLast
-                                  ? "linear-gradient(180deg, #3b82f6, #1d4ed8)"
-                                  : "linear-gradient(180deg, #60a5fa, #60a5fa)",
-                                boxShadow: isLast ? "0 4px 16px rgba(37, 99, 235, 0.4)" : "0 2px 8px rgba(59, 130, 246, 0.2)"
-                              }}
+                              className={cn(
+                                "w-full max-w-[40px] rounded-t-control",
+                                isLast
+                                  ? "bg-gradient-to-b from-blue-500 to-blue-700 shadow-e2"
+                                  : "bg-blue-400 shadow-e1"
+                              )}
+                              style={{ height: `${pct}%` }}
                             />
-                            <span className={`text-micro font-semibold ${isLast ? "text-[#2563eb]" : "text-slate-400"}`}>
+                            <span className={`text-micro font-semibold ${isLast ? "text-blue-600" : "text-slate-400"}`}>
                               {bar.label}
                             </span>
                           </div>
@@ -764,8 +763,8 @@ export default function DashboardClient() {
                 </div>
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                  <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                  <div className="flex min-h-[88px] items-center gap-3 rounded-card border border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-amber-100">
                       <Lightbulb className="h-5 w-5 text-amber-600" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -773,12 +772,12 @@ export default function DashboardClient() {
                       <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">Use textbook-based AI for accurate, board-aligned content.</p>
                     </div>
                   </div>
-                  <div className="flex min-h-[88px] items-center gap-3 rounded-xl border border-[#dbeafe] bg-gradient-to-r from-[#eff6ff] to-[#e0f2fe] p-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#dbeafe]">
-                      <Clock3 className="h-5 w-5 text-[#2563eb]" />
+                  <div className="flex min-h-[88px] items-center gap-3 rounded-card border border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-blue-100">
+                      <Clock3 className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-[#1e40af]">Time Saved</p>
+                      <p className="text-sm font-bold text-blue-800">Time Saved</p>
                       <p className="mt-0.5 text-lg font-extrabold text-slate-900">{estimatedHoursSaved} Hours</p>
                     </div>
                   </div>
@@ -799,7 +798,7 @@ export default function DashboardClient() {
                 setTempSelectedIds(selectedQuickAccessIds);
                 setIsCustomizing(true);
               }}
-              className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
+              className="flex items-center gap-2 rounded-card border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
             >
               Customize <Settings2 className="h-4 w-4" />
             </button>
@@ -811,9 +810,9 @@ export default function DashboardClient() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="clickable-card premium-hover flex min-h-[82px] items-center gap-3 rounded-xl border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md [--clickable-card-hover-bg:linear-gradient(135deg,#dffafa_0%,#ffffff_74%)]"
+                  className="clickable-card premium-hover flex min-h-[82px] items-center gap-3 rounded-card border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md [--clickable-card-hover-bg:linear-gradient(135deg,#dffafa_0%,#ffffff_74%)]"
                 >
-                  <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
+                  <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-card", toneClass(item.tone))}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -900,10 +899,10 @@ export default function DashboardClient() {
                     key={tool.title}
                     href={tool.href}
                     onClick={() => setSearchQuery("")}
-                    className="flex items-start gap-3 rounded-xl p-2.5 transition-all duration-200 hover:bg-slate-50/80 active:bg-slate-100/80 group/item"
+                    className="flex items-start gap-3 rounded-card p-2.5 transition-all duration-200 hover:bg-slate-50/80 active:bg-slate-100/80 group/item"
                   >
                     <span className={cn(
-                      "grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-transform group-hover/item:scale-105 shadow-sm ring-1 ring-slate-100",
+                      "grid h-9 w-9 shrink-0 place-items-center rounded-card transition-transform group-hover/item:scale-105 shadow-sm ring-1 ring-slate-100",
                       tool.tone === "blue" ? "bg-blue-50 text-blue-500" :
                       tool.tone === "green" ? "bg-emerald-50 text-emerald-500" :
                       tool.tone === "red" ? "bg-rose-50 text-rose-500" :
@@ -938,7 +937,7 @@ export default function DashboardClient() {
             <>
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
-                  <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
+                  <div className="flex h-12 w-12 rounded-card bg-red-100 items-center justify-center sm:h-14 sm:w-14">
                     <span className="text-red-400 text-xl">!</span>
                   </div>
                   <div className="flex-1">
@@ -973,7 +972,7 @@ export default function DashboardClient() {
 
       {/* View All Button below Cards */}
       <div className="mx-auto flex w-full max-w-[1240px] justify-center mt-4 mb-10 px-4">
-        <Link href="/dashboard/classroom-tools" className="rounded-xl border border-white/70 bg-white/90 px-4 py-2 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+        <Link href="/dashboard/classroom-tools" className="rounded-card border border-white/70 bg-white/90 px-4 py-2 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
           View All Tools
         </Link>
       </div>
@@ -984,31 +983,31 @@ export default function DashboardClient() {
           <div className="w-full rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-sm">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
-              <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+              <Link href="/dashboard/recent-generations" className="rounded-card border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
                 View All
               </Link>
             </div>
             <div className="space-y-2">
               {statsLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
-                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
+                  <div key={i} className="flex items-center gap-3 rounded-card p-2.5 animate-pulse">
+                    <div className="h-10 w-10 shrink-0 rounded-card bg-slate-200" />
                     <div className="min-w-0 flex-1 space-y-2">
                       <div className="h-4 w-3/4 rounded bg-slate-200" />
                       <div className="h-3 w-1/2 rounded bg-slate-100" />
                     </div>
-                    <div className="h-6 w-16 rounded-lg bg-slate-100" />
+                    <div className="h-6 w-16 rounded-control bg-slate-100" />
                   </div>
                 ))
               ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
                 <Link
                   key={`${item.type}-${item.id || item.topic}-${index}`}
                   href={item.href}
-                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
+                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-card p-2.5 transition-all duration-200 [--clickable-card-hover-bg:theme(colors.blue.100)] w-full min-w-0"
                 >
                   <div className={cn(
-                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                    recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                    "grid h-10 w-10 shrink-0 place-items-center rounded-card",
+                    recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600"
                   )}>
                     {item.type === "Worksheet"
                       ? <FileText className="h-5 w-5" />
@@ -1025,8 +1024,8 @@ export default function DashboardClient() {
                     <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
                   </div>
                   <span className={cn(
-                    "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
-                    recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
+                    "rounded-control px-2.5 py-1 text-xs font-semibold shrink-0",
+                    recentTypeClasses[item.type]?.pill || "bg-blue-50 text-blue-700"
                   )}>
                     {item.type}
                   </span>
@@ -1053,7 +1052,7 @@ export default function DashboardClient() {
               setTempSelectedIds(selectedQuickAccessIds);
               setIsCustomizing(true);
             }}
-            className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
+            className="flex items-center gap-2 rounded-card border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm hover:bg-slate-50 transition active:scale-95"
           >
             Customize <Settings2 className="h-4 w-4" />
           </button>
@@ -1065,9 +1064,9 @@ export default function DashboardClient() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="clickable-card premium-hover flex min-h-[82px] items-center gap-3 rounded-xl border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md [--clickable-card-hover-bg:linear-gradient(135deg,#dffafa_0%,#ffffff_74%)]"
+                className="clickable-card premium-hover flex min-h-[82px] items-center gap-3 rounded-card border border-white/70 bg-white/50 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md [--clickable-card-hover-bg:linear-gradient(135deg,#dffafa_0%,#ffffff_74%)]"
               >
-                <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", toneClass(item.tone))}>
+                <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-card", toneClass(item.tone))}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -1088,7 +1087,7 @@ export default function DashboardClient() {
 function StatsErrorCard() {
   return (
     <div className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 sm:h-14 sm:w-14">
+      <div className="flex h-12 w-12 items-center justify-center rounded-card bg-red-100 sm:h-14 sm:w-14">
         <span className="text-xl text-red-400">!</span>
       </div>
       <div className="flex-1">
@@ -1103,31 +1102,31 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
   const gradients = {
     pink: {
       card: "bg-gradient-to-br from-white via-pink-50/70 to-white",
-      iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
+      iconBox: "bg-pink-50 text-pink-500 ring-pink-100",
       iconShadow: "shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-pink-200/30"
     },
     green: {
       card: "bg-gradient-to-br from-white via-emerald-50/70 to-white",
-      iconBox: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100",
+      iconBox: "bg-emerald-50 text-emerald-600 ring-emerald-100",
       iconShadow: "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-emerald-200/30"
     },
     orange: {
       card: "bg-gradient-to-br from-white via-amber-50/80 to-white",
-      iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+      iconBox: "bg-amber-50 text-amber-500 ring-amber-100",
       iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-amber-200/30"
     },
     blue: {
-      card: "bg-gradient-to-br from-white via-[#eff6ff] to-white",
-      iconBox: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+      card: "bg-gradient-to-br from-white via-blue-50 to-white",
+      iconBox: "bg-blue-50 text-blue-500 ring-blue-100",
       iconShadow: "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
-      glow: "bg-[#bfdbfe]/30"
+      glow: "bg-blue-200/30"
     },
     yellow: {
-      card: "bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white",
-      iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+      card: "bg-gradient-to-br from-amber-50 via-amber-50/80 to-white",
+      iconBox: "bg-amber-50 text-amber-500 ring-amber-100",
       iconShadow: "shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
       glow: "bg-amber-200/30"
     }
@@ -1167,7 +1166,7 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
             <p className="text-sm font-bold leading-snug text-slate-900 sm:text-sm transition-colors group-hover/card:text-blue-600">{label}</p>
             {isLoading ? (
               <>
-                <div className="h-7 w-12 rounded-lg bg-slate-200/80 animate-pulse my-1.5" />
+                <div className="h-7 w-12 rounded-control bg-slate-200/80 animate-pulse my-1.5" />
                 <div className="h-3 w-16 rounded bg-slate-100/80 animate-pulse" />
               </>
             ) : (
@@ -1264,6 +1263,17 @@ function CountUpNumber({ value }: { value: number }) {
   return <>{displayValue}</>;
 }
 
+const DONUT = {
+  lesson: "#1677ff", // blue-500
+  worksheet: "#10b981", // emerald-500
+  presentation: "#f43f5e", // rose-500
+  notes: "#8b5cf6", // violet-500
+  activity: "#f59e0b", // amber-500
+  empty: "#cbd5e1", // slate-300
+  track: "#f1f5f9", // slate-100
+  shadow: "#64748b" // slate-500
+} as const;
+
 function UsageDonut({
   lessonCount,
   worksheetCount,
@@ -1277,19 +1287,23 @@ function UsageDonut({
   notesCount: number;
   activityCount: number;
 }) {
+  // SVG paint attributes take a colour value, not a class, so these five have to
+  // stay literals. They mirror the Tailwind ramp one-for-one — blue-500,
+  // emerald-500, rose-500, violet-500, amber-500 — so the donut stays on the same
+  // palette as the cards around it. Retokenising means editing here, not hunting.
   const total = lessonCount + worksheetCount + presentationCount + notesCount + activityCount;
   const radius = 40;
   const strokeWidth = 14;
   const circumference = 2 * Math.PI * radius;
   const segments = total
     ? [
-        { value: lessonCount, color: "#3b82f6" },
-        { value: worksheetCount, color: "#0db986" },
-        { value: presentationCount, color: "#f43f5e" },
-        { value: notesCount, color: "#8b5cf6" },
-        { value: activityCount, color: "#f59e0b" }
+        { value: lessonCount, color: DONUT.lesson },
+        { value: worksheetCount, color: DONUT.worksheet },
+        { value: presentationCount, color: DONUT.presentation },
+        { value: notesCount, color: DONUT.notes },
+        { value: activityCount, color: DONUT.activity }
       ]
-    : [{ value: 1, color: "#d7dae4" }];
+    : [{ value: 1, color: DONUT.empty }];
   let offset = 0;
 
   return (
@@ -1299,10 +1313,10 @@ function UsageDonut({
           <circle cx="54" cy="54" r={radius} fill="none" stroke="white" strokeWidth={strokeWidth} pathLength="100" className="animate-usage-stroke-reveal" />
         </mask>
         <filter id="usage-donut-soft-shadow" x="-18%" y="-12%" width="136%" height="136%">
-          <feDropShadow dx="0" dy="5" stdDeviation="3.5" floodColor="#64748b" floodOpacity="0.18" />
+          <feDropShadow dx="0" dy="5" stdDeviation="3.5" floodColor={DONUT.shadow} floodOpacity="0.18" />
         </filter>
       </defs>
-      <circle cx="54" cy="54" r={radius} fill="none" stroke="#eef2f7" strokeWidth={strokeWidth} />
+      <circle cx="54" cy="54" r={radius} fill="none" stroke={DONUT.track} strokeWidth={strokeWidth} />
       <g className="animate-usage-rotate-once origin-center" filter="url(#usage-donut-soft-shadow)" mask="url(#usage-donut-reveal)">
         {segments.map((segment, index) => {
           const length = total ? (segment.value / total) * circumference : circumference;
@@ -1335,18 +1349,17 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
   const gradients = {
     card: isGreen
       ? "bg-gradient-to-br from-emerald-50 via-green-50 to-white"
-      : "bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white",
+      : "bg-gradient-to-br from-blue-50 via-blue-50 to-white",
     iconBox: isGreen
-      ? "bg-[#ecfff6] text-[#24b77a] ring-emerald-100"
-      : "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+      ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+      : "bg-blue-50 text-blue-500 ring-blue-100",
     iconShadow: isGreen
       ? "shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]"
       : "shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)]",
-    glow: isGreen ? "bg-emerald-200/30" : "bg-[#bfdbfe]/30",
+    glow: isGreen ? "bg-emerald-200/30" : "bg-blue-200/30",
     button: isGreen
       ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
-      : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb] hover:from-[#2563eb] hover:to-[#1d4ed8]",
-    accent: isGreen ? "#10b981" : "#3b82f6"
+      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
   };
 
   return (
@@ -1390,7 +1403,7 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
             "h-10",
             "w-fit",
             "items-center justify-center gap-2",
-            "rounded-xl",
+            "rounded-card",
             "px-4",
             "text-sm font-bold text-white",
             "shadow-lg hover:shadow-xl",
@@ -1422,21 +1435,21 @@ function ActionPanel({ title, desc, href, button, icon: Icon, tone, illustration
               "shadow-lg backdrop-blur-sm",
               "flex flex-col items-center justify-center gap-1.5 p-3"
             )}>
-              <div className={cn("w-8 h-8 rounded-lg", isGreen ? "bg-emerald-100" : "bg-[#dbeafe]")}>
-                <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-[#2563eb]")} />
+              <div className={cn("w-8 h-8 rounded-control", isGreen ? "bg-emerald-100" : "bg-blue-100")}>
+                <Icon className={cn("h-8 w-8 p-1.5", isGreen ? "text-emerald-600" : "text-blue-600")} />
               </div>
-              <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-[#bfdbfe]")} />
-              <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-[#dbeafe]")} />
-              <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-[#bfdbfe]")} />
+              <div className={cn("w-12 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
+              <div className={cn("w-10 h-2 rounded-full", isGreen ? "bg-emerald-100" : "bg-blue-100")} />
+              <div className={cn("w-14 h-2 rounded-full", isGreen ? "bg-emerald-200" : "bg-blue-200")} />
             </div>
             <div className={cn(
               "absolute -top-3 -right-3",
               "h-9 w-9",
-              "rounded-xl border border-white/60 bg-white/80",
+              "rounded-card border border-white/60 bg-white/80",
               "shadow-md backdrop-blur-sm",
               "flex items-center justify-center"
             )}>
-              <Check className={cn("h-5 w-5", isGreen ? "text-emerald-500" : "text-[#3b82f6]")} />
+              <Check className={cn("h-5 w-5", isGreen ? "text-emerald-500" : "text-blue-500")} />
             </div>
           </div>
         </div>
@@ -1456,7 +1469,7 @@ function formatHours(hours: number) {
 
 function toneClass(tone: string) {
   const tones: Record<string, string> = {
-    blue: "bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white shadow-lg",
+    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg",
     pink: "bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-lg",
     green: "bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg",
     orange: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg",

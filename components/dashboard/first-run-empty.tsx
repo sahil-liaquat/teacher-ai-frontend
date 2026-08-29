@@ -24,7 +24,7 @@ export function FirstRunEmpty({ boardPreference }: { boardPreference?: string | 
         <div className="absolute -left-8 bottom-4 h-16 w-16 rounded-full bg-emerald-200/30 blur-2xl" />
 
         <div className="relative z-10 flex flex-col items-center">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-[22px] bg-[#ecfff6] text-[#24b77a] ring-1 ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-[22px] bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)]">
             <ClipboardCheck className="h-7 w-7 stroke-[2.3]" />
           </div>
           <h2 className="mt-5 text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
@@ -35,7 +35,7 @@ export function FirstRunEmpty({ boardPreference }: { boardPreference?: string | 
           </p>
           <Link
             href={href}
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:from-emerald-600 hover:to-green-700 hover:shadow-xl"
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-card bg-gradient-to-r from-emerald-500 to-green-600 px-5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:from-emerald-600 hover:to-green-700 hover:shadow-xl"
           >
             Create a Worksheet
             <ArrowRight className="h-4 w-4" />
