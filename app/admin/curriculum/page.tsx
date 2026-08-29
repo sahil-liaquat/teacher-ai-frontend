@@ -241,7 +241,10 @@ export default function AdminCurriculumPage() {
             </Button>
           </form>
 
-          <div className="mt-4 rounded-card border border-gray-200 overflow-hidden">
+          {/* overflow-x-auto, not overflow-hidden: this table is 564px wide and
+              the column is 260px at 360px, so `hidden` silently clipped 54% of
+              it with no way to scroll to the rest. */}
+          <div className="mt-4 overflow-x-auto rounded-card border border-gray-200">
             {classes.isLoading ? <div className="p-4"><LoadingState label="Loading classes" /></div> : null}
             {!classes.isLoading && selectedBoardId && !classes.data?.items?.length ? <div className="p-4"><EmptyState title="No classes found" /></div> : null}
             {classes.data?.items?.length ? (

@@ -119,8 +119,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="teachpad-page min-h-screen text-teachpad-ink">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 border-r border-teachpad-cardBorder bg-white/92 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-teachpad-cardBorder bg-white/92 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-xl transition-[transform,visibility] duration-300 lg:translate-x-0 lg:visible",
+          // A closed drawer is only moved off-screen, so its 16 links stayed in
+          // the tab order — a keyboard user on mobile tabbed through an
+          // invisible nav before reaching the page. `invisible` takes them out;
+          // transitioning visibility alongside transform keeps the slide-out,
+          // because visibility flips at the end of the duration when hiding.
+          mobileOpen ? "visible translate-x-0" : "invisible -translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
