@@ -201,6 +201,11 @@ function WorkshopCard({
   const seatsRemaining = workshop.max_capacity
     ? Math.max(0, workshop.max_capacity - workshop.registered_users_count)
     : null;
+  // The list endpoint has no date filter — it returns every published workshop,
+  // newest first — so a workshop that ran weeks ago still arrives here. The
+  // backend now refuses the registration; this stops us offering it in the
+  // first place instead of letting a teacher click into a 400.
+  const hasEnded = new Date(workshop.scheduled_at).getTime() < Date.now();
   const modeLabel = workshop.mode === "online" ? "Online" : workshop.mode === "offline" ? "Offline" : "Hybrid";
   const modeIcon = workshop.mode === "offline" ? <MapPin className="h-3.5 w-3.5" /> : workshop.mode === "hybrid" ? <Video className="h-3.5 w-3.5" /> : <Laptop className="h-3.5 w-3.5" />;
   const meetingLink = workshop.meeting_link?.trim() || null;
@@ -290,10 +295,21 @@ function WorkshopCard({
 
           <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-3">
             <div className="text-xs font-bold text-slate-500">
-              {seatsRemaining === null ? "Open seats" : `${seatsRemaining} seats left`}
+              {hasEnded
+                ? "This workshop has ended"
+                : seatsRemaining === null
+                  ? "Open seats"
+                  : `${seatsRemaining} seats left`}
             </div>
 
-            {!registered ? (
+            {hasEnded && !registered ? (
+              <Link
+                href={`/dashboard/workshops/${workshop.id}`}
+                className="inline-flex h-12 w-full items-center justify-center gap-1 rounded-[16px] border border-teachpad-cardBorder bg-white/85 px-3 text-sm font-extrabold text-teachpad-ink shadow-[0_10px_24px_var(--teachpad-shadowToolCard)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-teachpad-blue sm:text-base"
+              >
+                View Details <ChevronRight className="h-4 w-4" />
+              </Link>
+            ) : !registered ? (
               <div className="grid grid-cols-2 gap-2.5">
                 <Link
                   href={`/dashboard/workshops/${workshop.id}`}

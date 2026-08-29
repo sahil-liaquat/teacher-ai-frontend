@@ -165,6 +165,10 @@ export default function WorkshopDetailPage() {
     ? new Date() > new Date(workshop.registration_deadline)
     : false;
   const hasStarted = new Date() >= new Date(workshop.scheduled_at);
+  // hasStarted already governed cancelling; registration was checking only the
+  // deadline, which is nullable and unset in practice, so a workshop that ran
+  // weeks ago still offered a seat. The backend rejects it either way now.
+  const registrationClosed = isDeadlinePassed || hasStarted;
   const isRegistered = isAdminPreview ? false : workshop.is_registered;
   const canCancel = isRegistered && !hasStarted;
 
@@ -439,13 +443,13 @@ export default function WorkshopDetailPage() {
                     onClick={() => {
                       if (!isAdminPreview) registerMutation.mutate();
                     }}
-                    disabled={isAdminPreview || registerMutation.isPending || isDeadlinePassed}
+                    disabled={isAdminPreview || registerMutation.isPending || registrationClosed}
                     className="w-full h-11"
                     title={isAdminPreview ? "Registration is disabled in preview mode" : undefined}
                   >
                     {registerMutation.isPending
                       ? "Registering..."
-                      : isDeadlinePassed
+                      : registrationClosed
                       ? "Registration Closed"
                       : "Register Free Seat"}
                   </Button>
