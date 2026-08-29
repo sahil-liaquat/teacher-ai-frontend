@@ -13,6 +13,7 @@ import {
 import { getErrorMessage } from "@/lib/errors";
 import { claimGlobalCard, releaseGlobalCard } from "@/lib/global-card";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -137,65 +138,58 @@ export function FeedbackPromptModal() {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 py-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="feedback-modal-title"
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) skip();
+      }}
+      title={`How was your first ${label}?`}
+      description="Your feedback helps us make TeachPad better."
+      showClose={false}
+      className="gap-4 p-6"
     >
-      <div className="relative flex max-h-[90dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-[28px] border border-teachpad-cardBorder bg-white p-6 shadow-[0_32px_80px_rgba(22,119,255,0.18)]">
-        <div>
-          <h2 id="feedback-modal-title" className="text-lg font-black text-slate-900">
-            How was your first {label}?
-          </h2>
-          <p className="mt-1 text-sm font-semibold text-slate-500">
-            Your feedback helps us make TeachPad better.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1" role="radiogroup" aria-label="Star rating">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              role="radio"
-              aria-checked={rating === star}
-              aria-label={`${star} star${star > 1 ? "s" : ""}`}
-              className="p-1 transition-transform hover:scale-110"
-              onMouseEnter={() => setHover(star)}
-              onMouseLeave={() => setHover(0)}
-              onClick={() => setRating(star)}
-            >
-              <Star
-                className={cn(
-                  "h-8 w-8",
-                  (hover || rating) >= star ? "fill-amber-400 text-amber-400" : "text-slate-300"
-                )}
-              />
-            </button>
-          ))}
-        </div>
-
-        <label className="grid gap-1.5">
-          <span className="text-sm font-black text-slate-900">Anything we can improve? (optional)</span>
-          <Textarea
-            className="min-h-[80px]"
-            placeholder="Tell us what worked or what didn't…"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={2000}
-          />
-        </label>
-
-        <div className="mt-2 flex items-center justify-end gap-3">
-          <Button variant="outline" onClick={skip} disabled={submitting}>
-            Skip
-          </Button>
-          <Button onClick={submit} disabled={submitting || rating < 1}>
-            {submitting ? "Sending…" : "Submit"}
-          </Button>
-        </div>
+      <div className="flex items-center gap-1 pt-2" role="radiogroup" aria-label="Star rating">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            role="radio"
+            aria-checked={rating === star}
+            aria-label={`${star} star${star > 1 ? "s" : ""}`}
+            className="p-1.5 transition-transform hover:scale-110"
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => setRating(star)}
+          >
+            <Star
+              className={cn(
+                "h-8 w-8",
+                (hover || rating) >= star ? "fill-amber-400 text-amber-400" : "text-slate-300"
+              )}
+            />
+          </button>
+        ))}
       </div>
-    </div>
+
+      <label className="grid gap-1.5">
+        <span className="text-sm font-black text-slate-900">Anything we can improve? (optional)</span>
+        <Textarea
+          className="min-h-[80px]"
+          placeholder="Tell us what worked or what didn't…"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          maxLength={2000}
+        />
+      </label>
+
+      <div className="mt-2 flex items-center justify-end gap-3">
+        <Button variant="outline" onClick={skip} disabled={submitting}>
+          Skip
+        </Button>
+        <Button onClick={submit} loading={submitting} disabled={rating < 1}>
+          {submitting ? "Sending…" : "Submit"}
+        </Button>
+      </div>
+    </Modal>
   );
 }

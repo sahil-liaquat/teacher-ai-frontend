@@ -10,6 +10,7 @@ import { useBilling } from "@/lib/use-billing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { normalizeIndianMobile } from "@/lib/phone";
 
@@ -190,25 +191,18 @@ function UpgradeModalUI({
   const [selected, setSelected] = useState<"pro_monthly" | "pro_annual">("pro_annual");
   const [loading, setLoading] = useState(false);
 
-  // Dismissal hardening: lock background scroll, ESC to close, and make the
-  // hardware/browser back button close the modal instead of navigating the app
-  // behind it. onClose (from the provider) is useCallback-stable, so run once.
+  // Make the hardware/browser back button close the modal instead of
+  // navigating the app behind it. Radix already owns the background scroll
+  // lock, Escape, the focus trap and focus restore — this is the one piece of
+  // the old hand-rolled hardening it does not provide, and it matters on the
+  // Android phones most of these teachers are on. onClose (from the provider)
+  // is useCallback-stable, so run once.
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-
     window.history.pushState({ tpUpgradeModal: true }, "");
     const onPop = () => onClose();
     window.addEventListener("popstate", onPop);
 
     return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKey);
       window.removeEventListener("popstate", onPop);
       // Closed via the X/backdrop/ESC (our history entry is still present) -> pop
       // it so the user's back button isn't "used up". If closed via Back, it's
@@ -326,22 +320,22 @@ function UpgradeModalUI({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 py-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="upgrade-modal-title"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title={pastDue ? "Payment didn't go through" : "Upgrade to Pro"}
+      hideTitle
+      showClose={false}
+      className="max-w-lg overflow-hidden p-0"
     >
-      <div
-        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-[28px] border border-teachpad-cardBorder bg-white shadow-[0_32px_80px_rgba(22,119,255,0.18)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <>
         {/* Close */}
         <button
           onClick={onClose}
           aria-label="Close upgrade dialog"
-          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-xl border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm transition-all hover:bg-teachpad-tag hover:text-teachpad-ink"
+          className="absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-control border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-e1 transition-colors hover:bg-teachpad-tag hover:text-teachpad-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           <X className="h-5 w-5" />
         </button>
@@ -349,7 +343,7 @@ function UpgradeModalUI({
         {/* Header */}
         <div
           className={cn(
-            "relative shrink-0 overflow-hidden rounded-t-[28px] px-6 py-7",
+            "relative shrink-0 overflow-hidden px-6 py-7",
             pastDue
               ? "bg-gradient-to-br from-[#eb3b5a] to-[#a4133c]"
               : "bg-gradient-to-br from-[#1677ff] to-[#0040d9]"
@@ -366,9 +360,9 @@ function UpgradeModalUI({
               )}
             </span>
             <div>
-              <h2 id="upgrade-modal-title" className="text-xl font-extrabold text-white">
+              <p aria-hidden="true" className="text-lead font-extrabold text-white">
                 {pastDue ? "Payment didn't go through" : "Upgrade to Pro"}
-              </h2>
+              </p>
               <p className={cn("mt-0.5 text-sm font-medium", pastDue ? "text-rose-100" : "text-blue-100")}>
                 {pastDue
                   ? "Clear the pending amount to restore your plan"
@@ -512,8 +506,8 @@ function UpgradeModalUI({
           </p>
         </div>
         )}
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 }
 

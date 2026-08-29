@@ -5,6 +5,7 @@ import { Gift, Sparkles, X } from "lucide-react";
 import { backendApi } from "@/lib/api";
 import { useBilling } from "@/lib/use-billing";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 
 /**
  * Shown once when gift.granted && !gift.acknowledged.
@@ -47,19 +48,23 @@ export function GiftModal() {
     : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="gift-modal-title"
+    <Modal
+      open={visible}
+      onOpenChange={(next) => {
+        if (!next) void dismiss();
+      }}
+      title="You've been gifted Pro!"
+      hideTitle
+      showClose={false}
+      className="overflow-hidden p-0"
     >
-      <div className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-teachpad-cardBorder bg-white shadow-[0_32px_80px_rgba(22,119,255,0.18)]">
+      <div className="relative">
         {/* Dismiss */}
         <button
           onClick={dismiss}
           disabled={dismissing}
           aria-label="Close gift notification"
-          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-xl border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm transition-all hover:bg-teachpad-tag hover:text-teachpad-ink"
+          className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-control border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-e1 transition-colors hover:bg-teachpad-tag hover:text-teachpad-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           <X className="h-4 w-4" />
         </button>
@@ -76,12 +81,9 @@ export function GiftModal() {
 
           <div className="relative mt-4 flex items-center justify-center gap-1.5">
             <Sparkles className="h-4 w-4 text-yellow-300" />
-            <h2
-              id="gift-modal-title"
-              className="text-xl font-extrabold text-white"
-            >
+            <p aria-hidden="true" className="text-lead font-extrabold text-white">
               You&apos;ve been gifted Pro!
-            </h2>
+            </p>
             <Sparkles className="h-4 w-4 text-yellow-300" />
           </div>
           <p className="relative mt-1.5 text-sm font-semibold text-purple-200">
@@ -112,14 +114,14 @@ export function GiftModal() {
           )}
 
           <Button
-            className="mt-5 h-12 w-full rounded-[14px] bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-base text-white shadow-[0_14px_28px_rgba(124,58,237,0.30)] hover:shadow-[0_18px_36px_rgba(124,58,237,0.36)] hover:-translate-y-0.5"
+            className="mt-5 h-12 w-full bg-violet-600 text-base text-white hover:bg-violet-700"
             onClick={dismiss}
-            disabled={dismissing}
+            loading={dismissing}
           >
             {dismissing ? "Just a moment..." : "Start using Pro"}
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
