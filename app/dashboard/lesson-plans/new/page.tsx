@@ -52,10 +52,10 @@ const abilityProfileOptions = [
     label: "Needs more support",
     body: "Smaller steps, scaffolds, and frequent checks",
     icon: Lightbulb,
-    bg: "bg-[#fffbeb]",
-    text: "text-[#d97706]",
-    border: "border-[#fcd34d]",
-    selectedBg: "bg-[#fffbeb]"
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    border: "border-amber-300",
+    selectedBg: "bg-amber-50"
   },
   {
     value: "mixed_ability",
@@ -74,7 +74,7 @@ const abilityProfileOptions = [
     icon: UserCheck,
     bg: "bg-[#ecfff6]",
     text: "text-[#24b77a]",
-    border: "border-[#6ee7b7]",
+    border: "border-emerald-300",
     selectedBg: "bg-[#ecfff6]"
   },
   {
@@ -83,8 +83,8 @@ const abilityProfileOptions = [
     body: "Deeper reasoning and transfer tasks",
     icon: Rocket,
     bg: "bg-[#f6f1ff]",
-    text: "text-[#8b5cf6]",
-    border: "border-[#c4b5fd]",
+    text: "text-violet-500",
+    border: "border-violet-300",
     selectedBg: "bg-[#f6f1ff]"
   }
 ] as const;
@@ -95,10 +95,10 @@ const classSizeOptions = [
     label: "Small",
     body: "Fewer than 20 students",
     icon: UserRound,
-    bg: "bg-[#f0fdfa]",
-    text: "text-[#0d9488]",
-    border: "border-[#5eead4]",
-    selectedBg: "bg-[#f0fdfa]"
+    bg: "bg-teal-50",
+    text: "text-teal-600",
+    border: "border-teal-300",
+    selectedBg: "bg-teal-50"
   },
   {
     value: "medium",
@@ -115,10 +115,10 @@ const classSizeOptions = [
     label: "Large",
     body: "More than 40 students",
     icon: Boxes,
-    bg: "bg-[#fff1f2]",
-    text: "text-[#e11d48]",
-    border: "border-[#fda4af]",
-    selectedBg: "bg-[#fff1f2]"
+    bg: "bg-rose-50",
+    text: "text-rose-600",
+    border: "border-rose-300",
+    selectedBg: "bg-rose-50"
   }
 ] as const;
 
@@ -525,10 +525,10 @@ export default function NewLessonPlanPage() {
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
-          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-emerald-300" : "bg-[#eceef3]")} />
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-emerald-300" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_10px_rgba(22,119,255,0.3)]" : "bg-teachpad-tag text-[#9CA0AA]"
+            step === 2 ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_10px_rgba(22,119,255,0.3)]" : "bg-teachpad-tag text-fg-muted"
           )}>
             2
           </div>
@@ -563,7 +563,7 @@ export default function NewLessonPlanPage() {
                           .map((c) => (
                             <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
                               className={cn(
-                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
                                   ? "bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-[0_4px_12px_rgba(22,119,255,0.25)]"
                                   : "border border-teachpad-cardBorder bg-white text-teachpad-ink hover:border-blue-200 hover:bg-blue-50/50"
@@ -657,7 +657,7 @@ export default function NewLessonPlanPage() {
                       {[30, 45, 60, 90].map((d) => (
                         <button key={d} type="button" onClick={() => setDuration(d)}
                           className={cn(
-                            "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-all duration-200",
+                            "inline-flex h-10 items-center gap-2 rounded-card border px-4 text-sm font-semibold transition-all duration-200",
                             duration === d
                               ? "border-blue-300 bg-gradient-to-r from-teachpad-blue to-blue-600 text-white shadow-sm"
                               : "border-teachpad-cardBorder bg-white text-teachpad-muted hover:border-blue-200 hover:bg-blue-50/50"
@@ -676,7 +676,7 @@ export default function NewLessonPlanPage() {
                       {["Interactive", "Activity Based", "Lecture + Discussion", "Inquiry Based"].map((style) => (
                         <button key={style} type="button" onClick={() => setTeachingStyle(style)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             teachingStyle === style
                               ? "border-blue-300 bg-teachpad-blue text-white shadow-sm"
                               : "border-teachpad-cardBorder bg-white text-teachpad-muted hover:border-blue-200 hover:bg-blue-50/50"
@@ -695,13 +695,13 @@ export default function NewLessonPlanPage() {
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-teachpad-blue to-blue-600 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -726,14 +726,14 @@ export default function NewLessonPlanPage() {
                       <span className="text-sm font-medium text-teachpad-muted">Learning Objectives</span>
                     </div>
                     <button type="button" onClick={suggestObjectives}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-teachpad-cardBorder bg-white px-3.5 py-2 text-xs font-semibold text-teachpad-blue shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 max-sm:px-2.5 max-sm:py-1.5"
+                      className="inline-flex items-center gap-1.5 rounded-card border border-teachpad-cardBorder bg-white px-3.5 py-2 text-xs font-semibold text-teachpad-blue shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50 max-sm:px-2.5 max-sm:py-1.5"
                     >
                       <Sparkles className="h-3.5 w-3.5 shrink-0" /> AI Suggest Objectives
                     </button>
                   </div>
                   <div className="space-y-2">
                     <textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)}
-                      className="min-h-[120px] w-full rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 py-2.5 text-base font-medium text-teachpad-ink outline-none transition-colors duration-200 placeholder:text-[#9CA0AA] focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 sm:text-sm"
+                      className="min-h-[120px] w-full rounded-card border border-teachpad-cardBorder bg-teachpad-input px-3.5 py-2.5 text-base font-medium text-teachpad-ink outline-none transition-colors duration-200 placeholder:text-fg-muted focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 sm:text-sm"
                       placeholder="Type your learning objectives here. Press Enter for multiple objectives."
                     />
                   </div>
@@ -760,7 +760,7 @@ export default function NewLessonPlanPage() {
                             : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${option.bg} ${option.text}`}>
                           <OptionIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -770,7 +770,7 @@ export default function NewLessonPlanPage() {
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{option.body}</p>
                         </div>
                       </button>
                     );
@@ -798,7 +798,7 @@ export default function NewLessonPlanPage() {
                             : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${option.bg} ${option.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${option.bg} ${option.text}`}>
                           <OptionIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -808,7 +808,7 @@ export default function NewLessonPlanPage() {
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${option.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{option.body}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{option.body}</p>
                         </div>
                       </button>
                     );
@@ -828,16 +828,16 @@ export default function NewLessonPlanPage() {
                     const CompIcon = comp.icon;
                     const active = selected.includes(comp.title);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]", border: "border-[#fcd34d]" },
+                      amber: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-300" },
                       blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]", border: "border-[#93c5fd]" },
-                      green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]", border: "border-[#6ee7b7]" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
-                      orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]", border: "border-[#fcd34d]" },
-                      pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]", border: "border-[#f9a8d4]" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
-                      teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]", border: "border-[#5eead4]" },
-                      indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]", border: "border-[#a5b4fc]" },
-                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
+                      green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]", border: "border-emerald-300" },
+                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]", border: "border-amber-300" },
+                      pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]", border: "border-pink-300" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      teal: { bg: "bg-teal-50", text: "text-teal-600", border: "border-teal-300" },
+                      indigo: { bg: "bg-indigo-50", text: "text-indigo-500", border: "border-indigo-300" },
+                      rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
                     };
                     const ct = toneMap[comp.color] || toneMap.blue;
                     return (
@@ -849,7 +849,7 @@ export default function NewLessonPlanPage() {
                             : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
                           <CompIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -859,7 +859,7 @@ export default function NewLessonPlanPage() {
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{comp.body}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{comp.body}</p>
                         </div>
                       </div>
                     );
@@ -870,7 +870,7 @@ export default function NewLessonPlanPage() {
               {/* Success Card */}
               <div className="rounded-2xl border border-teachpad-cardBorder bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-card bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
                   </div>
                   <div className="flex-1">
@@ -878,7 +878,7 @@ export default function NewLessonPlanPage() {
                     <p className="mt-1 text-sm text-emerald-600">Click Generate Lesson Plan and let AI do the magic!</p>
                   </div>
                   <div className="hidden flex-shrink-0 lg:block">
-                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-control bg-emerald-100/50">
                       <Sparkles className="h-6 w-6 text-emerald-500" />
                     </div>
                   </div>
@@ -888,18 +888,18 @@ export default function NewLessonPlanPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-cardBorder pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-teachpad-cardBorder bg-white px-5 text-sm font-semibold text-teachpad-muted shadow-sm transition-all duration-200 hover:border-teachpad-blue hover:text-teachpad-blue max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-cardBorder bg-white px-5 text-sm font-semibold text-teachpad-muted shadow-sm transition-all duration-200 hover:border-teachpad-blue hover:text-teachpad-blue max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="lesson_plan" />
                   <button type="button" disabled={!canGenerate} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-teachpad-blue to-blue-600 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,119,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,119,255,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Lesson Plan
                   </button>
@@ -920,18 +920,18 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
     orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
     pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
     aqua: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
-    rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
     <div className="min-w-0 rounded-2xl border border-teachpad-cardBorder bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <span className="text-xs font-medium text-teachpad-muted sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
@@ -943,7 +943,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-xl border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-sm text-[#9CA0AA]">
+    <div className="flex h-10 items-center rounded-card border border-teachpad-cardBorder bg-teachpad-input px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );

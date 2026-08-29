@@ -574,7 +574,7 @@ export default function NotesGeneratorPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#be185d] transition hover:text-[#d9467d]">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-pink-700 transition hover:text-[#d9467d]">
         <ArrowLeft className="h-4 w-4" />
         Back
       </HistoryBackButton>
@@ -587,17 +587,17 @@ export default function NotesGeneratorPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#d9467d] shadow-sm">
                 <NotebookPen className="h-4 w-4" /> Textbook notes
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Notes Generator</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Notes Generator</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9e8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9e8] bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Notes</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your notes by choosing the style, detail level, and sections to include.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Customize Your Notes</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Fine-tune your notes by choosing the style, detail level, and sections to include.</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
@@ -618,10 +618,10 @@ export default function NotesGeneratorPage() {
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
-          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#f9a8d4]" : "bg-[#eceef3]")} />
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-pink-300" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_10px_rgba(244,95,152,0.3)]" : "bg-[#fff1f7] text-[#9CA0AA]"
+            step === 2 ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_10px_rgba(244,95,152,0.3)]" : "bg-[#fff1f7] text-fg-muted"
           )}>
             2
           </div>
@@ -634,7 +634,7 @@ export default function NotesGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are you teaching?</h3>
+                  <h3 className="text-base font-bold text-fg">What are you teaching?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={GraduationCap} label="Board / Curriculum" required color="blue">
@@ -656,10 +656,10 @@ export default function NotesGeneratorPage() {
                           .map((c) => (
                             <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
                               className={cn(
-                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
                                   ? "bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-[0_4px_12px_rgba(244,95,152,0.25)]"
-                                  : "border border-[#ffd9e8] bg-white text-[#25262b] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                                  : "border border-[#ffd9e8] bg-white text-fg hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
                               )}
                             >{c.grade_number}</button>
                           ))}
@@ -692,7 +692,7 @@ export default function NotesGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are we learning?</h3>
+                  <h3 className="text-base font-bold text-fg">What are we learning?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={BookOpen} label="Book / Textbook" required color="green">
@@ -727,7 +727,7 @@ export default function NotesGeneratorPage() {
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {chapterNames[0].split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
                           <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#ffd9e8] bg-[#fff1f7] px-2.5 py-1 text-xs font-medium text-[#be185d] transition-colors hover:bg-[#ffe4f0]"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#ffd9e8] bg-[#fff1f7] px-2.5 py-1 text-xs font-medium text-pink-700 transition-colors hover:bg-[#ffe4f0]"
                           >
                             <Sparkles className="h-3 w-3 text-[#d9467d]" />{suggestion}
                           </button>
@@ -740,18 +740,18 @@ export default function NotesGeneratorPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9e8] pt-6">
-                <HistoryBackButton className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#d9467d]">
+                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-[#d9467d]">
                   Cancel
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d]" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -766,9 +766,9 @@ export default function NotesGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Notes Style</h3>
+                  <h3 className="text-base font-bold text-fg">Notes Style</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Choose the style, language, and level of detail for your notes.</p>
+                <p className="mb-4 text-sm text-fg-muted">Choose the style, language, and level of detail for your notes.</p>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={Globe} label="Language" color="pink">
                     <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
@@ -782,10 +782,10 @@ export default function NotesGeneratorPage() {
                       {styleOptions.map((style) => (
                         <button key={style} type="button" onClick={() => setNoteStyle(style)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             noteStyle === style
-                              ? "border-[#f9a8d4] bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
-                              : "border-[#ffd9e8] bg-white text-[#55516e] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                              ? "border-pink-300 bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
+                              : "border-[#ffd9e8] bg-white text-fg-muted hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
                           )}
                         >{style}</button>
                       ))}
@@ -796,10 +796,10 @@ export default function NotesGeneratorPage() {
                       {detailOptions.map((level) => (
                         <button key={level} type="button" onClick={() => setDetailLevel(level)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             detailLevel === level
-                              ? "border-[#f9a8d4] bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
-                              : "border-[#ffd9e8] bg-white text-[#55516e] hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
+                              ? "border-pink-300 bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-white shadow-sm"
+                              : "border-[#ffd9e8] bg-white text-fg-muted hover:border-[#ffd9e8] hover:bg-[#fff1f7]"
                           )}
                         >{level}</button>
                       ))}
@@ -812,9 +812,9 @@ export default function NotesGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fff1f7] text-xs font-bold text-[#d9467d]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
+                  <h3 className="text-base font-bold text-fg">What to Include</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your notes.</p>
+                <p className="mb-4 text-sm text-fg-muted">Select the sections you want in your notes.</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
                     { key: "includeKeyTerms" as const, label: "Key Terms", desc: "Important vocabulary with definitions", icon: BookOpen, color: "rose" },
@@ -828,10 +828,10 @@ export default function NotesGeneratorPage() {
                       : item.key === "includeSummary" ? includeSummary
                       : includeQuestions;
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      rose: { bg: "bg-[#fff1f7]", text: "text-[#d9467d]", border: "border-[#f9a8d4]" },
-                      amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
-                      teal: { bg: "bg-[#ecfdf5]", text: "text-[#059669]", border: "border-[#6ee7b7]" },
-                      violet: { bg: "bg-[#f5f3ff]", text: "text-[#7c3aed]", border: "border-[#c4b5fd]" },
+                      rose: { bg: "bg-[#fff1f7]", text: "text-[#d9467d]", border: "border-pink-300" },
+                      amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
+                      teal: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-300" },
+                      violet: { bg: "bg-violet-50", text: "text-violet-600", border: "border-violet-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.blue;
                     return (
@@ -849,17 +849,17 @@ export default function NotesGeneratorPage() {
                             : "border-[#ffd9e8] bg-white hover:border-[#ffd9e8] hover:bg-[#fff8fb]"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
                           <CompIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm font-semibold ${active ? ct.text : "text-[#25262b]"}`}>
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-fg"}`}>
                               {item.label}
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{item.desc}</p>
                         </div>
                       </div>
                     );
@@ -870,7 +870,7 @@ export default function NotesGeneratorPage() {
               {/* Success Card */}
               <div className="rounded-2xl border border-[#ffd9e8] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-card bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
                   </div>
                   <div className="flex-1">
@@ -878,7 +878,7 @@ export default function NotesGeneratorPage() {
                     <p className="mt-1 text-sm text-emerald-600">Click Generate Notes and let AI do the magic!</p>
                   </div>
                   <div className="hidden flex-shrink-0 lg:block">
-                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-control bg-emerald-100/50">
                       <Sparkles className="h-6 w-6 text-emerald-500" />
                     </div>
                   </div>
@@ -888,18 +888,18 @@ export default function NotesGeneratorPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-[#ffd9e8] pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd9e8] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#d9467d] hover:text-[#d9467d] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-[#ffd9e8] bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#d9467d] hover:text-[#d9467d] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d]" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="notes" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#f45f98] to-[#d9467d] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(244,95,152,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(244,95,152,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Notes
                   </button>
@@ -928,7 +928,7 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack, isSaved, o
             <button
               type="button"
               onClick={() => router.back()}
-              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-pink-700 transition hover:text-[#d9467d]"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back
             </button>
@@ -936,13 +936,13 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack, isSaved, o
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#be185d] transition hover:text-[#d9467d]"
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.08em] text-pink-700 transition hover:text-[#d9467d]"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
             </button>
           )}
-          <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{notes.title || "Generated Notes"}</h2>
-          <p className="mt-1 text-sm font-semibold text-[#55516e]">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
+          <h2 className="mt-2 break-words text-xl font-black text-fg">{notes.title || "Generated Notes"}</h2>
+          <p className="mt-1 text-sm font-semibold text-fg-muted">{notes.metadata?.chapter || "Textbook grounded notes"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -973,8 +973,8 @@ function NotesOutput({ notes, onCopy, onPdf, onShare, onSave, onBack, isSaved, o
         <NotesList title="Learning Goals" items={notes.learning_goals} />
         {(notes.sections || []).map((section: any, index: number) => (
           <section key={`${section.heading}-${index}`} className="mt-5 rounded-[14px] border border-[#ffd9e8] bg-[#fff8fb] p-4">
-            <h3 className="text-base font-black text-[#25262b]">{section.heading}</h3>
-            <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#55516e]">{section.explanation}</p>
+            <h3 className="text-base font-black text-fg">{section.heading}</h3>
+            <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-fg-muted">{section.explanation}</p>
             <NotesList title="Key Points" items={section.key_points} compact />
             <NotesList title="Examples" items={section.examples} compact />
           </section>
@@ -1001,20 +1001,20 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
     green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
     orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
     pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
     <div className="min-w-0 rounded-2xl border border-[#ffd9e8] bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
-        <span className="text-xs font-medium text-[#55516e] sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
+        <span className="text-xs font-medium text-fg-muted sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
       </div>
       {children}
     </div>
@@ -1023,7 +1023,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-xl border border-[#ffd9e8] bg-[#fff8fb] px-3.5 text-sm text-[#9CA0AA]">
+    <div className="flex h-10 items-center rounded-card border border-[#ffd9e8] bg-[#fff8fb] px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );
@@ -1033,8 +1033,8 @@ function NotesBlock({ title, body }: { title: string; body?: string }) {
   if (!body) return null;
   return (
     <section className="mt-5">
-      <h3 className="text-base font-black text-[#25262b]">{title}</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#55516e]">{body}</p>
+      <h3 className="text-base font-black text-fg">{title}</h3>
+      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-fg-muted">{body}</p>
     </section>
   );
 }
@@ -1043,9 +1043,9 @@ function NotesList({ title, items, compact = false }: { title: string; items?: s
   if (!items?.length) return null;
   return (
     <section className={compact ? "mt-3" : "mt-5"}>
-      <h3 className="text-sm font-black text-[#25262b]">{title}</h3>
-      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-[#55516e]">
-        {items.map((item, index) => <li key={`${item}-${index}`} className="rounded-lg bg-white px-3 py-2 shadow-sm">{item}</li>)}
+      <h3 className="text-sm font-black text-fg">{title}</h3>
+      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-fg-muted">
+        {items.map((item, index) => <li key={`${item}-${index}`} className="rounded-control bg-white px-3 py-2 shadow-sm">{item}</li>)}
       </ul>
     </section>
   );
@@ -1055,12 +1055,12 @@ function Terms({ terms }: { terms?: Array<{ term?: string; meaning?: string }> }
   if (!terms?.length) return null;
   return (
     <section className="mt-5">
-      <h3 className="text-base font-black text-[#25262b]">Key Terms</h3>
+      <h3 className="text-base font-black text-fg">Key Terms</h3>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {terms.map((term, index) => (
-          <div key={`${term.term}-${index}`} className="rounded-xl border border-[#ffd9e8] bg-white p-3">
-            <p className="text-sm font-black text-[#be185d]">{term.term}</p>
-            <p className="mt-1 text-sm font-medium leading-6 text-[#55516e]">{term.meaning}</p>
+          <div key={`${term.term}-${index}`} className="rounded-card border border-[#ffd9e8] bg-white p-3">
+            <p className="text-sm font-black text-pink-700">{term.term}</p>
+            <p className="mt-1 text-sm font-medium leading-6 text-fg-muted">{term.meaning}</p>
           </div>
         ))}
       </div>

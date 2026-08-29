@@ -581,25 +581,25 @@ export default function ActivityGeneratorPage() {
         Back
       </HistoryBackButton>
 
-      <div className="overflow-visible rounded-[18px] border border-[#c9f7fb] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
+      <div className="overflow-visible rounded-[18px] border border-teachpad-sky bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
         {/* Header */}
-        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
+        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-teachpad-sky bg-gradient-to-br from-[#f0fdff] to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
           {step === 1 ? (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#16a9b6] shadow-sm">
                 <Activity className="h-4 w-4" /> Classroom activity
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Activity Generator</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate textbook-grounded classroom activities with timing, materials, teacher actions, and assessment prompts.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Activity Generator</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Generate textbook-grounded classroom activities with timing, materials, teacher actions, and assessment prompts.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#c9f7fb] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teachpad-sky bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Activity</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your activity by choosing the type, duration, group size, and sections to include.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Customize Your Activity</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Fine-tune your activity by choosing the type, duration, group size, and sections to include.</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
@@ -620,10 +620,10 @@ export default function ActivityGeneratorPage() {
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
-          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#b2ebf2]" : "bg-[#eceef3]")} />
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#b2ebf2]" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-[0_4px_10px_rgba(22,169,182,0.3)]" : "bg-[#f0fdff] text-[#9CA0AA]"
+            step === 2 ? "bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-[0_4px_10px_rgba(22,169,182,0.3)]" : "bg-[#f0fdff] text-fg-muted"
           )}>
             2
           </div>
@@ -636,7 +636,7 @@ export default function ActivityGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0fdff] text-xs font-bold text-[#16a9b6]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are you teaching?</h3>
+                  <h3 className="text-base font-bold text-fg">What are you teaching?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={GraduationCap} label="Board / Curriculum" required color="purple">
@@ -658,10 +658,10 @@ export default function ActivityGeneratorPage() {
                           .map((c) => (
                             <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
                               className={cn(
-                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
                                   ? "bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-[0_4px_12px_rgba(22,169,182,0.25)]"
-                                  : "border border-[#c9f7fb] bg-white text-[#25262b] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                                  : "border border-teachpad-sky bg-white text-fg hover:border-teachpad-sky hover:bg-[#f0fdff]"
                               )}
                             >{c.grade_number}</button>
                           ))}
@@ -694,7 +694,7 @@ export default function ActivityGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0fdff] text-xs font-bold text-[#16a9b6]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are we learning?</h3>
+                  <h3 className="text-base font-bold text-fg">What are we learning?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={BookOpen} label="Book / Textbook" required color="teal">
@@ -725,13 +725,13 @@ export default function ActivityGeneratorPage() {
                   </FieldCard>
                   <FieldCard icon={Sparkles} label="Topic / Focus" color="amber">
                     <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Optional: Type a specific topic" maxLength={150}
-                      className="h-10 w-full rounded-xl border border-[#c9f7fb] bg-[#f8feff] px-3.5 text-sm font-medium text-[#25262b] outline-none transition-colors duration-200 placeholder:text-[#9CA0AA] focus:border-[#16a9b6] focus:bg-white focus:ring-4 focus:ring-[#b2ebf2]/60"
+                      className="h-10 w-full rounded-card border border-teachpad-sky bg-[#f8feff] px-3.5 text-sm font-medium text-fg outline-none transition-colors duration-200 placeholder:text-fg-muted focus:border-[#16a9b6] focus:bg-white focus:ring-4 focus:ring-[#b2ebf2]/60"
                     />
                     {chapterNames[0] && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {chapterNames[0].split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
                           <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#c9f7fb] bg-[#f0fdff] px-2.5 py-1 text-xs font-medium text-[#087c86] transition-colors hover:bg-[#e0fafc]"
+                            className="inline-flex items-center gap-1 rounded-full border border-teachpad-sky bg-[#f0fdff] px-2.5 py-1 text-xs font-medium text-[#087c86] transition-colors hover:bg-[#e0fafc]"
                           >
                             <Sparkles className="h-3 w-3 text-[#16a9b6]" />{suggestion}
                           </button>
@@ -743,19 +743,19 @@ export default function ActivityGeneratorPage() {
               </div>
 
               {/* Step 1 Navigation */}
-              <div className="flex items-center justify-between border-t border-[#c9f7fb] pt-6">
-                <HistoryBackButton className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#16a9b6]">
+              <div className="flex items-center justify-between border-t border-teachpad-sky pt-6">
+                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-[#16a9b6]">
                   Cancel
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6]" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -770,19 +770,19 @@ export default function ActivityGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0fdff] text-xs font-bold text-[#16a9b6]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Activity Setup</h3>
+                  <h3 className="text-base font-bold text-fg">Activity Setup</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Choose the type, duration, group size, and difficulty for your activity.</p>
+                <p className="mb-4 text-sm text-fg-muted">Choose the type, duration, group size, and difficulty for your activity.</p>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={Lightbulb} label="Activity Type" color="amber">
                     <div className="flex flex-wrap gap-2">
                       {activityTypes.map((type) => (
                         <button key={type} type="button" onClick={() => setActivityType(type)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             activityType === type
                               ? "border-[#b2ebf2] bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-sm"
-                              : "border-[#c9f7fb] bg-white text-[#55516e] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                              : "border-teachpad-sky bg-white text-fg-muted hover:border-teachpad-sky hover:bg-[#f0fdff]"
                           )}
                         >{type}</button>
                       ))}
@@ -793,10 +793,10 @@ export default function ActivityGeneratorPage() {
                       {[5, 10, 15, 20, 30, 45].map((d) => (
                         <button key={d} type="button" onClick={() => setDurationMinutes(d)}
                           className={cn(
-                            "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-all duration-200",
+                            "inline-flex h-10 items-center gap-2 rounded-card border px-4 text-sm font-semibold transition-all duration-200",
                             durationMinutes === d
                               ? "border-[#b2ebf2] bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-sm"
-                              : "border-[#c9f7fb] bg-white text-[#55516e] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                              : "border-teachpad-sky bg-white text-fg-muted hover:border-teachpad-sky hover:bg-[#f0fdff]"
                           )}
                         >{d} min</button>
                       ))}
@@ -807,10 +807,10 @@ export default function ActivityGeneratorPage() {
                       {groupSizes.map((size) => (
                         <button key={size} type="button" onClick={() => setGroupSize(size)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             groupSize === size
                               ? "border-[#b2ebf2] bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-sm"
-                              : "border-[#c9f7fb] bg-white text-[#55516e] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                              : "border-teachpad-sky bg-white text-fg-muted hover:border-teachpad-sky hover:bg-[#f0fdff]"
                           )}
                         >{size}</button>
                       ))}
@@ -821,10 +821,10 @@ export default function ActivityGeneratorPage() {
                       {["English", "Hindi", "Urdu"].map((lang) => (
                         <button key={lang} type="button" onClick={() => setLanguage(lang)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             language === lang
                               ? "border-[#b2ebf2] bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-sm"
-                              : "border-[#c9f7fb] bg-white text-[#55516e] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                              : "border-teachpad-sky bg-white text-fg-muted hover:border-teachpad-sky hover:bg-[#f0fdff]"
                           )}
                         >{lang}</button>
                       ))}
@@ -835,10 +835,10 @@ export default function ActivityGeneratorPage() {
                       {difficultyOptions.map((level) => (
                         <button key={level} type="button" onClick={() => setDifficulty(level)}
                           className={cn(
-                            "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
+                            "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             difficulty === level
                               ? "border-[#b2ebf2] bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-white shadow-sm"
-                              : "border-[#c9f7fb] bg-white text-[#55516e] hover:border-[#c9f7fb] hover:bg-[#f0fdff]"
+                              : "border-teachpad-sky bg-white text-fg-muted hover:border-teachpad-sky hover:bg-[#f0fdff]"
                           )}
                         >{level}</button>
                       ))}
@@ -851,9 +851,9 @@ export default function ActivityGeneratorPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0fdff] text-xs font-bold text-[#16a9b6]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What to Include</h3>
+                  <h3 className="text-base font-bold text-fg">What to Include</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Select the sections you want in your activity.</p>
+                <p className="mb-4 text-sm text-fg-muted">Select the sections you want in your activity.</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {[
                     { key: "includeMaterials" as const, label: "Materials", desc: "Resources required for the activity", icon: Boxes, color: "teal" },
@@ -865,9 +865,9 @@ export default function ActivityGeneratorPage() {
                       : item.key === "includeAssessment" ? includeAssessment
                       : includeDifferentiation;
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]", border: "border-[#5eead4]" },
-                      indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]", border: "border-[#a5b4fc]" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
+                      teal: { bg: "bg-teal-50", text: "text-teal-600", border: "border-teal-300" },
+                      indigo: { bg: "bg-indigo-50", text: "text-indigo-500", border: "border-indigo-300" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.teal;
                     return (
@@ -881,20 +881,20 @@ export default function ActivityGeneratorPage() {
                         className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
                           active
                             ? `${ct.border} ${ct.bg}`
-                            : "border-[#c9f7fb] bg-white hover:border-[#c9f7fb] hover:bg-[#f8feff]"
+                            : "border-teachpad-sky bg-white hover:border-teachpad-sky hover:bg-[#f8feff]"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
                           <CompIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className={`text-sm font-semibold ${active ? ct.text : "text-[#25262b]"}`}>
+                            <span className={`text-sm font-semibold ${active ? ct.text : "text-fg"}`}>
                               {item.label}
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{item.desc}</p>
                         </div>
                       </div>
                     );
@@ -903,9 +903,9 @@ export default function ActivityGeneratorPage() {
               </div>
 
               {/* Success Card */}
-              <div className="rounded-2xl border border-[#c9f7fb] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-teachpad-sky bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-card bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
                   </div>
                   <div className="flex-1">
@@ -913,7 +913,7 @@ export default function ActivityGeneratorPage() {
                     <p className="mt-1 text-sm text-emerald-600">Click Generate Activity and let AI do the magic!</p>
                   </div>
                   <div className="hidden flex-shrink-0 lg:block">
-                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-control bg-emerald-100/50">
                       <Sparkles className="h-6 w-6 text-emerald-500" />
                     </div>
                   </div>
@@ -921,20 +921,20 @@ export default function ActivityGeneratorPage() {
               </div>
 
               {/* Step 2 Navigation */}
-              <div className="flex items-center justify-between border-t border-[#c9f7fb] pt-6">
+              <div className="flex items-center justify-between border-t border-teachpad-sky pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#c9f7fb] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#16a9b6] hover:text-[#16a9b6] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-sky bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#16a9b6] hover:text-[#16a9b6] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6]" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="activity" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(22,169,182,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(22,169,182,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Activity
                   </button>
@@ -955,8 +955,8 @@ function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack, isSa
   const isSavedGeneration = Boolean(searchParams.get("id"));
 
   return (
-    <aside className="rounded-[18px] border border-[#c9f7fb] bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
-      <div className="flex flex-col gap-3 border-b border-[#c9f7fb] bg-gradient-to-br from-[#f0fdff] to-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <aside className="rounded-[18px] border border-teachpad-sky bg-white shadow-[0_14px_34px_rgba(39,30,91,0.07)]">
+      <div className="flex flex-col gap-3 border-b border-teachpad-sky bg-gradient-to-br from-[#f0fdff] to-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           {isSavedGeneration ? (
             <button
@@ -975,8 +975,8 @@ function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack, isSa
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Inputs
             </button>
           )}
-          <h2 className="mt-2 break-words text-xl font-black text-[#25262b]">{activity.title || "Generated Activity"}</h2>
-          <p className="mt-1 text-sm font-semibold text-[#55516e]">{activity.metadata?.chapter || "Textbook grounded activity"}</p>
+          <h2 className="mt-2 break-words text-xl font-black text-fg">{activity.title || "Generated Activity"}</h2>
+          <p className="mt-1 text-sm font-semibold text-fg-muted">{activity.metadata?.chapter || "Textbook grounded activity"}</p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onCopy}><ClipboardCopy className="h-4 w-4" /> Copy</Button>
@@ -999,20 +999,20 @@ function ActivityOutput({ activity, onCopy, onPdf, onShare, onSave, onBack, isSa
         <ListBlock title="Materials" items={activity.materials} />
         <ListBlock title="Setup" items={activity.setup} />
         {(activity.activity_steps || []).map((step: any, index: number) => (
-          <section key={`${step.phase}-${index}`} className="mt-5 rounded-[14px] border border-[#c9f7fb] bg-[#f8feff] p-4">
-            <h3 className="text-base font-black text-[#25262b]">{step.time} - {step.phase}</h3>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#55516e]"><span className="text-[#087c86]">Teacher:</span> {step.teacher_action}</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#55516e]"><span className="text-[#087c86]">Students:</span> {step.student_action}</p>
+          <section key={`${step.phase}-${index}`} className="mt-5 rounded-[14px] border border-teachpad-sky bg-[#f8feff] p-4">
+            <h3 className="text-base font-black text-fg">{step.time} - {step.phase}</h3>
+            <p className="mt-2 text-sm font-semibold leading-6 text-fg-muted"><span className="text-[#087c86]">Teacher:</span> {step.teacher_action}</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-fg-muted"><span className="text-[#087c86]">Students:</span> {step.student_action}</p>
           </section>
         ))}
         <TextBlock title="Grouping Plan" body={activity.grouping_plan} />
         <ListBlock title="Discussion Prompts" items={activity.discussion_prompts} />
         <ListBlock title="Assessment" items={activity.assessment} />
         {activity.differentiation ? (
-          <section className="mt-5 rounded-[14px] border border-[#c9f7fb] bg-white p-4">
-            <h3 className="text-base font-black text-[#25262b]">Differentiation</h3>
-            <p className="mt-2 text-sm font-medium leading-6 text-[#55516e]"><span className="font-black text-[#087c86]">Support:</span> {activity.differentiation.support}</p>
-            <p className="mt-2 text-sm font-medium leading-6 text-[#55516e]"><span className="font-black text-[#087c86]">Challenge:</span> {activity.differentiation.challenge}</p>
+          <section className="mt-5 rounded-[14px] border border-teachpad-sky bg-white p-4">
+            <h3 className="text-base font-black text-fg">Differentiation</h3>
+            <p className="mt-2 text-sm font-medium leading-6 text-fg-muted"><span className="font-black text-[#087c86]">Support:</span> {activity.differentiation.support}</p>
+            <p className="mt-2 text-sm font-medium leading-6 text-fg-muted"><span className="font-black text-[#087c86]">Challenge:</span> {activity.differentiation.challenge}</p>
           </section>
         ) : null}
         <ListBlock title="Exit Ticket" items={activity.exit_ticket} />
@@ -1033,21 +1033,21 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
     blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
     green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
     orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
     cyan: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
-    <div className="min-w-0 rounded-2xl border border-[#c9f7fb] bg-white p-4 shadow-sm sm:p-5">
+    <div className="min-w-0 rounded-2xl border border-teachpad-sky bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
-        <span className="text-xs font-medium text-[#55516e] sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
+        <span className="text-xs font-medium text-fg-muted sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
       </div>
       {children}
     </div>
@@ -1056,7 +1056,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-xl border border-[#c9f7fb] bg-[#f8feff] px-3.5 text-sm text-[#9CA0AA]">
+    <div className="flex h-10 items-center rounded-card border border-teachpad-sky bg-[#f8feff] px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );
@@ -1066,8 +1066,8 @@ function TextBlock({ title, body }: { title: string; body?: string }) {
   if (!body) return null;
   return (
     <section className="mt-5">
-      <h3 className="text-base font-black text-[#25262b]">{title}</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-[#55516e]">{body}</p>
+      <h3 className="text-base font-black text-fg">{title}</h3>
+      <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-6 text-fg-muted">{body}</p>
     </section>
   );
 }
@@ -1076,9 +1076,9 @@ function ListBlock({ title, items }: { title: string; items?: string[] }) {
   if (!items?.length) return null;
   return (
     <section className="mt-5">
-      <h3 className="text-base font-black text-[#25262b]">{title}</h3>
-      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-[#55516e]">
-        {items.map((item, index) => <li key={`${item}-${index}`} className="rounded-lg bg-white px-3 py-2 shadow-sm">{item}</li>)}
+      <h3 className="text-base font-black text-fg">{title}</h3>
+      <ul className="mt-2 grid gap-2 text-sm font-medium leading-6 text-fg-muted">
+        {items.map((item, index) => <li key={`${item}-${index}`} className="rounded-control bg-white px-3 py-2 shadow-sm">{item}</li>)}
       </ul>
     </section>
   );

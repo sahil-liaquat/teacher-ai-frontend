@@ -633,17 +633,17 @@ export default function NewWorksheetPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#159565] shadow-sm">
                 <Sparkles className="h-4 w-4" /> Printable practice
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Create Worksheet</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate clean A4 worksheets from selected textbook chapters with only the question types you choose.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Create Worksheet</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Generate clean A4 worksheets from selected textbook chapters with only the question types you choose.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#d8f1e5] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#d8f1e5] bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#22c977] to-[#079765] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Worksheet</h1>
-              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Choose question types, difficulty balance, and additional sections to include.</p>
+              <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Customize Your Worksheet</h1>
+              <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-fg-muted">Choose question types, difficulty balance, and additional sections to include.</p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
@@ -664,10 +664,10 @@ export default function NewWorksheetPage() {
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
-          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-[#6ee7b7]" : "bg-[#eceef3]")} />
+          <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-emerald-300" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-[#ecfff7] text-[#9CA0AA]"
+            step === 2 ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-[#ecfff7] text-fg-muted"
           )}>
             2
           </div>
@@ -680,7 +680,7 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are you teaching?</h3>
+                  <h3 className="text-base font-bold text-fg">What are you teaching?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={GraduationCap} label="Board / Curriculum" required color="blue">
@@ -702,10 +702,10 @@ export default function NewWorksheetPage() {
                           .map((c) => (
                             <button key={c.id} type="button" onClick={() => chooseClass(c.id)}
                               className={cn(
-                                "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                                "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
                                   ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
-                                  : "border border-[#d8f1e5] bg-white text-[#25262b] hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                                  : "border border-[#d8f1e5] bg-white text-fg hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
                               )}
                             >{c.grade_number}</button>
                           ))}
@@ -738,7 +738,7 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">What are we learning?</h3>
+                  <h3 className="text-base font-bold text-fg">What are we learning?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <FieldCard icon={BookOpen} label="Book / Textbook" required color="green">
@@ -803,18 +803,18 @@ export default function NewWorksheetPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-[#d8f1e5] pt-6">
-                <HistoryBackButton className="text-sm font-semibold text-[#55516e] transition-colors hover:text-[#159565]">
+                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-[#159565]">
                   Cancel
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#1fbc79] to-[#069462] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#1fbc79] to-[#069462] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -829,16 +829,16 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">1</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Question Types</h3>
+                  <h3 className="text-base font-bold text-fg">Question Types</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Only selected sections will appear in the worksheet.</p>
+                <p className="mb-4 text-sm text-fg-muted">Only selected sections will appear in the worksheet.</p>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {questionTypeOptions.map((type) => {
                     const active = questionTypes.includes(type);
                     return active ? (
                       <div
                         key={type}
-                        className="rounded-xl border p-3.5 transition-all duration-200 flex flex-col justify-between border-[#bdebd7] bg-[#ecfff7]/70 shadow-[0_10px_22px_rgba(22,163,99,0.06)] ring-2 ring-[#159565]/10"
+                        className="rounded-card border p-3.5 transition-all duration-200 flex flex-col justify-between border-[#bdebd7] bg-[#ecfff7]/70 shadow-[0_10px_22px_rgba(22,163,99,0.06)] ring-2 ring-[#159565]/10"
                       >
                         <button
                           type="button"
@@ -846,7 +846,7 @@ export default function NewWorksheetPage() {
                           aria-pressed={active}
                           className="flex w-full items-center justify-between gap-3 text-left"
                         >
-                          <span className="text-sm font-bold text-[#25262b]">{type}</span>
+                          <span className="text-sm font-bold text-fg">{type}</span>
                           <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-[#159565] bg-[#159565] text-white">✓</span>
                         </button>
                         <div className="mt-3 pt-2.5 border-t border-[#d8f1e5] flex items-center gap-3">
@@ -872,21 +872,21 @@ export default function NewWorksheetPage() {
                         type="button"
                         onClick={() => toggleQuestionType(type)}
                         aria-pressed={active}
-                        className="rounded-xl border p-3.5 transition-all duration-200 flex items-center justify-between gap-3 text-left border-[#e3ebd6] bg-white hover:border-[#bdebd7] hover:bg-[#f8fffb] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-[#159565]"
+                        className="rounded-card border p-3.5 transition-all duration-200 flex items-center justify-between gap-3 text-left border-[#e3ebd6] bg-white hover:border-[#bdebd7] hover:bg-[#f8fffb] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-[#159565]"
                       >
-                        <span className="text-sm font-bold text-[#25262b]">{type}</span>
+                        <span className="text-sm font-bold text-fg">{type}</span>
                         <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-slate-300 bg-white text-transparent hover:border-slate-400">✓</span>
                       </button>
                     );
                   })}
                 </div>
                 {!questionTypes.length ? (
-                  <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one question type.</p>
+                  <p className="mt-4 rounded-card border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">Select at least one question type.</p>
                 ) : null}
                 {questionTypes.length > 0 && (
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="text-sm font-semibold text-[#55516e]">
-                      Total questions: <span className="text-[#25262b]">{totalQuestions}</span>
+                    <span className="text-sm font-semibold text-fg-muted">
+                      Total questions: <span className="text-fg">{totalQuestions}</span>
                     </span>
                     {totalQuestions > 60 && (
                       <span className="text-xs font-semibold text-red-500">
@@ -901,19 +901,19 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">2</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Question Mix</h3>
+                  <h3 className="text-base font-bold text-fg">Question Mix</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">Choose the types of questions you want in the worksheet.</p>
+                <p className="mb-4 text-sm text-fg-muted">Choose the types of questions you want in the worksheet.</p>
                 <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {questionMixOptions.map((item) => {
                     const MixIcon = item.icon;
                     const active = questionMix.includes(item.value);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-[#6ee7b7]" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
-                      amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
-                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
+                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-emerald-300" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
+                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.green;
                     return (
@@ -925,7 +925,7 @@ export default function NewWorksheetPage() {
                             : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
                           <MixIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -935,7 +935,7 @@ export default function NewWorksheetPage() {
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{item.desc}</p>
                         </div>
                       </div>
                     );
@@ -947,9 +947,9 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">3</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Competency Focus</h3>
+                  <h3 className="text-base font-bold text-fg">Competency Focus</h3>
                 </div>
-                <p className="mb-4 text-sm text-[#55516e]">
+                <p className="mb-4 text-sm text-fg-muted">
                   Select up to three competencies. Leave blank and TeachPad will choose suitable competencies from the chapter.
                 </p>
                 <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -957,11 +957,11 @@ export default function NewWorksheetPage() {
                     const CompIcon = item.icon;
                     const active = competencyFocus.includes(item.value);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-[#6ee7b7]" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]", border: "border-[#c4b5fd]" },
-                      amber: { bg: "bg-[#fffbeb]", text: "text-[#b45309]", border: "border-[#fcd34d]" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]", border: "border-[#7dd3fc]" },
-                      rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]", border: "border-[#fda4af]" },
+                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-emerald-300" },
+                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
+                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.green;
                     return (
@@ -973,7 +973,7 @@ export default function NewWorksheetPage() {
                             : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50/30"
                         }`}
                       >
-                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${ct.bg} ${ct.text}`}>
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
                           <CompIcon className="h-6 w-6" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -983,7 +983,7 @@ export default function NewWorksheetPage() {
                             </span>
                             {active && <Check className={`h-3.5 w-3.5 flex-shrink-0 ${ct.text}`} strokeWidth={3} />}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#9CA0AA]">{item.desc}</p>
+                          <p className="mt-0.5 text-xs text-fg-muted">{item.desc}</p>
                         </div>
                       </div>
                     );
@@ -995,7 +995,7 @@ export default function NewWorksheetPage() {
               <div>
                 <div className="mb-4 flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">4</span>
-                  <h3 className="text-base font-bold text-[#25262b]">Difficulty Distribution</h3>
+                  <h3 className="text-base font-bold text-fg">Difficulty Distribution</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3 sm:gap-2">
                   {difficultyPresets.map((preset) => {
@@ -1006,10 +1006,10 @@ export default function NewWorksheetPage() {
                         type="button"
                         onClick={() => setDifficulty(preset.values)}
                         className={cn(
-                          "flex h-11 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 sm:text-base",
+                          "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                           active
                             ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
-                            : "border border-[#d8f1e5] bg-white text-[#25262b] hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                            : "border border-[#d8f1e5] bg-white text-fg hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
                         )}
                       >
                         {preset.label}
@@ -1022,7 +1022,7 @@ export default function NewWorksheetPage() {
               {/* Success Card */}
               <div className="rounded-2xl border border-[#bdebd7] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-card bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
                   </div>
                   <div className="flex-1">
@@ -1030,7 +1030,7 @@ export default function NewWorksheetPage() {
                     <p className="mt-1 text-sm text-emerald-600">Click Generate Worksheet and let AI do the magic!</p>
                   </div>
                   <div className="hidden flex-shrink-0 lg:block">
-                    <div className="flex h-12 w-16 items-center justify-center rounded-lg bg-emerald-100/50">
+                    <div className="flex h-12 w-16 items-center justify-center rounded-control bg-emerald-100/50">
                       <Sparkles className="h-6 w-6 text-emerald-500" />
                     </div>
                   </div>
@@ -1040,18 +1040,18 @@ export default function NewWorksheetPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-[#d8f1e5] pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#d8f1e5] bg-white px-5 text-sm font-semibold text-[#55516e] shadow-sm transition-all duration-200 hover:border-[#159565] hover:text-[#159565] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-[#d8f1e5] bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#159565] hover:text-[#159565] max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#eceef3]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="worksheet" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#1fbc79] to-[#069462] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#1fbc79] to-[#069462] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Worksheet
                   </button>
@@ -1070,20 +1070,20 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
     blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
     green: { bg: "bg-[#ecfff7]", text: "text-[#159565]" },
     orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
+    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
     <div className="min-w-0 rounded-2xl border border-[#d8f1e5] bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
-        <span className="text-xs font-medium text-[#55516e] sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
+        <span className="text-xs font-medium text-fg-muted sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>
       </div>
       {children}
     </div>
@@ -1092,7 +1092,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-xl border border-[#d8f1e5] bg-[#f8fffb] px-3.5 text-sm text-[#9CA0AA]">
+    <div className="flex h-10 items-center rounded-card border border-[#d8f1e5] bg-[#f8fffb] px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );
@@ -1127,8 +1127,8 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <span className="text-xs font-semibold text-[#55516e]">{label}</span>
-      <div className="flex items-center justify-between gap-1 overflow-hidden rounded-xl border border-[#d8f1e5] bg-white p-1 shadow-sm">
+      <span className="text-xs font-semibold text-fg-muted">{label}</span>
+      <div className="flex items-center justify-between gap-1 overflow-hidden rounded-card border border-[#d8f1e5] bg-white p-1 shadow-sm">
         <button
           type="button"
           disabled={value <= min}
@@ -1136,7 +1136,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
             const newVal = Math.max(min, value - 1);
             onChange(newVal);
           }}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           -
         </button>
@@ -1152,7 +1152,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
           }}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="w-8 bg-transparent text-center text-sm font-bold text-[#25262b] outline-none"
+          className="w-8 bg-transparent text-center text-sm font-bold text-fg outline-none"
         />
         <button
           type="button"
@@ -1161,7 +1161,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
             const newVal = Math.min(max, value + 1);
             onChange(newVal);
           }}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           +
         </button>
@@ -1232,34 +1232,34 @@ function MultiSelect({
         disabled={disabled || isLoading}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-xl border border-teachpad-cardBorder bg-[#f8fffb] px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-[#f3faf7] disabled:text-[#9CA0AA] sm:text-sm",
+          "flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-card border border-teachpad-cardBorder bg-[#f8fffb] px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-[#f3faf7] disabled:text-fg-muted sm:text-sm",
           isOpen && "border-teachpad-blue bg-white ring-4 ring-blue-100/60"
         )}
       >
-        <span className={cn("block truncate", (isLoading || selectedValues.length === 0) ? "text-[#9CA0AA]" : "text-[#25262b]")}>
+        <span className={cn("block truncate", (isLoading || selectedValues.length === 0) ? "text-fg-muted" : "text-fg")}>
           {triggerLabel}
         </span>
         {isLoading ? (
           <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-[#159565]" />
         ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-[#9CA0AA] transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }} />
+          <ChevronDown className="h-4 w-4 shrink-0 text-fg-muted transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }} />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-xl border border-[#d8f1e5] bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
+        <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-card border border-[#d8f1e5] bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
           <div className="flex items-center justify-end border-b border-[#d8f1e5] px-3 py-1.5 bg-[#f8fffb]">
             <button
               type="button"
               onClick={handleClear}
-              className="text-xs font-bold text-[#9CA0AA] hover:underline"
+              className="text-xs font-bold text-fg-muted hover:underline"
             >
               Clear
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-1.5 max-h-[180px]">
             {options.length === 0 ? (
-              <div className="px-2.5 py-4 text-center text-xs font-semibold text-[#9CA0AA]">
+              <div className="px-2.5 py-4 text-center text-xs font-semibold text-fg-muted">
                 No chapters found
               </div>
             ) : (
@@ -1270,7 +1270,7 @@ function MultiSelect({
                     key={option.value}
                     type="button"
                     onClick={() => handleToggle(option.value)}
-                    className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-semibold text-[#25262b] outline-none hover:bg-[#f8fffb] transition"
+                    className="flex w-full items-start gap-2.5 rounded-control px-2.5 py-2 text-left text-sm font-semibold text-fg outline-none hover:bg-[#f8fffb] transition"
                   >
                     <input
                       type="checkbox"
