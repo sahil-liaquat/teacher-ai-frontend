@@ -340,8 +340,8 @@ export default function WorksheetDetailPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center p-4">
-        <div className="w-full max-w-[420px] rounded-3xl border border-[#dffafa] bg-white p-8 text-center shadow-[0_20px_50px_rgba(39,30,91,0.04)]">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-[#6f3ee9]" />
+        <div className="w-full max-w-[420px] rounded-3xl border border-teachpad-aqua bg-white p-8 text-center shadow-[0_20px_50px_rgba(39,30,91,0.04)]">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-violet-600" />
           <p className="mt-5 text-sm font-bold text-slate-600">Loading worksheet...</p>
         </div>
       </div>
@@ -350,9 +350,9 @@ export default function WorksheetDetailPage() {
 
   if (!generation?.output_json) {
     return (
-      <div className="mx-auto max-w-[860px] rounded-[18px] border border-[#dffafa] bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
-        <h1 className="text-xl font-black text-[#25262b]">Worksheet not found</h1>
-        <p className="mt-2 text-sm font-medium text-[#6d6f78]">Generate a worksheet again to open the printable output.</p>
+      <div className="mx-auto max-w-[860px] rounded-[18px] border border-teachpad-aqua bg-white p-6 text-center shadow-[0_12px_30px_rgba(39,30,91,0.05)]">
+        <h1 className="text-xl font-black text-fg">Worksheet not found</h1>
+        <p className="mt-2 text-sm font-medium text-fg-muted">Generate a worksheet again to open the printable output.</p>
       </div>
     );
   }
@@ -361,7 +361,7 @@ export default function WorksheetDetailPage() {
     <div className="print-shell">
       <WorkspaceReturnBanner />
       {autoSaveFailed ? (
-        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-control border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
           <span>Changes not saved — we'll keep retrying as you edit.</span>
           <button
             type="button"

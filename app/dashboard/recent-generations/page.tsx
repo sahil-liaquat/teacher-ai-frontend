@@ -49,10 +49,10 @@ const typeColors: Record<GenerationType, string> = {
 };
 
 const typeCardColors: Record<GenerationType, string> = {
-  "lesson plan": "from-[#eff6ff] via-blue-50/55 to-white hover:border-blue-100",
+  "lesson plan": "from-blue-50 via-blue-50/55 to-white hover:border-blue-100",
   worksheet: "from-white via-emerald-50/65 to-white hover:border-emerald-100",
   notes: "from-white via-pink-50/65 to-white hover:border-pink-100",
-  activity: "from-[#f0fdff] via-cyan-50/65 to-white hover:border-cyan-100",
+  activity: "from-cyan-50 via-cyan-50/65 to-white hover:border-cyan-100",
   presentation: "from-white via-violet-50/65 to-white hover:border-violet-100",
 };
 
@@ -144,12 +144,12 @@ export default function RecentGenerationsPage() {
         </div>
       ) : generations.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-[22px] border border-dashed border-teachpad-cardBorder bg-white/70 px-4 py-12 text-center shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm sm:py-16">
-          <Clock3 className="h-12 w-12 text-[#9CA0AA]" />
-          <h3 className="text-lg font-bold text-[#25262b]">No generations yet</h3>
-          <p className="max-w-sm text-center text-sm text-[#55516e]">Create your first lesson plan or worksheet to see it here.</p>
+          <Clock3 className="h-12 w-12 text-fg-muted" />
+          <h3 className="text-lg font-bold text-fg">No generations yet</h3>
+          <p className="max-w-sm text-center text-sm text-fg-muted">Create your first lesson plan or worksheet to see it here.</p>
           <Link
             href="/dashboard/classroom-tools"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#2563eb] px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 rounded-card bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
           >
             <Sparkles className="h-4 w-4" />
             AI Tools
@@ -169,7 +169,7 @@ export default function RecentGenerationsPage() {
                 >
                   <div className="flex w-full min-w-0 items-start gap-3 sm:items-center">
                     <span className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-card ring-1",
                       typeColors[gen.type]
                     )}>
                       <Icon className="h-5 w-5" />
@@ -217,7 +217,7 @@ export default function RecentGenerationsPage() {
                   type="button"
                   disabled={page === 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-9 items-center justify-center gap-1 rounded-card border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Previous
                 </button>
@@ -225,7 +225,7 @@ export default function RecentGenerationsPage() {
                   type="button"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-9 items-center justify-center gap-1 rounded-card border border-white/70 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>

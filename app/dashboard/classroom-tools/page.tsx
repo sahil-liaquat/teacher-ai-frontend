@@ -12,39 +12,39 @@ const cardBase = "group/card relative overflow-hidden flex items-center gap-3 sm
 
 const cardStyles: Record<string, { card: string; glow: string; iconBox: string; text: string }> = {
   blue: {
-    card: "from-[#eff6ff] via-[#eff6ff] to-white",
-    glow: "bg-[#bfdbfe]/30",
-    iconBox: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100",
+    card: "from-blue-50 via-blue-50 to-white",
+    glow: "bg-blue-200/30",
+    iconBox: "bg-blue-50 text-blue-500 ring-blue-100",
     text: "group-hover/card:text-blue-600"
   },
   green: {
     card: "from-white via-emerald-50/70 to-white",
     glow: "bg-emerald-200/30",
-    iconBox: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100",
+    iconBox: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     text: "group-hover/card:text-emerald-600"
   },
   yellow: {
-    card: "from-[#fffaf0] via-amber-50/80 to-white",
+    card: "from-amber-50 via-amber-50/80 to-white",
     glow: "bg-amber-200/30",
-    iconBox: "bg-[#fff6df] text-[#f0a22f] ring-amber-100",
+    iconBox: "bg-amber-50 text-amber-500 ring-amber-100",
     text: "group-hover/card:text-amber-600"
   },
   pink: {
     card: "from-white via-pink-50/70 to-white",
     glow: "bg-pink-200/30",
-    iconBox: "bg-[#fff1f7] text-[#f45f98] ring-pink-100",
+    iconBox: "bg-pink-50 text-pink-500 ring-pink-100",
     text: "group-hover/card:text-pink-600"
   },
   red: {
     card: "from-white via-rose-50/75 to-white",
     glow: "bg-rose-200/30",
-    iconBox: "bg-[#fff7f8] text-[#eb3b5a] ring-[#ffd9de]",
+    iconBox: "bg-rose-50 text-rose-500 ring-teachpad-red",
     text: "group-hover/card:text-rose-600"
   },
   aqua: {
-    card: "from-[#f0fdff] via-cyan-50/70 to-white",
+    card: "from-cyan-50 via-cyan-50/70 to-white",
     glow: "bg-cyan-200/30",
-    iconBox: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb]",
+    iconBox: "bg-cyan-50 text-cyan-600 ring-teachpad-sky",
     text: "group-hover/card:text-cyan-600"
   },
   lavender: {
@@ -117,7 +117,7 @@ export default function ClassroomToolsPage() {
                 <div className="flex items-center gap-2">
                   <h2 className={cn("text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors", s.text)}>{tool.title}</h2>
                   {tool.status !== "ready" ? (
-                    <Badge className="shrink-0 border-[#fff0bf] bg-[#fff0bf] px-2 py-0 text-micro text-[#b97800]">
+                    <Badge className="shrink-0 border-teachpad-yellow bg-teachpad-yellow px-2 py-0 text-micro text-amber-700">
                       {tool.badge}
                     </Badge>
                   ) : null}

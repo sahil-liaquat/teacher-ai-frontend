@@ -17,9 +17,9 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const statTiles = [
-  { label: "Boards", key: "boards", icon: "layers", tone: "bg-[#eef6ff]" },
-  { label: "Classes", key: "classes", icon: "graduationCap", tone: "bg-[#f0fdff]" },
-  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-[#fff1f7]" }
+  { label: "Boards", key: "boards", icon: "layers", tone: "bg-blue-50" },
+  { label: "Classes", key: "classes", icon: "graduationCap", tone: "bg-cyan-50" },
+  { label: "Books", key: "books", icon: "bookOpen", tone: "bg-pink-50" }
 ] as const;
 
 export default function TeacherTextbooksPage() {
@@ -224,7 +224,7 @@ export default function TeacherTextbooksPage() {
         {statTiles.map((stat) => {
           const value = stat.key === "boards" ? boards.length : summary[stat.key];
           return (
-            <div key={stat.key} className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+            <div key={stat.key} className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-blue-50 to-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <PastelIconTile name={stat.icon} className={cn("h-12 w-12 rounded-2xl", stat.tone)} />
                 <div>
@@ -272,7 +272,7 @@ export default function TeacherTextbooksPage() {
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-12 rounded-xl border border-slate-200/80 bg-white/60 hover:bg-white/80 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none shadow-[0_8px_20px_rgba(15,23,42,0.03)] focus:shadow-[0_12px_24px_rgba(37,99,235,0.06)] focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 ease-in-out"
+              className="w-full h-10 pl-10 pr-12 rounded-card border border-slate-200/80 bg-white/60 hover:bg-white/80 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none shadow-[0_8px_20px_rgba(15,23,42,0.03)] focus:shadow-[0_12px_24px_rgba(37,99,235,0.06)] focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 ease-in-out"
             />
             {searchQuery ? (
               <button
@@ -389,7 +389,7 @@ function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) 
       onClick={onSelect}
       className="clickable-card group overflow-hidden rounded-[22px] border border-white/70 bg-white text-left shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_48px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
     >
-      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-br from-white via-[#f8fbff] to-white p-5 transition-colors duration-200 group-hover:from-[#eef6ff] group-hover:via-white group-hover:to-white">
+      <div className="flex min-h-full flex-col gap-4 bg-gradient-to-br from-white via-blue-50 to-white p-5 transition-colors duration-200 group-hover:from-blue-50 group-hover:via-white group-hover:to-white">
         <div className="flex min-w-0 items-start gap-3">
           {boardLogo ? (
             <span className="grid h-20 w-20 shrink-0 place-items-center rounded-[20px] bg-white p-2 shadow-sm">
@@ -406,7 +406,7 @@ function BoardCard({ board, onSelect }: { board: Board; onSelect: () => void }) 
           </div>
         </div>
         <div className="mt-auto flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 rounded-xl bg-teachpad-blue px-4 py-2 text-sm font-black text-white shadow-[0_10px_22px_rgba(22,119,255,0.20)] transition group-hover:bg-[#0f63d6]">
+          <span className="inline-flex items-center gap-2 rounded-card bg-teachpad-blue px-4 py-2 text-sm font-black text-white shadow-[0_10px_22px_rgba(22,119,255,0.20)] transition group-hover:bg-blue-600">
             View classes <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </span>
         </div>
@@ -420,7 +420,7 @@ function ClassCard({ cls, onSelect }: { cls: ClassItem; onSelect: () => void }) 
     <button
       type="button"
       onClick={onSelect}
-      className="clickable-card group rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
+      className="clickable-card group rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-blue-50 to-white p-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-[0_18px_42px_var(--teachpad-shadowToolCard)] [--clickable-card-hover-bg:linear-gradient(135deg,#dbeafe_0%,#ffffff_74%)]"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -443,7 +443,7 @@ function SubjectShelf({ subject, books, boardId, classId }: { subject: string; b
     <article className="rounded-[22px] border border-white/70 bg-white/86 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <PastelIconTile name="bookOpen" className="h-12 w-12 rounded-[18px] bg-[#eef6ff]" />
+          <PastelIconTile name="bookOpen" className="h-12 w-12 rounded-[18px] bg-blue-50" />
           <div className="min-w-0">
             <h2 className="truncate text-lg font-black text-teachpad-ink">{subject}</h2>
             <p className="text-xs font-bold text-teachpad-muted">{books.length} {books.length === 1 ? "textbook" : "textbooks"}</p>
@@ -507,14 +507,14 @@ function BookRow({ book, boardId, classId }: { book: Book; boardId: string; clas
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:border-blue-100 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
+    <div className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white via-blue-50 to-white shadow-[0_8px_22px_rgba(30,50,80,0.04)] transition hover:border-blue-100 hover:shadow-[0_14px_28px_var(--teachpad-shadowToolCard)]">
       <button type="button" onClick={() => void toggleBook()} disabled={!book.is_ingested} className="group flex w-full items-center gap-3 p-3 text-left disabled:cursor-not-allowed">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef6ff] text-[#3b82f6]"><BookOpen className="h-5 w-5" /></div>
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-card bg-blue-50 text-blue-500"><BookOpen className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black leading-5 text-teachpad-ink">{book.title}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <span className="rounded-full bg-teachpad-tag px-2 py-0.5 text-xs font-bold text-teachpad-muted">{book.subject || "General"}</span>
-            <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold", book.is_ingested ? "bg-[#e5ffc6] text-[#3d7b0f]" : "bg-[#fff0bf] text-[#b97800]")}>
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold", book.is_ingested ? "bg-teachpad-green text-lime-700" : "bg-teachpad-yellow text-amber-700")}>
               {book.is_ingested ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}{book.is_ingested ? "Ready" : "Pending"}
             </span>
           </div>
@@ -527,9 +527,9 @@ function BookRow({ book, boardId, classId }: { book: Book; boardId: string; clas
           {!loading && !error && !chapters.length ? <p className="px-2 py-3 text-xs font-semibold text-slate-500">No chapters are available for this book yet.</p> : null}
           <div className="space-y-1">
             {chapters.map((chapter) => (
-              <div key={chapter.id} className="flex flex-col gap-2 rounded-xl px-3 py-2.5 transition hover:bg-blue-50/60 sm:flex-row sm:items-center sm:justify-between">
+              <div key={chapter.id} className="flex flex-col gap-2 rounded-card px-3 py-2.5 transition hover:bg-blue-50/60 sm:flex-row sm:items-center sm:justify-between">
                 <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-800">Chapter {chapter.chapter_number}: {chapter.chapter_title}</span><span className="mt-0.5 block text-micro font-semibold text-slate-400">Open a saved teaching workspace for this chapter.</span></span>
-                <button type="button" disabled={startingChapterId === chapter.id} onClick={() => void startWorkspace(chapter)} className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-50 px-3 text-micro font-black text-violet-700 hover:bg-violet-100 disabled:opacity-60">{startingChapterId === chapter.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PanelsTopLeft className="h-3.5 w-3.5" />}Start Workspace</button>
+                <button type="button" disabled={startingChapterId === chapter.id} onClick={() => void startWorkspace(chapter)} className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-control bg-violet-50 px-3 text-micro font-black text-violet-700 hover:bg-violet-100 disabled:opacity-60">{startingChapterId === chapter.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PanelsTopLeft className="h-3.5 w-3.5" />}Start Workspace</button>
               </div>
             ))}
           </div>

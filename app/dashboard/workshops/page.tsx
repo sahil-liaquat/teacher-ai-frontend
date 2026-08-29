@@ -151,13 +151,13 @@ function EmptyWorkshopState({
   action?: React.ReactNode;
 }) {
   return (
-    <Card className="overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+    <Card className="overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-blue-50 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
       <CardContent className="p-8 text-center">
         <div className={cn(
           "mx-auto mb-4 grid h-16 w-16 place-items-center rounded-[22px] ring-1 shadow-[0_14px_30px_rgba(15,23,42,0.08)]",
           tone === "blue"
-            ? "bg-[#eef6ff] text-[#3b82f6] ring-blue-100"
-            : "bg-[#fff8e8] text-amber-600 ring-amber-100"
+            ? "bg-blue-50 text-blue-500 ring-blue-100"
+            : "bg-amber-50 text-amber-600 ring-amber-100"
         )}>
           {icon}
         </div>
@@ -208,10 +208,10 @@ function WorkshopCard({
   const primaryHost = workshop.hosts[0];
 
   return (
-    <Card className="group/card relative flex h-full overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]">
+    <Card className="group/card relative flex h-full overflow-hidden rounded-[18px] border-white/70 bg-gradient-to-br from-white via-blue-50 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]">
       <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-blue-200/25 blur-2xl" />
       <div className="relative flex min-h-full w-full flex-col">
-        <div className="relative m-3 mb-0 h-36 overflow-hidden rounded-[16px] bg-gradient-to-br from-[#eff6ff] via-cyan-50/80 to-white sm:h-44">
+        <div className="relative m-3 mb-0 h-36 overflow-hidden rounded-[16px] bg-gradient-to-br from-blue-50 via-cyan-50/80 to-white sm:h-44">
           <WorkshopImage
             bannerUrl={workshop.banner_url}
             alt={workshop.title}
@@ -266,7 +266,7 @@ function WorkshopCard({
                     className="h-8 w-8 shrink-0 rounded-full border-2 border-white object-cover shadow-sm"
                   />
                 ) : (
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef6ff] text-blue-600 ring-2 ring-white">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600 ring-2 ring-white">
                     <User className="h-4 w-4" />
                   </div>
                 )}

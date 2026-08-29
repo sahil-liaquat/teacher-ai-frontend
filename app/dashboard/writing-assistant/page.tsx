@@ -177,59 +177,59 @@ const cardBase = "group/card relative overflow-hidden flex items-center gap-3 sm
 const panelBase = "rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm";
 
 const tintClasses: Record<string, { card: string; glow: string; icon: string; text: string }> = {
-  blue: { card: "from-[#eff6ff] via-[#eff6ff] to-white", glow: "bg-[#bfdbfe]/30", icon: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100", text: "group-hover/card:text-blue-600" },
-  green: { card: "from-white via-emerald-50/70 to-white", glow: "bg-emerald-200/30", icon: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100", text: "group-hover/card:text-emerald-600" },
-  pink: { card: "from-white via-pink-50/70 to-white", glow: "bg-pink-200/30", icon: "bg-[#fff1f7] text-[#f45f98] ring-pink-100", text: "group-hover/card:text-pink-600" },
-  amber: { card: "from-[#fffaf0] via-amber-50/80 to-white", glow: "bg-amber-200/30", icon: "bg-[#fff6df] text-[#f0a22f] ring-amber-100", text: "group-hover/card:text-amber-600" },
-  cyan: { card: "from-[#f0fdff] via-cyan-50/70 to-white", glow: "bg-cyan-200/30", icon: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb]", text: "group-hover/card:text-cyan-600" },
+  blue: { card: "from-blue-50 via-blue-50 to-white", glow: "bg-blue-200/30", icon: "bg-blue-50 text-blue-500 ring-blue-100", text: "group-hover/card:text-blue-600" },
+  green: { card: "from-white via-emerald-50/70 to-white", glow: "bg-emerald-200/30", icon: "bg-emerald-50 text-emerald-600 ring-emerald-100", text: "group-hover/card:text-emerald-600" },
+  pink: { card: "from-white via-pink-50/70 to-white", glow: "bg-pink-200/30", icon: "bg-pink-50 text-pink-500 ring-pink-100", text: "group-hover/card:text-pink-600" },
+  amber: { card: "from-amber-50 via-amber-50/80 to-white", glow: "bg-amber-200/30", icon: "bg-amber-50 text-amber-500 ring-amber-100", text: "group-hover/card:text-amber-600" },
+  cyan: { card: "from-cyan-50 via-cyan-50/70 to-white", glow: "bg-cyan-200/30", icon: "bg-cyan-50 text-cyan-600 ring-teachpad-sky", text: "group-hover/card:text-cyan-600" },
   violet: { card: "from-white via-violet-50/70 to-white", glow: "bg-violet-200/30", icon: "bg-violet-50 text-violet-600 ring-violet-100", text: "group-hover/card:text-violet-600" },
 };
 
 // Influencer page layout style mappings
 const stylesMap: Record<string, { card: string; glow: string; icon: string; badge: string; text: string; button: string }> = {
   blue: {
-    card: "from-[#eff6ff] via-white to-[#f8fbff]",
-    glow: "bg-[#bfdbfe]/35",
-    icon: "bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.18)]",
+    card: "from-blue-50 via-white to-blue-50",
+    glow: "bg-blue-200/35",
+    icon: "bg-blue-50 text-blue-500 ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.18)]",
     badge: "text-blue-600 bg-white/80",
-    text: "text-[#3b82f6]",
+    text: "text-blue-500",
     button: "from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-blue-200/40",
   },
   green: {
-    card: "from-[#ecfff6] via-white to-[#f4fdf8]",
-    glow: "bg-[#24b77a]/15",
-    icon: "bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.18)]",
+    card: "from-emerald-50 via-white to-emerald-50",
+    glow: "bg-emerald-600/15",
+    icon: "bg-emerald-50 text-emerald-600 ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.18)]",
     badge: "text-emerald-600 bg-white/80",
-    text: "text-[#24b77a]",
+    text: "text-emerald-600",
     button: "from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-emerald-200/40",
   },
   pink: {
-    card: "from-[#fff1f7] via-white to-[#fffbfd]",
-    glow: "bg-[#f45f98]/15",
-    icon: "bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.18)]",
+    card: "from-pink-50 via-white to-pink-50",
+    glow: "bg-pink-500/15",
+    icon: "bg-pink-50 text-pink-500 ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.18)]",
     badge: "text-pink-600 bg-white/80",
-    text: "text-[#f45f98]",
+    text: "text-pink-500",
     button: "from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 shadow-pink-200/40",
   },
   amber: {
-    card: "from-[#fffaf0] via-white to-[#fffdf9]",
-    glow: "bg-[#f0a22f]/15",
-    icon: "bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.18)]",
+    card: "from-amber-50 via-white to-amber-50",
+    glow: "bg-amber-500/15",
+    icon: "bg-amber-50 text-amber-500 ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.18)]",
     badge: "text-amber-600 bg-white/80",
-    text: "text-[#f0a22f]",
+    text: "text-amber-500",
     button: "from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 shadow-amber-200/40",
   },
   cyan: {
-    card: "from-[#f0fdff] via-white to-[#f4fdfe]",
-    glow: "bg-[#16a9b6]/15",
-    icon: "bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_14px_30px_rgba(22,169,182,0.15)]",
+    card: "from-cyan-50 via-white to-cyan-50",
+    glow: "bg-cyan-600/15",
+    icon: "bg-cyan-50 text-cyan-600 ring-teachpad-sky shadow-[0_14px_30px_rgba(22,169,182,0.15)]",
     badge: "text-cyan-600 bg-white/80",
-    text: "text-[#16a9b6]",
+    text: "text-cyan-600",
     button: "from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 shadow-cyan-200/40",
   },
   violet: {
-    card: "from-[#f6f1ff] via-white to-[#faf8ff]",
-    glow: "bg-[#8b5cf6]/15",
+    card: "from-violet-50 via-white to-violet-50",
+    glow: "bg-violet-500/15",
     icon: "bg-violet-50 text-violet-600 ring-violet-100 shadow-[0_14px_30px_rgba(139,92,246,0.18)]",
     badge: "text-violet-600 bg-white/80",
     text: "text-violet-600",
@@ -362,6 +362,8 @@ export default function WritingAssistantPage() {
       toast({ title: "Print blocked", description: "Please allow popups to print.", variant: "error" });
       return;
     }
+    // This stylesheet lands in a separate popup document that Tailwind never
+    // sees, so these colours have to stay literals.
     printWindow.document.write(`
       <html>
         <head>
@@ -420,7 +422,7 @@ export default function WritingAssistantPage() {
     <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       {screen === "home" && (
         <div className="space-y-4">
-          <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#1677ff] transition hover:text-[#0969e8] self-start">
+          <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-brand transition hover:text-blue-600 self-start">
             <ArrowLeft className="h-4 w-4" />
             Back
           </HistoryBackButton>
@@ -544,14 +546,14 @@ export default function WritingAssistantPage() {
                             value={String(form[field.key] || "")}
                             onChange={(event) => updateField(field.key, event.target.value)}
                             placeholder={field.placeholder || "Enter details here..."}
-                            className="min-h-[120px] rounded-xl border-slate-200 bg-[#f7f8fb]/80 px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-all duration-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                            className="min-h-[120px] rounded-card border-slate-200 bg-teachpad-input/80 px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-all duration-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50"
                           />
                         ) : (
                           <Input
                             value={String(form[field.key] || "")}
                             onChange={(event) => updateField(field.key, event.target.value)}
                             placeholder={field.placeholder}
-                            className="rounded-xl border-slate-200 bg-[#f7f8fb]/80 text-sm font-semibold text-slate-800 outline-none transition-all duration-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50"
+                            className="rounded-card border-slate-200 bg-teachpad-input/80 text-sm font-semibold text-slate-800 outline-none transition-all duration-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50"
                           />
                         )}
                       </FieldCard>
@@ -633,9 +635,9 @@ export default function WritingAssistantPage() {
                   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
                   window.open(url, "_blank", "noopener,noreferrer");
                 }}
-                className="bg-[#ecfff6] hover:bg-emerald-100 border-emerald-100 text-emerald-700 font-bold"
+                className="bg-emerald-50 hover:bg-emerald-100 border-emerald-100 text-emerald-700 font-bold"
               >
-                <MessageCircle className="h-3.5 w-3.5 mr-1 text-[#24b77a]" /> Send via WhatsApp
+                <MessageCircle className="h-3.5 w-3.5 mr-1 text-emerald-600" /> Send via WhatsApp
               </Button>
             </div>
           </div>
@@ -652,7 +654,7 @@ export default function WritingAssistantPage() {
                   size="sm"
                   onClick={() => transform(action.id)}
                   disabled={Boolean(busy)}
-                  className="h-8 rounded-xl px-3 text-micro font-bold shadow-none hover:bg-white"
+                  className="h-8 rounded-card px-3 text-micro font-bold shadow-none hover:bg-white"
                 >
                   {busy === action.id ? (
                     <RefreshCw className="h-3 w-3 animate-spin mr-1" />
@@ -741,23 +743,23 @@ function GeneratorFieldCard({
   children: ReactNode;
 }) {
   const toneMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
-    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
-    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
-    aqua: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
-    rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]" },
+    blue: { bg: "bg-blue-50", text: "text-blue-500" },
+    green: { bg: "bg-emerald-50", text: "text-emerald-600" },
+    orange: { bg: "bg-amber-50", text: "text-amber-500" },
+    pink: { bg: "bg-pink-50", text: "text-pink-500" },
+    aqua: { bg: "bg-cyan-50", text: "text-cyan-600" },
+    purple: { bg: "bg-violet-50", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-cyan-50", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
     <div className={cn("min-w-0 rounded-2xl border border-teachpad-cardBorder bg-white p-4 shadow-sm sm:p-5", className)}>
       <div className="mb-3 flex items-center gap-2.5 sm:mb-4 sm:gap-3">
-        <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9", tone.bg, tone.text)}>
+        <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9", tone.bg, tone.text)}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <span className="text-xs font-bold text-slate-500">
@@ -778,8 +780,8 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
       </div>
       {loading ? (
         <div className="space-y-3">
-          <div className="h-16 rounded-xl border border-slate-100 bg-slate-50/70 animate-pulse" />
-          <div className="h-16 rounded-xl border border-slate-100 bg-slate-50/70 animate-pulse" />
+          <div className="h-16 rounded-card border border-slate-100 bg-slate-50/70 animate-pulse" />
+          <div className="h-16 rounded-card border border-slate-100 bg-slate-50/70 animate-pulse" />
         </div>
       ) : items.length ? (
         <div className="space-y-2">
@@ -788,9 +790,9 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
               key={item.id}
               type="button"
               onClick={() => onOpen(item)}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-white px-3 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-md"
+              className="flex w-full items-center gap-3 rounded-card border border-slate-100 bg-white px-3 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-md"
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B73FF]">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-card bg-blue-50 text-brand">
                 <Send className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
@@ -802,8 +804,8 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
-          <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-400 shadow-sm">
+        <div className="rounded-card border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
+          <div className="mx-auto grid h-10 w-10 place-items-center rounded-card bg-white text-slate-400 shadow-sm">
             <Check className="h-4 w-4" />
           </div>
           <p className="mt-3 text-xs font-bold text-slate-650">No documents yet</p>
@@ -816,23 +818,23 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
 
 function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
   const toneMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
-    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
-    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
-    aqua: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-[#8b5cf6]" },
-    amber: { bg: "bg-[#fffbeb]", text: "text-[#d97706]" },
-    teal: { bg: "bg-[#f0fdfa]", text: "text-[#0d9488]" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-[#0ea5e9]" },
-    indigo: { bg: "bg-[#eef2ff]", text: "text-[#6366f1]" },
-    rose: { bg: "bg-[#fff1f2]", text: "text-[#e11d48]" },
+    blue: { bg: "bg-blue-50", text: "text-blue-500" },
+    green: { bg: "bg-emerald-50", text: "text-emerald-600" },
+    orange: { bg: "bg-amber-50", text: "text-amber-500" },
+    pink: { bg: "bg-pink-50", text: "text-pink-500" },
+    aqua: { bg: "bg-cyan-50", text: "text-cyan-600" },
+    purple: { bg: "bg-violet-50", text: "text-violet-500" },
+    amber: { bg: "bg-amber-50", text: "text-amber-600" },
+    teal: { bg: "bg-teal-50", text: "text-teal-600" },
+    sky: { bg: "bg-cyan-50", text: "text-sky-500" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
     <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <span className="text-xs font-bold text-slate-500 sm:text-sm">{label} {required && <span className="text-red-500">*</span>}</span>

@@ -348,7 +348,7 @@ export default function WorkshopDetailPage() {
               
               {isRegistered ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                  <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 rounded-card p-3 border border-emerald-100">
                     <CheckCircle className="h-5 w-5 shrink-0" />
                     <span className="text-xs font-bold">You are registered for this event!</span>
                   </div>
@@ -360,7 +360,7 @@ export default function WorkshopDetailPage() {
                         href={workshop.meeting_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-xl font-bold bg-blue-600 text-white shadow-md hover:bg-blue-700 transition"
+                        className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-card font-bold bg-blue-600 text-white shadow-md hover:bg-blue-700 transition"
                       >
                         <Video className="h-4 w-4" /> Join Online Session
                       </a>
@@ -470,7 +470,7 @@ export default function WorkshopDetailPage() {
                       key={rating}
                       type="button"
                       onClick={() => setFeedbackRating(rating)}
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-slate-100 bg-slate-50 text-amber-400 transition hover:bg-amber-50"
+                      className="grid h-9 w-9 place-items-center rounded-control border border-slate-100 bg-slate-50 text-amber-400 transition hover:bg-amber-50"
                       aria-label={`Rate ${rating} out of 5`}
                     >
                       <Star className={cn("h-5 w-5", rating <= feedbackRating && "fill-current")} />

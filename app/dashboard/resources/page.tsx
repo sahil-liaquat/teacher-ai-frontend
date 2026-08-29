@@ -40,10 +40,10 @@ const typeMeta: Record<ResourceType, { label: string; pluralLabel: string; icon:
 };
 
 const resourceCardColors: Record<ResourceType, string> = {
-  "lesson plan": "from-[#eff6ff] via-blue-50/55 to-white hover:border-blue-100",
+  "lesson plan": "from-blue-50 via-blue-50/55 to-white hover:border-blue-100",
   worksheet: "from-white via-emerald-50/65 to-white hover:border-emerald-100",
   notes: "from-white via-pink-50/65 to-white hover:border-pink-100",
-  activity: "from-[#f0fdff] via-cyan-50/65 to-white hover:border-cyan-100",
+  activity: "from-cyan-50 via-cyan-50/65 to-white hover:border-cyan-100",
   presentation: "from-white via-violet-50/65 to-white hover:border-violet-100",
 };
 
@@ -378,7 +378,7 @@ export default function ResourcesPage() {
       {/* Content */}
       {isLoading ? (
         <div className="space-y-4">
-          <Skeleton className="h-[48px] w-full rounded-xl bg-slate-100" />
+          <Skeleton className="h-[48px] w-full rounded-card bg-slate-100" />
           <Skeleton className="h-[120px] w-full rounded-2xl bg-slate-100" />
           <Skeleton className="h-[120px] w-full rounded-2xl bg-slate-100" />
           <Skeleton className="h-[120px] w-full rounded-2xl bg-slate-100" />
@@ -431,12 +431,12 @@ export default function ResourcesPage() {
                         <div className={cn("flex-1 min-w-0 rounded-2xl border border-white/70 bg-gradient-to-br p-4 shadow-[0_4px_20px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]", resourceCardColors[resource.type])}>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-start gap-3 min-w-0 flex-1">
-                              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", meta.colors.bg, meta.colors.text)}>
+                              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-card", meta.colors.bg, meta.colors.text)}>
                                 <Icon className="h-5 w-5" />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className={cn("inline-flex items-center rounded-lg px-2 py-0.5 text-micro font-bold border", meta.colors.border, meta.colors.bg, meta.colors.text)}>
+                                  <span className={cn("inline-flex items-center rounded-control px-2 py-0.5 text-micro font-bold border", meta.colors.border, meta.colors.bg, meta.colors.text)}>
                                     {meta.label}
                                   </span>
                                   <span className="text-micro font-semibold text-slate-400">
@@ -463,15 +463,15 @@ export default function ResourcesPage() {
                             
                             <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start mt-2 sm:mt-0 shrink-0">
                               <Link href={resource.href} className="flex-1 sm:flex-initial">
-                                <Button size="sm" className="w-full h-9 px-4 text-xs font-bold rounded-xl">
+                                <Button size="sm" className="w-full h-9 px-4 text-xs font-bold rounded-card">
                                   View
                                 </Button>
                               </Link>
-                              <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="flex-1 sm:flex-initial h-9 px-3 gap-1.5 text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 border-slate-200">
+                              <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} className="flex-1 sm:flex-initial h-9 px-3 gap-1.5 text-xs font-bold rounded-card text-slate-600 hover:text-slate-800 border-slate-200">
                                 <Download className="h-3.5 w-3.5" /> {resource.type === "presentation" ? "PPT" : "PDF"}
                               </Button>
                               {canDelete && (
-                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-xl text-slate-400 hover:bg-blue-50 hover:text-blue-600 shrink-0">
+                                <Button variant="ghost" size="sm" onClick={() => setResourceToDelete(resource)} className="h-9 w-9 p-0 rounded-card text-slate-400 hover:bg-blue-50 hover:text-blue-600 shrink-0">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               )}
@@ -518,7 +518,7 @@ export default function ResourcesPage() {
               <Button
                 variant="ghost"
                 onClick={() => setResourceToDelete(null)}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
+                className="h-10 px-4 text-sm font-bold rounded-card text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
               >
                 Cancel
               </Button>
@@ -528,7 +528,7 @@ export default function ResourcesPage() {
                   void handleDelete(resourceToDelete);
                   setResourceToDelete(null);
                 }}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-white"
+                className="h-10 px-4 text-sm font-bold rounded-card text-white"
               >
                 Confirm Remove
               </Button>
@@ -548,7 +548,7 @@ function CalendarDateBadge({ dateString }: { dateString: string }) {
   const day = isValid ? date.getDate().toString().padStart(2, "0") : "--";
   
   return (
-    <div className="flex flex-col items-center justify-center shrink-0 w-11 h-[48px] rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm select-none">
+    <div className="flex flex-col items-center justify-center shrink-0 w-11 h-[48px] rounded-control border border-slate-200 bg-white overflow-hidden shadow-sm select-none">
       <div className="w-full text-center text-micro font-black tracking-wider text-white bg-blue-500 py-0.5 px-1 leading-none uppercase">
         {month}
       </div>

@@ -15,7 +15,7 @@ export default function WorksheetsListPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8 px-4 py-4">
       <PageHeader title="Worksheets" description="AI-generated worksheets saved from your existing FastAPI backend." actions={<Link href="/dashboard/worksheets/new"><Button><Sparkles className="h-4 w-4" /> New Worksheet</Button></Link>} />
-      {worksheets.isLoading ? <Card><CardContent className="p-6 text-sm font-semibold text-[#6d6f78]">Loading saved worksheets...</CardContent></Card> : null}
+      {worksheets.isLoading ? <Card><CardContent className="p-6 text-sm font-semibold text-fg-muted">Loading saved worksheets...</CardContent></Card> : null}
       {worksheets.error ? <Card><CardContent className="p-6 text-red-700">{getErrorMessage(worksheets.error, "Could not load worksheets")}</CardContent></Card> : null}
       <div className="grid gap-4">
         {worksheets.data?.items?.length ? worksheets.data.items.map((worksheet, index) => {
@@ -31,7 +31,7 @@ export default function WorksheetsListPage() {
               <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
               <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/88 text-[#159565] shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-emerald-100 sm:h-12 sm:w-12 sm:rounded-2xl">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-card bg-white/88 text-emerald-700 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-emerald-100 sm:h-12 sm:w-12 sm:rounded-2xl">
                     <ClipboardCheck className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export default function WorksheetsListPage() {
                     </h3>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       <Badge className="text-micro px-1.5 py-0.5 font-semibold">Worksheet</Badge>
-                      <Badge className="bg-[#eef8f1] text-[#166534] text-micro px-1.5 py-0.5 font-semibold">{subject}</Badge>
+                      <Badge className="bg-emerald-50 text-green-800 text-micro px-1.5 py-0.5 font-semibold">{subject}</Badge>
                     </div>
                     <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
                       {[class_name, chapter_name].filter(Boolean).join(" • ")}
@@ -58,7 +58,7 @@ export default function WorksheetsListPage() {
               </div>
             </Link>
           );
-        }) : !worksheets.isLoading ? <Card><CardContent className="p-8 text-center"><div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#ecfff7] text-[#159565]"><ClipboardCheck className="h-7 w-7" /></div><h3 className="text-lg font-black text-slate-950">No worksheets yet.</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Generate your first textbook-grounded worksheet.</p><Link href="/dashboard/worksheets/new"><Button className="mt-5">Create Worksheet</Button></Link></CardContent></Card> : null}
+        }) : !worksheets.isLoading ? <Card><CardContent className="p-8 text-center"><div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-700"><ClipboardCheck className="h-7 w-7" /></div><h3 className="text-lg font-black text-slate-950">No worksheets yet.</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Generate your first textbook-grounded worksheet.</p><Link href="/dashboard/worksheets/new"><Button className="mt-5">Create Worksheet</Button></Link></CardContent></Card> : null}
       </div>
     </div>
   );
