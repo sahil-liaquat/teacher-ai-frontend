@@ -112,7 +112,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          "relative grid place-items-center text-[#0B73FF] transition hover:-translate-y-0.5 hover:text-blue-700",
+          "relative grid place-items-center text-brand transition hover:-translate-y-0.5 hover:text-blue-700",
           mobile ? "h-10 w-10 rounded-full bg-transparent" : "h-11 w-11 rounded-full bg-transparent",
         )}
       >
@@ -145,7 +145,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                   type="button"
                   disabled={markAll.isPending}
                   onClick={() => markAll.mutate()}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-micro font-bold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-control px-2 py-1.5 text-micro font-bold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
                 >
                   <CheckCheck className="h-3.5 w-3.5" /> Mark read
                 </button>
@@ -155,7 +155,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                   type="button"
                   disabled={clearAll.isPending}
                   onClick={() => clearAll.mutate()}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-micro font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-control px-2 py-1.5 text-micro font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Clear all
                 </button>
@@ -193,7 +193,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
               >
                 {!item.is_read && <span className={cn("absolute left-1.5 top-5 h-2 w-2 rounded-full", severityDot(item.severity))} />}
                 <div className="flex items-start gap-3">
-                  <span className={cn("mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl", severityTone(item.severity))}>
+                  <span className={cn("mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-card", severityTone(item.severity))}>
                     {item.is_read ? <Check className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -209,7 +209,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                             event.stopPropagation();
                             clearOne.mutate(item.id);
                           }}
-                          className="grid h-6 w-6 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                          className="grid h-6 w-6 place-items-center rounded-control text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>

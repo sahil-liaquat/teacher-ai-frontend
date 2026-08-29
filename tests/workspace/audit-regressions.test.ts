@@ -123,7 +123,10 @@ test("header notifications keep a visible unread badge until an item is opened",
   const notifications = source("components/notifications/notification-center.tsx");
   const appShell = source("components/app-shell.tsx");
 
-  assert.match(notifications, /text-\[#0B73FF\]/);
+  // Was the literal text-[#0B73FF]. That was one of three brand blues in the
+  // app; it is now the `brand` token. The badge is still coloured and still
+  // visible, which is what this test is about.
+  assert.match(notifications, /text-brand\b/);
   assert.match(notifications, /unreadCount > 0/);
   assert.match(notifications, /bg-red-600/);
   assert.match(notifications, /onClick=\{\(\) => read\(item\)\}/);

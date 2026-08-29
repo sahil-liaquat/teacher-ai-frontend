@@ -204,7 +204,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
           <aside className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col overflow-hidden rounded-r-3xl border-r border-teachpad-cardBorder bg-white/95 p-5 shadow-2xl lg:hidden">
             <div className="flex items-center justify-between">
               <Brand href={homeHref} />
-              <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
+              <button onClick={() => setMobileOpen(false)} className="grid h-9 w-9 place-items-center rounded-card border border-teachpad-cardBorder bg-white/90 text-teachpad-muted shadow-sm transition-all hover:bg-white hover:text-teachpad-blue">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -223,15 +223,15 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
                 onClick={() => setMobileOpen(false)}
                 className="mt-4 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-bold text-teachpad-muted transition-all hover:bg-emerald-50 hover:text-emerald-700 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-card bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
                   <WhatsAppIcon className="h-5 w-5" />
                 </span>
                 Join Now
               </a>
             )}
 
-            <button onClick={logout} className="mt-2 flex h-12 w-full shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8"><LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" /></span>
+            <button onClick={logout} className="mt-2 flex h-12 w-full shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-rose-500 transition-all hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm">
+              <span className="grid h-10 w-10 place-items-center rounded-card bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8"><LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" /></span>
               Logout
             </button>
           </aside>
@@ -307,14 +307,14 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
               <Button
                 variant="ghost"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
+                className="h-10 px-4 text-sm font-bold rounded-card text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
               >
                 Cancel
               </Button>
               <Button
                 variant="danger"
                 onClick={handleConfirmLogout}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-white"
+                className="h-10 px-4 text-sm font-bold rounded-card text-white"
               >
                 Log Out
               </Button>
@@ -378,7 +378,7 @@ function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavIt
                     type="button"
                     onClick={logout}
                     aria-label="Logout"
-                    className="group flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-[#eb3b5a] transition-all duration-300 hover:scale-105 hover:bg-teachpad-red"
+                    className="group flex h-10 w-10 items-center justify-center rounded-card bg-rose-50 text-rose-500 transition-all duration-300 hover:scale-105 hover:bg-teachpad-red"
                   >
                     <LogOut className="h-5 w-5" />
                   </button>
@@ -415,7 +415,7 @@ function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boo
         >
           <span
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
+              "flex h-10 w-10 items-center justify-center rounded-card transition-all duration-300",
               active
                 ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
                 : "group-hover:bg-blue-50"
@@ -451,7 +451,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       )}
     >
       <span className={cn(
-        "grid h-10 w-10 place-items-center rounded-xl transition-colors duration-200 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8",
+        "grid h-10 w-10 place-items-center rounded-card transition-colors duration-200 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8",
         active ? "bg-blue-100" : "bg-teachpad-tag",
         colorClass
       )}>
@@ -544,7 +544,7 @@ function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
       )}
     >
       <span className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200",
+        "flex h-9 w-9 items-center justify-center rounded-card transition-all duration-200",
         active ? "bg-blue-100" : "bg-transparent"
       )}>
         <Icon className={cn(
@@ -608,7 +608,7 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
               aria-label="Join the TeachPad WhatsApp community"
               className="mt-2 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-3 text-sm font-bold text-teachpad-muted transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 [@media(min-height:940px)]:hidden [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-sm"
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-card bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
                 <WhatsAppIcon className="h-5 w-5" />
               </span>
               <span>Join Now</span>
@@ -620,9 +620,9 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
       <div className="relative z-10 border-t border-teachpad-cardBorder pt-4 [@media(max-height:680px)]:pt-2">
         <button
           onClick={logout}
-          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm"
+          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-rose-500 transition-all duration-300 hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm"
         >
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
+          <span className="grid h-10 w-10 place-items-center rounded-card bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
             <LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
           </span>
           Logout
@@ -642,7 +642,7 @@ function WhatsAppCommunityCard() {
       className="relative mt-3 shrink-0 overflow-hidden rounded-[18px] border border-blue-100/90 bg-white antialiased shadow-[0_10px_26px_rgba(22,119,255,0.10)] ring-1 ring-white/80"
       style={{ fontFamily: 'ui-rounded, "SF Pro Rounded", "Avenir Next", "Nunito Sans", sans-serif' }}
     >
-      <div className="relative h-[132px] overflow-hidden bg-gradient-to-br from-blue-50 via-[#eefaff] to-violet-50">
+      <div className="relative h-[132px] overflow-hidden bg-gradient-to-br from-blue-50 via-blue-50 to-violet-50">
         <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-blue-200/35 blur-2xl" aria-hidden="true" />
         <div className="absolute -bottom-10 -left-8 h-24 w-24 rounded-full bg-violet-200/40 blur-2xl" aria-hidden="true" />
         <Sparkles className="absolute left-4 top-5 h-4 w-4 fill-violet-300 text-violet-400" aria-hidden="true" />
@@ -650,7 +650,7 @@ function WhatsAppCommunityCard() {
         <span className="absolute left-[72px] top-[76px] h-2.5 w-2.5 rotate-45 rounded-[2px] bg-amber-200" aria-hidden="true" />
         <span className="absolute right-3 top-6 h-2 w-2 rotate-45 rounded-[2px] bg-fuchsia-200" aria-hidden="true" />
 
-        <div className="absolute left-3 top-4 z-10 max-w-[90px] rounded-[14px] border border-white bg-white/95 px-2.5 py-2 text-micro font-extrabold leading-[1.2] tracking-[-0.01em] text-[#12346b] shadow-[0_6px_16px_rgba(22,119,255,0.10)]">
+        <div className="absolute left-3 top-4 z-10 max-w-[90px] rounded-[14px] border border-white bg-white/95 px-2.5 py-2 text-micro font-extrabold leading-[1.2] tracking-[-0.01em] text-blue-900 shadow-[0_6px_16px_rgba(22,119,255,0.10)]">
           Let&apos;s grow together
           <span className="absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 border-b border-r border-white bg-white" aria-hidden="true" />
         </div>
@@ -663,7 +663,7 @@ function WhatsAppCommunityCard() {
       </div>
 
       <div className="relative z-10 border-t border-blue-100/70 bg-white px-3 pb-3 pt-3 text-center">
-        <h2 className="text-sm font-extrabold leading-tight tracking-[-0.025em] text-[#12346b]">Join WhatsApp</h2>
+        <h2 className="text-sm font-extrabold leading-tight tracking-[-0.025em] text-blue-900">Join WhatsApp</h2>
         <a
           href="https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0"
           target="_blank"
@@ -710,7 +710,7 @@ function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; acti
       )}
     >
       <span className={cn(
-        "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
+        "grid h-9 w-9 place-items-center rounded-card transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
         active
           ? "bg-white shadow-[0_4px_12px_rgba(59,130,246,0.12)]"
           : "",
