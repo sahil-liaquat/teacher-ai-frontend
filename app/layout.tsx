@@ -50,8 +50,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    // Browser extensions inject attributes into <html>/<body> before React
+    // hydrates — ColorZilla's cz-shortcut-listen is the one that shows up here —
+    // and every one of them prints a hydration mismatch we cannot fix from our
+    // side. suppressHydrationWarning covers only these two elements' own
+    // attributes, one level deep; a real mismatch inside the app still warns.
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Script src="https://www.googletagmanager.com/gtag/js?id=G-ZC7B99HTG0" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
