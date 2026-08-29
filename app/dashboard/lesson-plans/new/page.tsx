@@ -62,30 +62,30 @@ const abilityProfileOptions = [
     label: "Mixed ability",
     body: "Balance support and challenge",
     icon: Users,
-    bg: "bg-[#eef6ff]",
-    text: "text-[#3b82f6]",
-    border: "border-[#93c5fd]",
-    selectedBg: "bg-[#eef6ff]"
+    bg: "bg-blue-50",
+    text: "text-blue-500",
+    border: "border-blue-300",
+    selectedBg: "bg-blue-50"
   },
   {
     value: "at_expected_level",
     label: "At expected level",
     body: "Grade-appropriate and focused",
     icon: UserCheck,
-    bg: "bg-[#ecfff6]",
-    text: "text-[#24b77a]",
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
     border: "border-emerald-300",
-    selectedBg: "bg-[#ecfff6]"
+    selectedBg: "bg-emerald-50"
   },
   {
     value: "advanced",
     label: "Advanced",
     body: "Deeper reasoning and transfer tasks",
     icon: Rocket,
-    bg: "bg-[#f6f1ff]",
+    bg: "bg-violet-50",
     text: "text-violet-500",
     border: "border-violet-300",
-    selectedBg: "bg-[#f6f1ff]"
+    selectedBg: "bg-violet-50"
   }
 ] as const;
 
@@ -105,10 +105,10 @@ const classSizeOptions = [
     label: "Medium",
     body: "20-40 students",
     icon: Users,
-    bg: "bg-[#eef6ff]",
-    text: "text-[#3b82f6]",
-    border: "border-[#93c5fd]",
-    selectedBg: "bg-[#eef6ff]"
+    bg: "bg-blue-50",
+    text: "text-blue-500",
+    border: "border-blue-300",
+    selectedBg: "bg-blue-50"
   },
   {
     value: "large",
@@ -829,12 +829,12 @@ export default function NewLessonPlanPage() {
                     const active = selected.includes(comp.title);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
                       amber: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-300" },
-                      blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]", border: "border-[#93c5fd]" },
-                      green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]", border: "border-emerald-300" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
-                      orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]", border: "border-amber-300" },
-                      pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]", border: "border-pink-300" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      blue: { bg: "bg-blue-50", text: "text-blue-500", border: "border-blue-300" },
+                      green: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-300" },
+                      sky: { bg: "bg-cyan-50", text: "text-sky-500", border: "border-sky-300" },
+                      orange: { bg: "bg-amber-50", text: "text-amber-500", border: "border-amber-300" },
+                      pink: { bg: "bg-pink-50", text: "text-pink-500", border: "border-pink-300" },
+                      purple: { bg: "bg-violet-50", text: "text-violet-500", border: "border-violet-300" },
                       teal: { bg: "bg-teal-50", text: "text-teal-600", border: "border-teal-300" },
                       indigo: { bg: "bg-indigo-50", text: "text-indigo-500", border: "border-indigo-300" },
                       rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
@@ -915,15 +915,15 @@ export default function NewLessonPlanPage() {
 
 function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
   const toneMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
-    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
-    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    pink: { bg: "bg-[#fff1f7]", text: "text-[#f45f98]" },
-    aqua: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    blue: { bg: "bg-blue-50", text: "text-blue-500" },
+    green: { bg: "bg-emerald-50", text: "text-emerald-600" },
+    orange: { bg: "bg-amber-50", text: "text-amber-500" },
+    pink: { bg: "bg-pink-50", text: "text-pink-500" },
+    aqua: { bg: "bg-cyan-50", text: "text-cyan-600" },
+    purple: { bg: "bg-violet-50", text: "text-violet-500" },
     amber: { bg: "bg-amber-50", text: "text-amber-600" },
     teal: { bg: "bg-teal-50", text: "text-teal-600" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    sky: { bg: "bg-cyan-50", text: "text-sky-500" },
     indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
     rose: { bg: "bg-rose-50", text: "text-rose-600" },
   };

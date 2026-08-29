@@ -620,17 +620,17 @@ export default function NewWorksheetPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#159565] transition hover:text-[#0f7a52]">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-emerald-700 transition hover:text-emerald-800">
         <ArrowLeft className="h-4 w-4" />
         Back
       </HistoryBackButton>
 
-      <div className="overflow-visible rounded-[18px] border border-[#d8f1e5] bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
+      <div className="overflow-visible rounded-[18px] border border-emerald-100 bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
         {/* Header */}
-        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-[#d8f1e5] bg-gradient-to-br from-[#ecfff7] to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
+        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-emerald-100 bg-gradient-to-br from-emerald-50 to-white px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
           {step === 1 ? (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#159565] shadow-sm">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-emerald-700 shadow-sm">
                 <Sparkles className="h-4 w-4" /> Printable practice
               </div>
               <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Create Worksheet</h1>
@@ -638,8 +638,8 @@ export default function NewWorksheetPage() {
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#d8f1e5] bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#22c977] to-[#079765] text-micro font-bold text-white">2</span>
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
               <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Customize Your Worksheet</h1>
@@ -660,14 +660,14 @@ export default function NewWorksheetPage() {
         <div className="flex items-center gap-2 px-5 pt-5 sm:px-6">
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 1 ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-[#ecfff7] text-[#159565]"
+            step === 1 ? "bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-emerald-50 text-emerald-700"
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
           <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-emerald-300" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-[#ecfff7] text-fg-muted"
+            step === 2 ? "bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-[0_4px_10px_rgba(34,201,119,0.3)]" : "bg-emerald-50 text-fg-muted"
           )}>
             2
           </div>
@@ -679,7 +679,7 @@ export default function NewWorksheetPage() {
               {/* Section 1: What are you teaching? */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">1</span>
                   <h3 className="text-base font-bold text-fg">What are you teaching?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -704,8 +704,8 @@ export default function NewWorksheetPage() {
                               className={cn(
                                 "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
-                                  ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
-                                  : "border border-[#d8f1e5] bg-white text-fg hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                                  ? "bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
+                                  : "border border-emerald-100 bg-white text-fg hover:border-emerald-100 hover:bg-emerald-50"
                               )}
                             >{c.grade_number}</button>
                           ))}
@@ -737,7 +737,7 @@ export default function NewWorksheetPage() {
               {/* Section 2: What are we learning? */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">2</span>
                   <h3 className="text-base font-bold text-fg">What are we learning?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -790,9 +790,9 @@ export default function NewWorksheetPage() {
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {chapterNames.slice(0, 6).map((suggestion) => (
                           <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#d8f1e5] bg-[#ecfff7] px-2.5 py-1 text-xs font-medium text-[#159565] transition-colors hover:bg-[#d8f1e5]"
+                            className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
                           >
-                            <Sparkles className="h-3 w-3 text-[#159565]" />{suggestion}
+                            <Sparkles className="h-3 w-3 text-emerald-700" />{suggestion}
                           </button>
                         ))}
                       </div>
@@ -802,19 +802,19 @@ export default function NewWorksheetPage() {
               </div>
 
               {/* Step 1 Navigation */}
-              <div className="flex items-center justify-between border-t border-[#d8f1e5] pt-6">
-                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-[#159565]">
+              <div className="flex items-center justify-between border-t border-emerald-100 pt-6">
+                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-emerald-700">
                   Cancel
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#1fbc79] to-[#069462] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-emerald-500 to-emerald-700 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -828,7 +828,7 @@ export default function NewWorksheetPage() {
               {/* Question Types */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">1</span>
                   <h3 className="text-base font-bold text-fg">Question Types</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">Only selected sections will appear in the worksheet.</p>
@@ -838,7 +838,7 @@ export default function NewWorksheetPage() {
                     return active ? (
                       <div
                         key={type}
-                        className="rounded-card border p-3.5 transition-all duration-200 flex flex-col justify-between border-[#bdebd7] bg-[#ecfff7]/70 shadow-[0_10px_22px_rgba(22,163,99,0.06)] ring-2 ring-[#159565]/10"
+                        className="rounded-card border p-3.5 transition-all duration-200 flex flex-col justify-between border-emerald-200 bg-emerald-50/70 shadow-[0_10px_22px_rgba(22,163,99,0.06)] ring-2 ring-emerald-700/10"
                       >
                         <button
                           type="button"
@@ -847,9 +847,9 @@ export default function NewWorksheetPage() {
                           className="flex w-full items-center justify-between gap-3 text-left"
                         >
                           <span className="text-sm font-bold text-fg">{type}</span>
-                          <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-[#159565] bg-[#159565] text-white">✓</span>
+                          <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-emerald-700 bg-emerald-700 text-white">✓</span>
                         </button>
-                        <div className="mt-3 pt-2.5 border-t border-[#d8f1e5] flex items-center gap-3">
+                        <div className="mt-3 pt-2.5 border-t border-emerald-100 flex items-center gap-3">
                           <NumericStepper
                             label="Count"
                             value={questionTypeCounts[type] ?? 5}
@@ -872,7 +872,7 @@ export default function NewWorksheetPage() {
                         type="button"
                         onClick={() => toggleQuestionType(type)}
                         aria-pressed={active}
-                        className="rounded-card border p-3.5 transition-all duration-200 flex items-center justify-between gap-3 text-left border-[#e3ebd6] bg-white hover:border-[#bdebd7] hover:bg-[#f8fffb] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-[#159565]"
+                        className="rounded-card border p-3.5 transition-all duration-200 flex items-center justify-between gap-3 text-left border-emerald-100 bg-white hover:border-emerald-200 hover:bg-emerald-50 active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
                       >
                         <span className="text-sm font-bold text-fg">{type}</span>
                         <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full border text-xs font-black transition-all border-slate-300 bg-white text-transparent hover:border-slate-400">✓</span>
@@ -900,7 +900,7 @@ export default function NewWorksheetPage() {
               {/* Question Mix */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">2</span>
                   <h3 className="text-base font-bold text-fg">Question Mix</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">Choose the types of questions you want in the worksheet.</p>
@@ -909,10 +909,10 @@ export default function NewWorksheetPage() {
                     const MixIcon = item.icon;
                     const active = questionMix.includes(item.value);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-emerald-300" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      green: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-300" },
+                      purple: { bg: "bg-violet-50", text: "text-violet-500", border: "border-violet-300" },
                       amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      sky: { bg: "bg-cyan-50", text: "text-sky-500", border: "border-sky-300" },
                       rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.green;
@@ -946,7 +946,7 @@ export default function NewWorksheetPage() {
               {/* Competency Focus */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">3</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">3</span>
                   <h3 className="text-base font-bold text-fg">Competency Focus</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">
@@ -957,10 +957,10 @@ export default function NewWorksheetPage() {
                     const CompIcon = item.icon;
                     const active = competencyFocus.includes(item.value);
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
-                      green: { bg: "bg-[#ecfff7]", text: "text-[#159565]", border: "border-emerald-300" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
+                      green: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-300" },
+                      purple: { bg: "bg-violet-50", text: "text-violet-500", border: "border-violet-300" },
                       amber: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      sky: { bg: "bg-cyan-50", text: "text-sky-500", border: "border-sky-300" },
                       rose: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.green;
@@ -994,7 +994,7 @@ export default function NewWorksheetPage() {
               {/* Difficulty Distribution */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ecfff7] text-xs font-bold text-[#159565]">4</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">4</span>
                   <h3 className="text-base font-bold text-fg">Difficulty Distribution</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3 sm:gap-2">
@@ -1008,8 +1008,8 @@ export default function NewWorksheetPage() {
                         className={cn(
                           "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                           active
-                            ? "bg-gradient-to-r from-[#22c977] to-[#079765] text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
-                            : "border border-[#d8f1e5] bg-white text-fg hover:border-[#d8f1e5] hover:bg-[#ecfff7]"
+                            ? "bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-[0_4px_12px_rgba(34,201,119,0.25)]"
+                            : "border border-emerald-100 bg-white text-fg hover:border-emerald-100 hover:bg-emerald-50"
                         )}
                       >
                         {preset.label}
@@ -1020,7 +1020,7 @@ export default function NewWorksheetPage() {
               </div>
 
               {/* Success Card */}
-              <div className="rounded-2xl border border-[#bdebd7] bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-card bg-emerald-100">
                     <Check className="h-5 w-5 text-emerald-600" strokeWidth={3} />
@@ -1038,20 +1038,20 @@ export default function NewWorksheetPage() {
               </div>
 
               {/* Step 2 Navigation */}
-              <div className="flex items-center justify-between border-t border-[#d8f1e5] pt-6">
+              <div className="flex items-center justify-between border-t border-emerald-100 pt-6">
                 <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card border border-[#d8f1e5] bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#159565] hover:text-[#159565] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-emerald-100 bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-emerald-700 hover:text-emerald-700 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#22c977] to-[#079765]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="worksheet" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#1fbc79] to-[#069462] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-emerald-500 to-emerald-700 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(21,149,101,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(21,149,101,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Worksheet
                   </button>
@@ -1067,18 +1067,18 @@ export default function NewWorksheetPage() {
 
 function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
   const toneMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
-    green: { bg: "bg-[#ecfff7]", text: "text-[#159565]" },
-    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    blue: { bg: "bg-blue-50", text: "text-blue-500" },
+    green: { bg: "bg-emerald-50", text: "text-emerald-700" },
+    orange: { bg: "bg-amber-50", text: "text-amber-500" },
+    purple: { bg: "bg-violet-50", text: "text-violet-500" },
     amber: { bg: "bg-amber-50", text: "text-amber-600" },
     teal: { bg: "bg-teal-50", text: "text-teal-600" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    sky: { bg: "bg-cyan-50", text: "text-sky-500" },
     indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
-    <div className="min-w-0 rounded-2xl border border-[#d8f1e5] bg-white p-4 shadow-sm sm:p-5">
+    <div className="min-w-0 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-3 flex items-center gap-2.5 sm:gap-3 sm:mb-4">
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-card sm:h-9 sm:w-9 ${tone.bg} ${tone.text}`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1092,7 +1092,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-card border border-[#d8f1e5] bg-[#f8fffb] px-3.5 text-sm text-fg-muted">
+    <div className="flex h-10 items-center rounded-card border border-emerald-100 bg-emerald-50 px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );
@@ -1128,7 +1128,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
   return (
     <div className="flex flex-col gap-1 w-full">
       <span className="text-xs font-semibold text-fg-muted">{label}</span>
-      <div className="flex items-center justify-between gap-1 overflow-hidden rounded-card border border-[#d8f1e5] bg-white p-1 shadow-sm">
+      <div className="flex items-center justify-between gap-1 overflow-hidden rounded-card border border-emerald-100 bg-white p-1 shadow-sm">
         <button
           type="button"
           disabled={value <= min}
@@ -1136,7 +1136,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
             const newVal = Math.max(min, value - 1);
             onChange(newVal);
           }}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-emerald-700 transition hover:bg-emerald-50 active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           -
         </button>
@@ -1161,7 +1161,7 @@ function NumericStepper({ value, onChange, min = 1, max = 100, label }: NumericS
             const newVal = Math.min(max, value + 1);
             onChange(newVal);
           }}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-[#159565] transition hover:bg-[#ecfff7] active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-lg font-bold text-emerald-700 transition hover:bg-emerald-50 active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           +
         </button>
@@ -1232,7 +1232,7 @@ function MultiSelect({
         disabled={disabled || isLoading}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-card border border-teachpad-cardBorder bg-[#f8fffb] px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-[#f3faf7] disabled:text-fg-muted sm:text-sm",
+          "flex h-10 w-full min-w-0 max-w-full items-center justify-between gap-2.5 overflow-hidden rounded-card border border-teachpad-cardBorder bg-emerald-50 px-3.5 text-left text-base font-semibold text-teachpad-ink shadow-sm outline-none transition-colors duration-200 hover:border-blue-200 focus:border-teachpad-blue focus:bg-white focus:ring-4 focus:ring-blue-100/60 disabled:cursor-not-allowed disabled:bg-emerald-50 disabled:text-fg-muted sm:text-sm",
           isOpen && "border-teachpad-blue bg-white ring-4 ring-blue-100/60"
         )}
       >
@@ -1240,15 +1240,15 @@ function MultiSelect({
           {triggerLabel}
         </span>
         {isLoading ? (
-          <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-[#159565]" />
+          <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-emerald-700" />
         ) : (
           <ChevronDown className="h-4 w-4 shrink-0 text-fg-muted transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }} />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-card border border-[#d8f1e5] bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
-          <div className="flex items-center justify-end border-b border-[#d8f1e5] px-3 py-1.5 bg-[#f8fffb]">
+        <div className="absolute z-[100] mt-2 max-h-[300px] w-full min-w-[240px] overflow-hidden rounded-card border border-emerald-100 bg-white shadow-[0_20px_50px_-28px_rgba(21,149,101,0.15)] flex flex-col">
+          <div className="flex items-center justify-end border-b border-emerald-100 px-3 py-1.5 bg-emerald-50">
             <button
               type="button"
               onClick={handleClear}
@@ -1270,13 +1270,13 @@ function MultiSelect({
                     key={option.value}
                     type="button"
                     onClick={() => handleToggle(option.value)}
-                    className="flex w-full items-start gap-2.5 rounded-control px-2.5 py-2 text-left text-sm font-semibold text-fg outline-none hover:bg-[#f8fffb] transition"
+                    className="flex w-full items-start gap-2.5 rounded-control px-2.5 py-2 text-left text-sm font-semibold text-fg outline-none hover:bg-emerald-50 transition"
                   >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => {}}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#d8f1e5] text-[#159565] accent-[#159565]"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-emerald-100 text-emerald-700 accent-emerald-700"
                     />
                     <span className="block min-w-0 whitespace-normal break-words leading-5">
                       {option.label}

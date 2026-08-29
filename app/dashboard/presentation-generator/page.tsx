@@ -484,17 +484,17 @@ export default function PresentationGeneratorPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-4">
-      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-[#eb3b5a] transition hover:text-rose-700">
+      <HistoryBackButton className="inline-flex items-center gap-1.5 text-sm font-black text-rose-500 transition hover:text-rose-700">
         <ArrowLeft className="h-4 w-4" />
         Back
       </HistoryBackButton>
 
       <div className="overflow-visible rounded-[18px] border border-teachpad-red bg-white/86 shadow-[0_14px_34px_rgba(39,30,91,0.07)] backdrop-blur-sm">
         {/* Header */}
-        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-teachpad-red bg-gradient-to-br from-[#fff7f8] via-white to-[#ffe5e9] px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
+        <div className="relative min-h-[100px] overflow-hidden rounded-t-[18px] border-b border-teachpad-red bg-gradient-to-br from-rose-50 via-white to-rose-100 px-4 py-4 sm:min-h-[130px] sm:px-6 sm:py-5">
           {step === 1 ? (
             <div className="relative z-10 max-w-[560px]">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#eb3b5a] shadow-sm">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-rose-500 shadow-sm">
                 <Presentation className="h-4 w-4" /> Create presentation
               </div>
               <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Presentation Generator</h1>
@@ -503,7 +503,7 @@ export default function PresentationGeneratorPage() {
           ) : step === 2 ? (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teachpad-red bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-micro font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-400 text-micro font-bold text-white">2</span>
                 Step 2 of 3
               </div>
               <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Customize Your Presentation</h1>
@@ -512,7 +512,7 @@ export default function PresentationGeneratorPage() {
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teachpad-red bg-white px-3 py-1.5 text-xs font-semibold text-fg-muted shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-micro font-bold text-white">3</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-400 text-micro font-bold text-white">3</span>
                 Step 3 of 3
               </div>
               <h1 className="text-h2 font-black tracking-tight text-fg sm:text-h1">Choose Visual Theme</h1>
@@ -533,21 +533,21 @@ export default function PresentationGeneratorPage() {
         <div className="flex items-center gap-2 px-5 pt-5 sm:px-6">
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 1 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-[#eb3b5a]"
+            step === 1 ? "bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-rose-500"
           )}>
             {step > 1 ? <Check className="h-3.5 w-3.5" /> : 1}
           </div>
           <div className={cn("h-0.5 w-10 rounded transition-colors", step > 1 ? "bg-rose-200" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 2 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-[#eb3b5a]"
+            step === 2 ? "bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-rose-500"
           )}>
             {step > 2 ? <Check className="h-3.5 w-3.5" /> : 2}
           </div>
           <div className={cn("h-0.5 w-10 rounded transition-colors", step > 2 ? "bg-rose-200" : "bg-teachpad-cardBorder")} />
           <div className={cn(
             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
-            step === 3 ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-fg-muted"
+            step === 3 ? "bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_4px_10px_rgba(235,59,90,0.3)]" : "bg-rose-50 text-fg-muted"
           )}>
             3
           </div>
@@ -559,7 +559,7 @@ export default function PresentationGeneratorPage() {
               {/* Section 1: What are you teaching? */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#eb3b5a]">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-rose-500">1</span>
                   <h3 className="text-base font-bold text-fg">What are you teaching?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -584,7 +584,7 @@ export default function PresentationGeneratorPage() {
                               className={cn(
                                 "flex h-11 w-full items-center justify-center rounded-card text-sm font-bold transition-all duration-200 sm:text-base",
                                 classId === c.id
-                                  ? "bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-[0_4px_12px_rgba(235,59,90,0.25)]"
+                                  ? "bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_4px_12px_rgba(235,59,90,0.25)]"
                                   : "border border-teachpad-red bg-white text-fg hover:border-teachpad-red hover:bg-rose-50"
                               )}
                             >{c.grade_number}</button>
@@ -615,7 +615,7 @@ export default function PresentationGeneratorPage() {
               {/* Section 2: What are we learning? */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#eb3b5a]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-rose-500">2</span>
                   <h3 className="text-base font-bold text-fg">What are we learning?</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -651,9 +651,9 @@ export default function PresentationGeneratorPage() {
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {chapterNames[0].split(/[,;&]+/).map(s => s.trim()).filter(Boolean).slice(0, 6).map((suggestion) => (
                           <button key={suggestion} type="button" onClick={() => setTopic(suggestion)}
-                            className="inline-flex items-center gap-1 rounded-full border border-teachpad-red bg-rose-50 px-2.5 py-1 text-xs font-medium text-[#eb3b5a] transition-colors hover:bg-[#ffe5e9]"
+                            className="inline-flex items-center gap-1 rounded-full border border-teachpad-red bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-500 transition-colors hover:bg-rose-100"
                           >
-                            <Sparkles className="h-3 w-3 text-[#ff6f86]" />{suggestion}
+                            <Sparkles className="h-3 w-3 text-rose-400" />{suggestion}
                           </button>
                         ))}
                       </div>
@@ -664,18 +664,18 @@ export default function PresentationGeneratorPage() {
 
               {/* Step 1 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-red pt-6">
-                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-[#eb3b5a]">
+                <HistoryBackButton className="text-sm font-semibold text-fg-muted transition-colors hover:text-rose-500">
                   Cancel
                 </HistoryBackButton>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-rose-500 to-rose-400" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button
                   type="button"
                   disabled={!canGoNext}
                   onClick={() => { setStep(2); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-rose-500 to-rose-400 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -689,7 +689,7 @@ export default function PresentationGeneratorPage() {
               {/* Presentation Setup */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#eb3b5a]">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-rose-500">1</span>
                   <h3 className="text-base font-bold text-fg">Presentation Setup</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">Choose the slide count, language, style, tone, and level of detail for your deck.</p>
@@ -701,7 +701,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             slideCount === n
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{n} slides</button>
@@ -715,7 +715,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             language === lang
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{lang}</button>
@@ -729,7 +729,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             style === s
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{s}</button>
@@ -743,7 +743,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             tone === t
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{t}</button>
@@ -757,7 +757,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             detailLevel === level
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{level}</button>
@@ -771,7 +771,7 @@ export default function PresentationGeneratorPage() {
                           className={cn(
                             "inline-flex items-center gap-2 rounded-card border px-3.5 py-2 text-sm font-semibold transition-all duration-200",
                             visualDensity === v
-                              ? "border-rose-200 bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-sm"
+                              ? "border-rose-200 bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-sm"
                               : "border-teachpad-red bg-white text-fg-muted hover:border-teachpad-red hover:bg-rose-50"
                           )}
                         >{v}</button>
@@ -780,7 +780,7 @@ export default function PresentationGeneratorPage() {
                   </FieldCard>
                   <FieldCard icon={FileText} label="Instructions" color="sky">
                     <Textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Optional focus, examples, or classroom constraints." rows={3} maxLength={500}
-                      className="w-full rounded-card border border-teachpad-red bg-[#fff7f8] px-3.5 py-2.5 text-sm font-medium text-fg outline-none transition-colors duration-200 placeholder:text-fg-muted focus:border-[#eb3b5a] focus:bg-white focus:ring-4 focus:ring-rose-200/60"
+                      className="w-full rounded-card border border-teachpad-red bg-rose-50 px-3.5 py-2.5 text-sm font-medium text-fg outline-none transition-colors duration-200 placeholder:text-fg-muted focus:border-rose-500 focus:bg-white focus:ring-4 focus:ring-rose-200/60"
                     />
                   </FieldCard>
                 </div>
@@ -789,7 +789,7 @@ export default function PresentationGeneratorPage() {
               {/* What to Include */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#eb3b5a]">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-rose-500">2</span>
                   <h3 className="text-base font-bold text-fg">What to Include</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">Select the sections you want in your presentation.</p>
@@ -808,8 +808,8 @@ export default function PresentationGeneratorPage() {
                     const toneMap: Record<string, { bg: string; text: string; border: string }> = {
                       teal: { bg: "bg-teal-50", text: "text-teal-600", border: "border-teal-300" },
                       amber: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-300" },
-                      purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500", border: "border-violet-300" },
-                      sky: { bg: "bg-[#f0fdff]", text: "text-sky-500", border: "border-sky-300" },
+                      purple: { bg: "bg-violet-50", text: "text-violet-500", border: "border-violet-300" },
+                      sky: { bg: "bg-cyan-50", text: "text-sky-500", border: "border-sky-300" },
                     };
                     const ct = toneMap[item.color] || toneMap.teal;
                     return (
@@ -824,7 +824,7 @@ export default function PresentationGeneratorPage() {
                         className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-5 transition-all duration-200 ${
                           active
                             ? `${ct.border} ${ct.bg}`
-                            : "border-teachpad-red bg-white hover:border-teachpad-red hover:bg-[#fff8fa]"
+                            : "border-teachpad-red bg-white hover:border-teachpad-red hover:bg-rose-50"
                         }`}
                       >
                         <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-card ${ct.bg} ${ct.text}`}>
@@ -850,17 +850,17 @@ export default function PresentationGeneratorPage() {
               {/* Step 2 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-red pt-6">
                 <button type="button" onClick={() => { setStep(1); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-red bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-red bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-rose-500 hover:text-rose-500 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-rose-500 to-rose-400" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                 </div>
                 <button type="button" onClick={() => { setStep(3); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:px-4 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-rose-500 to-rose-400 px-5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] max-sm:px-4 max-sm:text-xs"
                 >
                   Next
                   <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -874,7 +874,7 @@ export default function PresentationGeneratorPage() {
               {/* Choose Theme Grid */}
               <div>
                 <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#eb3b5a]">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-rose-500">1</span>
                   <h3 className="text-base font-bold text-fg">Choose Visual Theme</h3>
                 </div>
                 <p className="mb-4 text-sm text-fg-muted">Select one of our premium presentation visual themes below.</p>
@@ -891,8 +891,8 @@ export default function PresentationGeneratorPage() {
                           "relative aspect-[16/10] overflow-hidden rounded-[20px] border p-5 text-center flex flex-col justify-center items-center transition-all duration-300",
                           item.bg,
                           active
-                            ? "ring-4 ring-[#eb3b5a]/45 border-[#eb3b5a] shadow-[0_12px_28px_rgba(235,59,90,0.12)] scale-[1.02] z-10"
-                            : "border-teachpad-red/80 hover:border-[#eb3b5a]/50 hover:shadow-[0_8px_20px_rgba(0,0,0,0.03)]"
+                            ? "ring-4 ring-rose-500/45 border-rose-500 shadow-[0_12px_28px_rgba(235,59,90,0.12)] scale-[1.02] z-10"
+                            : "border-teachpad-red/80 hover:border-rose-500/50 hover:shadow-[0_8px_20px_rgba(0,0,0,0.03)]"
                         )}
                       >
                         {/* Custom Theme Preview Ornaments */}
@@ -975,7 +975,7 @@ export default function PresentationGeneratorPage() {
 
                         {/* Selected Indicator */}
                         {active && (
-                          <div className="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-white shadow-md animate-[slide-appear_0.2s_ease-out]">
+                          <div className="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-md animate-[slide-appear_0.2s_ease-out]">
                             <Check className="h-3.5 w-3.5" strokeWidth={3} />
                           </div>
                         )}
@@ -1007,19 +1007,19 @@ export default function PresentationGeneratorPage() {
               {/* Step 3 Navigation */}
               <div className="flex items-center justify-between border-t border-teachpad-red pt-6">
                 <button type="button" onClick={() => { setStep(2); scrollToTop(); }}
-                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-red bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-[#eb3b5a] hover:text-[#eb3b5a] max-sm:px-3 max-sm:text-xs"
+                  className="inline-flex h-11 items-center gap-2 rounded-card border border-teachpad-red bg-white px-5 text-sm font-semibold text-fg-muted shadow-sm transition-all duration-200 hover:border-rose-500 hover:text-rose-500 max-sm:px-3 max-sm:text-xs"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0" /> Back
                 </button>
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
                   <span className="flex h-2.5 w-2.5 rounded-full bg-teachpad-cardBorder" />
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86]" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-gradient-to-r from-rose-500 to-rose-400" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <TrialGatePill kind="presentation" />
                   <button type="button" disabled={!canGenerate || generating} onClick={generate}
-                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
+                    className="inline-flex h-11 items-center gap-2 rounded-card bg-gradient-to-r from-rose-500 to-rose-400 px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(235,59,90,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(235,59,90,0.3)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 max-sm:px-4 max-sm:text-xs"
                   >
                     <Sparkles className="h-5 w-5 max-sm:h-4 max-sm:w-4" /> Generate Presentation
                   </button>
@@ -1035,15 +1035,15 @@ export default function PresentationGeneratorPage() {
 
 function FieldCard({ icon: Icon, label, required, color = "blue", children }: { icon: React.ComponentType<{ className?: string }>; label: string; required?: boolean; color?: string; children: ReactNode }) {
   const toneMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-[#eef6ff]", text: "text-[#3b82f6]" },
-    green: { bg: "bg-[#ecfff6]", text: "text-[#24b77a]" },
-    orange: { bg: "bg-[#fff6df]", text: "text-[#f0a22f]" },
-    purple: { bg: "bg-[#f6f1ff]", text: "text-violet-500" },
+    blue: { bg: "bg-blue-50", text: "text-blue-500" },
+    green: { bg: "bg-emerald-50", text: "text-emerald-600" },
+    orange: { bg: "bg-amber-50", text: "text-amber-500" },
+    purple: { bg: "bg-violet-50", text: "text-violet-500" },
     amber: { bg: "bg-amber-50", text: "text-amber-600" },
     teal: { bg: "bg-teal-50", text: "text-teal-600" },
-    sky: { bg: "bg-[#f0fdff]", text: "text-sky-500" },
+    sky: { bg: "bg-cyan-50", text: "text-sky-500" },
     indigo: { bg: "bg-indigo-50", text: "text-indigo-500" },
-    cyan: { bg: "bg-[#f0fdff]", text: "text-[#16a9b6]" },
+    cyan: { bg: "bg-cyan-50", text: "text-cyan-600" },
   };
   const tone = toneMap[color] || toneMap.blue;
   return (
@@ -1061,7 +1061,7 @@ function FieldCard({ icon: Icon, label, required, color = "blue", children }: { 
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-10 items-center rounded-card border border-teachpad-red bg-[#fff7f8] px-3.5 text-sm text-fg-muted">
+    <div className="flex h-10 items-center rounded-card border border-teachpad-red bg-rose-50 px-3.5 text-sm text-fg-muted">
       {children}
     </div>
   );
