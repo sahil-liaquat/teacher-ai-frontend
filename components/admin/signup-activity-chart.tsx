@@ -13,6 +13,7 @@ import {
   type LabelProps,
 } from "recharts";
 import { backendApi, type AdminSignupActivity } from "@/lib/api";
+import { BRAND_BLUE, CHART_AXIS, CHART_BAD, CHART_GOOD, CHART_GRID, CHART_LABEL, CHART_LABEL_STRONG } from "@/lib/chart-colors";
 
 const number = new Intl.NumberFormat("en-IN");
 const averageNumber = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 1 });
@@ -61,19 +62,19 @@ export function SignupActivityChart() {
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={signups.data.buckets} margin={{ top: 48, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f7" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID} />
             <XAxis
               dataKey="day"
               tickFormatter={(value) => shortDay(String(value))}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
+              tick={{ fontSize: 12, fill: CHART_LABEL }}
               tickLine={false}
-              axisLine={{ stroke: "#e5e7eb" }}
+              axisLine={{ stroke: CHART_AXIS }}
               minTickGap={16}
             />
             <YAxis
               allowDecimals={false}
               tickFormatter={(value) => number.format(Number(value))}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
+              tick={{ fontSize: 12, fill: CHART_LABEL }}
               tickLine={false}
               axisLine={false}
               width={48}
@@ -82,7 +83,7 @@ export function SignupActivityChart() {
               cursor={{ fill: "rgba(1,101,253,0.06)" }}
               content={(props) => <SignupTooltip active={props.active} payload={props.payload} dailyAverage={dailyAverage} />}
             />
-            <Bar dataKey="signups" fill="#0165fd" radius={[4, 4, 0, 0]} maxBarSize={48}>
+            <Bar dataKey="signups" fill={BRAND_BLUE} radius={[4, 4, 0, 0]} maxBarSize={48}>
               <LabelList
                 dataKey="signups"
                 position="top"
@@ -111,7 +112,7 @@ function SignupTooltip({
   const activationColor = bucket.activation_rate < 55 ? "text-red-600" : "text-green-600";
 
   return (
-    <div className="min-w-52 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-xl">
+    <div className="min-w-52 rounded-card border border-slate-200 bg-white p-3 text-xs shadow-xl">
       <p className="mb-2 font-black text-slate-900">{shortDay(bucket.day)}</p>
       <div className="space-y-1.5 font-semibold text-slate-600">
         <p className="flex items-center justify-between gap-6"><span>Total signups</span><span className="font-black text-slate-900">{number.format(bucket.signups)}</span></p>
@@ -136,14 +137,14 @@ function SignupBarLabel({
   if (!box || box.x == null || box.y == null || box.width == null || !bucket || !signups) return null;
 
   const centerX = box.x + box.width / 2;
-  const activationColor = bucket.activation_rate < 55 ? "#dc2626" : "#16a34a";
+  const activationColor = bucket.activation_rate < 55 ? CHART_BAD : CHART_GOOD;
 
   return (
     <g>
       <text x={centerX} y={box.y - 20} textAnchor="middle" fill={activationColor} fontSize={10} fontWeight={800}>
         {bucket.activation_rate}%
       </text>
-      <text x={centerX} y={box.y - 6} textAnchor="middle" fill="#475569" fontSize={10} fontWeight={700}>
+      <text x={centerX} y={box.y - 6} textAnchor="middle" fill={CHART_LABEL_STRONG} fontSize={10} fontWeight={700}>
         {number.format(signups)}
       </text>
     </g>
@@ -152,7 +153,7 @@ function SignupBarLabel({
 
 function ChartMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-72 items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-sm font-medium text-gray-500">
+    <div className="flex h-72 items-center justify-center rounded-card border-2 border-dashed border-gray-200 text-sm font-medium text-gray-500">
       <span>{children}</span>
     </div>
   );

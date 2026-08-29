@@ -561,7 +561,7 @@ export default function AdminWorkshopsAndHostsPage() {
             title="Workshops Ledger"
             description={`Displaying all ${activeSubTab} workshops.`}
             actions={
-              <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
+              <div className="flex w-full items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
                 <Search className="h-[18px] w-[18px] text-gray-400" />
                 <Input
                   className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
@@ -603,10 +603,10 @@ export default function AdminWorkshopsAndHostsPage() {
                               <img
                                 src={resolveUploadUrl(w.banner_url)}
                                 alt=""
-                                className="mt-0.5 aspect-video h-10 shrink-0 rounded-lg border border-gray-100 bg-gray-50 object-contain object-center"
+                                className="mt-0.5 aspect-video h-10 shrink-0 rounded-control border border-gray-100 bg-gray-50 object-contain object-center"
                               />
                             ) : (
-                              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gray-100 text-gray-400 mt-0.5">
+                              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-gray-100 text-gray-400 mt-0.5">
                                 <FileText className="h-6 w-6" />
                               </div>
                             )}
@@ -733,7 +733,7 @@ export default function AdminWorkshopsAndHostsPage() {
           title="Speaker Directory"
           description="Browse, filter, and edit host profiles."
           actions={
-            <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
+            <div className="flex w-full items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
               <Search className="h-4 w-4 text-gray-400" />
               <Input
                 className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
@@ -892,7 +892,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
-                    className="mt-1 flex h-10 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-teachpad-blue focus:outline-none"
+                    className="mt-1 flex h-10 w-full rounded-card border border-gray-200 bg-white px-3 py-2 text-sm focus:border-teachpad-blue focus:outline-none"
                   >
                     <option value="online">Online Webinar</option>
                     <option value="offline">Offline Venue</option>
@@ -904,7 +904,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   <select
                     value={publishingDestination}
                     onChange={(e) => setPublishingDestination(e.target.value as any)}
-                    className="mt-1 flex h-10 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-teachpad-blue focus:outline-none"
+                    className="mt-1 flex h-10 w-full rounded-card border border-gray-200 bg-white px-3 py-2 text-sm focus:border-teachpad-blue focus:outline-none"
                   >
                     <option value="both">Both Landing Page & TeachPad App</option>
                     <option value="landing_page">Landing Page Only</option>
@@ -945,7 +945,7 @@ export default function AdminWorkshopsAndHostsPage() {
                     ) : (
                       <div className="grid h-10 w-16 place-items-center rounded bg-gray-100 text-gray-400 border border-dashed"><Upload className="h-4 w-4" /></div>
                     )}
-                    <label className="cursor-pointer inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 text-xs font-bold bg-gray-50 hover:bg-gray-100 text-gray-700 transition">
+                    <label className="cursor-pointer inline-flex items-center justify-center h-9 px-3 rounded-control border border-gray-200 text-xs font-bold bg-gray-50 hover:bg-gray-100 text-gray-700 transition">
                       {uploadingBanner ? <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> : null}
                       Upload Banner
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, "banner")} disabled={uploadingBanner} />
@@ -971,14 +971,14 @@ export default function AdminWorkshopsAndHostsPage() {
                 ) : null}
                 {hostsQuery.isLoading && !workshopHostOptions.length ? <p className="text-xs text-gray-500 mt-2">Loading hosts...</p> : null}
                 {workshopHostOptions.length ? (
-                  <div className="grid gap-2 sm:grid-cols-2 mt-2 max-h-32 overflow-y-auto border border-gray-100 rounded-lg p-2.5 bg-gray-50/50">
+                  <div className="grid gap-2 sm:grid-cols-2 mt-2 max-h-32 overflow-y-auto border border-gray-100 rounded-control p-2.5 bg-gray-50/50">
                     {workshopHostOptions.map((host) => {
                       const isSelected = selectedHostIds.includes(host.id);
                       return (
                         <div
                           key={host.id}
                           className={cn(
-                            "flex items-center rounded-lg border text-xs font-semibold transition-colors",
+                            "flex items-center rounded-control border text-xs font-semibold transition-colors",
                             isSelected
                               ? "bg-blue-50 border-blue-200 text-teachpad-blue"
                               : "bg-white border-gray-150 hover:bg-gray-50 text-gray-700"
@@ -1038,7 +1038,7 @@ export default function AdminWorkshopsAndHostsPage() {
               </div>
 
               {/* Options */}
-              <div className="grid gap-3 sm:grid-cols-3 bg-gray-50 p-3 rounded-xl border mt-2">
+              <div className="grid gap-3 sm:grid-cols-3 bg-gray-50 p-3 rounded-card border mt-2">
                 <label className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1074,7 +1074,7 @@ export default function AdminWorkshopsAndHostsPage() {
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as any)}
-                  className="flex h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-xs font-bold focus:border-teachpad-blue focus:outline-none"
+                  className="flex h-9 rounded-control border border-gray-200 bg-white px-2.5 text-xs font-bold focus:border-teachpad-blue focus:outline-none"
                 >
                   <option value="draft">Save as Draft</option>
                   <option value="published">Publish Immediately</option>
@@ -1137,11 +1137,11 @@ export default function AdminWorkshopsAndHostsPage() {
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Profile Photo</label>
                   <div className="flex items-center gap-3 mt-1.5">
                     {hostPhoto ? (
-                      <img src={resolveUploadUrl(hostPhoto)} alt="Preview" className="h-10 w-10 rounded-lg object-cover border" />
+                      <img src={resolveUploadUrl(hostPhoto)} alt="Preview" className="h-10 w-10 rounded-control object-cover border" />
                     ) : (
                       <div className="grid h-10 w-10 place-items-center rounded bg-gray-105 text-gray-400 border border-dashed"><User className="h-5 w-5" /></div>
                     )}
-                    <label className="cursor-pointer inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 text-xs font-bold bg-gray-50 hover:bg-gray-100 text-gray-700 transition">
+                    <label className="cursor-pointer inline-flex items-center justify-center h-9 px-3 rounded-control border border-gray-200 text-xs font-bold bg-gray-50 hover:bg-gray-100 text-gray-700 transition">
                       {uploadingHostPhoto ? <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> : null}
                       {hostPhoto ? "Change Photo" : "Upload Photo"}
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, "host")} disabled={uploadingHostPhoto} />
@@ -1213,7 +1213,7 @@ export default function AdminWorkshopsAndHostsPage() {
               <MetricCard label="Certificates" value={certificatesIssuedCount} tone="amber" icon={<Award className="h-5 w-5" />} />
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-gray-100">
+            <div className="min-h-0 flex-1 overflow-auto rounded-card border border-gray-100">
               {registrationsQuery.isLoading ? (
                 <div className="p-6">
                   <LoadingState label="Loading registrations" />
@@ -1313,7 +1313,7 @@ export default function AdminWorkshopsAndHostsPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-red-50 text-red-600">
                 <Trash2 className="h-6 w-6" />
               </span>
               <div>
@@ -1340,7 +1340,7 @@ export default function AdminWorkshopsAndHostsPage() {
         <div className="fixed inset-0 z-[70] grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-red-50 text-red-600">
                 <Trash2 className="h-6 w-6" />
               </span>
               <div>

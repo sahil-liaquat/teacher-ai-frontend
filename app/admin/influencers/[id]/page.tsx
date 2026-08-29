@@ -190,7 +190,7 @@ function CodeRedemptions({ codeId }: { codeId: string }) {
   if (reds.isLoading) return <div className="mt-3"><LoadingState label="Loading redemptions" /></div>;
   if (!reds.data?.length) return <p className="mt-3 text-xs text-gray-500">No redemptions yet.</p>;
   return (
-    <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs">
+    <div className="mt-3 rounded-control border border-gray-100 bg-gray-50 p-3 text-xs">
       {reds.data.map((r) => (
         <div key={r.user_id} className="flex items-center justify-between py-1">
           <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ function PayoutCommissions({ payoutId }: { payoutId: string }) {
   if (comms.isLoading) return <div className="mt-3"><LoadingState label="Loading" /></div>;
   if (!comms.data?.length) return <p className="mt-3 text-xs text-gray-500">No commissions linked.</p>;
   return (
-    <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs">
+    <div className="mt-3 rounded-control border border-gray-100 bg-gray-50 p-3 text-xs">
       {comms.data.map((c) => (
         <div key={c.id} className="flex items-center justify-between py-1">
           <span className="text-gray-700">{c.referred_user_name || c.referred_user_email || "Unnamed"}</span>

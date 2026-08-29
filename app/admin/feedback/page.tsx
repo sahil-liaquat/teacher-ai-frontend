@@ -113,7 +113,7 @@ export default function AdminFeedbackPage() {
       >
         <div className="border-b border-gray-100 p-4">
           <form onSubmit={applySearch} className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_180px_160px_140px_auto]">
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3">
+            <div className="flex items-center gap-2 rounded-control border border-gray-200 bg-white px-3">
               <Search className="h-4 w-4 shrink-0 text-gray-400" />
               <Input
                 value={searchDraft}
@@ -236,7 +236,7 @@ function FeedbackTableRow({ item }: { item: AdminFeedbackItem }) {
 
 function FeedbackCard({ item }: { item: AdminFeedbackItem }) {
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <article className="rounded-card border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-semibold text-gray-900">{item.user_name}</p>
@@ -286,7 +286,7 @@ function FilterSelect({
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      className="h-10 rounded-control border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
     >
       <option value="">{placeholder}</option>
       {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

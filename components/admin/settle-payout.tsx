@@ -79,7 +79,7 @@ export function SettlePayout({ influencerId, onSettled }: { influencerId: string
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-600"><HandCoins className="h-4 w-4" /></span>
+                        <span className="grid h-9 w-9 place-items-center rounded-control bg-blue-50 text-blue-600"><HandCoins className="h-4 w-4" /></span>
                         <div>
                           <p className="font-semibold text-gray-900">{row.referred_user_name || "Unnamed user"}</p>
                           <p className="text-xs text-gray-500">{row.referred_user_email || "-"}</p>
@@ -99,7 +99,7 @@ export function SettlePayout({ influencerId, onSettled }: { influencerId: string
 
       <AdminPanel title="Settle payout" description="Record the bank/UPI reference for this clearance.">
         <div className="space-y-4">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <div className="rounded-card border border-emerald-100 bg-emerald-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Amount to clear</p>
             <p className="mt-1 text-3xl font-bold text-emerald-950">{formatInr(selectedTotal)}</p>
             <p className="mt-1 text-sm text-emerald-700">{selectedIds.length ? `${selectedIds.length} selected` : "All pending commissions"}</p>

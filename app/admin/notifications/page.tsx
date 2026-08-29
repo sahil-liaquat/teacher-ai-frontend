@@ -86,7 +86,7 @@ export default function AdminNotificationsPage() {
           </Field>
           <Field label="Type">
             <select
-              className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium"
+              className="h-10 w-full rounded-control border border-gray-200 bg-white px-3 text-sm font-medium"
               value={form.severity}
               onChange={(event) => setForm((current) => ({ ...current, severity: event.target.value as NotificationSeverity }))}
             >
@@ -154,7 +154,7 @@ export default function AdminNotificationsPage() {
           {notifications.data?.map((item) => (
             <article key={item.id} className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600"><BellRing className="h-5 w-5" /></span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-card bg-blue-50 text-blue-600"><BellRing className="h-5 w-5" /></span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-sm font-black text-slate-900">{item.title}</h3>

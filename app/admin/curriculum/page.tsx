@@ -136,7 +136,7 @@ export default function AdminCurriculumPage() {
           title="Boards"
           description="Create and manage education boards."
           actions={
-            <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-64">
+            <div className="flex w-full items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-3 py-2 sm:w-64">
               <Search className="h-4 w-4 text-gray-400" />
               <Input
                 className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
@@ -147,7 +147,7 @@ export default function AdminCurriculumPage() {
             </div>
           }
         >
-          <form onSubmit={createBoard} className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
+          <form onSubmit={createBoard} className="rounded-card border border-gray-200 bg-gray-50 p-4 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Code">
                 <Input value={boardForm.code} onChange={(event) => setBoardForm({ ...boardForm, code: event.target.value })} placeholder="cbse" required />
@@ -173,7 +173,7 @@ export default function AdminCurriculumPage() {
               const selected = selectedBoardId === board.id;
               return (
                 <div key={board.id} className={cn(
-                  "rounded-xl border p-4 transition-all",
+                  "rounded-card border p-4 transition-all",
                   selected ? "border-blue-200 bg-blue-50/50" : "border-gray-200 bg-white"
                 )}>
                   {editing ? (
@@ -223,7 +223,7 @@ export default function AdminCurriculumPage() {
             </Select>
           }
         >
-          <form onSubmit={createClass} className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
+          <form onSubmit={createClass} className="rounded-card border border-gray-200 bg-gray-50 p-4 space-y-4">
             <div className="grid gap-4 sm:grid-cols-[100px_1fr]">
               <Field label="Grade">
                 <Input type="number" min={1} max={12} value={classForm.grade_number} onChange={(event) => setClassForm({ ...classForm, grade_number: event.target.value })} required />
@@ -241,7 +241,7 @@ export default function AdminCurriculumPage() {
             </Button>
           </form>
 
-          <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden">
+          <div className="mt-4 rounded-card border border-gray-200 overflow-hidden">
             {classes.isLoading ? <div className="p-4"><LoadingState label="Loading classes" /></div> : null}
             {!classes.isLoading && selectedBoardId && !classes.data?.items?.length ? <div className="p-4"><EmptyState title="No classes found" /></div> : null}
             {classes.data?.items?.length ? (

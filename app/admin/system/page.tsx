@@ -81,7 +81,7 @@ export default function AdminSystemPage() {
         />
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-card border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-100 px-6 py-4">
           <h2 className="text-base font-semibold text-gray-900">Backend Details</h2>
           <p className="mt-0.5 text-sm text-gray-500">Raw values from the health endpoint.</p>
@@ -113,9 +113,9 @@ function HealthTile({ title, detail, status, icon, healthy }: { title: string; d
   };
 
   return (
-    <div className={cn("rounded-xl border p-5", toneClasses[tone])}>
+    <div className={cn("rounded-card border p-5", toneClasses[tone])}>
       <div className="flex items-start justify-between gap-3">
-        <span className={cn("flex h-12 w-12 items-center justify-center rounded-xl", iconBg[tone])}>{icon}</span>
+        <span className={cn("flex h-12 w-12 items-center justify-center rounded-card", iconBg[tone])}>{icon}</span>
         <StatusPill status={tone === "success" ? "success" : tone === "danger" ? "danger" : "neutral"}>{status}</StatusPill>
       </div>
       <p className="mt-4 font-semibold text-gray-900">{title}</p>
@@ -141,7 +141,7 @@ function HealthTile({ title, detail, status, icon, healthy }: { title: string; d
 
 function Detail({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <div className="rounded-card border border-gray-200 bg-gray-50 p-4">
       <dt className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</dt>
       <dd className={cn("mt-2 break-words text-sm font-semibold", danger ? "text-rose-700" : "text-gray-900")}>{value}</dd>
     </div>

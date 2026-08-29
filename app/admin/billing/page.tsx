@@ -50,7 +50,7 @@ export default function AdminBillingPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Kind">
             <select
-              className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              className="h-10 w-full rounded-control border border-gray-200 bg-white px-3 text-sm"
               value={form.kind}
               onChange={(e) => {
                 const kind = e.target.value as PromoKind;
@@ -83,7 +83,7 @@ export default function AdminBillingPage() {
           </Field>
           <Field label="Link to influencer (optional)">
             <select
-              className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
+              className="h-10 w-full rounded-control border border-gray-200 bg-white px-3 text-sm"
               value={form.influencer_id ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, influencer_id: e.target.value || null }))}
             >

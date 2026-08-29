@@ -248,7 +248,7 @@ function ProgressRow({ label, value, total, color }: { label: string; value: num
 }
 
 function ReadinessCard({ label, value, href }: { label: string; value: number | string; href: string }) {
-  return <Link href={href} className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-4 hover:border-blue-200 hover:bg-blue-50"><span><span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span><span className="mt-1 block text-xl font-black text-slate-900">{value}</span></span><ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600" /></Link>;
+  return <Link href={href} className="group flex items-center justify-between rounded-card border border-slate-100 bg-slate-50 px-4 py-4 hover:border-blue-200 hover:bg-blue-50"><span><span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span><span className="mt-1 block text-xl font-black text-slate-900">{value}</span></span><ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600" /></Link>;
 }
 
 function SignupProgress({ user }: { user: ApiUser }) {
@@ -266,7 +266,7 @@ function OpportunityCard({ value, title, description, href, tone }: { value: num
     blue: "border-blue-100 bg-blue-50 text-blue-700",
     rose: "border-rose-100 bg-rose-50 text-rose-700",
   };
-  return <Link href={href} className={`group block rounded-xl border p-4 ${colors[tone]}`}><div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" /><div className="min-w-0 flex-1"><div className="flex items-baseline justify-between gap-3"><p className="font-bold text-slate-900">{title}</p><span className="text-2xl font-black">{number.format(value)}</span></div><p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">{description}</p></div><ArrowRight className="mt-1 h-4 w-4 shrink-0 opacity-50 group-hover:translate-x-0.5" /></div></Link>;
+  return <Link href={href} className={`group block rounded-card border p-4 ${colors[tone]}`}><div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" /><div className="min-w-0 flex-1"><div className="flex items-baseline justify-between gap-3"><p className="font-bold text-slate-900">{title}</p><span className="text-2xl font-black">{number.format(value)}</span></div><p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">{description}</p></div><ArrowRight className="mt-1 h-4 w-4 shrink-0 opacity-50 group-hover:translate-x-0.5" /></div></Link>;
 }
 
 function formatLabel(value: string) {

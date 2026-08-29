@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { AdminSummary, AdminUsageByKind } from "@/lib/api";
+import { BRAND_BLUE, CHART_AXIS, CHART_GRID, CHART_LABEL, CHART_LABEL_STRONG } from "@/lib/chart-colors";
 
 const compact = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
 const number = new Intl.NumberFormat("en-IN");
@@ -25,15 +26,15 @@ export function ToolUsageChart({ data }: { data: AdminUsageByKind[] }) {
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 22, bottom: 0, left: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef2f7" />
-          <XAxis type="number" tickFormatter={(value) => compact.format(Number(value))} tick={{ fontSize: 12, fill: "#64748b" }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} />
-          <YAxis type="category" dataKey="label" width={112} tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} tickLine={false} axisLine={false} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={CHART_GRID} />
+          <XAxis type="number" tickFormatter={(value) => compact.format(Number(value))} tick={{ fontSize: 12, fill: CHART_LABEL }} tickLine={false} axisLine={{ stroke: CHART_AXIS }} />
+          <YAxis type="category" dataKey="label" width={112} tick={{ fontSize: 12, fill: CHART_LABEL_STRONG, fontWeight: 600 }} tickLine={false} axisLine={false} />
           <Tooltip
             cursor={{ fill: "rgba(1,101,253,0.05)" }}
             formatter={(value) => [number.format(Number(value)), "Generations"]}
-            contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }}
+            contentStyle={{ borderRadius: 12, border: `1px solid ${CHART_AXIS}`, fontSize: 12 }}
           />
-          <Bar dataKey="generations" fill="#0165fd" radius={[0, 6, 6, 0]} maxBarSize={28} />
+          <Bar dataKey="generations" fill={BRAND_BLUE} radius={[0, 6, 6, 0]} maxBarSize={28} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -66,7 +67,7 @@ export function UserFunnelChart({ data }: { data: AdminSummary["user_funnel"] })
           </div>
         );
       })}
-      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
+      <div className="rounded-card border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
         {number.format(data.new_last_24_hours)} new account{data.new_last_24_hours === 1 ? "" : "s"} in the last 24 hours
       </div>
     </div>
@@ -74,7 +75,7 @@ export function UserFunnelChart({ data }: { data: AdminSummary["user_funnel"] })
 }
 
 function ChartEmpty({ label }: { label: string }) {
-  return <div className="flex h-72 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-sm font-medium text-slate-500">{label}</div>;
+  return <div className="flex h-72 items-center justify-center rounded-card border-2 border-dashed border-slate-200 text-sm font-medium text-slate-500">{label}</div>;
 }
 
 function formatLabel(value: string) {

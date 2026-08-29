@@ -101,7 +101,7 @@ export default function AdminActivityPage() {
               <select
                 value={kind}
                 onChange={(e) => { setKind(e.target.value as ActivityKind | ""); setPage(0); }}
-                className="h-9 rounded-xl border border-teachpad-cardBorder bg-white px-3 text-sm font-semibold"
+                className="h-9 rounded-card border border-teachpad-cardBorder bg-white px-3 text-sm font-semibold"
               >
                 {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
               </select>

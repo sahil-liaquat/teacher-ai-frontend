@@ -167,7 +167,7 @@ export function ActivityExportDialog({
             </div>
 
             {query ? (
-              <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+              <div className="mt-2 overflow-hidden rounded-card border border-slate-200 bg-white shadow-lg">
                 {users.isError ? (
                   <p className="px-4 py-3 text-sm font-medium text-rose-600">Could not load the user list.</p>
                 ) : matches.length ? (
@@ -221,9 +221,9 @@ export function ActivityExportDialog({
             </div>
           ) : null}
 
-          {error ? <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</p> : null}
+          {error ? <p className="rounded-card bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</p> : null}
           {exportedCount != null ? (
-            <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+            <p className="rounded-card bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
               Exported {exportedCount} activit{exportedCount === 1 ? "y" : "ies"}.
             </p>
           ) : null}

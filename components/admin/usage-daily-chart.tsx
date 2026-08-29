@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import type { AdminUsageDaily } from "@/lib/api";
+import { BRAND_BLUE, CHART_AXIS, CHART_GRID, CHART_LABEL, CHART_LABEL_STRONG } from "@/lib/chart-colors";
 import { cn } from "@/lib/utils";
 
 type Metric = "generations" | "total_tokens" | "cost_inr";
@@ -68,7 +69,7 @@ export function UsageDailyChart({ data, start, end }: { data: AdminUsageDaily[];
 
   if (!data.length) {
     return (
-      <div className="flex h-72 items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-sm font-medium text-gray-500">
+      <div className="flex h-72 items-center justify-center rounded-card border-2 border-dashed border-gray-200 text-sm font-medium text-gray-500">
         No usage in this range yet.
       </div>
     );
@@ -83,7 +84,7 @@ export function UsageDailyChart({ data, start, end }: { data: AdminUsageDaily[];
             type="button"
             onClick={() => setMetric(m.key)}
             className={cn(
-              "rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors",
+              "rounded-control border px-3 py-1.5 text-xs font-semibold transition-colors",
               metric === m.key
                 ? "border-blue-200 bg-blue-50 text-blue-700"
                 : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
@@ -96,18 +97,18 @@ export function UsageDailyChart({ data, start, end }: { data: AdminUsageDaily[];
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 28, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f7" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID} />
             <XAxis
               dataKey="day"
               tickFormatter={(value) => shortDay(String(value))}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
+              tick={{ fontSize: 12, fill: CHART_LABEL }}
               tickLine={false}
-              axisLine={{ stroke: "#e5e7eb" }}
+              axisLine={{ stroke: CHART_AXIS }}
               minTickGap={16}
             />
             <YAxis
               tickFormatter={(value) => formatAxis(metric, Number(value))}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
+              tick={{ fontSize: 12, fill: CHART_LABEL }}
               tickLine={false}
               axisLine={false}
               width={56}
@@ -119,14 +120,14 @@ export function UsageDailyChart({ data, start, end }: { data: AdminUsageDaily[];
                 formatValue(metric, Number(value)),
                 `${metricLabel} · avg ${formatAverage(metric, dailyAverage)}/day`,
               ]}
-              contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }}
+              contentStyle={{ borderRadius: 12, border: `1px solid ${CHART_AXIS}`, fontSize: 12 }}
             />
-            <Bar dataKey={metric} fill="#0165fd" radius={[4, 4, 0, 0]} maxBarSize={48}>
+            <Bar dataKey={metric} fill={BRAND_BLUE} radius={[4, 4, 0, 0]} maxBarSize={48}>
               <LabelList
                 dataKey={metric}
                 position="top"
                 formatter={(value: number) => formatBarLabel(metric, Number(value))}
-                fill="#475569"
+                fill={CHART_LABEL_STRONG}
                 fontSize={10}
                 fontWeight={700}
               />

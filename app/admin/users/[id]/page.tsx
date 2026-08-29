@@ -153,7 +153,7 @@ export default function AdminUserDetailPage() {
 
         <AdminPanel title="Referral & promo history" description="How this user was referred and access codes they redeemed.">
           {data.referrer ? (
-            <Link href={`/admin/users/${data.referrer.id}`} className="mb-4 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4 hover:bg-blue-50">
+            <Link href={`/admin/users/${data.referrer.id}`} className="mb-4 flex items-center gap-3 rounded-card border border-blue-100 bg-blue-50/60 p-4 hover:bg-blue-50">
               <UserRound className="h-5 w-5 text-blue-600" />
               <span className="min-w-0 flex-1"><span className="block font-semibold text-gray-900">Referred by {data.referrer.name}</span><span className="block truncate text-xs text-gray-500">{data.referrer.email}</span></span>
               <ExternalLink className="h-4 w-4 text-blue-600" />
@@ -162,7 +162,7 @@ export default function AdminUserDetailPage() {
           {data.promo_redemptions.length ? (
             <div className="space-y-3">
               {data.promo_redemptions.map((promo) => (
-                <div key={promo.id} className="flex items-start gap-3 rounded-xl border border-gray-100 p-4">
+                <div key={promo.id} className="flex items-start gap-3 rounded-card border border-gray-100 p-4">
                   <Ticket className="mt-0.5 h-5 w-5 text-violet-600" />
                   <div className="min-w-0 flex-1"><p className="font-semibold text-gray-900">{promo.code}</p><p className="text-xs text-gray-500">{formatLabel(promo.kind)}{promo.duration_days ? ` · ${promo.duration_days} days` : ""} · {formatDateTime(promo.redeemed_at)}</p></div>
                   <span className="text-xs text-gray-500">Until {formatDateTime(promo.resulting_access_until ?? undefined)}</span>
@@ -176,7 +176,7 @@ export default function AdminUserDetailPage() {
       <AdminPanel title="Generation history" description="Persisted output counts plus the ten most recent generation records." actions={<Link href={`/admin/activity?user_id=${account.id}`} className="text-sm font-semibold text-blue-600 hover:underline">Open full activity ↗</Link>}>
         <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(data.generation_counts).map(([key, value]) => (
-            <div key={key} className="rounded-xl border border-gray-100 bg-gray-50 p-4"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{GENERATION_LABELS[key] ?? formatLabel(key)}</p><p className="mt-2 text-2xl font-black text-gray-900">{value}</p></div>
+            <div key={key} className="rounded-card border border-gray-100 bg-gray-50 p-4"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{GENERATION_LABELS[key] ?? formatLabel(key)}</p><p className="mt-2 text-2xl font-black text-gray-900">{value}</p></div>
           ))}
         </div>
         {activity.isLoading ? <LoadingState label="Loading recent activity" /> : activity.data?.items.length ? (
@@ -192,7 +192,7 @@ export default function AdminUserDetailPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <AdminPanel title={`Feedback (${data.feedback.length})`} description="Generator ratings, comments, and skipped prompts.">
           {data.feedback.length ? <div className="space-y-3">{data.feedback.map((item) => (
-            <div key={item.id} className="rounded-xl border border-gray-100 p-4">
+            <div key={item.id} className="rounded-card border border-gray-100 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-blue-600" /><span className="font-semibold">{formatLabel(item.tool)}</span>{item.rating != null ? <span className="text-sm font-semibold text-amber-600">{item.rating}/5</span> : null}</div><StatusPill status={item.dismissed ? "neutral" : "success"}>{item.dismissed ? "Skipped" : "Submitted"}</StatusPill></div>
               <p className="mt-2 whitespace-pre-wrap text-sm text-gray-600">{item.comment || "No comment"}</p><p className="mt-2 text-xs text-gray-400">{formatDateTime(item.created_at)}</p>
             </div>
@@ -201,7 +201,7 @@ export default function AdminUserDetailPage() {
 
         <AdminPanel title={`Workshops (${data.workshops.length})`} description="Registration, attendance, certification, and session feedback.">
           {data.workshops.length ? <div className="space-y-3">{data.workshops.map((item) => (
-            <div key={item.id} className="rounded-xl border border-gray-100 p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-semibold text-gray-900">{item.title}</p><p className="mt-1 text-xs text-gray-500">{formatDateTime(item.scheduled_at)}</p></div><div className="flex gap-1.5"><StatusPill status={item.attended ? "success" : "neutral"}>{item.attended ? "Attended" : "Registered"}</StatusPill>{item.certificate_issued ? <StatusPill status="info">Certificate</StatusPill> : null}</div></div>{item.feedback_rating ? <p className="mt-2 text-sm font-semibold text-amber-600">{item.feedback_rating}/5</p> : null}{item.feedback_text ? <p className="mt-1 text-sm text-gray-600">{item.feedback_text}</p> : null}</div>
+            <div key={item.id} className="rounded-card border border-gray-100 p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-semibold text-gray-900">{item.title}</p><p className="mt-1 text-xs text-gray-500">{formatDateTime(item.scheduled_at)}</p></div><div className="flex gap-1.5"><StatusPill status={item.attended ? "success" : "neutral"}>{item.attended ? "Attended" : "Registered"}</StatusPill>{item.certificate_issued ? <StatusPill status="info">Certificate</StatusPill> : null}</div></div>{item.feedback_rating ? <p className="mt-2 text-sm font-semibold text-amber-600">{item.feedback_rating}/5</p> : null}{item.feedback_text ? <p className="mt-1 text-sm text-gray-600">{item.feedback_text}</p> : null}</div>
           ))}</div> : <EmptyState title="No workshop registrations" />}
         </AdminPanel>
       </div>

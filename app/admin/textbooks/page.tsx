@@ -99,7 +99,7 @@ export default function AdminTextbooksPage() {
       {showHelp && (
         <AdminPanel title="Markdown Format Requirements" description="Your markdown file must include valid frontmatter at the top.">
           <div className="space-y-4">
-            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+            <div className="rounded-control bg-amber-50 border border-amber-200 p-4">
               <div className="flex gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
@@ -108,18 +108,18 @@ export default function AdminTextbooksPage() {
                 </div>
               </div>
             </div>
-            <pre className="rounded-lg bg-gray-900 text-gray-100 p-4 text-sm overflow-x-auto">
+            <pre className="rounded-control bg-gray-900 text-gray-100 p-4 text-sm overflow-x-auto">
 {`---
 subject: "Math"
 book_title: "Algebra Grade 8"
 ---`}
             </pre>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 p-3">
+              <div className="rounded-control border border-gray-200 p-3">
                 <p className="text-xs font-semibold uppercase text-gray-500">subject</p>
                 <p className="mt-1 text-sm font-medium text-gray-900">The subject name (e.g., "Math", "Science")</p>
               </div>
-              <div className="rounded-lg border border-gray-200 p-3">
+              <div className="rounded-control border border-gray-200 p-3">
                 <p className="text-xs font-semibold uppercase text-gray-500">book_title</p>
                 <p className="mt-1 text-sm font-medium text-gray-900">The book title (e.g., "Algebra Grade 8")</p>
               </div>
@@ -162,7 +162,7 @@ book_title: "Algebra Grade 8"
         title="Library Catalog"
         description="Search and browse all textbooks in the library."
         actions={
-          <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
+          <div className="flex w-full items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
             <Search className="h-4 w-4 text-gray-400" />
             <Input
               className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
@@ -215,7 +215,7 @@ book_title: "Algebra Grade 8"
             </div>
             <div className="grid gap-3 p-4 xl:hidden">
               {filteredBooks.map((book: any) => (
-                <div key={book.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div key={book.id} className="rounded-card border border-gray-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-gray-900">{book.title}</p>
@@ -223,7 +223,7 @@ book_title: "Algebra Grade 8"
                     </div>
                     <StatusPill status={book.is_ingested ? "info" : "warning"}>{book.is_ingested ? "ingested" : "pending"}</StatusPill>
                   </div>
-                  <p className="mt-3 truncate rounded-lg bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600">{book.pinecone_index || "No index"}</p>
+                  <p className="mt-3 truncate rounded-control bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600">{book.pinecone_index || "No index"}</p>
                   <div className="mt-4"><BookActions book={book} remove={remove} /></div>
                 </div>
               ))}

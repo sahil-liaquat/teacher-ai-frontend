@@ -59,7 +59,7 @@ export default function AdminBookDetailPage() {
           {chapters.data?.length ? (
             <div className="space-y-3">
               {chapters.data.map((chapter: any) => (
-                <div key={chapter.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-3">
+                <div key={chapter.id} className="flex items-center justify-between gap-3 rounded-control border border-slate-200 px-3 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-black text-slate-950">{chapter.chapter_title || chapter.title || "Untitled chapter"}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-500">Chapter {chapter.chapter_number || "-"}</p>
@@ -77,7 +77,7 @@ export default function AdminBookDetailPage() {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+    <div className="rounded-control border border-slate-200 bg-slate-50 p-3">
       <dt className="text-xs font-bold uppercase text-slate-500">{label}</dt>
       <dd className="mt-1 break-words text-sm font-bold text-slate-950">{value}</dd>
     </div>

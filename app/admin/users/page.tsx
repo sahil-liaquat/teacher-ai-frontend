@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
         title="User Directory"
         description="Search and manage user accounts."
         actions={
-          <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
+          <div className="flex w-full items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-3 py-2 sm:w-72">
             <Search className="h-4 w-4 text-gray-400" />
             <Input
               className="h-7 border-0 bg-transparent px-0 shadow-none focus:ring-0"
@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-labelledby="change-user-status-title" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-gray-100 text-gray-600">
                 <ShieldCheck className="h-6 w-6" />
               </span>
               <div>
@@ -222,7 +222,7 @@ export default function AdminUsersPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-gray-900/50 px-4 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-labelledby="delete-user-title" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-red-50 text-red-600">
                 <UserRoundX className="h-6 w-6" />
               </span>
               <div>
@@ -300,7 +300,7 @@ function UserTableRow({ user, onStatusChange, onGrant, onRoleChange, rolePending
 
 function UserCard({ user, onStatusChange, onGrant, onRoleChange, rolePending, onResend, onDelete, resendSeconds, resendPending }: UserActionProps) {
   return (
-    <div className={cn("rounded-xl border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
+    <div className={cn("rounded-card border bg-white p-4", user.confirmed ? "border-gray-200" : "border-amber-200")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <Link href={`/admin/users/${user.id}`} className="block">
@@ -361,7 +361,7 @@ function StatusButtons({ user, onStatusChange, onGrant, onRoleChange, rolePendin
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-gray-50 p-3">
+    <div className="rounded-control bg-gray-50 p-3">
       <p className="text-xs font-semibold uppercase text-gray-500">{label}</p>
       <p className="mt-1 truncate font-medium text-gray-900">{value}</p>
     </div>

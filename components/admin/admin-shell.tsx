@@ -127,7 +127,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="border-b border-teachpad-cardBorder px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <Link href="/admin" className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teachpad-blue to-blue-600 text-white shadow-[0_12px_24px_var(--teachpad-shadowBlue)]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-gradient-to-br from-teachpad-blue to-blue-600 text-white shadow-[0_12px_24px_var(--teachpad-shadowBlue)]">
                   <Shield className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">
@@ -136,7 +136,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </span>
               </Link>
               <button 
-                className="grid h-8 w-8 place-items-center rounded-lg text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink lg:hidden" 
+                className="grid h-8 w-8 place-items-center rounded-control text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink lg:hidden" 
                 onClick={() => setMobileOpen(false)} 
                 aria-label="Close navigation"
               >
@@ -154,7 +154,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="border-t border-teachpad-cardBorder p-4">
-            <div className="rounded-xl border border-teachpad-cardBorder bg-teachpad-panel p-3">
+            <div className="rounded-card border border-teachpad-cardBorder bg-teachpad-panel p-3">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-teachpad-blue">
                   <Users className="h-4 w-4" />
@@ -166,7 +166,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </div>
               <button 
                 onClick={logout} 
-                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-teachpad-cardBorder text-sm font-medium text-teachpad-muted transition-colors hover:bg-white hover:text-teachpad-ink"
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-control border border-teachpad-cardBorder text-sm font-medium text-teachpad-muted transition-colors hover:bg-white hover:text-teachpad-ink"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out
@@ -189,7 +189,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="flex h-16 items-center justify-between gap-4 px-6">
             <div className="flex items-center gap-3">
               <button 
-                className="grid h-9 w-9 place-items-center rounded-lg border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm lg:hidden" 
+                className="grid h-9 w-9 place-items-center rounded-control border border-teachpad-cardBorder bg-white text-teachpad-muted shadow-sm lg:hidden" 
                 onClick={() => setMobileOpen(true)} 
                 aria-label="Open navigation"
               >
@@ -218,14 +218,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <Button
                 variant="ghost"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
+                className="h-10 px-4 text-sm font-bold rounded-card text-slate-500 border border-slate-200 bg-white hover:bg-slate-50"
               >
                 Cancel
               </Button>
               <Button
                 variant="danger"
                 onClick={handleConfirmLogout}
-                className="h-10 px-4 text-sm font-bold rounded-xl text-white"
+                className="h-10 px-4 text-sm font-bold rounded-card text-white"
               >
                 Log Out
               </Button>
@@ -243,7 +243,7 @@ function AdminNavLink({ item, active }: { item: AdminNavItem; active: boolean })
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+        "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm font-medium transition-all",
         active 
           ? "bg-blue-50 text-teachpad-blue" 
           : "text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink"

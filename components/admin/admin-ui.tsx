@@ -16,11 +16,11 @@ export function AdminPageHeader({
   meta?: ReactNode;
 }) {
   return (
-    <section className="rounded-[32px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-6 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)]">
+    <section className="rounded-[32px] border border-blue-200 bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f4f9ff_100%)] px-6 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           {eyebrow && <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>}
-          <h1 className="mt-1 text-2xl font-black tracking-normal text-[#071b49] sm:text-3xl">{title}</h1>
+          <h1 className="mt-1 text-2xl font-black tracking-normal text-fg sm:text-3xl">{title}</h1>
           {description && <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-slate-600">{description}</p>}
           {meta && <div className="mt-4 flex flex-wrap gap-2">{meta}</div>}
         </div>
@@ -50,9 +50,9 @@ export function AdminPanel({
   return (
     <section id={id} className={cn("overflow-hidden rounded-[18px] border border-white/70 bg-white/86 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm", className)}>
       {(title || description || actions) && (
-        <div className="flex flex-col gap-3 border-b border-white/70 bg-gradient-to-br from-[#f8fbff] to-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-white/70 bg-gradient-to-br from-blue-50 to-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            {title && <h2 className="text-base font-bold text-[#071b49]">{title}</h2>}
+            {title && <h2 className="text-base font-bold text-fg">{title}</h2>}
             {description && <p className="mt-0.5 text-sm font-medium text-slate-500">{description}</p>}
           </div>
           {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -85,14 +85,14 @@ export function MetricCard({
   };
 
   return (
-    <div className="rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+    <div className="rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-blue-50 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-black tracking-tight text-[#071b49]">{value}</p>
+          <p className="mt-2 text-3xl font-black tracking-tight text-fg">{value}</p>
           {detail && <p className="mt-1 text-sm font-medium text-slate-500">{detail}</p>}
         </div>
-        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1", toneClasses[tone])}>{icon}</span>
+        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-card ring-1", toneClasses[tone])}>{icon}</span>
       </div>
     </div>
   );
@@ -143,7 +143,7 @@ export function EmptyState({
 
 export function LoadingState({ label = "Loading data" }: { label?: string }) {
   return (
-    <div className="flex min-h-32 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+    <div className="flex min-h-32 items-center justify-center rounded-card border border-gray-200 bg-gray-50">
       <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
         <Loader2 className="h-4 w-4 animate-spin" />
         {label}

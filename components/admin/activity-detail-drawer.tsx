@@ -41,7 +41,7 @@ export function ActivityDetailDrawer({
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{kind.replace("_", " ")}</p>
             <h2 className="text-lg font-bold text-gray-900">Generation detail</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-gray-500 hover:bg-gray-100">
+          <button onClick={onClose} aria-label="Close" className="rounded-control p-2 text-gray-500 hover:bg-gray-100">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -79,7 +79,7 @@ export function ActivityDetailDrawer({
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+    <div className="rounded-control border border-gray-100 bg-gray-50 px-3 py-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
       <p className="mt-0.5 break-words font-semibold text-gray-900">{value}</p>
     </div>
@@ -97,7 +97,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function JsonBlock({ value }: { value: Record<string, unknown> }) {
   return (
-    <pre className="max-h-[40vh] overflow-auto rounded-lg border border-gray-200 bg-gray-900 p-4 text-xs leading-relaxed text-gray-100">
+    <pre className="max-h-[40vh] overflow-auto rounded-control border border-gray-200 bg-gray-900 p-4 text-xs leading-relaxed text-gray-100">
       {JSON.stringify(value, null, 2)}
     </pre>
   );
