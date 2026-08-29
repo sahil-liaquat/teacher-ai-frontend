@@ -39,13 +39,13 @@ export function PlanBanner() {
       : null;
 
     return (
-      <div className="mb-3 flex items-center justify-between gap-3 rounded-[18px] border border-blue-100 bg-gradient-to-r from-[#eff6ff] to-white px-4 py-2.5">
+      <div className="mb-3 flex items-center justify-between gap-3 rounded-[18px] border border-blue-100 bg-gradient-to-r from-blue-50 to-white px-4 py-2.5">
         <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#dbeafe] text-teachpad-blue">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-card bg-blue-100 text-teachpad-blue">
             <CreditCard className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-extrabold text-[#1e40af]">TeachPad Pro</p>
+            <p className="text-sm font-extrabold text-blue-800">TeachPad Pro</p>
             <p className="text-xs font-semibold text-teachpad-muted">
               {untilLabel
                 ? `Add a card to keep Pro after ${untilLabel}`
@@ -61,7 +61,7 @@ export function PlanBanner() {
               "Add a payment method so your Pro access continues after your free period.",
             )
           }
-          className="h-8 shrink-0 rounded-xl px-3 text-xs"
+          className="h-8 shrink-0 rounded-card px-3 text-xs"
         >
           Add card
         </Button>
@@ -91,16 +91,16 @@ export function PlanBanner() {
           "mb-3 flex items-center justify-between gap-3 rounded-[18px] border px-4 py-2.5",
           isTrial
               ? "border-amber-100 bg-gradient-to-r from-amber-50 to-white"
-              : "border-blue-100 bg-gradient-to-r from-[#eff6ff] to-white"
+              : "border-blue-100 bg-gradient-to-r from-blue-50 to-white"
         )}
       >
         <div className="flex items-center gap-2.5">
           <span
             className={cn(
-              "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
+              "grid h-8 w-8 shrink-0 place-items-center rounded-card",
               isTrial
                   ? "bg-amber-100 text-amber-600"
-                  : "bg-[#dbeafe] text-teachpad-blue"
+                  : "bg-blue-100 text-teachpad-blue"
             )}
           >
             {isTrial ? (
@@ -115,7 +115,7 @@ export function PlanBanner() {
                 "text-sm font-extrabold",
                 isTrial
                     ? "text-amber-800"
-                    : "text-[#1e40af]"
+                    : "text-blue-800"
               )}
             >
               {isTrial
@@ -178,7 +178,7 @@ export function PlanBanner() {
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
-            "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
+            "grid h-8 w-8 shrink-0 place-items-center rounded-card",
             atLimit
               ? "bg-red-100 text-red-500"
               : nearLimit
@@ -211,7 +211,7 @@ export function PlanBanner() {
         size="sm"
         onClick={() => openUpgrade()}
         className={cn(
-          "h-8 shrink-0 rounded-xl px-3 text-xs",
+          "h-8 shrink-0 rounded-card px-3 text-xs",
           atLimit || nearLimit
             ? "bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_8px_18px_rgba(245,158,11,0.30)]"
             : ""

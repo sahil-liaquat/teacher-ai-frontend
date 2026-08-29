@@ -231,7 +231,7 @@ function PastDueBanner({ pastDue }: { pastDue: NonNullable<BillingMe["past_due"]
         <span
           className={cn(
             "grid h-12 w-12 shrink-0 place-items-center rounded-[16px]",
-            inGrace ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-[#eb3b5a]"
+            inGrace ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-500"
           )}
         >
           <AlertTriangle className="h-6 w-6" />
@@ -304,7 +304,7 @@ function MandateNudge({
   onSetup: () => void;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[22px] border border-white/70 bg-gradient-to-br from-[#eff6ff] via-white to-[#f8fbff] px-5 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+    <div className="flex items-start gap-3 rounded-[22px] border border-white/70 bg-gradient-to-br from-blue-50 via-white to-blue-50 px-5 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-teachpad-blue" />
       <div className="min-w-0 flex-1">
         <p className="font-extrabold text-teachpad-ink">Keep your access uninterrupted</p>
@@ -385,9 +385,9 @@ function PlanCard({
           className={cn(
             "grid h-14 w-14 shrink-0 place-items-center rounded-[18px]",
             isGift
-              ? "bg-[#f6f1ff] text-[#8b5cf6]"
+              ? "bg-violet-50 text-violet-500"
               : proLook
-                ? "bg-[#dbeafe] text-teachpad-blue"
+                ? "bg-blue-100 text-teachpad-blue"
                 : "bg-teachpad-tag text-teachpad-muted"
           )}
         >
@@ -407,11 +407,11 @@ function PlanCard({
             </h2>
             {/* Badge: only gift or genuine active paid — never reveals trial status */}
             {isGift ? (
-              <span className="rounded-full bg-[#eff6ff] px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-[#1e40af]">
+              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-blue-800">
                 Gift
               </span>
             ) : isActivePaid ? (
-              <span className="rounded-full bg-[#dbeafe] px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-[#1e40af]">
+              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-blue-800">
                 Active
               </span>
             ) : null}
@@ -494,7 +494,7 @@ function RedeemCard({
   return (
     <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-white via-amber-50/60 to-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
       <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-[#fff6df] text-[#f0a22f] ring-1 ring-amber-100">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-amber-50 text-amber-500 ring-1 ring-amber-100">
           <Tag className="h-5 w-5" />
         </span>
         <div className="min-w-0">
@@ -519,7 +519,7 @@ function RedeemCard({
         <Button
           onClick={onRedeem}
           disabled={loading || !code.trim()}
-          className="h-10 shrink-0 rounded-xl px-4 text-sm"
+          className="h-10 shrink-0 rounded-card px-4 text-sm"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -588,7 +588,7 @@ function UsageCard({
                   ? "bg-gradient-to-r from-red-400 to-red-500"
                   : nearLimit
                     ? "bg-gradient-to-r from-amber-400 to-orange-500"
-                  : "bg-gradient-to-r from-[#3b82f6] to-[#2563eb]"
+                  : "bg-gradient-to-r from-blue-500 to-blue-600"
               )}
               style={{ width: `${pct}%` }}
             />
@@ -596,7 +596,7 @@ function UsageCard({
         )}
 
         {quota === null && (
-          <p className="mt-2 text-sm font-semibold text-[#16a34a]">
+          <p className="mt-2 text-sm font-semibold text-green-600">
             Fair-use generation allowance included
           </p>
         )}
@@ -640,7 +640,7 @@ function CancelCard({
           <div className="mt-3 flex gap-2">
             <Button
               variant="danger"
-              className="flex-1 h-10 rounded-xl text-sm"
+              className="flex-1 h-10 rounded-card text-sm"
               disabled={loading}
               onClick={onCancel}
             >
@@ -652,7 +652,7 @@ function CancelCard({
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-10 rounded-xl text-sm"
+              className="flex-1 h-10 rounded-card text-sm"
               disabled={loading}
               onClick={onAbort}
             >
@@ -663,7 +663,7 @@ function CancelCard({
       ) : (
         <Button
           variant="outline"
-          className="mt-4 h-10 w-full rounded-xl border-red-200 text-sm text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+          className="mt-4 h-10 w-full rounded-card border-red-200 text-sm text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
           onClick={onCancel}
         >
           Cancel subscription
@@ -685,9 +685,9 @@ function InfoRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/70 bg-gradient-to-br from-white via-[#f8fbff] to-white px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/70 bg-gradient-to-br from-white via-blue-50 to-white px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white text-teachpad-blue shadow-[0_6px_14px_var(--teachpad-shadowToolCard)]">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-card bg-white text-teachpad-blue shadow-[0_6px_14px_var(--teachpad-shadowToolCard)]">
           {icon}
         </span>
         <span className="text-sm font-extrabold text-teachpad-ink">{label}</span>

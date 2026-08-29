@@ -70,7 +70,7 @@ export function GiftModal() {
         </button>
 
         {/* Header gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] px-6 py-8 text-center">
+        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 to-indigo-600 px-6 py-8 text-center">
           <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
           <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-white/5" />
 

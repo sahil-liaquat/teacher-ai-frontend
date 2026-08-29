@@ -277,6 +277,8 @@ function UpgradeModalUI({
           email: checkout.prefill?.email ?? undefined,
           contact: checkout.prefill?.contact ?? undefined,
         },
+        // Razorpay's widget renders outside our DOM, so this has to be a
+        // literal. Keep it equal to theme.colors.brand.
         theme: { color: "#1677ff" },
         handler: () => {
           // Razorpay does not await this callback — wrap async work in a
@@ -380,7 +382,7 @@ function UpgradeModalUI({
         <div className="overflow-y-auto p-6">
           {/* Context line (e.g. "Presentations require a Pro plan") */}
           {contextLine && (
-            <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="mb-4 flex items-center gap-2.5 rounded-card border border-amber-200 bg-amber-50 px-4 py-3">
               <Zap className="h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-sm font-semibold text-amber-800">{contextLine}</p>
             </div>
@@ -390,7 +392,7 @@ function UpgradeModalUI({
           <ul className="mb-5 space-y-2">
             {PRO_FEATURES.map((feature) => (
               <li key={feature} className="flex items-center gap-2.5">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dbeafe]">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100">
                   <Check className="h-3 w-3 text-teachpad-blue" />
                 </span>
                 <span className="text-sm font-semibold text-teachpad-ink">{feature}</span>
@@ -408,8 +410,8 @@ function UpgradeModalUI({
                 className={cn(
                   "relative rounded-[18px] border-2 p-4 text-left transition-all duration-200",
                   selected === plan.id
-                    ? "border-teachpad-blue bg-gradient-to-br from-[#eff6ff] to-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
-                    : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-[#f8fbff]"
+                    ? "border-teachpad-blue bg-gradient-to-br from-blue-50 to-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
+                    : "border-teachpad-cardBorder bg-white hover:border-blue-200 hover:bg-blue-50"
                 )}
               >
                 {plan.badge && (
@@ -453,7 +455,7 @@ function UpgradeModalUI({
           )}
 
           {showTrialNote && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <div className="mb-4 flex items-start gap-2.5 rounded-card border border-blue-100 bg-blue-50 px-4 py-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teachpad-blue" />
               <p className="text-sm font-medium leading-5 text-teachpad-ink">
                 <span className="font-bold">You won&apos;t be charged today.</span> A
@@ -536,7 +538,7 @@ function PastDueBody({
 
   return (
     <div className="overflow-y-auto p-6">
-      <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5">
+      <div className="mb-5 rounded-card border border-rose-200 bg-rose-50 px-4 py-3.5">
         <p className="text-sm font-semibold leading-5 text-rose-900">
           {pastDue.in_grace ? (
             <>
@@ -565,7 +567,7 @@ function PastDueBody({
           "You can cancel the subscription anytime from Billing",
         ].map((line) => (
           <li key={line} className="flex items-center gap-2.5">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dbeafe]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100">
               <Check className="h-3 w-3 text-teachpad-blue" />
             </span>
             <span className="text-sm font-semibold text-teachpad-ink">{line}</span>

@@ -331,7 +331,7 @@ export default function SettingsPage() {
             setCurrentScreen("menu");
             router.replace("/dashboard/settings", { scroll: false });
           }}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg focus:outline-none"
+          className="inline-flex items-center gap-2 rounded-card border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg focus:outline-none"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Settings
@@ -344,10 +344,10 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setCurrentScreen("account")}
-            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#eff6ff] via-[#eff6ff] to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-blue-50 via-blue-50 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
-            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#bfdbfe]/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-blue-200/30 blur-2xl" />
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-blue-50 text-blue-500 ring-blue-100 shadow-[0_14px_30px_rgba(59,130,246,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <User className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -361,10 +361,10 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setCurrentScreen("security")}
-            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#f0fdff] via-cyan-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-cyan-50 via-cyan-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
             <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-cyan-200/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-cyan-50 text-cyan-600 ring-teachpad-sky shadow-[0_14px_30px_rgba(22,169,182,0.18),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -381,7 +381,7 @@ export default function SettingsPage() {
             className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-pink-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
             <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-pink-200/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-pink-50 text-pink-500 ring-pink-100 shadow-[0_14px_30px_rgba(244,95,152,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <GraduationCap className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -398,7 +398,7 @@ export default function SettingsPage() {
             className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-white via-emerald-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
             <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-emerald-200/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-emerald-50 text-emerald-600 ring-emerald-100 shadow-[0_14px_30px_rgba(36,183,122,0.23),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <Heart className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -412,10 +412,10 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setCurrentScreen("appearance")}
-            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#fffaf0] via-amber-50/80 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-amber-50 via-amber-50/80 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
             <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-amber-200/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-amber-50 text-amber-500 ring-amber-100 shadow-[0_14px_30px_rgba(240,162,47,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -428,10 +428,10 @@ export default function SettingsPage() {
           {/* Billing Card */}
           <Link
             href="/dashboard/billing"
-            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-[#fef3f2] via-red-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
+            className="group/card relative overflow-hidden flex items-center gap-3 sm:gap-4 p-4 sm:p-5 min-h-[116px] sm:min-h-[126px] rounded-[18px] border border-white/70 bg-gradient-to-br from-rose-50 via-red-50/70 to-white shadow-[0_14px_34px_rgba(15,23,42,0.07)] transition-all duration-300 ease-in-out hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 text-left focus:outline-none"
           >
             <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-red-200/30 blur-2xl" />
-            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-[#fff5f3] text-[#dc2626] ring-red-100 shadow-[0_14px_30px_rgba(220,38,38,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
+            <div className="shrink-0 h-14 w-14 sm:h-[64px] sm:w-[64px] rounded-[22px] flex items-center justify-center ring-1 bg-rose-50 text-red-600 ring-red-100 shadow-[0_14px_30px_rgba(220,38,38,0.24),inset_0_1px_0_rgba(255,255,255,0.92)] transition-transform duration-300 group-hover/card:scale-105">
               <CreditCard className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -446,7 +446,7 @@ export default function SettingsPage() {
       {currentScreen === "account" && (
         <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#eef6ff] text-[#3b82f6] ring-blue-100 shadow-[0_10px_24px_rgba(59,130,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-blue-50 text-blue-500 ring-blue-100 shadow-[0_10px_24px_rgba(59,130,246,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
               <User className="h-5 w-5 stroke-[2.3]" />
             </div>
             <div>
@@ -479,18 +479,18 @@ export default function SettingsPage() {
                       aria-pressed={selected}
                       onClick={() => setAvatarKey(avatar.key)}
                       className={cn(
-                        "group relative rounded-2xl border bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B73FF] focus-visible:ring-offset-2",
-                        selected ? "border-[#0B73FF] ring-2 ring-blue-100" : "border-slate-200"
+                        "group relative rounded-2xl border bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
+                        selected ? "border-brand ring-2 ring-blue-100" : "border-slate-200"
                       )}
                     >
                       <span className="block aspect-square overflow-hidden rounded-full bg-slate-100">
                         <BoyAvatar avatarKey={avatar.key} alt="" />
                       </span>
-                      <span className={cn("mt-2 block text-micro font-bold", selected ? "text-[#0B73FF]" : "text-slate-600")}>
+                      <span className={cn("mt-2 block text-micro font-bold", selected ? "text-brand" : "text-slate-600")}>
                         {avatar.label}
                       </span>
                       {selected && (
-                        <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white shadow-sm">
+                        <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-brand text-white shadow-sm">
                           <Check className="h-3 w-3 stroke-[3]" />
                         </span>
                       )}
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                   value={profile.name}
                   onChange={(e) => updateProfile("name", e.target.value)}
                   placeholder="Enter full name"
-                  className="rounded-xl border-slate-200 bg-white focus-visible:ring-[#0B73FF]"
+                  className="rounded-card border-slate-200 bg-white focus-visible:ring-brand"
                 />
               </div>
 
@@ -522,7 +522,7 @@ export default function SettingsPage() {
                   value={email}
                   disabled
                   placeholder="email@example.com"
-                  className="rounded-xl border-slate-200 bg-slate-50 cursor-not-allowed font-medium text-slate-500"
+                  className="rounded-card border-slate-200 bg-slate-50 cursor-not-allowed font-medium text-slate-500"
                 />
               </div>
 
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="10-digit mobile number"
-                  className="rounded-xl border-slate-200 bg-white focus-visible:ring-[#0B73FF]"
+                  className="rounded-card border-slate-200 bg-white focus-visible:ring-brand"
                 />
               </div>
 
@@ -566,7 +566,7 @@ export default function SettingsPage() {
                   value={schoolName}
                   onChange={(e) => setSchoolName(e.target.value)}
                   placeholder="Enter your school name"
-                  className="rounded-xl border-slate-200 bg-white focus-visible:ring-[#0B73FF]"
+                  className="rounded-card border-slate-200 bg-white focus-visible:ring-brand"
                 />
               </div>
             </div>
@@ -575,7 +575,7 @@ export default function SettingsPage() {
               <Button
                 type="submit"
                 disabled={saving || currentUser.isLoading}
-                className="rounded-xl px-5 py-2.5 font-bold text-xs bg-[#0B73FF] hover:bg-[#005cd6] text-white shadow-sm transition-all duration-200"
+                className="rounded-card px-5 py-2.5 font-bold text-xs bg-brand hover:bg-blue-600 text-white shadow-sm transition-all duration-200"
               >
                 <Save className="h-3.5 w-3.5 mr-1.5" />
                 {saving ? "Saving..." : "Save Changes"}
@@ -588,7 +588,7 @@ export default function SettingsPage() {
       {currentScreen === "security" && (
         <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#f0fdff] text-[#16a9b6] ring-[#c9f7fb] shadow-[0_10px_24px_rgba(22,169,182,0.14),inset_0_1px_0_rgba(255,255,255,0.92)]">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-cyan-50 text-cyan-600 ring-teachpad-sky shadow-[0_10px_24px_rgba(22,169,182,0.14),inset_0_1px_0_rgba(255,255,255,0.92)]">
               <ShieldCheck className="h-5 w-5 stroke-[2.3]" />
             </div>
             <div>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-5 border-t border-slate-100">
             <div className="flex items-start gap-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B73FF] shadow-sm">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-card bg-blue-50 text-brand shadow-sm">
                 <KeyRound className="h-4.5 w-4.5" />
               </span>
               <div>
@@ -612,7 +612,7 @@ export default function SettingsPage() {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl h-10 px-4 font-bold text-xs shrink-0 border-slate-200 text-slate-700 hover:bg-slate-50 transition-all duration-200"
+              className="rounded-card h-10 px-4 font-bold text-xs shrink-0 border-slate-200 text-slate-700 hover:bg-slate-50 transition-all duration-200"
               disabled={sendingReset || currentUser.isLoading || !currentUser.data?.email}
               onClick={sendPasswordReset}
             >
@@ -626,7 +626,7 @@ export default function SettingsPage() {
       {currentScreen === "preferences" && (
         <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#fff1f7] text-[#f45f98] ring-pink-100 shadow-[0_10px_24px_rgba(244,95,152,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-pink-50 text-pink-500 ring-pink-100 shadow-[0_10px_24px_rgba(244,95,152,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
               <GraduationCap className="h-5 w-5 stroke-[2.3]" />
             </div>
             <div>
@@ -642,8 +642,8 @@ export default function SettingsPage() {
 
             {boardsQuery.isLoading ? (
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="h-20 rounded-xl border border-slate-100 bg-slate-50/50 animate-pulse" />
-                <div className="h-20 rounded-xl border border-slate-100 bg-slate-50/50 animate-pulse" />
+                <div className="h-20 rounded-card border border-slate-100 bg-slate-50/50 animate-pulse" />
+                <div className="h-20 rounded-card border border-slate-100 bg-slate-50/50 animate-pulse" />
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -657,13 +657,13 @@ export default function SettingsPage() {
                     }
                   }}
                   className={cn(
-                    "flex items-center gap-4 rounded-xl border p-4 text-left transition-all duration-200 relative",
+                    "flex items-center gap-4 rounded-card border p-4 text-left transition-all duration-200 relative",
                     jkboseBoard && defaultBoardId === jkboseBoard.id
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white p-1 border border-slate-100">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-control bg-white p-1 border border-slate-100">
                     <img src="/landing/board-logos/jkbose-logo.png" alt="JKBOSE" className="h-full w-full object-contain" />
                   </div>
                   <div className="min-w-0 pr-6">
@@ -671,7 +671,7 @@ export default function SettingsPage() {
                     <span className="text-micro font-medium text-slate-400 block mt-0.5">Jammu & Kashmir Board</span>
                   </div>
                   {jkboseBoard && defaultBoardId === jkboseBoard.id && (
-                    <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white">
+                    <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-brand text-white">
                       <Check className="h-3 w-3" />
                     </span>
                   )}
@@ -687,13 +687,13 @@ export default function SettingsPage() {
                     }
                   }}
                   className={cn(
-                    "flex items-center gap-4 rounded-xl border p-4 text-left transition-all duration-200 relative",
+                    "flex items-center gap-4 rounded-card border p-4 text-left transition-all duration-200 relative",
                     cbseBoard && defaultBoardId === cbseBoard.id
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white p-1 border border-slate-100">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-control bg-white p-1 border border-slate-100">
                     <img src="/landing/board-logos/cbse-logo.png" alt="CBSE" className="h-full w-full object-contain" />
                   </div>
                   <div className="min-w-0 pr-6">
@@ -701,7 +701,7 @@ export default function SettingsPage() {
                     <span className="text-micro font-medium text-slate-400 block mt-0.5">Central Board of Secondary Education</span>
                   </div>
                   {cbseBoard && defaultBoardId === cbseBoard.id && (
-                    <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white">
+                    <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-brand text-white">
                       <Check className="h-3 w-3" />
                     </span>
                   )}
@@ -715,7 +715,7 @@ export default function SettingsPage() {
       {currentScreen === "referral" && (
         <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#ecfff6] text-[#24b77a] ring-emerald-100 shadow-[0_10px_24px_rgba(36,183,122,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-emerald-50 text-emerald-600 ring-emerald-100 shadow-[0_10px_24px_rgba(36,183,122,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
               <Heart className="h-5 w-5 stroke-[2.3]" />
             </div>
             <div>
@@ -726,23 +726,23 @@ export default function SettingsPage() {
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
             {referralCodesQuery.isLoading ? (
-              <div className="h-32 animate-pulse rounded-xl border border-slate-100 bg-slate-50" aria-label="Loading referral code" />
+              <div className="h-32 animate-pulse rounded-card border border-slate-100 bg-slate-50" aria-label="Loading referral code" />
             ) : primaryCode ? (
-              <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+              <div className="rounded-card border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-micro font-bold text-red-500">
                     <Ticket className="h-3.5 w-3.5" />
                     Referral Code
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-xl border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800">
+                    <span className="rounded-card border border-rose-200/40 bg-white px-3 py-1 font-mono text-xl font-black tracking-wider text-slate-800">
                       {primaryCode.code}
                     </span>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
+                      className="border-slate-200 h-9 px-3 rounded-control text-slate-700 hover:bg-slate-50 font-bold"
                       onClick={() => copyValue(primaryCode.code, "code")}
                     >
                       {copied === "code" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
@@ -759,7 +759,7 @@ export default function SettingsPage() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="border-slate-200 h-9 px-3 rounded-lg text-slate-700 hover:bg-slate-50 font-bold"
+                    className="border-slate-200 h-9 px-3 rounded-control text-slate-700 hover:bg-slate-50 font-bold"
                     onClick={() => copyValue(shareLink, "link")}
                   >
                     {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
@@ -773,7 +773,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <div className="rounded-card border border-amber-200 bg-amber-50 p-5">
                 <div className="flex items-start gap-3">
                   <Ticket className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                   <div>
@@ -792,7 +792,7 @@ export default function SettingsPage() {
               <h4 className="text-micro font-black uppercase tracking-wider text-slate-400">Referral Metrics</h4>
               <div className="grid gap-4 grid-cols-3">
                 {/* Total Referrals */}
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-center">
+                <div className="rounded-card border border-slate-100 bg-slate-50/50 p-4 text-center">
                   <span className="text-lg font-black text-slate-800 block">
                     {influencerDashboardQuery.data?.total_referred_signups ?? 0}
                   </span>
@@ -800,7 +800,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Active Teachers */}
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-center">
+                <div className="rounded-card border border-slate-100 bg-slate-50/50 p-4 text-center">
                   <span className="text-lg font-black text-slate-800 block">
                     {influencerDashboardQuery.data?.total_active_subscribers ?? 0}
                   </span>
@@ -808,7 +808,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Rewards Earned */}
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-center">
+                <div className="rounded-card border border-slate-100 bg-slate-50/50 p-4 text-center">
                   <span className="text-lg font-black text-slate-800 block">
                     ₹{influencerDashboardQuery.data?.total_earned_commission_inr ?? 0}
                   </span>
@@ -823,7 +823,7 @@ export default function SettingsPage() {
       {currentScreen === "appearance" && (
         <section className="rounded-[18px] border border-white/70 bg-white/80 p-4 sm:p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm space-y-6">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-[#fff6df] text-[#f0a22f] ring-amber-100 shadow-[0_10px_24px_rgba(240,162,47,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
+            <div className="shrink-0 h-10 w-10 rounded-[14px] flex items-center justify-center ring-1 bg-amber-50 text-amber-500 ring-amber-100 shadow-[0_10px_24px_rgba(240,162,47,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]">
               <Sparkles className="h-5 w-5 stroke-[2.3]" />
             </div>
             <div>
@@ -843,23 +843,23 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => changeSidebarLayout("floating")}
                   className={cn(
-                    "flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200",
+                    "flex flex-col gap-3 rounded-card border p-4 text-left transition-all duration-200",
                     sidebarLayout === "floating"
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
                   {/* Realistic UI Preview */}
-                  <div className="relative h-24 w-full rounded-xl bg-slate-50 border border-slate-200/60 p-2 flex gap-2 overflow-hidden select-none pointer-events-none">
-                    <div className="w-5 h-full rounded-lg bg-white border border-slate-200/80 flex flex-col items-center gap-1.5 p-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#0B73FF]" />
+                  <div className="relative h-24 w-full rounded-card bg-slate-50 border border-slate-200/60 p-2 flex gap-2 overflow-hidden select-none pointer-events-none">
+                    <div className="w-5 h-full rounded-control bg-white border border-slate-200/80 flex flex-col items-center gap-1.5 p-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-brand" />
                       <div className="w-2.5 h-1 rounded bg-slate-200" />
                       <div className="w-2.5 h-1 rounded bg-slate-200" />
                       <div className="w-2.5 h-1 rounded bg-slate-200" />
                     </div>
                     <div className="flex-1 flex flex-col gap-1.5 pt-1">
                       <div className="h-2 w-1/3 rounded bg-slate-300" />
-                      <div className="h-10 w-full rounded-lg bg-white border border-slate-200/80 p-1.5 flex flex-col gap-1">
+                      <div className="h-10 w-full rounded-control bg-white border border-slate-200/80 p-1.5 flex flex-col gap-1">
                         <div className="h-1.5 w-1/2 rounded bg-slate-200" />
                         <div className="h-1.5 w-3/4 rounded bg-slate-100" />
                       </div>
@@ -867,7 +867,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <span className="font-bold text-slate-800 text-sm">Floating Sidebar</span>
-                    {sidebarLayout === "floating" && <span className="h-2 w-2 rounded-full bg-[#0B73FF]" />}
+                    {sidebarLayout === "floating" && <span className="h-2 w-2 rounded-full bg-brand" />}
                   </div>
                 </button>
 
@@ -876,17 +876,17 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => changeSidebarLayout("expanded")}
                   className={cn(
-                    "flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200",
+                    "flex flex-col gap-3 rounded-card border p-4 text-left transition-all duration-200",
                     sidebarLayout === "expanded"
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
                   {/* Realistic UI Preview */}
-                  <div className="relative h-24 w-full rounded-xl bg-slate-50 border border-slate-200/60 p-2 flex gap-2 overflow-hidden select-none pointer-events-none">
-                    <div className="w-14 h-full rounded-lg bg-white border border-slate-200/80 flex flex-col gap-1.5 p-1">
+                  <div className="relative h-24 w-full rounded-card bg-slate-50 border border-slate-200/60 p-2 flex gap-2 overflow-hidden select-none pointer-events-none">
+                    <div className="w-14 h-full rounded-control bg-white border border-slate-200/80 flex flex-col gap-1.5 p-1">
                       <div className="w-full h-3.5 rounded bg-blue-50 flex items-center px-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0B73FF]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-brand" />
                       </div>
                       <div className="w-full h-1 rounded bg-slate-200" />
                       <div className="w-full h-1 rounded bg-slate-200" />
@@ -894,7 +894,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex-1 flex flex-col gap-1.5 pt-1">
                       <div className="h-2 w-1/3 rounded bg-slate-300" />
-                      <div className="h-10 w-full rounded-lg bg-white border border-slate-200/80 p-1.5 flex flex-col gap-1">
+                      <div className="h-10 w-full rounded-control bg-white border border-slate-200/80 p-1.5 flex flex-col gap-1">
                         <div className="h-1.5 w-1/2 rounded bg-slate-200" />
                         <div className="h-1.5 w-3/4 rounded bg-slate-100" />
                       </div>
@@ -902,7 +902,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <span className="font-bold text-slate-800 text-sm">Expanded Sidebar</span>
-                    {sidebarLayout === "expanded" && <span className="h-2 w-2 rounded-full bg-[#0B73FF]" />}
+                    {sidebarLayout === "expanded" && <span className="h-2 w-2 rounded-full bg-brand" />}
                   </div>
                 </button>
               </div>
@@ -918,20 +918,20 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => changeDashboardLayout("search-first")}
                   className={cn(
-                    "flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200",
+                    "flex flex-col gap-3 rounded-card border p-4 text-left transition-all duration-200",
                     dashboardLayout === "search-first"
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
                   {/* Miniature Dashboard Preview */}
-                  <div className="relative h-24 w-full rounded-xl bg-slate-50 border border-slate-200/60 p-2 flex flex-col justify-between overflow-hidden select-none pointer-events-none">
+                  <div className="relative h-24 w-full rounded-card bg-slate-50 border border-slate-200/60 p-2 flex flex-col justify-between overflow-hidden select-none pointer-events-none">
                     <div className="flex items-center justify-between w-full">
                       <div className="h-2 w-6 rounded bg-slate-300" />
                       <div className="h-2.5 w-2.5 rounded-full bg-slate-300" />
                     </div>
-                    <div className="w-full h-5 rounded-lg border border-blue-200 bg-white flex items-center px-1.5 gap-1">
-                      <div className="h-1.5 w-1.5 rounded-full bg-[#0B73FF]" />
+                    <div className="w-full h-5 rounded-control border border-blue-200 bg-white flex items-center px-1.5 gap-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-brand" />
                       <div className="h-1 w-10 rounded bg-slate-100" />
                     </div>
                     <div className="flex justify-center gap-1 w-full pb-1">
@@ -942,7 +942,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <span className="font-bold text-slate-800 text-sm">Search-First Dashboard</span>
-                    {dashboardLayout === "search-first" && <span className="h-2 w-2 rounded-full bg-[#0B73FF]" />}
+                    {dashboardLayout === "search-first" && <span className="h-2 w-2 rounded-full bg-brand" />}
                   </div>
                 </button>
 
@@ -951,14 +951,14 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => changeDashboardLayout("original")}
                   className={cn(
-                    "flex flex-col gap-3 rounded-xl border p-4 text-left transition-all duration-200",
+                    "flex flex-col gap-3 rounded-card border p-4 text-left transition-all duration-200",
                     dashboardLayout === "original"
-                      ? "border-[#0B73FF] bg-[#0B73FF]/5 shadow-sm"
+                      ? "border-brand bg-brand/5 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
                   {/* Miniature Dashboard Preview */}
-                  <div className="relative h-24 w-full rounded-xl bg-slate-50 border border-slate-200/60 p-2 flex flex-col justify-between overflow-hidden select-none pointer-events-none">
+                  <div className="relative h-24 w-full rounded-card bg-slate-50 border border-slate-200/60 p-2 flex flex-col justify-between overflow-hidden select-none pointer-events-none">
                     <div className="flex items-center justify-between w-full">
                       <div className="h-2 w-6 rounded bg-slate-300" />
                       <div className="h-2.5 w-2.5 rounded-full bg-slate-300" />
@@ -966,7 +966,7 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-3 gap-1 w-full">
                       <div className="h-6 rounded bg-white border border-slate-200 flex flex-col justify-center px-1">
                         <div className="h-0.5 w-1 rounded bg-slate-300" />
-                        <div className="h-1 w-2 rounded bg-[#0B73FF] mt-0.5" />
+                        <div className="h-1 w-2 rounded bg-brand mt-0.5" />
                       </div>
                       <div className="h-6 rounded bg-white border border-slate-200 flex flex-col justify-center px-1">
                         <div className="h-0.5 w-1 rounded bg-slate-300" />
@@ -981,7 +981,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <span className="font-bold text-slate-800 text-sm">Classic Dashboard</span>
-                    {dashboardLayout === "original" && <span className="h-2 w-2 rounded-full bg-[#0B73FF]" />}
+                    {dashboardLayout === "original" && <span className="h-2 w-2 rounded-full bg-brand" />}
                   </div>
                 </button>
               </div>

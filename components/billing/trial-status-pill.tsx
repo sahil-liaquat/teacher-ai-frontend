@@ -13,7 +13,7 @@ type Tone = "info" | "warn" | "danger";
 const TONE: Record<Tone, string> = {
   info: "border-blue-100 bg-blue-50/80 text-teachpad-blue",
   warn: "border-amber-200/80 bg-amber-50/90 text-amber-700",
-  danger: "border-rose-200/80 bg-rose-50/90 text-[#eb3b5a]",
+  danger: "border-rose-200/80 bg-rose-50/90 text-rose-500",
 };
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
