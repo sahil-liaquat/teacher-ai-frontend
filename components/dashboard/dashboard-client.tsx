@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardMyClasses } from "@/components/dashboard/my-classes-section";
+import { FirstRunEmpty } from "@/components/dashboard/first-run-empty";
 
 const statCards = [
   { label: "Lesson Planner", fallback: "0", sub: "Total Created", icon: BookOpen, tone: "blue", href: "/dashboard/lesson-plans/new" },
@@ -372,6 +373,7 @@ export default function DashboardClient() {
   const notesTotal = totals?.notes ?? 0;
   const activityTotal = totals?.activities ?? 0;
   const savedResourcesTotal = lessonTotal + worksheetTotal + presentationTotal + notesTotal + activityTotal;
+  const isFirstRun = Boolean(dashboardQuery.data) && !statsLoading && !statsError && savedResourcesTotal === 0;
 
   const lessonMonthlyTotal = monthlyTotals?.lesson_plans ?? 0;
   const worksheetMonthlyTotal = monthlyTotals?.worksheets ?? 0;
@@ -545,41 +547,45 @@ export default function DashboardClient() {
         </header>
 
         {/* Original Grid of 4 cards (stats-first, launching tools) */}
-        <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
-          {statsError ? (
-            <>
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
-                  <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
-                    <span className="text-red-400 text-xl">!</span>
+        {isFirstRun ? (
+          <FirstRunEmpty boardPreference={currentUser.data?.board_preference} />
+        ) : (
+          <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
+            {statsError ? (
+              <>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
+                    <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
+                      <span className="text-red-400 text-xl">!</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
+                      <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
-                    <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            originalStatCards.map((stat, index) => {
-              const numericVal =
-                index === 0 ? lessonTotal :
-                index === 1 ? worksheetTotal :
-                index === 2 ? savedResourcesTotal :
-                monthlyGenerationsTotal;
+                ))}
+              </>
+            ) : (
+              originalStatCards.map((stat, index) => {
+                const numericVal =
+                  index === 0 ? lessonTotal :
+                  index === 1 ? worksheetTotal :
+                  index === 2 ? savedResourcesTotal :
+                  monthlyGenerationsTotal;
 
-              return (
-                <StatCard
-                  key={stat.label}
-                  {...stat}
-                  value={formatNumber(numericVal, stat.fallback)}
-                  numericValue={numericVal}
-                  isLoading={statsLoading}
-                />
-              );
-            })
-          )}
-        </section>
+                return (
+                  <StatCard
+                    key={stat.label}
+                    {...stat}
+                    value={formatNumber(numericVal, stat.fallback)}
+                    numericValue={numericVal}
+                    isLoading={statsLoading}
+                  />
+                );
+              })
+            )}
+          </section>
+        )}
 
         {/* Original Textbook Action Panels (Lesson Plan Generator and Worksheet Generator) */}
         <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 gap-4 xl:grid-cols-2 px-4">
@@ -604,66 +610,71 @@ export default function DashboardClient() {
         </section>
 
         {/* Original Two Column Bottom Layout */}
-        <section className="mx-auto grid w-full max-w-[1240px] items-stretch gap-6 lg:grid-cols-[1fr_1.2fr] px-4 mb-16">
+        <section className={cn(
+          "mx-auto grid w-full max-w-[1240px] items-stretch gap-6 px-4 mb-16",
+          !isFirstRun && "lg:grid-cols-[1fr_1.2fr]"
+        )}>
           {/* Left Column: Recent Generations */}
-          <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
-              <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
-                View All
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {statsLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
-                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="h-4 w-3/4 rounded bg-slate-200" />
-                      <div className="h-3 w-1/2 rounded bg-slate-100" />
-                    </div>
-                    <div className="h-6 w-16 rounded-lg bg-slate-100" />
-                  </div>
-                ))
-              ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
-                <Link
-                  key={`${item.type}-${item.id || item.topic}-${index}`}
-                  href={item.href}
-                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
-                >
-                  <div className={cn(
-                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                    recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
-                  )}>
-                    {item.type === "Worksheet"
-                      ? <FileText className="h-5 w-5" />
-                      : item.type === "Presentation"
-                        ? <Presentation className="h-5 w-5" />
-                        : item.type === "Notes"
-                          ? <NotebookPen className="h-5 w-5" />
-                          : item.type === "Activity"
-                            ? <Sparkles className="h-5 w-5" />
-                            : <BookOpen className="h-5 w-5" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
-                    <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
-                  </div>
-                  <span className={cn(
-                    "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
-                    recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
-                  )}>
-                    {item.type}
-                  </span>
+          {!isFirstRun && (
+            <div className="h-full min-w-0 rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
+                <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+                  View All
                 </Link>
-              )) : (
-                <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                  <FileText className="mx-auto h-10 w-10 text-slate-300" />
-                  <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
-                </div>
-              )}
+              </div>
+              <div className="space-y-2">
+                {statsLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
+                      <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="h-4 w-3/4 rounded bg-slate-200" />
+                        <div className="h-3 w-1/2 rounded bg-slate-100" />
+                      </div>
+                      <div className="h-6 w-16 rounded-lg bg-slate-100" />
+                    </div>
+                  ))
+                ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
+                  <Link
+                    key={`${item.type}-${item.id || item.topic}-${index}`}
+                    href={item.href}
+                    className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
+                  >
+                    <div className={cn(
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                      recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                    )}>
+                      {item.type === "Worksheet"
+                        ? <FileText className="h-5 w-5" />
+                        : item.type === "Presentation"
+                          ? <Presentation className="h-5 w-5" />
+                          : item.type === "Notes"
+                            ? <NotebookPen className="h-5 w-5" />
+                            : item.type === "Activity"
+                              ? <Sparkles className="h-5 w-5" />
+                              : <BookOpen className="h-5 w-5" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
+                      <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
+                    </div>
+                    <span className={cn(
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
+                      recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
+                    )}>
+                      {item.type}
+                    </span>
+                  </Link>
+                )) : (
+                  <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+                    <FileText className="mx-auto h-10 w-10 text-slate-300" />
+                    <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Right Column: Your Progress This Month */}
           <div className="flex h-full min-w-0 flex-col rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] backdrop-blur-sm">
@@ -917,42 +928,46 @@ export default function DashboardClient() {
       </div>
 
       {/* Cards Grid */}
-      <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
-        {statsError ? (
-          <>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
-                <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
-                  <span className="text-red-400 text-xl">!</span>
+      {isFirstRun ? (
+        <FirstRunEmpty boardPreference={currentUser.data?.board_preference} />
+      ) : (
+        <section className="mx-auto grid w-full max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-4 px-4">
+          {statsError ? (
+            <>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex min-h-[116px] items-center gap-3 rounded-[18px] border border-red-200 bg-gradient-to-br from-red-50 to-white p-4 sm:min-h-[126px] sm:gap-4 sm:p-5">
+                  <div className="flex h-12 w-12 rounded-xl bg-red-100 items-center justify-center sm:h-14 sm:w-14">
+                    <span className="text-red-400 text-xl">!</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
+                    <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
-                  <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
-                </div>
-              </div>
-            ))}
-          </>
-        ) : (
-          statCards.map((stat, index) => {
-            const numericVal =
-              index === 0 ? lessonTotal :
-              index === 1 ? worksheetTotal :
-              index === 2 ? notesTotal :
-              presentationTotal;
+              ))}
+            </>
+          ) : (
+            statCards.map((stat, index) => {
+              const numericVal =
+                index === 0 ? lessonTotal :
+                index === 1 ? worksheetTotal :
+                index === 2 ? notesTotal :
+                presentationTotal;
 
-            return (
-              <StatCard
-                key={stat.label}
-                {...stat}
-                value={formatNumber(numericVal, stat.fallback)}
-                numericValue={numericVal}
-                hoverLift={true}
-                isLoading={statsLoading}
-              />
-            );
-          })
-        )}
-      </section>
+              return (
+                <StatCard
+                  key={stat.label}
+                  {...stat}
+                  value={formatNumber(numericVal, stat.fallback)}
+                  numericValue={numericVal}
+                  hoverLift={true}
+                  isLoading={statsLoading}
+                />
+              );
+            })
+          )}
+        </section>
+      )}
 
       {/* View All Button below Cards */}
       <div className="mx-auto flex w-full max-w-[1240px] justify-center mt-4 mb-10 px-4">
@@ -962,66 +977,68 @@ export default function DashboardClient() {
       </div>
 
       {/* Full-width Layout: Recent Generations */}
-      <section className="mx-auto w-full max-w-[1240px] px-4 mb-16">
-        <div className="w-full rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
-            <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
-              View All
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {statsLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
-                  <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="h-4 w-3/4 rounded bg-slate-200" />
-                    <div className="h-3 w-1/2 rounded bg-slate-100" />
-                  </div>
-                  <div className="h-6 w-16 rounded-lg bg-slate-100" />
-                </div>
-              ))
-            ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
-              <Link
-                key={`${item.type}-${item.id || item.topic}-${index}`}
-                href={item.href}
-                className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
-              >
-                <div className={cn(
-                  "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-                  recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
-                )}>
-                  {item.type === "Worksheet"
-                    ? <FileText className="h-5 w-5" />
-                    : item.type === "Presentation"
-                      ? <Presentation className="h-5 w-5" />
-                      : item.type === "Notes"
-                        ? <NotebookPen className="h-5 w-5" />
-                        : item.type === "Activity"
-                          ? <Sparkles className="h-5 w-5" />
-                          : <BookOpen className="h-5 w-5" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
-                  <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
-                </div>
-                <span className={cn(
-                  "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
-                  recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
-                )}>
-                  {item.type}
-                </span>
+      {!isFirstRun && (
+        <section className="mx-auto w-full max-w-[1240px] px-4 mb-16">
+          <div className="w-full rounded-[18px] border border-white/70 bg-white/80 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] backdrop-blur-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900">Recent Generations</h2>
+              <Link href="/dashboard/recent-generations" className="rounded-xl border border-white/70 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-md backdrop-blur-sm backdrop-filter transition-all duration-200 hover:bg-white hover:-translate-y-0.5 hover:shadow-lg">
+                View All
               </Link>
-            )) : (
-              <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                <FileText className="mx-auto h-10 w-10 text-slate-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
-              </div>
-            )}
+            </div>
+            <div className="space-y-2">
+              {statsLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl p-2.5 animate-pulse">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="h-4 w-3/4 rounded bg-slate-200" />
+                      <div className="h-3 w-1/2 rounded bg-slate-100" />
+                    </div>
+                    <div className="h-6 w-16 rounded-lg bg-slate-100" />
+                  </div>
+                ))
+              ) : displayRecent.length ? displayRecent.slice(0, 5).map((item: any, index: number) => (
+                <Link
+                  key={`${item.type}-${item.id || item.topic}-${index}`}
+                  href={item.href}
+                  className="clickable-card premium-hover-sm flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 [--clickable-card-hover-bg:#e0f2fe] w-full min-w-0"
+                >
+                  <div className={cn(
+                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                    recentTypeClasses[item.type]?.iconBg || "bg-gradient-to-br from-[#dbeafe] to-[#eff6ff] text-[#2563eb]"
+                  )}>
+                    {item.type === "Worksheet"
+                      ? <FileText className="h-5 w-5" />
+                      : item.type === "Presentation"
+                        ? <Presentation className="h-5 w-5" />
+                        : item.type === "Notes"
+                          ? <NotebookPen className="h-5 w-5" />
+                          : item.type === "Activity"
+                            ? <Sparkles className="h-5 w-5" />
+                            : <BookOpen className="h-5 w-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{item.topic}</p>
+                    <p className="truncate text-xs font-medium text-slate-500">{item.class_name} <span className="mx-1">•</span> {item.subject}</p>
+                  </div>
+                  <span className={cn(
+                    "rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0",
+                    recentTypeClasses[item.type]?.pill || "bg-[#eff6ff] text-[#1d4ed8]"
+                  )}>
+                    {item.type}
+                  </span>
+                </Link>
+              )) : (
+                <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+                  <FileText className="mx-auto h-10 w-10 text-slate-300" />
+                  <p className="mt-3 text-sm font-semibold text-slate-500">No recent generations yet.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <DashboardMyClasses />
 
