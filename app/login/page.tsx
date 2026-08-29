@@ -74,7 +74,10 @@ export default function LoginPage() {
         resendCooldown.start(email);
         toast({ title: "Link sent", description: res.message, variant: "success" });
       } else {
-        setAuthState(deriveAuthState(Object.assign(new Error(res.message), { code: "RATE_LIMITED" }), email));
+        // Toast, don't swap the panel: RATE_LIMITED's state has canResend false,
+        // so swapping would take away the Resend button and the inbox link the
+        // teacher still needs.
+        toast({ title: "Please wait a moment", description: res.message, variant: "error" });
       }
     } catch (error) {
       toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
@@ -136,7 +139,7 @@ export default function LoginPage() {
     try {
       const response = await requestPasswordReset(values.email);
       setResetSentEmail(values.email);
-      resendCooldown.start("reset");
+      resendCooldown.start(values.email);
       toast({ title: "Reset email sent", description: response.message || "Check your inbox for the reset link.", variant: "success" });
     } catch (error) {
       toast({ title: "Could not send reset email", description: getErrorMessage(error, "Try again"), variant: "error" });
@@ -144,12 +147,12 @@ export default function LoginPage() {
   }
 
   async function handleResendReset() {
-    if (!resetSentEmail || resendingReset || resendCooldown.secondsLeft("reset") > 0) return;
+    if (!resetSentEmail || resendingReset || resendCooldown.secondsLeft(resetSentEmail) > 0) return;
     setResendingReset(true);
     try {
       const response = await requestPasswordReset(resetSentEmail);
       toast({ title: "Reset email re-sent", description: response.message || "Check your inbox for the reset link.", variant: "success" });
-      resendCooldown.start("reset");
+      resendCooldown.start(resetSentEmail);
     } catch (error) {
       toast({ title: "Could not resend", description: getErrorMessage(error, "Try again."), variant: "error" });
     } finally {
@@ -330,14 +333,14 @@ export default function LoginPage() {
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Open the link from your inbox to create a new password.</p>
               <button
                 type="button"
-                disabled={resendingReset || resendCooldown.secondsLeft("reset") > 0}
+                disabled={resendingReset || resendCooldown.secondsLeft(resetSentEmail) > 0}
                 onClick={handleResendReset}
                 className="mt-4 block w-full text-sm font-black text-blue-600 transition hover:text-blue-700 disabled:pointer-events-none disabled:opacity-60"
               >
                 {resendingReset
                   ? "Resending…"
-                  : resendCooldown.secondsLeft("reset") > 0
-                    ? `Resend in ${resendCooldown.secondsLeft("reset")}s`
+                  : resendCooldown.secondsLeft(resetSentEmail) > 0
+                    ? `Resend in ${resendCooldown.secondsLeft(resetSentEmail)}s`
                     : "Didn't get the email? Resend"}
               </button>
               <button

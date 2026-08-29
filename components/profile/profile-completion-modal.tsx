@@ -7,6 +7,7 @@ import {
   CURRENT_USER_QUERY_KEY,
   backendApi,
   getCurrentUser,
+  skipPhone,
   updateProfile,
   type ApiUser
 } from "@/lib/api";
@@ -77,6 +78,20 @@ export function ProfileCompletionModal() {
     }
   }
 
+  function handleSkip() {
+    // This overlay has no X, no Escape and no backdrop dismiss, so without this
+    // an email signup that left phone blank is walled in. Hide locally first so
+    // the teacher is never held behind a slow request, then persist —
+    // phone_prompt_state is computed server-side, so a client-only dismissal
+    // would re-fire on reload.
+    queryClient.setQueryData<ApiUser>(CURRENT_USER_QUERY_KEY, (old) =>
+      old ? { ...old, phone_prompt_state: "hidden" } : old
+    );
+    void skipPhone()
+      .then((updated) => queryClient.setQueryData(CURRENT_USER_QUERY_KEY, updated))
+      .catch(() => {});
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-teachpad-ink/30 px-4 py-4 backdrop-blur-sm"
@@ -118,6 +133,9 @@ export function ProfileCompletionModal() {
         </label>
 
         <div className="mt-2 flex items-center justify-end gap-3">
+          <Button variant="outline" onClick={handleSkip} disabled={submitting}>
+            Not now
+          </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Saving…" : "Save"}
           </Button>
