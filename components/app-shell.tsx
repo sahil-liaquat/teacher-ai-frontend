@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ComponentType, ReactNode } from "react";
 import {
   BookmarkCheck,
@@ -17,6 +17,8 @@ import {
   LogOut,
   Menu,
   PanelsTopLeft,
+  Pin,
+  PinOff,
   Settings,
   Shield,
   Sparkles,
@@ -33,35 +35,65 @@ import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { StreakPill } from "@/components/streak/streak-pill";
 
+// Nine flat items read as one long undifferentiated run. The groups below are
+// display-only and never reorder anything — the existing array order already
+// clusters correctly, which matters because MobileBottomNav renders
+// nav.slice(0, 5) and must keep showing the same five tabs.
+type NavGroup = "teach" | "library" | "account";
+
 type NavItem = {
   href: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  group?: NavGroup;
 };
 
+const NAV_GROUP_LABELS: Record<NavGroup, string> = {
+  teach: "Teach",
+  library: "Library",
+  account: "Account"
+};
+
+/**
+ * Split a nav into its labelled groups, preserving array order. A nav whose
+ * items carry no group (admin, which has no obvious clusters) comes back as a
+ * single unlabelled run, so it renders exactly as it did before.
+ */
+function groupNav(nav: NavItem[]): { key: string; label: string | null; items: NavItem[] }[] {
+  if (!nav.some((item) => item.group)) return [{ key: "all", label: null, items: nav }];
+  const order: NavGroup[] = ["teach", "library", "account"];
+  return order
+    .map((group) => ({
+      key: group,
+      label: NAV_GROUP_LABELS[group],
+      items: nav.filter((item) => item.group === group)
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
 const teacherNav: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft },
-  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
-  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
-  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
-  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
-  { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings }
+  { href: "/dashboard", label: "Home", icon: Home, group: "teach" },
+  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft, group: "teach" },
+  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles, group: "teach" },
+  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar, group: "teach" },
+  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock, group: "library" },
+  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck, group: "library" },
+  { href: "/dashboard/textbooks", label: "Books", icon: BookMarked, group: "library" },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, group: "account" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "account" }
 ];
 
 const influencerWorkspaceNav: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft },
-  { href: "/influencer", label: "Influencer", icon: HandCoins },
-  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles },
-  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar },
-  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock },
-  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck },
-  { href: "/dashboard/textbooks", label: "Books", icon: BookMarked },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings }
+  { href: "/dashboard", label: "Home", icon: Home, group: "teach" },
+  { href: "/dashboard/my-workspace", label: "Workspace", icon: PanelsTopLeft, group: "teach" },
+  { href: "/influencer", label: "Influencer", icon: HandCoins, group: "teach" },
+  { href: "/dashboard/classroom-tools", label: "AI Tools", icon: Sparkles, group: "teach" },
+  { href: "/dashboard/workshops", label: "Growth Hub", icon: Calendar, group: "teach" },
+  { href: "/dashboard/recent-generations", label: "Recent", icon: Clock, group: "library" },
+  { href: "/dashboard/resources", label: "Saved", icon: BookmarkCheck, group: "library" },
+  { href: "/dashboard/textbooks", label: "Books", icon: BookMarked, group: "library" },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard, group: "account" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "account" }
 ];
 
 const adminNav: NavItem[] = [
@@ -102,6 +134,13 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
   const isHomeDashboard = pathname === homeHref;
   const profileHref = "/dashboard/settings?section=account";
   const [sidebarLayout, setSidebarLayout] = useState<"floating" | "expanded">("expanded");
+  // Whether the compact rail is pinned open. Starts false on both server and
+  // client and is only raised from localStorage in an effect, so the first
+  // client render matches the HTML we sent.
+  const [railPinned, setRailPinned] = useState(false);
+  // Pinning is the one rail state that reflows the page, so the content column
+  // follows it as well as the layout preference.
+  const sidebarWide = sidebarLayout === "expanded" || railPinned;
 
   useEffect(() => {
     if (hasStoredAuthTokens()) {
@@ -127,6 +166,40 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       window.removeEventListener("storage", updateLayout);
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      setRailPinned(localStorage.getItem("teachpad_sidebar_pinned") === "1");
+    } catch {
+      // Private mode / blocked site data — an unpinned rail is a fine default.
+    }
+  }, []);
+
+  const toggleRailPin = useCallback(() => {
+    setRailPinned((wasPinned) => {
+      const pinned = !wasPinned;
+      try {
+        localStorage.setItem("teachpad_sidebar_pinned", pinned ? "1" : "0");
+      } catch {
+        // Preference just won't survive the reload.
+      }
+      return pinned;
+    });
+  }, []);
+
+  useEffect(() => {
+    // Cmd/Ctrl + \ is the pin toggle. Ignored while typing so it can never
+    // fire from inside a lesson-plan prompt or any other field.
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "\\" || !(e.metaKey || e.ctrlKey)) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName))) return;
+      e.preventDefault();
+      toggleRailPin();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [toggleRailPin]);
 
   useEffect(() => setMobileOpen(false), [pathname]);
 
@@ -248,13 +321,20 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
           showCommunity={!admin}
         />
       ) : (
-        <FloatingSidebar nav={nav} activePath={pathname} onNavigate={() => {}} onLogout={logout} />
+        <FloatingSidebar
+          nav={nav}
+          activePath={pathname}
+          onNavigate={() => {}}
+          onLogout={logout}
+          pinned={railPinned}
+          onTogglePin={toggleRailPin}
+        />
       )}
 
       <div className="hidden lg:block">
         <div className={cn(
           "mx-auto w-full max-w-[1480px] px-6 pt-3",
-          sidebarLayout === "expanded" ? "pl-[260px]" : "pl-24"
+          sidebarWide ? "pl-[260px]" : "pl-24"
         )}>
           <div className="mx-auto w-full max-w-[1240px] px-4">
             <div id="dashboard-plan-banner-slot" />
@@ -288,7 +368,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
       <main className="min-h-screen pb-20 pt-16 lg:pb-0 lg:pt-0">
         <div className={cn(
           "mx-auto w-full max-w-[1480px] px-4 py-4 sm:px-5 lg:px-6 xl:py-5",
-          sidebarLayout === "expanded" ? "lg:pl-[260px]" : "lg:pl-24"
+          sidebarWide ? "lg:pl-[260px]" : "lg:pl-24"
         )}>
           {!admin && role !== "influencer" && <div className="lg:hidden"><TrialStatusPill /></div>}
           {children}
@@ -349,87 +429,186 @@ const navIconColors: Record<string, string> = {
 };
 
 
-function FloatingSidebar({ nav, activePath, onNavigate, onLogout }: { nav: NavItem[]; activePath: string; onNavigate: () => void; onLogout: () => void }) {
+/**
+ * Desktop-only (lg:) icon rail that widens to reveal labels on hover, focus, or
+ * when pinned. It overlays the page rather than pushing it, so the content
+ * column never reflows as the pointer crosses the rail — only pinning, which is
+ * deliberate and sticky, shifts the layout.
+ *
+ * Nothing here is shared with the phone experience: mobile navigates through the
+ * header drawer and MobileBottomNav, which are untouched.
+ */
+function FloatingSidebar({
+  nav,
+  activePath,
+  onNavigate,
+  onLogout,
+  pinned,
+  onTogglePin
+}: {
+  nav: NavItem[];
+  activePath: string;
+  onNavigate: () => void;
+  onLogout: () => void;
+  pinned: boolean;
+  onTogglePin: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const open = pinned || hovered;
+  const groups = groupNav(nav);
+
   const logout = (e: React.MouseEvent) => {
     e.preventDefault();
     onLogout();
   };
 
   return (
-    <aside className="fixed bottom-0 left-5 top-0 z-40 hidden h-[calc(100vh-32px)] translate-y-[16px] lg:block">
+    <aside
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      // Keyboard users get the same reveal: focus entering the rail opens it,
+      // and it closes only once focus leaves the subtree entirely (relatedTarget
+      // is null when focus leaves the document, which should not collapse it).
+      onFocusCapture={() => setHovered(true)}
+      onBlurCapture={(e) => {
+        if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node)) setHovered(false);
+      }}
+      className={cn(
+        "fixed bottom-3 left-3 top-3 z-40 hidden overflow-hidden rounded-sheet border border-teachpad-cardBorder bg-white/92 shadow-e3 backdrop-blur-md transition-[width] duration-200 ease-out lg:flex lg:flex-col",
+        open ? "w-60" : "w-16"
+      )}
+    >
       <TooltipProvider delayDuration={0} skipDelayDuration={0}>
-        <nav className="flex h-full flex-col items-center justify-center">
-          <div className="relative overflow-hidden flex flex-col items-center justify-center rounded-[24px] border border-teachpad-cardBorder bg-white/86 px-2.5 py-4 shadow-[0_20px_60px_var(--teachpad-shadowCard)] backdrop-blur-md">
-            <div className="relative z-10 flex flex-col items-center gap-2">
-              {nav.map((item) => (
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
+          {groups.map((group, index) => (
+            <div key={group.key} className="flex flex-col gap-1">
+              {/* Open, a group announces itself by name. Collapsed, there is no
+                  room for a word, so it becomes a hairline between runs — and
+                  the first group needs neither. */}
+              {group.label && open ? (
+                <div className="flex h-7 items-center px-2">
+                  <span className="truncate text-micro font-black uppercase tracking-wider text-teachpad-muted">
+                    {group.label}
+                  </span>
+                </div>
+              ) : null}
+              {group.label && !open && index > 0 ? (
+                <div className="flex h-7 items-center px-2">
+                  <span className="h-px w-full bg-teachpad-cardBorder" />
+                </div>
+              ) : null}
+              {group.items.map((item) => (
                 <FloatingNavItem
                   key={item.href}
                   item={item}
                   active={isActive(item.href, activePath)}
                   onClick={onNavigate}
+                  open={open}
                 />
               ))}
-
-              <div className="my-2 h-px w-8 bg-teachpad-cardBorder" />
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={logout}
-                    aria-label="Logout"
-                    className="group flex h-10 w-10 items-center justify-center rounded-card bg-rose-50 text-rose-500 transition-all duration-300 hover:scale-105 hover:bg-teachpad-red"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Logout</TooltipContent>
-              </Tooltip>
             </div>
-
-            {/* Gradient blurry blobs at bottom */}
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-blue-500/15 blur-2xl z-0" />
-            <div className="pointer-events-none absolute -bottom-10 -right-10 h-28 w-28 rounded-full bg-fuchsia-500/15 blur-2xl z-0" />
-          </div>
+          ))}
         </nav>
+
+        <div className="shrink-0 border-t border-teachpad-cardBorder p-2">
+          <RailButton
+            open={open}
+            label="Logout"
+            icon={LogOut}
+            onClick={logout}
+            className="text-rose-600 hover:bg-rose-50"
+          />
+          <RailButton
+            open={open}
+            label={pinned ? "Unpin sidebar" : "Pin sidebar open"}
+            icon={pinned ? PinOff : Pin}
+            onClick={onTogglePin}
+            className="text-teachpad-muted hover:bg-surface-sunken hover:text-teachpad-ink"
+          />
+        </div>
       </TooltipProvider>
     </aside>
   );
 }
 
-function FloatingNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
-  const Icon = item.icon;
-  const colorClass = navIconColors[item.label] || "text-blue-500";
+/** A rail row that is icon-only when collapsed and icon + label when open. */
+function RailButton({
+  open,
+  label,
+  icon: Icon,
+  onClick,
+  className
+}: {
+  open: boolean;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  onClick: (e: React.MouseEvent) => void;
+  className?: string;
+}) {
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        "flex h-11 w-full items-center gap-3 rounded-card px-3 text-sm font-bold transition-colors duration-200",
+        className
+      )}
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      <span className={cn("truncate whitespace-nowrap", open ? "opacity-100" : "opacity-0")}>{label}</span>
+    </button>
+  );
 
+  if (open) return button;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          href={item.href}
-          onClick={onClick}
-          aria-label={item.label}
-          className={cn(
-            "group relative flex items-center justify-center transition-all duration-300 hover:scale-105",
-            active ? "scale-105" : ""
-          )}
-        >
-          <span
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-card transition-all duration-300",
-              active
-                ? "bg-white shadow-[0_8px_24px_var(--teachpad-shadowBlue)]"
-                : "group-hover:bg-blue-50"
-            )}
-          >
-            <Icon
-              className={cn(
-                "h-5 w-5 transition-colors duration-300",
-                colorClass
-              )}
-            />
-          </span>
-        </Link>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function FloatingNavItem({
+  item,
+  active,
+  onClick,
+  open
+}: {
+  item: NavItem;
+  active: boolean;
+  onClick: () => void;
+  open: boolean;
+}) {
+  const Icon = item.icon;
+
+  const link = (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        // The active bar is drawn as a left border so it lines up in both
+        // widths. Inactive rows reserve the same 3px so nothing shifts.
+        "relative flex h-11 items-center gap-3 rounded-card border-l-[3px] px-2.5 text-sm font-bold transition-colors duration-200",
+        active
+          ? "border-brand bg-blue-50 text-brand-text"
+          : "border-transparent text-teachpad-muted hover:bg-surface-sunken hover:text-teachpad-ink"
+      )}
+    >
+      <Icon className={cn("h-5 w-5 shrink-0 transition-colors duration-200", active && "text-brand")} />
+      <span className={cn("truncate whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0")}>
+        {item.label}
+      </span>
+    </Link>
+  );
+
+  // A tooltip on an open rail would just repeat the label sitting next to it.
+  if (open) return link;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
     </Tooltip>
   );
@@ -585,14 +764,26 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
         <div className="mb-6 flex items-center justify-between [@media(max-height:760px)]:mb-4 [@media(max-height:680px)]:mb-3">
           <Brand href={homeHref} compact={true} />
         </div>
-        <nav className="flex-1 space-y-1.5 min-h-0 pr-1 select-none [@media(max-height:760px)]:space-y-0.5 [@media(max-height:680px)]:space-y-0">
-          {nav.map((item) => (
-            <ExpandedSidebarNavItem
-              key={item.href}
-              item={item}
-              active={isActive(item.href, activePath)}
-              onClick={onNavigate}
-            />
+        <nav className="flex-1 min-h-0 pr-1 select-none">
+          {groupNav(nav).map((group) => (
+            <div key={group.key} className="space-y-1.5 [@media(max-height:760px)]:space-y-0.5 [@media(max-height:680px)]:space-y-0">
+              {group.label ? (
+                // Hidden on short laptop screens, where the vertical budget is
+                // already tight enough that the existing max-height rules are
+                // shrinking the rows themselves.
+                <p className="px-3 pb-1 pt-3 text-micro font-black uppercase tracking-wider text-teachpad-muted [@media(max-height:760px)]:hidden">
+                  {group.label}
+                </p>
+              ) : null}
+              {group.items.map((item) => (
+                <ExpandedSidebarNavItem
+                  key={item.href}
+                  item={item}
+                  active={isActive(item.href, activePath)}
+                  onClick={onNavigate}
+                />
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -629,9 +820,6 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
         </button>
       </div>
 
-      {/* Gradient blurry blobs at bottom */}
-      <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-blue-500/15 blur-2xl z-0" />
-      <div className="pointer-events-none absolute -bottom-12 -right-12 h-36 w-36 rounded-full bg-fuchsia-500/15 blur-2xl z-0" />
     </aside>
   );
 }
@@ -696,28 +884,29 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const Icon = item.icon;
-  const colorClass = navIconColors[item.label] || "text-blue-500";
 
   return (
     <Link
       href={item.href}
       onClick={onClick}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02] [@media(max-height:760px)]:h-10 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-sm",
+        // Active reads as a left bar + tint + brand text. The old treatment was
+        // a near-white gradient on a near-white panel, so the one row that
+        // needed to stand out was the hardest to see. Inactive rows carry the
+        // same 3px border in transparent so nothing shifts on navigation.
+        "flex h-12 items-center gap-3 rounded-card border-l-[3px] px-2.5 text-sm font-bold transition-colors duration-200 [@media(max-height:760px)]:h-10 [@media(max-height:680px)]:h-9",
         active
-          ? "bg-gradient-to-r from-blue-50/50 to-white text-teachpad-blue border border-teachpad-cardBorder/30 shadow-sm"
-          : "text-teachpad-muted hover:bg-slate-50 hover:text-teachpad-ink"
+          ? "border-brand bg-blue-50 text-brand-text"
+          : "border-transparent text-teachpad-muted hover:bg-surface-sunken hover:text-teachpad-ink"
       )}
     >
-      <span className={cn(
-        "grid h-9 w-9 place-items-center rounded-card transition-all duration-300 [@media(max-height:760px)]:h-8 [@media(max-height:760px)]:w-8",
-        active
-          ? "bg-white shadow-[0_4px_12px_rgba(59,130,246,0.12)]"
-          : "",
-        colorClass
-      )}>
-        <Icon className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
-      </span>
+      <Icon
+        className={cn(
+          "h-5 w-5 shrink-0 transition-colors duration-200 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4",
+          active && "text-brand"
+        )}
+      />
       <span className="truncate">{item.label}</span>
     </Link>
   );
