@@ -12,6 +12,10 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+// Curriculum edits here must also drop the teacher-facing catalogue cache, or an
+// admin adding a board sees it in this screen while the generator dropdowns keep
+// serving the old list for up to CATALOGUE_STALE_TIME.
+import { catalogueKeys } from "@/lib/use-catalogue";
 
 type BoardForm = { code: string; name: string; description: string };
 type ClassForm = { grade_number: string; name: string; description: string };
@@ -67,6 +71,7 @@ export default function AdminCurriculumPage() {
     setSelectedBoardId(created.id);
     toast({ title: "Board created" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-boards"] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   async function saveBoard(id: string) {
@@ -78,12 +83,14 @@ export default function AdminCurriculumPage() {
     setEditingBoardId("");
     toast({ title: "Board updated" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-boards"] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   async function setBoardActive(board: Board, isActive: boolean) {
     await backendApi.updateBoard(board.id, { is_active: isActive });
     toast({ title: isActive ? "Board activated" : "Board deactivated" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-boards"] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   async function createClass(event: FormEvent<HTMLFormElement>) {
@@ -98,6 +105,7 @@ export default function AdminCurriculumPage() {
     setClassForm(emptyClassForm);
     toast({ title: "Class created" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-classes", selectedBoardId] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   async function saveClass(id: string) {
@@ -109,12 +117,14 @@ export default function AdminCurriculumPage() {
     setEditingClassId("");
     toast({ title: "Class updated" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-classes", selectedBoardId] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   async function setClassActive(item: ClassItem, isActive: boolean) {
     await backendApi.updateClass(item.id, { is_active: isActive });
     toast({ title: isActive ? "Class activated" : "Class deactivated" });
     queryClient.invalidateQueries({ queryKey: ["admin-curriculum-classes", selectedBoardId] });
+    queryClient.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   return (

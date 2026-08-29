@@ -4,8 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Brain, Check, ChevronDown, FileText, FlaskConical, Globe, GraduationCap, Hash, Lightbulb, LoaderCircle, MessageCircle, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { backendApi, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError } from "@/lib/api";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
+import {
+  fetchChaptersCached,
+  useBoards,
+  useBooksByClass,
+  useCataloguePrefetch,
+  useChaptersByBook,
+  useClassesByBoard
+} from "@/lib/use-catalogue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -179,12 +188,14 @@ export default function NewWorksheetPage() {
   const { toast } = useToast();
   const { openUpgrade } = useUpgradeModal();
   const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
+  const queryClient = useQueryClient();
   const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
   const prevChaptersStr = useRef("");
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  // The cascade is served from the shared catalogue cache, so switching between
+  // generator tools reuses these lists instead of refetching all four levels.
+  // Changing a selection changes the query key, which is what clears the stale
+  // list and raises the loading flag — the form no longer does that by hand.
+  const boardsQuery = useBoards();
   const [boardId, setBoardId] = useState("");
   const [classId, setClassId] = useState("");
   const [subject, setSubject] = useState("");
@@ -207,15 +218,28 @@ export default function NewWorksheetPage() {
   const [includeHints, setIncludeHints] = useState(false);
   const [includeDiagramsImages, setIncludeDiagramsImages] = useState(false);
   const [step, setStep] = useState(1);
-  const [fetching, setFetching] = useState(false);
-  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
-  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
-  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
-  const [classesError, setClassesError] = useState("");
-  const [subjectsError, setSubjectsError] = useState("");
-  const [booksError, setBooksError] = useState("");
-  const [chaptersError, setChaptersError] = useState("");
+
+  const classesQuery = useClassesByBoard(boardId);
+  const booksQuery = useBooksByClass(classId);
+  const chaptersQuery = useChaptersByBook(bookId);
+  const prefetch = useCataloguePrefetch();
+
+  const boards = boardsQuery.data ?? [];
+  const classes = classesQuery.data ?? [];
+  const books = booksQuery.data ?? [];
+  const chapters = chaptersQuery.data ?? [];
+
+  const fetching = boardsQuery.isLoading;
+  const isLoadingClasses = classesQuery.isLoading;
+  const isLoadingBooks = booksQuery.isLoading;
+  // Subjects are derived from the book list, so they load with it.
+  const isLoadingSubjects = booksQuery.isLoading;
+  const isLoadingChapters = chaptersQuery.isLoading;
+
+  const classesError = classesQuery.isError ? getErrorMessage(classesQuery.error, "Could not load classes.") : "";
+  const booksError = booksQuery.isError ? getErrorMessage(booksQuery.error, "Could not load books.") : "";
+  const subjectsError = booksError;
+  const chaptersError = chaptersQuery.isError ? getErrorMessage(chaptersQuery.error, "Could not load chapters.") : "";
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
@@ -268,102 +292,27 @@ export default function NewWorksheetPage() {
     });
   }, [draftReady, boardId, classId, subject, bookId, chapterNames, topic, language, difficulty, questionTypes, questionTypeCounts, questionTypeMarks, questionMix, competencyFocus, includeAnswerKey, includeMarkingScheme, includeHints, includeDiagramsImages]);
 
+  // Apply the teacher's saved default board once the list is available. This
+  // used to live inside the boards fetch, whose effect listed boardId as a
+  // dependency — so choosing a board refetched the whole board list.
   useEffect(() => {
-    setFetching(true);
-    backendApi.boards(0, 100)
-      .then((res) => {
-        const filtered = res.items.filter((board) => board.is_active !== false);
-        setBoards(filtered);
-        const defaultBoardId = localStorage.getItem("teachpad_default_board_id");
-        if (defaultBoardId && !boardId) {
-          const match = filtered.find((b) => b.id === defaultBoardId);
-          if (match) {
-            chooseBoard(match.id);
-          }
-        }
-      })
-      .catch((err) => toast({ title: "Could not load boards", description: getErrorMessage(err, "Could not load boards. Try again."), variant: "error" }))
-      .finally(() => setFetching(false));
-  }, [toast, boardId]);
+    if (boardId || !boardsQuery.data) return;
+    const defaultBoardId = localStorage.getItem("teachpad_default_board_id");
+    if (!defaultBoardId) return;
+    if (boardsQuery.data.some((board) => board.id === defaultBoardId)) chooseBoard(defaultBoardId);
+    // chooseBoard only sets state and warms the next level; re-running on its
+    // identity would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardsQuery.data, boardId]);
 
   useEffect(() => {
-    if (!boardId) {
-      setIsLoadingClasses(false);
-      return;
-    }
-    let cancelled = false;
-    setClassesError("");
-    setIsLoadingClasses(true);
-    backendApi.classesByBoard(boardId, 0, 100)
-      .then((res) => {
-        if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
-      })
-      .catch((err) => {
-        if (!cancelled) setClassesError(getErrorMessage(err, "Could not load classes."));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingClasses(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [boardId]);
-
-  useEffect(() => {
-    if (!classId) {
-      setIsLoadingSubjects(false);
-      setIsLoadingBooks(false);
-      return;
-    }
-    let cancelled = false;
-    setSubjectsError("");
-    setBooksError("");
-    setIsLoadingSubjects(true);
-    setIsLoadingBooks(true);
-    backendApi.booksByClass(classId, 0, 100)
-      .then((res) => {
-        if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false));
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          const message = getErrorMessage(err, "Could not load books.");
-          setSubjectsError(message);
-          setBooksError(message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingSubjects(false);
-          setIsLoadingBooks(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [classId]);
-
-  useEffect(() => {
-    if (!bookId) {
-      setIsLoadingChapters(false);
-      return;
-    }
-    let cancelled = false;
-    setChaptersError("");
-    setIsLoadingChapters(true);
-    backendApi.chaptersByBook(bookId)
-      .then((items) => {
-        if (!cancelled) setChapters(items);
-      })
-      .catch((err) => {
-        if (!cancelled) setChaptersError(getErrorMessage(err, "Could not load chapters."));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingChapters(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [bookId]);
+    if (!boardsQuery.isError) return;
+    toast({
+      title: "Could not load boards",
+      description: getErrorMessage(boardsQuery.error, "Could not load boards. Try again."),
+      variant: "error"
+    });
+  }, [boardsQuery.isError, boardsQuery.error, toast]);
 
   const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
   const subjectOptions = useMemo(() => Array.from(new Set(books.map((book) => book.subject).filter(Boolean))).sort(), [books]);
@@ -412,7 +361,10 @@ export default function NewWorksheetPage() {
     }
     if (!companionContext.chapter || !candidates.length) return;
     let cancelled = false;
-    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+    // Reading through the cache means this scan populates the same entries the
+    // chapter dropdown uses, so selecting the matched book renders instantly
+    // instead of fetching its chapters a second time.
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await fetchChaptersCached(queryClient, book.id) })))
       .then((results) => {
         if (cancelled || companionApplied.current.book) return;
         const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
@@ -421,7 +373,6 @@ export default function NewWorksheetPage() {
         companionApplied.current.book = true;
         companionApplied.current.chapter = true;
         setBookId(found.book.id);
-        setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
       // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
@@ -447,58 +398,38 @@ export default function NewWorksheetPage() {
     prevChaptersStr.current = chaptersStr;
   }, [chapterNames, topic]);
 
+  // Each handler now only resets the selections below it. The lists themselves
+  // clear because their query keys change, and the request for the next level
+  // starts here rather than waiting for the render that needs it.
   function chooseBoard(value: string) {
     setBoardId(value);
-    setClasses([]);
-    setBooks([]);
-    setChapters([]);
     setClassId("");
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setClassesError("");
-    setSubjectsError("");
-    setBooksError("");
-    setChaptersError("");
-    setIsLoadingClasses(Boolean(value));
-    setIsLoadingSubjects(false);
-    setIsLoadingBooks(false);
-    setIsLoadingChapters(false);
+    prefetch.classes(value);
   }
 
   function chooseClass(value: string) {
     setClassId(value);
-    setBooks([]);
-    setChapters([]);
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setSubjectsError("");
-    setBooksError("");
-    setChaptersError("");
-    setIsLoadingSubjects(Boolean(value));
-    setIsLoadingBooks(Boolean(value));
-    setIsLoadingChapters(false);
+    prefetch.books(value);
   }
 
   function chooseSubject(value: string) {
     const matchingBook = books.find((book) => book.subject === value);
     setSubject(value);
     setBookId(matchingBook?.id || "");
-    setChapters([]);
     setChapterNames([]);
-    setBooksError("");
-    setChaptersError("");
-    setIsLoadingBooks(false);
-    setIsLoadingChapters(Boolean(matchingBook));
+    if (matchingBook) prefetch.chapters(matchingBook.id);
   }
 
   function chooseBook(value: string) {
     setBookId(value);
-    setChapters([]);
     setChapterNames([]);
-    setChaptersError("");
-    setIsLoadingChapters(Boolean(value));
+    prefetch.chapters(value);
   }
 
   function chooseChapter(value: string) {

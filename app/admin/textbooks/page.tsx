@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/errors";
+// Ingesting or deleting a textbook changes what teachers can pick, so the shared
+// catalogue cache has to go with it.
+import { catalogueKeys } from "@/lib/use-catalogue";
 
 export default function AdminTextbooksPage() {
   const books = useQuery({ queryKey: ["admin-books"], queryFn: loadBookLibrary });
@@ -68,6 +71,7 @@ export default function AdminTextbooksPage() {
       formElement.reset();
       toast({ title: "Book uploaded", description: "The textbook was parsed and queued for indexing." });
       client.invalidateQueries({ queryKey: ["admin-books"] });
+    client.invalidateQueries({ queryKey: catalogueKeys.all });
     } catch (error) {
       toast({ title: "Upload failed", description: getErrorMessage(error, "Try again"), variant: "error" });
     } finally {
@@ -80,6 +84,7 @@ export default function AdminTextbooksPage() {
     await backendApi.deleteBook(id);
     toast({ title: "Book deleted" });
     client.invalidateQueries({ queryKey: ["admin-books"] });
+    client.invalidateQueries({ queryKey: catalogueKeys.all });
   }
 
   return (

@@ -4,7 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, Boxes, Check, ClipboardCheck, FileText, FlaskConical, Globe, GraduationCap, Lightbulb, MessageCircle, Monitor, Presentation, Sparkles, Users } from "lucide-react";
-import { backendApi, Board, Book, Chapter, ClassItem, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { backendApi, getRateLimitNotice, isFreeQuotaError, isPaymentRequiredError, type PresentationGeneratePayload } from "@/lib/api";
+import {
+  fetchChaptersCached,
+  useBoards,
+  useBooksByClass,
+  useCataloguePrefetch,
+  useChaptersByBook,
+  useClassesByBoard
+} from "@/lib/use-catalogue";
 import { getErrorCode, getErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,10 +75,9 @@ export default function PresentationGeneratorPage() {
   const { openUpgrade } = useUpgradeModal();
   const companionContext = useMemo(() => getCompanionPrefillContext(searchParams), [searchParams]);
   const companionApplied = useRef({ board: false, class: false, subject: false, book: false, chapter: false, topic: false });
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  // Served from the shared catalogue cache — see lib/use-catalogue.ts.
+  const queryClient = useQueryClient();
+  const boardsQuery = useBoards();
   const [boardId, setBoardId] = useState("");
   const [classId, setClassId] = useState("");
   const [subject, setSubject] = useState("");
@@ -89,13 +97,24 @@ export default function PresentationGeneratorPage() {
   const [includeImages, setIncludeImages] = useState(true);
   const [theme, setTheme] = useState<string>("Light");
   const [step, setStep] = useState(1);
-  const [fetching, setFetching] = useState(false);
-  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
-  const [isLoadingBooks, setIsLoadingBooks] = useState(false);
-  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
-  const [classesError, setClassesError] = useState("");
-  const [booksError, setBooksError] = useState("");
-  const [chaptersError, setChaptersError] = useState("");
+  const classesQuery = useClassesByBoard(boardId);
+  const booksQuery = useBooksByClass(classId);
+  const chaptersQuery = useChaptersByBook(bookId);
+  const prefetch = useCataloguePrefetch();
+
+  const boards = boardsQuery.data ?? [];
+  const classes = classesQuery.data ?? [];
+  const books = booksQuery.data ?? [];
+  const chapters = chaptersQuery.data ?? [];
+
+  const fetching = boardsQuery.isLoading;
+  const isLoadingClasses = classesQuery.isLoading;
+  const isLoadingBooks = booksQuery.isLoading;
+  const isLoadingChapters = chaptersQuery.isLoading;
+
+  const classesError = classesQuery.isError ? getErrorMessage(classesQuery.error, "Could not load classes.") : "";
+  const booksError = booksQuery.isError ? getErrorMessage(booksQuery.error, "Could not load books.") : "";
+  const chaptersError = chaptersQuery.isError ? getErrorMessage(chaptersQuery.error, "Could not load chapters.") : "";
   const [generating, setGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
   const [generationError, setGenerationError] = useState("");
@@ -163,92 +182,25 @@ export default function PresentationGeneratorPage() {
     });
   }, [draftReady, boardId, chapterNames, classId, bookId, detailLevel, includeActivities, includeImages, includeQuiz, includeSpeakerNotes, language, slideCount, style, subject, tone, visualDensity, theme]);
 
+  // Apply the teacher's saved default board once the list arrives. This used to
+  // sit inside the boards fetch, whose effect depended on boardId — so choosing
+  // a board refetched the entire board list.
   useEffect(() => {
-    setFetching(true);
-    backendApi.boards(0, 100)
-      .then((res) => {
-        const filtered = res.items.filter((board) => board.is_active !== false);
-        setBoards(filtered);
-        const defaultBoardId = localStorage.getItem("teachpad_default_board_id");
-        if (defaultBoardId && !boardId) {
-          const match = filtered.find((b) => b.id === defaultBoardId);
-          if (match) {
-            chooseBoard(match.id);
-          }
-        }
-      })
-      .catch((error) => toast({ title: "Could not load boards", description: getErrorMessage(error, "Please try again."), variant: "error" }))
-      .finally(() => setFetching(false));
-  }, [toast, boardId]);
+    if (boardId || !boardsQuery.data) return;
+    const defaultBoardId = localStorage.getItem("teachpad_default_board_id");
+    if (!defaultBoardId) return;
+    if (boardsQuery.data.some((b) => b.id === defaultBoardId)) chooseBoard(defaultBoardId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardsQuery.data, boardId]);
 
   useEffect(() => {
-    if (!boardId) {
-      setIsLoadingClasses(false);
-      return;
-    }
-    let cancelled = false;
-    setClassesError("");
-    setIsLoadingClasses(true);
-    backendApi.classesByBoard(boardId, 0, 100)
-      .then((res) => {
-        if (!cancelled) setClasses(res.items.filter((item) => item.is_active !== false));
-      })
-      .catch((error) => {
-        if (!cancelled) setClassesError(getErrorMessage(error, "Could not load classes."));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingClasses(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [boardId]);
-
-  useEffect(() => {
-    if (!classId) {
-      setIsLoadingBooks(false);
-      return;
-    }
-    let cancelled = false;
-    setBooksError("");
-    setIsLoadingBooks(true);
-    backendApi.booksByClass(classId, 0, 100)
-      .then((res) => {
-        if (!cancelled) setBooks(res.items.filter((book) => book.is_active !== false && book.is_ingested !== false));
-      })
-      .catch((error) => {
-        if (!cancelled) setBooksError(getErrorMessage(error, "Could not load books."));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingBooks(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [classId]);
-
-  useEffect(() => {
-    if (!bookId) {
-      setIsLoadingChapters(false);
-      return;
-    }
-    let cancelled = false;
-    setChaptersError("");
-    setIsLoadingChapters(true);
-    backendApi.chaptersByBook(bookId)
-      .then((items) => {
-        if (!cancelled) setChapters(items);
-      })
-      .catch((error) => {
-        if (!cancelled) setChaptersError(getErrorMessage(error, "Could not load chapters."));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingChapters(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [bookId]);
+    if (!boardsQuery.isError) return;
+    toast({
+      title: "Could not load boards",
+      description: getErrorMessage(boardsQuery.error, "Please try again."),
+      variant: "error"
+    });
+  }, [boardsQuery.isError, boardsQuery.error, toast]);
 
   const selectedClass = useMemo(() => classes.find((item) => item.id === classId), [classes, classId]);
   const selectedBook = useMemo(() => books.find((book) => book.id === bookId), [books, bookId]);
@@ -298,7 +250,9 @@ export default function PresentationGeneratorPage() {
     }
     if (!companionContext.chapter || !candidates.length) return;
     let cancelled = false;
-    Promise.all(candidates.map(async (book) => ({ book, chapters: await backendApi.chaptersByBook(book.id) })))
+    // Through the cache, so the matched book's chapters are already there when
+    // the dropdown renders.
+    Promise.all(candidates.map(async (book) => ({ book, chapters: await fetchChaptersCached(queryClient, book.id) })))
       .then((results) => {
         if (cancelled || companionApplied.current.book) return;
         const found = results.find((result) => findMatchingChapter(result.chapters, companionContext.chapter));
@@ -307,7 +261,6 @@ export default function PresentationGeneratorPage() {
         companionApplied.current.book = true;
         companionApplied.current.chapter = true;
         setBookId(found.book.id);
-        setChapters(found.chapters);
         setChapterNames(chapter ? [chapter.chapter_title || chapter.title || companionContext.chapter] : [companionContext.chapter]);
       })
       // Intentionally silent: companion auto-selection is a convenience — on failure the teacher just picks book/chapter manually.
@@ -325,34 +278,23 @@ export default function PresentationGeneratorPage() {
     setChapterNames([match.chapter_title || match.title || companionContext.chapter]);
   }, [chapters, companionContext]);
 
+  // Only the selections below reset here; the lists clear because their query
+  // keys change, and the next level starts loading on selection.
   function chooseBoard(value: string) {
     setBoardId(value);
-    setClasses([]);
-    setBooks([]);
-    setChapters([]);
     setClassId("");
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setClassesError("");
-    setBooksError("");
-    setChaptersError("");
-    setIsLoadingClasses(Boolean(value));
-    setIsLoadingBooks(false);
-    setIsLoadingChapters(false);
+    prefetch.classes(value);
   }
 
   function chooseClass(value: string) {
     setClassId(value);
-    setBooks([]);
-    setChapters([]);
     setSubject("");
     setBookId("");
     setChapterNames([]);
-    setBooksError("");
-    setChaptersError("");
-    setIsLoadingBooks(Boolean(value));
-    setIsLoadingChapters(false);
+    prefetch.books(value);
   }
 
   function chooseSubject(value: string) {
@@ -360,17 +302,13 @@ export default function PresentationGeneratorPage() {
     setSubject(value);
     setBookId(matchingBook?.id || "");
     setChapterNames([]);
-    setChapters([]);
-    setChaptersError("");
-    setIsLoadingChapters(Boolean(matchingBook));
+    if (matchingBook) prefetch.chapters(matchingBook.id);
   }
 
   function chooseBook(value: string) {
     setBookId(value);
     setChapterNames([]);
-    setChapters([]);
-    setChaptersError("");
-    setIsLoadingChapters(Boolean(value));
+    prefetch.chapters(value);
   }
 
   function chooseChapter(value: string) {
