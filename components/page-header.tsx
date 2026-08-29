@@ -28,7 +28,7 @@ export function PageHeader({
       <div className={cn("relative z-10 min-w-0 flex-1", illustration ? "lg:max-w-[64%]" : "")}>
         <h1 className={cn(
           "font-black tracking-normal",
-          isHero ? "max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02] text-transparent" : "text-[22px] leading-tight text-[#071b49] sm:text-[26px]"
+          isHero ? "max-w-3xl bg-gradient-to-r from-[#0f3b82] via-[#1677ff] to-[#16a9b6] bg-clip-text text-[clamp(1.9rem,4vw,3.35rem)] leading-[1.02] text-transparent" : "text-h3 leading-tight text-[#071b49] sm:text-h3"
         )}>{title}</h1>
         {description ? (
           <p className={cn("max-w-2xl text-teachpad-muted", isHero ? "mt-3 text-sm font-semibold leading-6 sm:text-base" : "mt-2 text-sm font-semibold leading-6")}>

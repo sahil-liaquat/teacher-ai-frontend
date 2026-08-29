@@ -147,7 +147,7 @@ function DashboardMetric({
         <div className="relative z-10 min-w-0 flex-1">
           <p className="text-xs font-semibold text-slate-500 sm:text-sm">{label}</p>
           <p className="mt-1 truncate text-2xl font-extrabold text-slate-900 sm:text-3xl">{value}</p>
-          <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400 sm:text-xs">{detail}</p>
+          <p className="mt-0.5 truncate text-micro font-medium text-slate-400 sm:text-xs">{detail}</p>
         </div>
       </div>
     </article>

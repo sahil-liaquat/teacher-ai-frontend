@@ -35,12 +35,12 @@ export default function WorksheetsListPage() {
                     <ClipboardCheck className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-slate-950 text-[14px] sm:text-[15.5px] leading-snug break-words">
+                    <h3 className="font-bold text-slate-950 text-sm sm:text-sm leading-snug break-words">
                       {topic}
                     </h3>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      <Badge className="text-[10px] px-1.5 py-0.5 font-semibold">Worksheet</Badge>
-                      <Badge className="bg-[#eef8f1] text-[#166534] text-[10px] px-1.5 py-0.5 font-semibold">{subject}</Badge>
+                      <Badge className="text-micro px-1.5 py-0.5 font-semibold">Worksheet</Badge>
+                      <Badge className="bg-[#eef8f1] text-[#166534] text-micro px-1.5 py-0.5 font-semibold">{subject}</Badge>
                     </div>
                     <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">
                       {[class_name, chapter_name].filter(Boolean).join(" • ")}

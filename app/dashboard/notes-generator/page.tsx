@@ -587,16 +587,16 @@ export default function NotesGeneratorPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#d9467d] shadow-sm">
                 <NotebookPen className="h-4 w-4" /> Textbook notes
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Notes Generator</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Notes Generator</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate chapter-wise classroom notes, blackboard points, key terms, and revision questions from your textbook.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9e8] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-[10px] font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#f45f98] to-[#d9467d] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Notes</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Notes</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your notes by choosing the style, detail level, and sections to include.</p>
             </div>
           )}

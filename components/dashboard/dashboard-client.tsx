@@ -527,7 +527,7 @@ export default function DashboardClient() {
             sidebarLayout === "expanded" ? "text-left lg:text-right lg:ml-auto" : "text-left"
           )}>
             <h1 className={cn(
-              "flex items-center gap-x-2 whitespace-nowrap text-[23px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl",
+              "flex items-center gap-x-2 whitespace-nowrap text-h3 font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-3xl",
               sidebarLayout === "expanded" && "lg:justify-end"
             )}>
               <span>{greeting.text}, {firstName}</span>
@@ -539,7 +539,7 @@ export default function DashboardClient() {
                   className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-12 sm:w-12"
                 />
               ) : (
-                <span className="inline-block text-[2.45rem] leading-none sm:text-[2.7rem]">{greeting.emoji}</span>
+                <span className="inline-block text-h1 leading-none sm:text-h1">{greeting.emoji}</span>
               )}
             </h1>
             <p className="mt-1 text-sm font-medium text-slate-500">Let&apos;s create something amazing today.</p>
@@ -560,7 +560,7 @@ export default function DashboardClient() {
                     </div>
                     <div className="flex-1">
                       <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
-                      <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
+                      <p className="text-micro sm:text-xs text-red-500 mt-1">Refresh to try again</p>
                     </div>
                   </div>
                 ))}
@@ -751,7 +751,7 @@ export default function DashboardClient() {
                                 boxShadow: isLast ? "0 4px 16px rgba(37, 99, 235, 0.4)" : "0 2px 8px rgba(59, 130, 246, 0.2)"
                               }}
                             />
-                            <span className={`text-[10px] font-semibold ${isLast ? "text-[#2563eb]" : "text-slate-400"}`}>
+                            <span className={`text-micro font-semibold ${isLast ? "text-[#2563eb]" : "text-slate-400"}`}>
                               {bar.label}
                             </span>
                           </div>
@@ -833,7 +833,7 @@ export default function DashboardClient() {
     <div className="mx-auto flex flex-col w-full max-w-[1480px] gap-6 px-0 2xl:px-4">
       {/* Center Stage Greeting */}
       <div className="flex flex-col items-center text-center mt-4 mb-4 px-4 sm:mt-12 sm:mb-8">
-        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-[25px] font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
+        <h1 className="flex items-center justify-center gap-2 whitespace-nowrap text-h3 font-extrabold tracking-tight text-slate-900 min-w-0 sm:text-4xl">
           <span>{greeting.text}, {firstName}</span>
           {greeting.icon ? (
             <img
@@ -843,7 +843,7 @@ export default function DashboardClient() {
               className="h-12 w-12 shrink-0 object-contain drop-shadow-[0_7px_10px_rgba(251,191,36,0.24)] sm:h-14 sm:w-14"
             />
           ) : (
-            <span className="inline-block text-[2.7rem] leading-none sm:text-[3.2rem]">{greeting.emoji}</span>
+            <span className="inline-block text-h1 leading-none sm:text-display">{greeting.emoji}</span>
           )}
         </h1>
         <p className="mt-2 text-sm font-medium text-slate-500">What would you like to create today?</p>
@@ -858,7 +858,7 @@ export default function DashboardClient() {
           placeholder={isListening ? "Listening..." : placeholderText}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-[15px] font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
+          className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 sm:pr-28 rounded-full border border-slate-200/80 bg-white/70 hover:bg-white/90 hover:border-slate-300 focus:border-blue-500 focus:bg-white text-sm font-medium tracking-wide text-slate-700 placeholder-slate-400/90 outline-none shadow-[0_8px_30px_rgba(15,23,42,0.04)] focus:shadow-[0_12px_36px_rgba(37,99,235,0.08)] focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 ease-in-out"
         />
         
         <div className="absolute right-5 sm:right-7 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -888,7 +888,7 @@ export default function DashboardClient() {
         {/* Floating Dropdown results */}
         {searchQuery ? (
           <div className="absolute left-4 right-4 top-full mt-2 rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-md p-2 shadow-[0_20px_50px_rgba(15,23,42,0.15)] z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="px-3 py-1.5 text-micro font-bold uppercase tracking-wider text-slate-400">
               AI Tools ({filteredTools.length})
             </div>
             <div className="mt-1 max-h-[300px] overflow-y-auto space-y-1">
@@ -913,7 +913,7 @@ export default function DashboardClient() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-slate-800 transition-colors group-hover/item:text-blue-600">{tool.title}</p>
-                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-slate-500 line-clamp-2">{tool.description}</p>
+                      <p className="mt-0.5 text-micro font-medium leading-4 text-slate-500 line-clamp-2">{tool.description}</p>
                     </div>
                   </Link>
                 ))
@@ -941,7 +941,7 @@ export default function DashboardClient() {
                   </div>
                   <div className="flex-1">
                     <p className="text-xs sm:text-sm font-semibold text-red-700">Could not load stats</p>
-                    <p className="text-[10px] sm:text-xs text-red-500 mt-1">Refresh to try again</p>
+                    <p className="text-micro sm:text-xs text-red-500 mt-1">Refresh to try again</p>
                   </div>
                 </div>
               ))}
@@ -1090,7 +1090,7 @@ function StatsErrorCard() {
       </div>
       <div className="flex-1">
         <p className="text-xs font-semibold text-red-700 sm:text-sm">Could not load stats</p>
-        <p className="mt-1 text-[10px] text-red-500 sm:text-xs">Refresh to try again</p>
+        <p className="mt-1 text-micro text-red-500 sm:text-xs">Refresh to try again</p>
       </div>
     </div>
   );
@@ -1150,18 +1150,18 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
       <div className="min-w-0 flex-1">
         {showOnlyLabel ? (
           <>
-            <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">
+            <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">
               {label}
             </p>
             {desc && (
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">
                 {desc}
               </p>
             )}
           </>
         ) : (
           <>
-            <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-[15.5px] transition-colors group-hover/card:text-blue-600">{label}</p>
+            <p className="text-sm font-bold leading-snug text-slate-900 sm:text-sm transition-colors group-hover/card:text-blue-600">{label}</p>
             {isLoading ? (
               <>
                 <div className="h-7 w-12 rounded-lg bg-slate-200/80 animate-pulse my-1.5" />
@@ -1172,7 +1172,7 @@ function StatCard({ label, value, sub, numericValue, icon: Icon, tone, href, hov
                 <p className="mt-1.5 text-2xl font-extrabold leading-none text-slate-950 sm:text-3xl">
                   <CountUpNumber value={numericValue} />
                 </p>
-                <p className="mt-1 text-[11px] font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
+                <p className="mt-1 text-micro font-medium leading-snug text-slate-600 sm:text-xs">{sub}</p>
               </>
             )}
           </>

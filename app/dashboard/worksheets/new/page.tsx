@@ -633,16 +633,16 @@ export default function NewWorksheetPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#159565] shadow-sm">
                 <Sparkles className="h-4 w-4" /> Printable practice
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Create Worksheet</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Create Worksheet</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate clean A4 worksheets from selected textbook chapters with only the question types you choose.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#d8f1e5] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#22c977] to-[#079765] text-[10px] font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#22c977] to-[#079765] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Worksheet</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Worksheet</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Choose question types, difficulty balance, and additional sections to include.</p>
             </div>
           )}

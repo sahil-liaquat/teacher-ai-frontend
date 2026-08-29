@@ -118,7 +118,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
       >
         <Bell className="h-[23px] w-[23px] fill-none" strokeWidth={2.8} />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-red-600 px-1 text-[10px] font-black leading-none text-white shadow-sm">
+          <span className="absolute -right-0.5 -top-0.5 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-red-600 px-1 text-micro font-black leading-none text-white shadow-sm">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -135,7 +135,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
           <header className="flex items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-blue-50/80 to-white px-4 py-3.5">
             <div>
               <h2 className="text-sm font-black text-slate-900">Notifications</h2>
-              <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
+              <p className="mt-0.5 text-micro font-semibold text-slate-500">
                 {unreadCount ? `${unreadCount} unread` : "You're all caught up"}
               </p>
             </div>
@@ -145,7 +145,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                   type="button"
                   disabled={markAll.isPending}
                   onClick={() => markAll.mutate()}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-micro font-bold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
                 >
                   <CheckCheck className="h-3.5 w-3.5" /> Mark read
                 </button>
@@ -155,7 +155,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                   type="button"
                   disabled={clearAll.isPending}
                   onClick={() => clearAll.mutate()}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-micro font-bold text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Clear all
                 </button>
@@ -200,7 +200,7 @@ export function NotificationCenter({ mobile = false }: { mobile?: boolean }) {
                     <div className="flex items-start justify-between gap-3">
                       <h3 className={cn("text-sm text-slate-900", item.is_read ? "font-bold" : "font-black")}>{item.title}</h3>
                       <div className="flex shrink-0 items-center gap-1">
-                        <time className="text-[10px] font-semibold text-slate-400" dateTime={item.created_at}>{relativeTime(item.created_at)}</time>
+                        <time className="text-micro font-semibold text-slate-400" dateTime={item.created_at}>{relativeTime(item.created_at)}</time>
                         <button
                           type="button"
                           aria-label={`Clear ${item.title}`}

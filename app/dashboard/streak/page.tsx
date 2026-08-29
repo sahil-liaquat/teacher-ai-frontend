@@ -114,8 +114,8 @@ export default function TeachingJourneyPage() {
     <div className="relative mx-auto w-full min-w-0 max-w-[1180px] space-y-4 px-0 py-3 min-[390px]:px-1 sm:space-y-6 sm:px-4 sm:py-7">
       <header className="reveal-card relative min-h-[190px] overflow-hidden rounded-[22px] border border-[#d9e5f3] bg-[linear-gradient(120deg,#ffffff_0%,#ffffff_58%,#f0f7ff_100%)] px-4 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.07)] min-[390px]:px-5 sm:min-h-[224px] sm:rounded-[28px] sm:px-8 sm:py-6 lg:px-10">
         <div className="relative z-10 flex min-h-[148px] flex-col justify-center sm:min-h-[160px] lg:pr-[310px]">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#f45f98]">Teaching streak</p>
-          <h1 className="mt-2 text-[30px] font-black leading-[1.08] tracking-tight text-[#071b49] min-[390px]:text-[34px] sm:text-[44px]"><span className="block">Your Teaching</span><span className="text-[#126de8]">Journey</span></h1>
+          <p className="text-micro font-black uppercase tracking-[0.2em] text-[#f45f98]">Teaching streak</p>
+          <h1 className="mt-2 text-h2 font-black leading-[1.08] tracking-tight text-[#071b49] min-[390px]:text-h1 sm:text-display"><span className="block">Your Teaching</span><span className="text-[#126de8]">Journey</span></h1>
           <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-[#6d6f78] min-[390px]:text-sm sm:mt-3 sm:leading-6">Small teaching habits. Meaningful recognition.</p>
           <div className="mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-[#ffd7be] bg-[#fff7ed] px-3 py-1.5 text-xs font-black text-[#c55b20] shadow-[0_8px_20px_rgba(245,158,11,0.12)] min-[390px]:px-4 min-[390px]:py-2 min-[390px]:text-sm sm:mt-4">
             <span className="grid h-6 w-6 place-items-center rounded-full bg-white shadow-sm" aria-hidden="true">🔥</span>{summary.data.current_streak > 0 ? `${summary.data.current_streak}-day streak` : "Start your streak"}
@@ -168,7 +168,7 @@ export default function TeachingJourneyPage() {
           <h2 className="text-lg font-black text-[#071b49]">Rewards roadmap</h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">Each milestone unlocks once. Badges are available instantly.</p>
           </div>
-          <p className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-[#9ca0aa] sm:block lg:hidden">Swipe to explore</p>
+          <p className="hidden text-micro font-bold uppercase tracking-[0.14em] text-[#9ca0aa] sm:block lg:hidden">Swipe to explore</p>
         </div>
         <div className="-mx-3 mt-4 overflow-x-auto overscroll-x-contain px-3 pb-2 [scrollbar-width:thin] min-[390px]:-mx-4 min-[390px]:px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:overflow-visible lg:px-0">
           <div className="grid grid-flow-col auto-cols-[minmax(240px,320px)] gap-3 lg:grid-flow-row lg:auto-cols-auto lg:grid-cols-4 lg:gap-4">
@@ -187,13 +187,13 @@ export default function TeachingJourneyPage() {
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => changeCalendarMonth(-1)} disabled={month.isFetching} aria-label="Previous month" className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
-            <span className="w-fit shrink-0 rounded-full bg-[#eef6ff] px-3 py-1 text-[10px] font-bold text-[#126de8] ring-1 ring-[#dbeafe] min-[390px]:text-xs">{month.data.days.length} teaching days</span>
+            <span className="w-fit shrink-0 rounded-full bg-[#eef6ff] px-3 py-1 text-micro font-bold text-[#126de8] ring-1 ring-[#dbeafe] min-[390px]:text-xs">{month.data.days.length} teaching days</span>
             <button type="button" onClick={() => changeCalendarMonth(1)} disabled={month.isFetching} aria-label="Next month" className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </div>
         <MonthCalendar data={month.data} selectedDate={selectedDate} onSelect={setSelectedDate} />
-        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold text-slate-500">
-          <span className="inline-flex items-center gap-1.5"><span className="inline-flex rounded-full bg-orange-100 px-1 py-0.5 text-[8px] ring-1 ring-orange-200" aria-hidden="true">🔥1</span>Active streak day</span><span className="inline-flex items-center gap-1.5"><CalendarRewardBadge milestone={3} compact projected />Projected reward date</span><Legend color="bg-emerald-500" label="Completed" /><Legend color="bg-orange-200 ring-2 ring-orange-100" label="Today pending" /><Legend color="bg-slate-200" label="Missed" />
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-micro font-semibold text-slate-500">
+          <span className="inline-flex items-center gap-1.5"><span className="inline-flex rounded-full bg-orange-100 px-1 py-0.5 text-micro ring-1 ring-orange-200" aria-hidden="true">🔥1</span>Active streak day</span><span className="inline-flex items-center gap-1.5"><CalendarRewardBadge milestone={3} compact projected />Projected reward date</span><Legend color="bg-emerald-500" label="Completed" /><Legend color="bg-orange-200 ring-2 ring-orange-100" label="Today pending" /><Legend color="bg-slate-200" label="Missed" />
         </div>
         {selected && (
           <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4" aria-live="polite">
@@ -229,7 +229,7 @@ function SummaryCard({ label, value, icon: Icon, tone }: { label: string; value:
     green: { card: "from-[#ecfff6] via-[#f3fffa] to-white", icon: "bg-white text-[#24b77a] ring-emerald-100 shadow-[0_12px_24px_rgba(36,183,122,0.17)]" },
     violet: { card: "from-[#f4f0ff] via-[#faf8ff] to-white", icon: "bg-white text-[#8b5cf6] ring-violet-100 shadow-[0_12px_24px_rgba(139,92,246,0.16)]" },
   };
-  return <div className={cn("min-w-0 rounded-[16px] border border-white/70 bg-gradient-to-br p-3 shadow-[0_14px_34px_rgba(15,23,42,0.06)] min-[390px]:rounded-[20px] min-[390px]:p-4", styles[tone].card)}><div className={cn("grid h-9 w-9 place-items-center rounded-[13px] ring-1 min-[390px]:h-11 min-[390px]:w-11 min-[390px]:rounded-[15px]", styles[tone].icon)}><Icon className="h-4 w-4 min-[390px]:h-5 min-[390px]:w-5" /></div><p className="mt-3 text-[10px] font-bold leading-4 text-[#7b7e89] min-[390px]:mt-4 min-[390px]:text-xs">{label}</p><p className="mt-0.5 break-words text-base font-black leading-5 tracking-tight text-[#071b49] min-[390px]:mt-1 min-[390px]:text-xl min-[390px]:leading-6">{value}</p></div>;
+  return <div className={cn("min-w-0 rounded-[16px] border border-white/70 bg-gradient-to-br p-3 shadow-[0_14px_34px_rgba(15,23,42,0.06)] min-[390px]:rounded-[20px] min-[390px]:p-4", styles[tone].card)}><div className={cn("grid h-9 w-9 place-items-center rounded-[13px] ring-1 min-[390px]:h-11 min-[390px]:w-11 min-[390px]:rounded-[15px]", styles[tone].icon)}><Icon className="h-4 w-4 min-[390px]:h-5 min-[390px]:w-5" /></div><p className="mt-3 text-micro font-bold leading-4 text-[#7b7e89] min-[390px]:mt-4 min-[390px]:text-xs">{label}</p><p className="mt-0.5 break-words text-base font-black leading-5 tracking-tight text-[#071b49] min-[390px]:mt-1 min-[390px]:text-xl min-[390px]:leading-6">{value}</p></div>;
 }
 
 function MonthCalendar({ data, selectedDate, onSelect }: { data: StreakMonth; selectedDate: string | null; onSelect: (date: string) => void }) {
@@ -240,7 +240,7 @@ function MonthCalendar({ data, selectedDate, onSelect }: { data: StreakMonth; se
   const cells = Array.from({ length: firstWeekday + totalDays }, (_, index) => index < firstWeekday ? null : index - firstWeekday + 1);
   return (
     <div className="mt-5">
-      <div className="grid grid-cols-7 gap-0.5 text-center text-[8px] font-black uppercase tracking-wide text-slate-400 min-[390px]:gap-1 min-[390px]:text-[10px] min-[390px]:tracking-wider">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="grid grid-cols-7 gap-0.5 text-center text-micro font-black uppercase tracking-wide text-slate-400 min-[390px]:gap-1 min-[390px]:text-micro min-[390px]:tracking-wider">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <span key={day}>{day}</span>)}</div>
       <div className="mt-2 grid grid-cols-7 gap-0.5 min-[390px]:gap-1 sm:gap-1.5">
         {cells.map((day, index) => {
           if (day == null) return <span key={`blank-${index}`} className="aspect-square" />;
@@ -262,7 +262,7 @@ function MonthCalendar({ data, selectedDate, onSelect }: { data: StreakMonth; se
               disabled={!record}
               aria-label={`${formatDate(dateValue)}${record ? `, ${record.resource_count} resources generated${streakDay ? `, day ${streakDay} of your current active streak` : ""}${record.reward_milestone && milestone ? `, ${milestone.label} milestone reached for a ${record.reward_milestone}-day streak` : ""}` : isToday ? ", today pending" : isFuture ? ", future" : ", no teaching activity"}${isProjected && milestone ? `, ${milestone.label} projected if your streak continues` : ""}`}
               className={cn(
-                "relative aspect-square min-w-0 overflow-visible rounded-[8px] border text-[10px] font-bold transition focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff] min-[390px]:rounded-[10px] min-[390px]:text-xs sm:rounded-[13px]",
+                "relative aspect-square min-w-0 overflow-visible rounded-[8px] border text-micro font-bold transition focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff] min-[390px]:rounded-[10px] min-[390px]:text-xs sm:rounded-[13px]",
                 record && "cursor-pointer border-[#b8ebdf] bg-[#ecfff6] text-[#147a57] hover:bg-[#dcfaef]",
                 streakDay && "border-[#f3c788] bg-gradient-to-br from-[#fffaf0] via-[#ecfff6] to-white ring-2 ring-[#fff1d6]",
                 milestone && "border-[#cbbaf8] bg-gradient-to-br from-[#f7f3ff] to-white text-[#7652d6] ring-2 ring-[#eee8ff]",
@@ -275,7 +275,7 @@ function MonthCalendar({ data, selectedDate, onSelect }: { data: StreakMonth; se
             >
               <span className={cn((streakDay || milestone) && "absolute left-1 top-0.5 min-[390px]:left-1.5 min-[390px]:top-1")}>{day}</span>
               {streakDay && (
-                <span className="absolute right-0.5 top-0.5 inline-flex items-center gap-0.5 rounded-full border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-100 px-1 py-0.5 text-[7px] font-black leading-none text-orange-700 shadow-sm min-[390px]:right-1 min-[390px]:top-1 min-[390px]:text-[8px] sm:right-1.5 sm:top-1.5 sm:px-1.5 sm:py-1 sm:text-[10px]" aria-hidden="true">
+                <span className="absolute right-0.5 top-0.5 inline-flex items-center gap-0.5 rounded-full border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-100 px-1 py-0.5 text-micro font-black leading-none text-orange-700 shadow-sm min-[390px]:right-1 min-[390px]:top-1 min-[390px]:text-micro sm:right-1.5 sm:top-1.5 sm:px-1.5 sm:py-1 sm:text-micro" aria-hidden="true">
                   <span>🔥</span><span className="hidden sm:inline">Day</span><span>{streakDay}</span>
                 </span>
               )}
@@ -323,7 +323,7 @@ function RewardRoadmapItem({ reward, last, onOpenCertificate, onShare, onRecogni
   return (
     <div className="relative flex min-w-0 flex-col">
       <div className="flex items-center px-1">
-        <span className={cn("relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full border text-[10px] font-black shadow-sm min-[390px]:h-9 min-[390px]:w-9 min-[390px]:text-xs", tones.node, reward.status === "claimed" && "border-[#24b77a] bg-[#24b77a] text-white", reward.status === "unlocked" && "ring-4 ring-white", reward.status === "in_progress" && "border-[#126de8] bg-[#eef6ff] text-[#126de8]")}>
+        <span className={cn("relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full border text-micro font-black shadow-sm min-[390px]:h-9 min-[390px]:w-9 min-[390px]:text-xs", tones.node, reward.status === "claimed" && "border-[#24b77a] bg-[#24b77a] text-white", reward.status === "unlocked" && "ring-4 ring-white", reward.status === "in_progress" && "border-[#126de8] bg-[#eef6ff] text-[#126de8]")}>
           {reward.status === "claimed" ? <Check className="h-4 w-4" /> : reward.milestone_days}
         </span>
         {!last && <span className={cn("ml-2 h-px flex-1", tones.line)} />}
@@ -333,7 +333,7 @@ function RewardRoadmapItem({ reward, last, onOpenCertificate, onShare, onRecogni
           <p className="text-xs font-black text-[#071b49] min-[390px]:text-sm">{reward.milestone_days} teaching days</p>
           <StatusLabel reward={reward} />
         </div>
-        <p className="mt-1 min-h-8 break-words text-[11px] font-semibold leading-4 text-[#6d6f78] min-[390px]:text-xs">{reward.reward_label}</p>
+        <p className="mt-1 min-h-8 break-words text-micro font-semibold leading-4 text-[#6d6f78] min-[390px]:text-xs">{reward.reward_label}</p>
         <RewardArtwork tier={reward.badge_tier} muted={reward.status === "locked" || reward.status === "expired"} className="mt-3 !aspect-auto !h-28 min-[390px]:!h-32" />
         {(reward.status === "unlocked" || reward.status === "claimed") && <div className="mt-3 flex flex-col gap-2">{reward.has_certificate ? <button type="button" onClick={onOpenCertificate} disabled={busy} className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#1677ff] to-[#0969e8] px-3 text-xs font-bold text-white shadow-[0_8px_16px_rgba(22,119,255,0.18)] hover:-translate-y-0.5 disabled:opacity-60"><Eye className="h-3.5 w-3.5" />View certificate</button> : <button type="button" onClick={onShare} className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#1677ff] to-[#0969e8] px-3 text-xs font-bold text-white shadow-[0_8px_16px_rgba(22,119,255,0.18)] hover:-translate-y-0.5"><Share2 className="h-3.5 w-3.5" />Share card</button>}{reward.recognition_eligible && <button type="button" onClick={onRecognition} className="inline-flex h-9 w-full items-center justify-center rounded-[10px] border border-[#d9cbff] bg-white px-3 text-xs font-bold text-[#7652d6] hover:bg-[#f4f0ff]">{reward.recognition_consent ? "Feature approved" : "Review recognition"}</button>}</div>}
       </div>
@@ -346,7 +346,7 @@ function RecognitionConsentModal({ loading, data, onClose, onDecision, busy }: {
     <div className="fixed inset-0 z-[105] flex items-center justify-center bg-[#071b49]/55 p-2 backdrop-blur-sm min-[390px]:p-4" role="dialog" aria-modal="true" aria-labelledby="recognition-title">
       <div className="max-h-[calc(100dvh-1rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[20px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(7,27,73,0.24)] min-[390px]:max-h-[calc(100dvh-2rem)] min-[390px]:rounded-[26px]">
         <div className="relative border-b border-[#dbeafe] bg-gradient-to-br from-[#eff6ff] via-white to-[#f4f0ff] p-4 min-[390px]:p-5 sm:p-6">
-          <div className="pr-12"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f45f98]">Privacy review</p><h2 id="recognition-title" className="mt-2 text-xl font-black leading-7 text-[#071b49]">Would you like to be featured on the TeachPad Teachers page?</h2></div>
+          <div className="pr-12"><p className="text-micro font-black uppercase tracking-[0.18em] text-[#f45f98]">Privacy review</p><h2 id="recognition-title" className="mt-2 text-xl font-black leading-7 text-[#071b49]">Would you like to be featured on the TeachPad Teachers page?</h2></div>
           <button type="button" onClick={onClose} aria-label="Close" className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-white/90 text-[#6d6f78] shadow-sm ring-1 ring-white hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
         <div className="p-4 min-[390px]:p-5 sm:p-6">
@@ -361,7 +361,7 @@ function RecognitionConsentModal({ loading, data, onClose, onDecision, busy }: {
 function StatusLabel({ reward }: { reward: StreakReward }) {
   const recognitionReady = reward.recognition_eligible && (reward.status === "unlocked" || reward.status === "claimed") && reward.recognition_consent !== true;
   const copy = recognitionReady ? "Eligible for recognition" : reward.recognition_consent === true ? "Approved" : reward.status === "claimed" ? "Claimed" : reward.status === "unlocked" ? "Unlocked" : reward.status === "in_progress" ? `${reward.days_remaining} days left` : reward.status === "expired" ? "Expired" : "Locked";
-  return <span className={cn("max-w-full shrink-0 whitespace-normal rounded-full px-2 py-1 text-left text-[9px] font-black leading-3 ring-1 ring-white min-[390px]:text-[10px]", reward.status === "claimed" && "bg-[#dcfaef] text-[#147a57]", reward.status === "unlocked" && "bg-[#fff1d6] text-[#a95f1d]", reward.status === "in_progress" && "bg-[#e3f0ff] text-[#126de8]", (reward.status === "locked" || reward.status === "expired") && "bg-[#edf0f5] text-[#7b7e89]")}>{copy}</span>;
+  return <span className={cn("max-w-full shrink-0 whitespace-normal rounded-full px-2 py-1 text-left text-micro font-black leading-3 ring-1 ring-white min-[390px]:text-micro", reward.status === "claimed" && "bg-[#dcfaef] text-[#147a57]", reward.status === "unlocked" && "bg-[#fff1d6] text-[#a95f1d]", reward.status === "in_progress" && "bg-[#e3f0ff] text-[#126de8]", (reward.status === "locked" || reward.status === "expired") && "bg-[#edf0f5] text-[#7b7e89]")}>{copy}</span>;
 }
 
 function Legend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className={cn("h-2.5 w-2.5 rounded-full", color)} />{label}</span>; }

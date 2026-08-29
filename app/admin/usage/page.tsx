@@ -265,7 +265,7 @@ function Flag({ on, labelOn, labelOff, children }: { on: boolean; labelOn: strin
     <span
       title={on ? labelOn : labelOff}
       className={cn(
-        "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold",
+        "grid h-5 w-5 place-items-center rounded-full text-micro font-bold",
         on ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200" : "bg-rose-50 text-rose-500 ring-1 ring-rose-200"
       )}
     >

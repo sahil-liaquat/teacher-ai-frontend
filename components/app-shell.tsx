@@ -221,7 +221,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
                 rel="noopener noreferrer"
                 aria-label="Join the TeachPad WhatsApp community"
                 onClick={() => setMobileOpen(false)}
-                className="mt-4 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-bold text-teachpad-muted transition-all hover:bg-emerald-50 hover:text-emerald-700 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]"
+                className="mt-4 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-bold text-teachpad-muted transition-all hover:bg-emerald-50 hover:text-emerald-700 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm"
               >
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
                   <WhatsAppIcon className="h-5 w-5" />
@@ -230,7 +230,7 @@ export function AppShell({ children, admin = false, role }: { children: ReactNod
               </a>
             )}
 
-            <button onClick={logout} className="mt-2 flex h-12 w-full shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]">
+            <button onClick={logout} className="mt-2 flex h-12 w-full shrink-0 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8"><LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" /></span>
               Logout
             </button>
@@ -444,7 +444,7 @@ function MobileNavItem({ item, active, onClick }: { item: NavItem; active: boole
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]",
+        "flex h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold transition-all duration-200 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm",
         active
           ? "bg-gradient-to-r from-blue-50 to-white text-teachpad-blue"
           : "text-teachpad-muted hover:bg-teachpad-tag hover:text-teachpad-ink"
@@ -521,7 +521,7 @@ function MobileBottomNav({ nav, activePath }: { nav: NavItem[]; activePath: stri
             <Sparkles className="h-6 w-6 text-white" />
           </div>
           <span className={cn(
-            "text-[10px] font-semibold transition-colors duration-200",
+            "text-micro font-semibold transition-colors duration-200",
             isActive(centerItem.href, activePath) ? "text-gray-900" : "text-gray-500"
           )}>
             AI Tools
@@ -553,7 +553,7 @@ function TabBarItem({ item, active }: { item: NavItem; active: boolean }) {
         )} />
       </span>
       <span className={cn(
-        "text-[10px] font-semibold transition-colors duration-200 truncate max-w-full",
+        "text-micro font-semibold transition-colors duration-200 truncate max-w-full",
         active ? "text-gray-900" : "text-gray-500"
       )}>
         {item.label}
@@ -606,7 +606,7 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Join the TeachPad WhatsApp community"
-              className="mt-2 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-3 text-sm font-bold text-teachpad-muted transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 [@media(min-height:940px)]:hidden [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-[13px]"
+              className="mt-2 flex h-12 shrink-0 items-center gap-3 rounded-2xl px-3 text-sm font-bold text-teachpad-muted transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 [@media(min-height:940px)]:hidden [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-sm"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#20bd63] [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
                 <WhatsAppIcon className="h-5 w-5" />
@@ -620,7 +620,7 @@ function ExpandedSidebar({ nav, activePath, onNavigate, onLogout, homeHref, show
       <div className="relative z-10 border-t border-teachpad-cardBorder pt-4 [@media(max-height:680px)]:pt-2">
         <button
           onClick={logout}
-          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-[13px]"
+          className="flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[#eb3b5a] transition-all duration-300 hover:bg-teachpad-red [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:px-3 [@media(max-height:680px)]:text-sm"
         >
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 [@media(max-height:680px)]:h-8 [@media(max-height:680px)]:w-8">
             <LogOut className="h-5 w-5 [@media(max-height:680px)]:h-4 [@media(max-height:680px)]:w-4" />
@@ -650,7 +650,7 @@ function WhatsAppCommunityCard() {
         <span className="absolute left-[72px] top-[76px] h-2.5 w-2.5 rotate-45 rounded-[2px] bg-amber-200" aria-hidden="true" />
         <span className="absolute right-3 top-6 h-2 w-2 rotate-45 rounded-[2px] bg-fuchsia-200" aria-hidden="true" />
 
-        <div className="absolute left-3 top-4 z-10 max-w-[90px] rounded-[14px] border border-white bg-white/95 px-2.5 py-2 text-[10.5px] font-extrabold leading-[1.2] tracking-[-0.01em] text-[#12346b] shadow-[0_6px_16px_rgba(22,119,255,0.10)]">
+        <div className="absolute left-3 top-4 z-10 max-w-[90px] rounded-[14px] border border-white bg-white/95 px-2.5 py-2 text-micro font-extrabold leading-[1.2] tracking-[-0.01em] text-[#12346b] shadow-[0_6px_16px_rgba(22,119,255,0.10)]">
           Let&apos;s grow together
           <span className="absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 border-b border-r border-white bg-white" aria-hidden="true" />
         </div>
@@ -663,13 +663,13 @@ function WhatsAppCommunityCard() {
       </div>
 
       <div className="relative z-10 border-t border-blue-100/70 bg-white px-3 pb-3 pt-3 text-center">
-        <h2 className="text-[15px] font-extrabold leading-tight tracking-[-0.025em] text-[#12346b]">Join WhatsApp</h2>
+        <h2 className="text-sm font-extrabold leading-tight tracking-[-0.025em] text-[#12346b]">Join WhatsApp</h2>
         <a
           href="https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Join the TeachPad WhatsApp community"
-          className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#22c767] to-[#19b958] text-[13px] font-extrabold text-white shadow-[0_7px_16px_rgba(37,211,102,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_10px_20px_rgba(37,211,102,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
+          className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#22c767] to-[#19b958] text-sm font-extrabold text-white shadow-[0_7px_16px_rgba(37,211,102,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_10px_20px_rgba(37,211,102,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:ring-offset-2"
         >
           <WhatsAppIcon className="h-[18px] w-[18px]" />
           Join Now
@@ -703,7 +703,7 @@ function ExpandedSidebarNavItem({ item, active, onClick }: { item: NavItem; acti
       href={item.href}
       onClick={onClick}
       className={cn(
-        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02] [@media(max-height:760px)]:h-10 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-[13px]",
+        "flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition-all duration-300 hover:scale-[1.02] [@media(max-height:760px)]:h-10 [@media(max-height:680px)]:h-9 [@media(max-height:680px)]:text-sm",
         active
           ? "bg-gradient-to-r from-blue-50/50 to-white text-teachpad-blue border border-teachpad-cardBorder/30 shadow-sm"
           : "text-teachpad-muted hover:bg-slate-50 hover:text-teachpad-ink"

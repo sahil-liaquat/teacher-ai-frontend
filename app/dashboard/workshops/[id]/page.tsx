@@ -298,7 +298,7 @@ export default function WorkshopDetailPage() {
                         <div className="flex flex-wrap items-baseline gap-2">
                           <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{host.full_name}</h4>
                           {host.years_of_experience && (
-                            <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold">
+                            <span className="text-micro bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold">
                               {host.years_of_experience}+ yrs exp
                             </span>
                           )}
@@ -355,7 +355,7 @@ export default function WorkshopDetailPage() {
 
                   {isOnline && workshop.meeting_link && (
                     <div className="space-y-2 border-t pt-4">
-                      <label className="text-[10px] uppercase font-bold text-slate-400">Meeting Link</label>
+                      <label className="text-micro uppercase font-bold text-slate-400">Meeting Link</label>
                       <a
                         href={workshop.meeting_link}
                         target="_blank"
@@ -369,7 +369,7 @@ export default function WorkshopDetailPage() {
 
                   {isOffline && workshop.venue_details && (
                     <div className="space-y-1.5 border-t pt-4 text-xs">
-                      <label className="text-[10px] uppercase font-bold text-slate-400">Venue Location</label>
+                      <label className="text-micro uppercase font-bold text-slate-400">Venue Location</label>
                       <div className="flex items-start gap-2 text-slate-700 mt-1">
                         <MapPin className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                         <span className="font-semibold">{workshop.venue_details}</span>
@@ -381,7 +381,7 @@ export default function WorkshopDetailPage() {
                     const whatsappGroupLink = workshop.whatsapp_group_link || "https://chat.whatsapp.com/CSZrJFz6sMpJuSmAB87tq7?s=sw&p=i&ilr=1&amv=0";
                     return (
                       <div className="space-y-2 border-t pt-4">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">WhatsApp Group</label>
+                        <label className="text-micro uppercase font-bold text-slate-400">WhatsApp Group</label>
                         <a
                           href={whatsappGroupLink}
                           target="_blank"

@@ -936,7 +936,7 @@ export default function AdminWorkshopsAndHostsPage() {
               <div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Banner Image</label>
-                  <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
+                  <p className="mt-1 text-micro leading-relaxed text-gray-400">
                     Recommended: 1600 × 900 px (16:9). This single banner is used on the landing page and throughout the Growth Hub.
                   </p>
                   <div className="flex items-center gap-3 mt-1.5">
@@ -967,7 +967,7 @@ export default function AdminWorkshopsAndHostsPage() {
                   </button>
                 </div>
                 {editingWorkshop ? (
-                  <p className="mt-1 text-[11px] text-gray-400">Selected hosts show Edit and Delete actions below.</p>
+                  <p className="mt-1 text-micro text-gray-400">Selected hosts show Edit and Delete actions below.</p>
                 ) : null}
                 {hostsQuery.isLoading && !workshopHostOptions.length ? <p className="text-xs text-gray-500 mt-2">Loading hosts...</p> : null}
                 {workshopHostOptions.length ? (
@@ -1009,7 +1009,7 @@ export default function AdminWorkshopsAndHostsPage() {
                               <button
                                 type="button"
                                 onClick={() => openEditHost(host)}
-                                className="inline-flex h-7 items-center gap-1 rounded-md border border-blue-200 bg-white px-2 text-[10px] font-bold text-teachpad-blue transition-colors hover:bg-blue-50"
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-blue-200 bg-white px-2 text-micro font-bold text-teachpad-blue transition-colors hover:bg-blue-50"
                                 title={`Edit ${host.full_name}`}
                                 aria-label={`Edit host ${host.full_name}`}
                               >
@@ -1019,7 +1019,7 @@ export default function AdminWorkshopsAndHostsPage() {
                               <button
                                 type="button"
                                 onClick={() => setIsDeletingHost(host)}
-                                className="inline-flex h-7 items-center gap-1 rounded-md border border-red-200 bg-white px-2 text-[10px] font-bold text-red-600 transition-colors hover:bg-red-50"
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-red-200 bg-white px-2 text-micro font-bold text-red-600 transition-colors hover:bg-red-50"
                                 title={`Delete ${host.full_name}`}
                                 aria-label={`Delete host ${host.full_name}`}
                               >

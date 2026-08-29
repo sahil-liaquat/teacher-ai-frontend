@@ -418,12 +418,12 @@ export function LessonPlanChatbotPanel({
         <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-white/70 bg-white/55 px-5 py-4 backdrop-blur-xl">
           <ElifAvatar />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2"><h2 className="text-[15px] font-extrabold tracking-tight text-slate-900">Elif</h2><span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/90 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />Context ready</span></div>
-            <p className="mt-0.5 text-[10.5px] font-semibold text-slate-500">Your AI teaching assistant</p>
+            <div className="flex items-center gap-2"><h2 className="text-sm font-extrabold tracking-tight text-slate-900">Elif</h2><span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/90 px-2 py-0.5 text-micro font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />Context ready</span></div>
+            <p className="mt-0.5 text-micro font-semibold text-slate-500">Your AI teaching assistant</p>
           </div>
           <div className="flex items-center gap-1 rounded-xl border border-white/80 bg-white/45 p-1 shadow-sm">
             {panelView === "review" ? (
-              <button type="button" onClick={returnToResourceHub} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[9px] font-extrabold text-slate-500 transition hover:bg-white hover:text-violet-600 hover:shadow-sm" aria-label="Back to lesson resources">
+              <button type="button" onClick={returnToResourceHub} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-micro font-extrabold text-slate-500 transition hover:bg-white hover:text-violet-600 hover:shadow-sm" aria-label="Back to lesson resources">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span className="hidden min-[390px]:inline">Back</span>
               </button>
@@ -448,7 +448,7 @@ export function LessonPlanChatbotPanel({
           <>
           {analysisLoading ? <ReviewLoading /> : null}
           {analysisError ? (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-[20px] border border-red-100 bg-white/80 p-4 text-[11px] text-red-700 shadow-[0_10px_28px_rgba(239,68,68,0.08)] backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-[20px] border border-red-100 bg-white/80 p-4 text-micro text-red-700 shadow-[0_10px_28px_rgba(239,68,68,0.08)] backdrop-blur-md">
               <p className="font-bold">{analysisError}</p>
               <button type="button" onClick={() => void loadAnalysis(true)} className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 font-extrabold text-red-600 transition hover:bg-red-100"><RefreshCw className="h-3.5 w-3.5" /> Try again</button>
             </motion.div>
@@ -459,21 +459,21 @@ export function LessonPlanChatbotPanel({
               <section className="relative overflow-hidden rounded-[22px] border border-white/90 bg-white/75 p-4 shadow-[0_12px_35px_rgba(37,99,235,0.08)] backdrop-blur-md">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br from-blue-100/90 to-violet-100/80 blur-2xl" />
                 <div className="flex items-start justify-between gap-3">
-                  <div className="relative"><p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-blue-500">Overall review</p><p className="mt-1.5 text-[11.5px] font-medium leading-[1.7] text-slate-600">{analysis.overall_summary}</p></div>
-                  <motion.span initial={{ rotate: -8, scale: 0.85 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", delay: 0.12 }} className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-violet-100 text-[13px] font-extrabold text-blue-700 shadow-inner" title="Prioritisation score, not an academic rating">{analysis.quality_score.overall}</motion.span>
+                  <div className="relative"><p className="text-micro font-extrabold uppercase tracking-[0.16em] text-blue-500">Overall review</p><p className="mt-1.5 text-micro font-medium leading-[1.7] text-slate-600">{analysis.overall_summary}</p></div>
+                  <motion.span initial={{ rotate: -8, scale: 0.85 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", delay: 0.12 }} className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-violet-100 text-sm font-extrabold text-blue-700 shadow-inner" title="Prioritisation score, not an academic rating">{analysis.quality_score.overall}</motion.span>
                 </div>
-                {analysis.cached ? <p className="mt-2 text-[9px] font-medium text-slate-400">Review reused because this lesson plan has not changed.</p> : null}
+                {analysis.cached ? <p className="mt-2 text-micro font-medium text-slate-400">Review reused because this lesson plan has not changed.</p> : null}
               </section>
 
               {analysis.strengths.length ? (
                 <section>
-                  <h3 className="mb-2.5 flex items-center gap-2 px-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-emerald-600"><span className="grid h-7 w-7 place-items-center rounded-lg border border-emerald-100 bg-emerald-50"><ThumbsUp className="h-3.5 w-3.5" /></span> What is working <span className="h-px flex-1 bg-emerald-100/80" /></h3>
-                  <div className="space-y-2.5">{analysis.strengths.map((strength, index) => <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06 }} key={strength.title} className="rounded-[18px] border border-white/90 bg-white/65 p-3.5 shadow-[0_7px_22px_rgba(16,185,129,0.06)] backdrop-blur-sm"><p className="text-[11px] font-bold text-slate-800">{strength.title}</p><p className="mt-1 text-[9.5px] font-medium leading-[1.65] text-slate-500">{strength.evidence}</p></motion.div>)}</div>
+                  <h3 className="mb-2.5 flex items-center gap-2 px-1 text-micro font-extrabold uppercase tracking-[0.14em] text-emerald-600"><span className="grid h-7 w-7 place-items-center rounded-lg border border-emerald-100 bg-emerald-50"><ThumbsUp className="h-3.5 w-3.5" /></span> What is working <span className="h-px flex-1 bg-emerald-100/80" /></h3>
+                  <div className="space-y-2.5">{analysis.strengths.map((strength, index) => <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06 }} key={strength.title} className="rounded-[18px] border border-white/90 bg-white/65 p-3.5 shadow-[0_7px_22px_rgba(16,185,129,0.06)] backdrop-blur-sm"><p className="text-micro font-bold text-slate-800">{strength.title}</p><p className="mt-1 text-micro font-medium leading-[1.65] text-slate-500">{strength.evidence}</p></motion.div>)}</div>
                 </section>
               ) : null}
 
               <section>
-                <h3 className="mb-2.5 flex items-center gap-2 px-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-violet-600"><span className="grid h-7 w-7 place-items-center rounded-lg border border-violet-100 bg-violet-50"><Sparkles className="h-3.5 w-3.5" /></span> Important improvements <span className="h-px flex-1 bg-violet-100/80" /></h3>
+                <h3 className="mb-2.5 flex items-center gap-2 px-1 text-micro font-extrabold uppercase tracking-[0.14em] text-violet-600"><span className="grid h-7 w-7 place-items-center rounded-lg border border-violet-100 bg-violet-50"><Sparkles className="h-3.5 w-3.5" /></span> Important improvements <span className="h-px flex-1 bg-violet-100/80" /></h3>
                 <div className="space-y-3">
                   {visibleIssues.map((issue) => (
                     <IssueCard
@@ -494,8 +494,8 @@ export function LessonPlanChatbotPanel({
 
               {analysis.quick_actions.length ? (
                 <section>
-                  <h3 className="mb-2.5 px-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400">Quick actions for this plan</h3>
-                  <div className="flex flex-wrap gap-2">{analysis.quick_actions.map((action) => <motion.button whileHover={{ y: -2, scale: 1.015 }} whileTap={{ scale: 0.96 }} key={action.id} type="button" disabled={sending} onClick={() => void sendMessage(action.instruction)} className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-2 text-[9.5px] font-bold text-blue-600 shadow-[0_5px_15px_rgba(37,99,235,0.07)] backdrop-blur-sm transition-colors hover:border-blue-100 hover:bg-white"><ChevronRight className="h-3.5 w-3.5" />{action.label}</motion.button>)}</div>
+                  <h3 className="mb-2.5 px-1 text-micro font-extrabold uppercase tracking-[0.14em] text-slate-400">Quick actions for this plan</h3>
+                  <div className="flex flex-wrap gap-2">{analysis.quick_actions.map((action) => <motion.button whileHover={{ y: -2, scale: 1.015 }} whileTap={{ scale: 0.96 }} key={action.id} type="button" disabled={sending} onClick={() => void sendMessage(action.instruction)} className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-2 text-micro font-bold text-blue-600 shadow-[0_5px_15px_rgba(37,99,235,0.07)] backdrop-blur-sm transition-colors hover:border-blue-100 hover:bg-white"><ChevronRight className="h-3.5 w-3.5" />{action.label}</motion.button>)}</div>
                 </section>
               ) : null}
             </motion.div>
@@ -507,14 +507,14 @@ export function LessonPlanChatbotPanel({
           )}
         </div>
 
-        {panelView === "review" && lastRevision ? <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-t border-emerald-100/60 bg-emerald-50/70 px-4 py-2.5 text-[9.5px] text-emerald-800 backdrop-blur-xl"><span className="min-w-0 truncate font-semibold"><Check className="mr-1 inline h-3.5 w-3.5" />{lastRevision.summary}</span><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={busyId === "undo"} onClick={() => void undo()} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/90 bg-white/75 px-2.5 py-1.5 font-extrabold shadow-sm transition hover:bg-white"><RotateCcw className="h-3.5 w-3.5" /> Undo</motion.button></motion.div> : null}
+        {panelView === "review" && lastRevision ? <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-t border-emerald-100/60 bg-emerald-50/70 px-4 py-2.5 text-micro text-emerald-800 backdrop-blur-xl"><span className="min-w-0 truncate font-semibold"><Check className="mr-1 inline h-3.5 w-3.5" />{lastRevision.summary}</span><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={busyId === "undo"} onClick={() => void undo()} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/90 bg-white/75 px-2.5 py-1.5 font-extrabold shadow-sm transition hover:bg-white"><RotateCcw className="h-3.5 w-3.5" /> Undo</motion.button></motion.div> : null}
 
         {panelView === "review" ? <form onSubmit={submit} className="relative z-10 shrink-0 border-t border-white/70 bg-white/50 p-3.5 backdrop-blur-2xl">
           <div className="flex items-end gap-2 rounded-[18px] border border-white bg-white/80 p-2 shadow-[0_9px_28px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-300 focus-within:border-blue-200 focus-within:bg-white/95 focus-within:shadow-[0_12px_34px_rgba(37,99,235,0.13)]">
-            <textarea value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(input); } }} rows={1} maxLength={2000} placeholder="Ask Elif to improve this lesson plan…" className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-2.5 py-2 text-[10.5px] font-medium leading-5 text-slate-700 outline-none placeholder:text-slate-400" disabled={sending} />
+            <textarea value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(input); } }} rows={1} maxLength={2000} placeholder="Ask Elif to improve this lesson plan…" className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-2.5 py-2 text-micro font-medium leading-5 text-slate-700 outline-none placeholder:text-slate-400" disabled={sending} />
             <motion.button whileHover={{ y: -2, scale: 1.04 }} whileTap={{ y: 0, scale: 0.92 }} type="submit" disabled={!input.trim() || sending} className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 text-white shadow-[0_7px_18px_rgba(79,70,229,0.3)] transition-opacity disabled:opacity-40" aria-label="Send to Elif">{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</motion.button>
           </div>
-          <p className="mt-2 text-center text-[8px] font-medium tracking-wide text-slate-400">Elif uses this lesson plan and its original teaching inputs.</p>
+          <p className="mt-2 text-center text-micro font-medium tracking-wide text-slate-400">Elif uses this lesson plan and its original teaching inputs.</p>
         </form> : null}
       </motion.aside>
       )}
@@ -556,8 +556,8 @@ function ResourceHubHome({ lessonPlan, states, onGenerate, onCustomize, onOpen, 
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="text-[15px] font-extrabold tracking-tight text-slate-900">What would you like to do next?</h3>
-            <p className="mt-0.5 text-[9.5px] font-semibold leading-4 text-slate-500">Create more teaching resources from the same lesson plan, or customize each one to suit your class.</p>
+            <h3 className="text-sm font-extrabold tracking-tight text-slate-900">What would you like to do next?</h3>
+            <p className="mt-0.5 text-micro font-semibold leading-4 text-slate-500">Create more teaching resources from the same lesson plan, or customize each one to suit your class.</p>
           </div>
         </div>
       </div>
@@ -579,7 +579,7 @@ function ResourceHubHome({ lessonPlan, states, onGenerate, onCustomize, onOpen, 
       </div>
 
       <section className="mt-4 shrink-0 border-t border-white/80 pt-4">
-        <p className="px-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400">Need AI feedback?</p>
+        <p className="px-1 text-micro font-extrabold uppercase tracking-[0.14em] text-slate-400">Need AI feedback?</p>
         <motion.button
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
@@ -589,8 +589,8 @@ function ResourceHubHome({ lessonPlan, states, onGenerate, onCustomize, onOpen, 
         >
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-[0_6px_16px_rgba(79,70,229,0.25)]"><Sparkles className="h-4.5 w-4.5" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-extrabold text-slate-800">Review this Lesson Plan</span>
-            <span className="mt-0.5 block truncate text-[9px] font-semibold text-slate-500">{lessonPlan?.topic || "Get strengths and focused improvements"}</span>
+            <span className="block text-micro font-extrabold text-slate-800">Review this Lesson Plan</span>
+            <span className="mt-0.5 block truncate text-micro font-semibold text-slate-500">{lessonPlan?.topic || "Get strengths and focused improvements"}</span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-violet-500" />
         </motion.button>
@@ -636,23 +636,23 @@ function ResourceCard({ resource, Icon, tone, state, index, onGenerate, onCustom
       <div className="relative flex w-full flex-col gap-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:gap-3.5">
         <div className="flex min-w-0 w-full items-center gap-3.5 min-[480px]:flex-1">
           <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border shadow-sm", toneClasses)}><Icon className="h-[19px] w-[19px]" /></span>
-          <h4 className="min-w-0 flex-1 text-[11.5px] font-extrabold text-slate-800">{label}</h4>
+          <h4 className="min-w-0 flex-1 text-micro font-extrabold text-slate-800">{label}</h4>
         </div>
         {state.status === "idle" ? (
           <div className="grid w-full shrink-0 grid-cols-2 items-center gap-1.5 min-[480px]:flex min-[480px]:w-auto">
-            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onGenerate} className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-2 text-[8.5px] font-extrabold text-white shadow-[0_5px_14px_rgba(59,130,246,0.22)] min-[480px]:w-auto">Generate</motion.button>
-            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onCustomize} className="w-full rounded-xl border border-slate-100 bg-white px-3 py-2 text-[8.5px] font-extrabold text-slate-600 shadow-sm transition hover:border-blue-100 hover:text-blue-600 min-[480px]:w-auto">Customize</motion.button>
+            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onGenerate} className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-2 text-micro font-extrabold text-white shadow-[0_5px_14px_rgba(59,130,246,0.22)] min-[480px]:w-auto">Generate</motion.button>
+            <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onCustomize} className="w-full rounded-xl border border-slate-100 bg-white px-3 py-2 text-micro font-extrabold text-slate-600 shadow-sm transition hover:border-blue-100 hover:text-blue-600 min-[480px]:w-auto">Customize</motion.button>
           </div>
         ) : null}
         {state.status === "generating" ? (
-          <div role="status" aria-live="polite" className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2 text-center text-[8.5px] font-extrabold text-blue-700 min-[480px]:w-auto">
+          <div role="status" aria-live="polite" className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2 text-center text-micro font-extrabold text-blue-700 min-[480px]:w-auto">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating {label}...
           </div>
         ) : null}
         {state.status === "success" && state.generationId ? (
           <div role="status" aria-live="polite" className="flex w-full shrink-0 items-center justify-between gap-2 min-[480px]:w-auto min-[480px]:justify-start">
-            <span className="inline-flex items-center gap-1 text-[8.5px] font-extrabold text-emerald-600"><Check className="h-3.5 w-3.5" /> Generated</span>
-            <motion.a whileTap={{ scale: 0.94 }} href={lessonResourceOpenHref(resource, state.generationId)} target="_blank" rel="noopener noreferrer" onClick={() => onOpen(state.generationId!)} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-[8.5px] font-extrabold text-white shadow-[0_5px_14px_rgba(16,185,129,0.2)]">Open <ArrowRight className="h-3 w-3" /></motion.a>
+            <span className="inline-flex items-center gap-1 text-micro font-extrabold text-emerald-600"><Check className="h-3.5 w-3.5" /> Generated</span>
+            <motion.a whileTap={{ scale: 0.94 }} href={lessonResourceOpenHref(resource, state.generationId)} target="_blank" rel="noopener noreferrer" onClick={() => onOpen(state.generationId!)} className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-micro font-extrabold text-white shadow-[0_5px_14px_rgba(16,185,129,0.2)]">Open <ArrowRight className="h-3 w-3" /></motion.a>
           </div>
         ) : null}
       </div>
@@ -664,14 +664,14 @@ function ReviewLoading() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-[22px] border border-white/90 bg-white/70 p-5 shadow-[0_12px_35px_rgba(37,99,235,0.09)] backdrop-blur-md">
       <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
-      <div className="flex items-center gap-3.5"><motion.span animate={{ y: [0, -4, 0], rotate: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-50 to-violet-100 shadow-inner"><Sparkles className="h-5 w-5 text-indigo-500" /></motion.span><div><p className="text-[11px] font-extrabold text-slate-800">Elif is reviewing your lesson</p><p className="mt-1 text-[9px] font-medium text-slate-500">Looking for the most useful improvements…</p></div></div>
+      <div className="flex items-center gap-3.5"><motion.span animate={{ y: [0, -4, 0], rotate: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-50 to-violet-100 shadow-inner"><Sparkles className="h-5 w-5 text-indigo-500" /></motion.span><div><p className="text-micro font-extrabold text-slate-800">Elif is reviewing your lesson</p><p className="mt-1 text-micro font-medium text-slate-500">Looking for the most useful improvements…</p></div></div>
       <div className="mt-5 space-y-2.5"><div className="elif-shimmer h-3 w-[88%] rounded-full" /><div className="elif-shimmer h-3 w-[72%] rounded-full" /><div className="elif-shimmer h-16 w-full rounded-[16px]" /><div className="grid grid-cols-3 gap-2"><div className="elif-shimmer h-7 rounded-full" /><div className="elif-shimmer h-7 rounded-full" /><div className="elif-shimmer h-7 rounded-full" /></div></div>
     </motion.div>
   );
 }
 
 function ThinkingState() {
-  return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 inline-flex items-center gap-2.5 rounded-full border border-white bg-white/65 px-3.5 py-2 text-[9px] font-semibold text-slate-500 shadow-sm backdrop-blur-md"><span className="flex items-center gap-1"><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="h-1.5 w-1.5 rounded-full bg-blue-400" /><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.12 }} className="h-1.5 w-1.5 rounded-full bg-indigo-400" /><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.24 }} className="h-1.5 w-1.5 rounded-full bg-violet-400" /></span>Elif is thinking with this lesson in mind</motion.div>;
+  return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 inline-flex items-center gap-2.5 rounded-full border border-white bg-white/65 px-3.5 py-2 text-micro font-semibold text-slate-500 shadow-sm backdrop-blur-md"><span className="flex items-center gap-1"><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="h-1.5 w-1.5 rounded-full bg-blue-400" /><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.12 }} className="h-1.5 w-1.5 rounded-full bg-indigo-400" /><motion.span animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.24 }} className="h-1.5 w-1.5 rounded-full bg-violet-400" /></span>Elif is thinking with this lesson in mind</motion.div>;
 }
 
 function IssueCard({ issue, busyId, editing, instruction, onInstruction, onEdit, onApply, onWhy, onDismiss }: {
@@ -688,14 +688,14 @@ function IssueCard({ issue, busyId, editing, instruction, onInstruction, onEdit,
   return (
     <motion.article layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} className="group/card relative overflow-hidden rounded-[20px] border border-white/90 bg-white/70 p-4 shadow-[0_9px_28px_rgba(99,102,241,0.07)] backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_15px_38px_rgba(99,102,241,0.13)]">
       <div className={cn("absolute inset-y-0 left-0 w-1", issue.priority === "high" ? "bg-gradient-to-b from-rose-400 to-orange-300" : issue.priority === "medium" ? "bg-gradient-to-b from-amber-400 to-yellow-300" : "bg-gradient-to-b from-blue-400 to-cyan-300")} />
-      <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-1.5"><h4 className="text-[11px] font-extrabold leading-5 text-slate-800">{issue.title}</h4><span className={cn("rounded-full border px-2 py-0.5 text-[7.5px] font-extrabold uppercase tracking-wider", issue.priority === "high" ? "border-rose-100 bg-rose-50 text-rose-600" : issue.priority === "medium" ? "border-amber-100 bg-amber-50 text-amber-600" : "border-slate-100 bg-slate-50 text-slate-500")}>{issue.priority}</span></div><p className="mt-1.5 text-[9.5px] font-medium leading-[1.65] text-slate-500">{issue.problem}</p></div><motion.button whileHover={{ scale: 1.08, rotate: 5 }} whileTap={{ scale: 0.9 }} type="button" onClick={onDismiss} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500" aria-label={`Dismiss ${issue.title}`}><Trash2 className="h-3.5 w-3.5" /></motion.button></div>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">{issue.affected_sections.map((section) => <span key={section} className="rounded-md border border-blue-100/70 bg-blue-50/60 px-1.5 py-1 text-[7.5px] font-bold text-blue-600">{sectionLabel(section)}</span>)}</div>
-      <details className="mt-2.5 text-[9px] text-slate-500"><summary className="cursor-pointer font-bold transition hover:text-blue-600">Evidence from this plan</summary><p className="mt-1.5 rounded-xl bg-slate-50/70 p-2.5 leading-[1.65]">{issue.evidence}</p></details>
-      {editing ? <motion.textarea initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} value={instruction} onChange={(event) => onInstruction(event.target.value)} rows={3} maxLength={2000} className="mt-3 w-full resize-y rounded-[14px] border border-blue-100 bg-blue-50/35 p-3 text-[9.5px] font-medium leading-5 text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50" aria-label="Modify instruction before applying" /> : null}
+      <div className="flex items-start gap-2"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-1.5"><h4 className="text-micro font-extrabold leading-5 text-slate-800">{issue.title}</h4><span className={cn("rounded-full border px-2 py-0.5 text-micro font-extrabold uppercase tracking-wider", issue.priority === "high" ? "border-rose-100 bg-rose-50 text-rose-600" : issue.priority === "medium" ? "border-amber-100 bg-amber-50 text-amber-600" : "border-slate-100 bg-slate-50 text-slate-500")}>{issue.priority}</span></div><p className="mt-1.5 text-micro font-medium leading-[1.65] text-slate-500">{issue.problem}</p></div><motion.button whileHover={{ scale: 1.08, rotate: 5 }} whileTap={{ scale: 0.9 }} type="button" onClick={onDismiss} className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500" aria-label={`Dismiss ${issue.title}`}><Trash2 className="h-3.5 w-3.5" /></motion.button></div>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">{issue.affected_sections.map((section) => <span key={section} className="rounded-md border border-blue-100/70 bg-blue-50/60 px-1.5 py-1 text-micro font-bold text-blue-600">{sectionLabel(section)}</span>)}</div>
+      <details className="mt-2.5 text-micro text-slate-500"><summary className="cursor-pointer font-bold transition hover:text-blue-600">Evidence from this plan</summary><p className="mt-1.5 rounded-xl bg-slate-50/70 p-2.5 leading-[1.65]">{issue.evidence}</p></details>
+      {editing ? <motion.textarea initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} value={instruction} onChange={(event) => onInstruction(event.target.value)} rows={3} maxLength={2000} className="mt-3 w-full resize-y rounded-[14px] border border-blue-100 bg-blue-50/35 p-3 text-micro font-medium leading-5 text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50" aria-label="Modify instruction before applying" /> : null}
       <div className="mt-3 flex flex-wrap gap-2">
-        <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={onApply} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3.5 py-2 text-[8.5px] font-extrabold text-white shadow-[0_5px_14px_rgba(59,130,246,0.25)] disabled:opacity-50">{busyId === issue.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Apply</motion.button>
-        <motion.button whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={onWhy} className="inline-flex items-center gap-1.5 rounded-xl border border-white bg-white/75 px-3 py-2 text-[8.5px] font-bold text-slate-500 shadow-sm transition-colors hover:text-violet-600"><HelpCircle className="h-3.5 w-3.5" /> Why?</motion.button>
-        <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl border border-white bg-white/75 px-3 py-2 text-[8.5px] font-bold text-slate-500 shadow-sm transition-colors hover:text-blue-600"><Edit3 className="h-3.5 w-3.5" /> Modify <ChevronDown className={cn("h-3 w-3 transition", editing && "rotate-180")} /></motion.button>
+        <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={onApply} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3.5 py-2 text-micro font-extrabold text-white shadow-[0_5px_14px_rgba(59,130,246,0.25)] disabled:opacity-50">{busyId === issue.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Apply</motion.button>
+        <motion.button whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={onWhy} className="inline-flex items-center gap-1.5 rounded-xl border border-white bg-white/75 px-3 py-2 text-micro font-bold text-slate-500 shadow-sm transition-colors hover:text-violet-600"><HelpCircle className="h-3.5 w-3.5" /> Why?</motion.button>
+        <motion.button whileTap={{ scale: 0.94 }} type="button" onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-xl border border-white bg-white/75 px-3 py-2 text-micro font-bold text-slate-500 shadow-sm transition-colors hover:text-blue-600"><Edit3 className="h-3.5 w-3.5" /> Modify <ChevronDown className={cn("h-3 w-3 transition", editing && "rotate-180")} /></motion.button>
       </div>
     </motion.article>
   );
@@ -704,10 +704,10 @@ function IssueCard({ issue, busyId, editing, instruction, onInstruction, onEdit,
 function ChatBubble({ message, busyId, onApply }: { message: ConversationMessage; busyId: string | null; onApply: (change: ElifProposedChange) => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10, x: message.role === "user" ? 10 : -10 }} animate={{ opacity: 1, y: 0, x: 0 }} transition={{ type: "spring", stiffness: 340, damping: 26 }} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
-      <div className={cn("max-w-[90%] rounded-[18px] px-3.5 py-3 text-[10px] font-medium leading-[1.7]", message.role === "user" ? "rounded-br-[6px] bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_8px_22px_rgba(59,130,246,0.22)]" : "rounded-bl-[6px] border border-white bg-white/75 text-slate-600 shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-sm")}>
-        <div className="mb-1.5 flex items-center gap-1.5 text-[8px] font-extrabold uppercase tracking-[0.12em] opacity-70">{message.role === "user" ? <MessageCircle className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}{message.role === "user" ? "You" : "Elif"}</div>
+      <div className={cn("max-w-[90%] rounded-[18px] px-3.5 py-3 text-micro font-medium leading-[1.7]", message.role === "user" ? "rounded-br-[6px] bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_8px_22px_rgba(59,130,246,0.22)]" : "rounded-bl-[6px] border border-white bg-white/75 text-slate-600 shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-sm")}>
+        <div className="mb-1.5 flex items-center gap-1.5 text-micro font-extrabold uppercase tracking-[0.12em] opacity-70">{message.role === "user" ? <MessageCircle className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}{message.role === "user" ? "You" : "Elif"}</div>
         <p className="whitespace-pre-wrap">{message.content}</p>
-        {message.proposedChanges?.length ? <div className="mt-3 space-y-2">{message.proposedChanges.map((change) => <div key={change.id} className="rounded-[14px] border border-blue-100/70 bg-blue-50/55 p-3"><p className="text-[9.5px] font-extrabold text-blue-800">{change.title}</p><p className="mt-1 text-[8.5px] leading-5 text-blue-700">{change.instruction}</p><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={() => onApply(change)} className="mt-2 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-2.5 py-1.5 text-[8px] font-extrabold text-white shadow-sm disabled:opacity-50">{busyId === change.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Apply change</motion.button></div>)}</div> : null}
+        {message.proposedChanges?.length ? <div className="mt-3 space-y-2">{message.proposedChanges.map((change) => <div key={change.id} className="rounded-[14px] border border-blue-100/70 bg-blue-50/55 p-3"><p className="text-micro font-extrabold text-blue-800">{change.title}</p><p className="mt-1 text-micro leading-5 text-blue-700">{change.instruction}</p><motion.button whileTap={{ scale: 0.94 }} type="button" disabled={Boolean(busyId)} onClick={() => onApply(change)} className="mt-2 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-2.5 py-1.5 text-micro font-extrabold text-white shadow-sm disabled:opacity-50">{busyId === change.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Apply change</motion.button></div>)}</div> : null}
       </div>
     </motion.div>
   );

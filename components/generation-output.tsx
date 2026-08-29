@@ -170,7 +170,7 @@ function LessonPlanDocumentOutput({
             <span>/</span>
             <span>Lesson Plan Output</span>
           </div>
-          <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">
+          <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-h2">
             {chapterDisplay}
           </h1>
           <p className="mt-2 text-sm font-medium text-[#6d6f78]">
@@ -199,7 +199,7 @@ function LessonPlanDocumentOutput({
       <div className="min-w-0">
         <article
           onClick={highlightedSections.length ? onClearHighlights : undefined}
-          className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]"
+          className="lesson-plan-print-page min-w-0 border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm"
         >
           <header className="grid min-w-0 gap-4 border-b border-slate-300 pb-5 font-sans sm:gap-6">
             <div className="grid gap-5">
@@ -208,7 +208,7 @@ function LessonPlanDocumentOutput({
                   as="h2"
                   value={draft.title}
                   onCommit={(title) => updateDraft((current) => ({ ...current, title }))}
-                  className="break-words text-[20px] font-black leading-tight tracking-normal text-black sm:text-[24px]"
+                  className="break-words text-lead font-black leading-tight tracking-normal text-black sm:text-h3"
                   ariaLabel="Document title"
                   singleLine
                 />
@@ -222,7 +222,7 @@ function LessonPlanDocumentOutput({
                     singleLine
                   />
                 </p>
-                <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
+                <p className="mt-1 break-words text-micro font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
                   {formatMetadataValue(draft.metadata.board || "Board")}
                   <span> • </span>
                   {formatMetadataValue(draft.metadata.book || "Textbook")}
@@ -284,12 +284,12 @@ function LessonSectionBlock({
       )}
     >
       {isHighlighted ? (
-        <span className="absolute -top-3 right-3 rounded-full bg-blue-600 px-3 py-1 font-sans text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-md print:hidden">
+        <span className="absolute -top-3 right-3 rounded-full bg-blue-600 px-3 py-1 font-sans text-micro font-black uppercase tracking-[0.12em] text-white shadow-md print:hidden">
           Updated by Elif
         </span>
       ) : null}
       <div className="min-w-0">
-        <h3 className="break-words font-sans text-[15px] font-black leading-6 text-black sm:text-[17px]">
+        <h3 className="break-words font-sans text-sm font-black leading-6 text-black sm:text-base">
           <span>{index + 1}. </span>
           <EditableText
             as="span"
@@ -316,7 +316,7 @@ function LessonSectionBlock({
               {section.children.map((child, childIndex) => (
                 <div key={child.key || `${child.title}-${childIndex}`}>
                   <div className="flex items-start gap-2">
-                    <span className="pt-0.5 font-sans text-[14px] font-black text-black sm:text-[15px]">
+                    <span className="pt-0.5 font-sans text-sm font-black text-black sm:text-sm">
                       {toRoman(childIndex + 1)}.
                     </span>
                     <EditableText
@@ -326,7 +326,7 @@ function LessonSectionBlock({
                         ...section,
                         children: section.children?.map((item, index) => index === childIndex ? { ...item, title } : item)
                       })}
-                      className="font-sans text-[14px] font-black text-black sm:text-[15px]"
+                      className="font-sans text-sm font-black text-black sm:text-sm"
                       ariaLabel={`Subheading ${childIndex + 1}`}
                       singleLine
                     />
@@ -387,7 +387,7 @@ function LessonFlowBlock({
 }) {
   if (!rows.length) return null;
   return (
-    <div className="overflow-hidden rounded-[6px] border border-slate-300 font-sans text-[13px] sm:text-sm">
+    <div className="overflow-hidden rounded-[6px] border border-slate-300 font-sans text-sm sm:text-sm">
       {rows.map((row, index) => (
         <div key={`${row.phase}-${index}`} className="grid gap-3 border-b border-slate-200 p-3 last:border-b-0 lg:grid-cols-[120px_minmax(0,1fr)]">
           <div className="text-xs font-black uppercase tracking-[0.08em] text-slate-500">
@@ -450,7 +450,7 @@ function LessonBulletList({
         as="p"
         value={lines[0]}
         onCommit={(value) => onLinesChange?.(replaceLine(lines, 0, value))}
-        className="whitespace-pre-wrap break-words font-serif text-[14px] leading-6 text-black sm:text-[15px]"
+        className="whitespace-pre-wrap break-words font-serif text-sm leading-6 text-black sm:text-sm"
         ariaLabel="Editable lesson text"
       />
     );
@@ -458,7 +458,7 @@ function LessonBulletList({
   return (
     <ul className="ml-5 grid list-disc gap-3">
       {lines.map((line, index) => (
-        <li key={`${line}-${index}`} className="min-w-0 break-words pl-1 font-serif text-[14px] leading-6 text-black sm:text-[15px]">
+        <li key={`${line}-${index}`} className="min-w-0 break-words pl-1 font-serif text-sm leading-6 text-black sm:text-sm">
           <EditableText
             as="span"
             value={line}
@@ -535,7 +535,7 @@ function LessonDetailRow({
 }) {
   return (
     <div className="min-w-0 rounded-[12px] border border-[#eee9f7] bg-[#f8ffff] p-3">
-      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
+      <p className="text-micro font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
       {isEditing && draft ? (
         <InlineTextInput
           value={draft.metadata[field] || ""}
@@ -553,7 +553,7 @@ function LessonDetailRow({
 function CompactDetail({ label, value }: { label: string; value?: unknown }) {
   return (
     <div className="min-w-0 border-b border-[#eceef3] pb-3 last:border-b-0 last:pb-0">
-      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
+      <p className="text-micro font-black uppercase tracking-[0.08em] text-[#5b7194]">{label}</p>
       <p className="mt-1 break-words text-sm font-bold text-[#25262b]">{formatMetadataValue(value)}</p>
     </div>
   );
@@ -962,7 +962,7 @@ export function LessonPlanOutput({
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-lg font-black text-[#25262b]">Generated Lesson Plan</h1>
               </div>
-              <h2 className="mt-4 max-w-4xl break-words text-[30px] font-black tracking-tight text-[#25262b] 2xl:mt-5 2xl:text-4xl">
+              <h2 className="mt-4 max-w-4xl break-words text-h2 font-black tracking-tight text-[#25262b] 2xl:mt-5 2xl:text-4xl">
                 {typedTitle}
                 {!stream.done("title") ? <TypingCursor /> : null}
               </h2>
@@ -1303,7 +1303,7 @@ export function WorksheetOutput({
               <span>/</span>
               <span>{locale.worksheetOutput}</span>
             </div>
-            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-[28px]">{locale.generatedWorksheet}</h1>
+            <h1 className="mt-2 break-words text-2xl font-black leading-tight text-[#25262b] sm:text-h2">{locale.generatedWorksheet}</h1>
             <p className="mt-2 text-sm font-medium text-[#6d6f78]">{grade} • {subject} • {chapter}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1340,10 +1340,10 @@ export function WorksheetOutput({
       </div>
 
       {tab === "Worksheet" ? (
-        <article dir={locale.dir} lang={locale.localeCode} className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-[14px] leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-[15px]">
+        <article dir={locale.dir} lang={locale.localeCode} className="worksheet-print-page w-full max-w-none border border-[#d8d3e5] bg-white px-4 py-6 font-serif text-sm leading-6 text-black shadow-[0_18px_48px_rgba(39,30,91,0.06)] sm:px-8 sm:py-8 md:px-10 lg:px-12 lg:py-11 lg:text-sm">
           <header className="grid min-w-0 gap-4 font-sans sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-6">
             <div className="min-w-0">
-              <h2 className="break-words text-[19px] font-black leading-tight text-black sm:text-[22px]">
+              <h2 className="break-words text-lead font-black leading-tight text-black sm:text-h3">
                 <EditableText as="span" value={grade} onCommit={(value) => updateMetadata("grade", value)} ariaLabel="Worksheet grade" singleLine />
                 <span> - </span>
                 <EditableText as="span" value={subject} onCommit={(value) => updateMetadata("subject", value)} ariaLabel="Worksheet subject" singleLine />
@@ -1352,7 +1352,7 @@ export function WorksheetOutput({
                 as="p"
                 value={topic}
                 onCommit={(value) => updateMetadata("topic", value)}
-                className="mt-1 break-words text-[16px] font-black leading-snug text-black sm:text-[18px]"
+                className="mt-1 break-words text-base font-black leading-snug text-black sm:text-lead"
                 ariaLabel="Worksheet topic"
                 singleLine
               />
@@ -1360,7 +1360,7 @@ export function WorksheetOutput({
                 <span>{locale.chapter}: </span>
                 <EditableText as="span" value={chapter} onCommit={(value) => updateMetadata("chapter", value)} ariaLabel="Worksheet chapter" singleLine />
               </p>
-              <p className="mt-1 break-words text-[11px] font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
+              <p className="mt-1 break-words text-micro font-bold uppercase leading-5 tracking-[0.08em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
                 <EditableText as="span" value={metadata.board || locale.board} onCommit={(value) => updateMetadata("board", value)} ariaLabel="Worksheet board" singleLine />
                 <span> • </span>
                 <EditableText as="span" value={metadata.book || locale.textbook} onCommit={(value) => updateMetadata("book", value)} ariaLabel="Worksheet textbook" singleLine />
@@ -1381,7 +1381,7 @@ export function WorksheetOutput({
               value={worksheetOutput?.instructions || getWorksheetInstructions(worksheetOutput, locale)}
               languages={languages}
               onCommit={(instructions) => updateWorksheet((current) => ({ ...current, instructions }))}
-              className="mt-1 break-words text-[13px] font-semibold italic leading-6 text-slate-700 sm:text-sm"
+              className="mt-1 break-words text-sm font-semibold italic leading-6 text-slate-700 sm:text-sm"
               ariaLabel="Worksheet instructions"
             />
           </section>
@@ -1395,7 +1395,7 @@ export function WorksheetOutput({
                     value={section.section_title || localizeWorksheetSectionTitle(section.section_title, locale, sectionIndex)}
                     languages={languages}
                     onCommit={(section_title) => updateSection(sectionIndex, (currentSection) => ({ ...currentSection, section_title }))}
-                    className="min-w-0 flex-1 break-words text-[15px] font-black leading-6 text-black sm:text-[17px]"
+                    className="min-w-0 flex-1 break-words text-sm font-black leading-6 text-black sm:text-base"
                     ariaLabel={`Worksheet section ${sectionIndex + 1} title`}
                     singleLine
                   />
@@ -1480,7 +1480,7 @@ function WorksheetQuestion({
 
   return (
     <div className="min-w-0 break-inside-avoid">
-      <p className="break-words font-serif text-[14px] leading-6 sm:text-[15px]">
+      <p className="break-words font-serif text-sm leading-6 sm:text-sm">
         <span className="mr-3 font-sans font-black">{index + 1}.</span>
         <BilingualText
           as="span"
@@ -1491,7 +1491,7 @@ function WorksheetQuestion({
         />
       </p>
       {options.length ? (
-        <div className="mt-2 grid gap-x-10 gap-y-2 pl-5 font-sans text-[13px] sm:grid-cols-2 sm:pl-9 sm:text-sm">
+        <div className="mt-2 grid gap-x-10 gap-y-2 pl-5 font-sans text-sm sm:grid-cols-2 sm:pl-9 sm:text-sm">
           {options.map((option: string, optionIndex: number) => (
             <span key={`${option}-${optionIndex}`} className="flex min-w-0 items-start gap-2">
               <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-slate-300" />
@@ -1508,7 +1508,7 @@ function WorksheetQuestion({
         </div>
       ) : null}
       {left.length && right.length ? (
-        <div className="mt-3 overflow-x-auto rounded-[6px] border border-slate-300 font-sans text-[13px] sm:text-sm">
+        <div className="mt-3 overflow-x-auto rounded-[6px] border border-slate-300 font-sans text-sm sm:text-sm">
           <table className="w-full min-w-[420px] table-fixed border-collapse">
             <thead className="bg-slate-50 text-left text-black">
               <tr><th className="w-1/2 border-r border-slate-300 px-3 py-2">{locale.columnA}</th><th className="px-3 py-2">{locale.columnB}</th></tr>

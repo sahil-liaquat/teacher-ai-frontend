@@ -309,7 +309,7 @@ export function OnboardingWizard() {
               </div>
 
               {/* Step Badge */}
-              <div className="self-start sm:self-auto flex items-center bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
+              <div className="self-start sm:self-auto flex items-center bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded-full text-micro font-bold uppercase tracking-wider">
                 Step {step + 1} of {STEP_COUNT}
               </div>
             </div>
@@ -324,7 +324,7 @@ export function OnboardingWizard() {
                       <h2 id="onboarding-title" className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                         What do you teach?
                       </h2>
-                      <p className="text-[11px] sm:text-sm font-semibold text-slate-400">
+                      <p className="text-micro sm:text-sm font-semibold text-slate-400">
                         Select your current primary role in education so we can personalize your experience.
                       </p>
                     </div>
@@ -351,7 +351,7 @@ export function OnboardingWizard() {
                       <h2 id="onboarding-title" className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                         Which board do you teach?
                       </h2>
-                      <p className="text-[11px] sm:text-sm font-semibold text-slate-400">
+                      <p className="text-micro sm:text-sm font-semibold text-slate-400">
                         We'll tailor textbooks and recommendations to your syllabus.
                       </p>
                     </div>
@@ -386,7 +386,7 @@ export function OnboardingWizard() {
                       <h2 id="onboarding-title" className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                         Your school
                       </h2>
-                      <p className="text-[11px] sm:text-sm font-semibold text-slate-400">
+                      <p className="text-micro sm:text-sm font-semibold text-slate-400">
                         Optional — helps us generate customized report cards and worksheets formatted for your school.
                       </p>
                     </div>
@@ -408,7 +408,7 @@ export function OnboardingWizard() {
                       <h2 id="onboarding-title" className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                         What would you like to create first?
                       </h2>
-                      <p className="text-[11px] sm:text-sm font-semibold text-slate-400">
+                      <p className="text-micro sm:text-sm font-semibold text-slate-400">
                         Choose a tool to start immediately, and we'll take you straight there.
                       </p>
                     </div>

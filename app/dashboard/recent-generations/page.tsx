@@ -179,7 +179,7 @@ export default function RecentGenerationsPage() {
                         <span className="line-clamp-2 max-w-full break-words text-sm font-bold leading-5 text-slate-900 sm:truncate">
                           {gen.title}
                         </span>
-                        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">{meta.label}</span>
+                        <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-micro font-semibold text-slate-500">{meta.label}</span>
                       </div>
                       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-slate-500">
                         {gen.className && <span className="shrink-0">{gen.className}</span>}

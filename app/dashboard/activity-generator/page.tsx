@@ -589,16 +589,16 @@ export default function ActivityGeneratorPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#16a9b6] shadow-sm">
                 <Activity className="h-4 w-4" /> Classroom activity
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Activity Generator</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Activity Generator</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate textbook-grounded classroom activities with timing, materials, teacher actions, and assessment prompts.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#c9f7fb] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-[10px] font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#20c4cf] to-[#16a9b6] text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Activity</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Activity</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your activity by choosing the type, duration, group size, and sections to include.</p>
             </div>
           )}

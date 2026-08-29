@@ -309,7 +309,7 @@ function TeacherNotesPanel({
         </span>
         <div>
           <h2 className="text-sm font-extrabold text-slate-900">Teacher Notes</h2>
-          <p className="text-[11px] font-semibold text-slate-500">Private talking points for this slide. They are included in the PowerPoint speaker notes.</p>
+          <p className="text-micro font-semibold text-slate-500">Private talking points for this slide. They are included in the PowerPoint speaker notes.</p>
         </div>
       </div>
       <textarea
@@ -347,7 +347,7 @@ function SlidePreviewStrip({
       style={{ fontFeatureSettings: "\"cv02\", \"cv03\", \"cv04\", \"cv11\"" }}
     >
       <div className="mb-4 flex items-center justify-between gap-3 px-1 shrink-0">
-        <p className="text-[13px] font-bold uppercase tracking-wider text-slate-500">Slides</p>
+        <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Slides</p>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold tabular-nums text-slate-500">{slides.length}</span>
       </div>
       <div className="flex flex-1 min-h-0 max-h-[130px] gap-2 overflow-x-auto pr-1 sm:gap-3 md:max-h-none md:flex-col md:overflow-x-hidden md:overflow-y-auto">
@@ -374,8 +374,8 @@ function SlidePreviewStrip({
               )}
             </div>
             <div className="min-w-0 self-center">
-              <p className="line-clamp-2 text-[12.5px] font-bold leading-snug text-slate-800">{slide.title}</p>
-              <p className="mt-1 line-clamp-1 text-[10.5px] font-semibold leading-none text-slate-400">{slide.points[0] || slide.subtitle || "Presentation slide"}</p>
+              <p className="line-clamp-2 text-micro font-bold leading-snug text-slate-800">{slide.title}</p>
+              <p className="mt-1 line-clamp-1 text-micro font-semibold leading-none text-slate-400">{slide.points[0] || slide.subtitle || "Presentation slide"}</p>
             </div>
           </button>
         ))}

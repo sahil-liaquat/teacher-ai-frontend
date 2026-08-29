@@ -50,14 +50,14 @@ export function DashboardMyClasses() {
                   <div className="h-[140px] w-full overflow-hidden rounded-[15px] border border-slate-200/70 bg-slate-50">
                     <img src={thumbnail.src640} srcSet={`${thumbnail.src320} 320w, ${thumbnail.src640} 640w`} sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, calc(100vw - 48px)" width={640} height={360} loading="lazy" decoding="async" alt={thumbnail.alt} className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]" />
                   </div>
-                  <span className={cn("mt-4 inline-flex rounded-full px-2.5 py-1 text-[9px] font-black", progressStatus === "ready" ? "bg-emerald-50 text-emerald-700" : progressStatus === "not_started" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700")}>{progressStatus === "ready" ? "Completed" : progressStatus === "not_started" ? "Not Started" : "In Progress"}</span>
+                  <span className={cn("mt-4 inline-flex rounded-full px-2.5 py-1 text-micro font-black", progressStatus === "ready" ? "bg-emerald-50 text-emerald-700" : progressStatus === "not_started" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700")}>{progressStatus === "ready" ? "Completed" : progressStatus === "not_started" ? "Not Started" : "In Progress"}</span>
                   <h3 className="mt-3 truncate text-base font-black text-[#151d3a]">{item.chapter_title}</h3>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{item.class_name} <span className="px-1.5 text-slate-300">•</span> {item.subject}</p>
-                  <p className="mt-5 text-[10px] font-semibold text-slate-500">{progress.createdCount} of 5 resources ready</p>
+                  <p className="mt-1 text-micro font-semibold text-slate-500">{item.class_name} <span className="px-1.5 text-slate-300">•</span> {item.subject}</p>
+                  <p className="mt-5 text-micro font-semibold text-slate-500">{progress.createdCount} of 5 resources ready</p>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                     <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${progress.percentage}%` }} />
                   </div>
-                  <div className="mt-5 flex items-center justify-between text-[10px] font-semibold text-slate-500">
+                  <div className="mt-5 flex items-center justify-between text-micro font-semibold text-slate-500">
                     <span className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" />Last generated {relativeTime(item.last_generated_at || item.last_opened_at)}</span>
                     <span className="grid h-8 w-8 place-items-center rounded-xl border border-indigo-50 bg-white text-blue-600 transition group-hover:border-blue-200 group-hover:bg-blue-600 group-hover:text-white"><ArrowRight className="h-3.5 w-3.5" /></span>
                   </div>

@@ -70,7 +70,7 @@ export function StreakPill({ mobile = false }: { mobile?: boolean }) {
         aria-expanded={open}
         className={cn(
           "inline-flex h-9 items-center justify-center rounded-full border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 px-3 text-xs font-extrabold text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:from-orange-100 hover:to-amber-100 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 active:translate-y-px",
-          mobile && "h-8 min-w-8 px-1.5 text-[11px] min-[390px]:px-2.5",
+          mobile && "h-8 min-w-8 px-1.5 text-micro min-[390px]:px-2.5",
           summary.isLoading && "animate-pulse",
         )}
       >
@@ -132,7 +132,7 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
       >
         <header className="relative flex min-h-[96px] items-start justify-between overflow-hidden border-b border-[#dbeafe] px-4 py-4 min-[390px]:min-h-[108px] min-[390px]:px-5 min-[390px]:py-5 sm:px-6">
           <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f45f98]">Keep showing up</p>
+            <p className="text-micro font-black uppercase tracking-[0.18em] text-[#f45f98]">Keep showing up</p>
             <h2 id="streak-drawer-title" className="mt-1 text-xl font-black text-[#071b49]">Your Teaching Streak</h2>
             <span className="mt-2 block h-1 w-12 rounded-full bg-gradient-to-r from-[#1677ff] to-[#16a9b6]" />
           </div>
@@ -220,7 +220,7 @@ function StreakDrawer({ open, onClose, summary }: { open: boolean; onClose: () =
 function WeekDay({ day }: { day: { date: string; label: string; status: "completed" | "pending" | "future" | "missed" } }) {
   return (
     <div className="text-center">
-      <p className="text-[10px] font-bold text-slate-500">{day.label}</p>
+      <p className="text-micro font-bold text-slate-500">{day.label}</p>
       <div className={cn(
         "mx-auto mt-2 grid h-8 w-8 place-items-center rounded-full border text-xs font-black",
         day.status === "completed" && "border-emerald-500 bg-emerald-500 text-white",

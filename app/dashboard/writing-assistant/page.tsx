@@ -462,8 +462,8 @@ export default function WritingAssistantPage() {
                     <Icon className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors", tint.text)}>{item.title}</p>
-                    <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">{item.description}</p>
+                    <p className={cn("text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors", tint.text)}>{item.title}</p>
+                    <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">{item.description}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
                 </button>
@@ -496,7 +496,7 @@ export default function WritingAssistantPage() {
                 </div>
               </div>
               <div className="hidden sm:flex shrink-0">
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold shadow-sm backdrop-blur-sm", activeStyles.badge)}>
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-micro font-bold shadow-sm backdrop-blur-sm", activeStyles.badge)}>
                   <Sparkles className="h-3.5 w-3.5" /> AI Workspace
                 </span>
               </div>
@@ -642,7 +642,7 @@ export default function WritingAssistantPage() {
 
           {/* AI Refinement / Transformations Toolbar */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">AI Refinement Toolbar</label>
+            <label className="text-micro font-black uppercase tracking-wider text-slate-400">AI Refinement Toolbar</label>
             <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50/50 p-2.5">
               {ACTIONS.map((action) => (
                 <Button
@@ -652,7 +652,7 @@ export default function WritingAssistantPage() {
                   size="sm"
                   onClick={() => transform(action.id)}
                   disabled={Boolean(busy)}
-                  className="h-8 rounded-xl px-3 text-[11px] font-bold shadow-none hover:bg-white"
+                  className="h-8 rounded-xl px-3 text-micro font-bold shadow-none hover:bg-white"
                 >
                   {busy === action.id ? (
                     <RefreshCw className="h-3 w-3 animate-spin mr-1" />
@@ -672,7 +672,7 @@ export default function WritingAssistantPage() {
 
             {/* Document Title (Letterhead Subject Line) */}
             <div className="mb-6 border-b border-slate-100 pb-6 mt-1">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Subject / Title</label>
+              <label className="text-micro font-black uppercase tracking-wider text-slate-400">Subject / Title</label>
               <input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -683,11 +683,11 @@ export default function WritingAssistantPage() {
 
             {/* Document Content */}
             <div className="relative">
-              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Body Content</label>
+              <label className="text-micro font-black uppercase tracking-wider text-slate-400">Body Content</label>
               <textarea
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
-                className="mt-2 min-h-[460px] w-full resize-y border-none bg-transparent p-0 text-[15px] leading-8 text-slate-800 outline-none focus:ring-0 focus-visible:outline-none font-medium"
+                className="mt-2 min-h-[460px] w-full resize-y border-none bg-transparent p-0 text-sm leading-8 text-slate-800 outline-none focus:ring-0 focus-visible:outline-none font-medium"
                 placeholder="Write your document content here..."
               />
             </div>
@@ -707,7 +707,7 @@ function SectionHeading({ icon: Icon, title, description, tint }: { icon: typeof
       </div>
       <div>
         <h3 className="text-base font-extrabold text-slate-900">{title}</h3>
-        <p className="mt-0.5 text-[11px] font-medium text-slate-500">{description}</p>
+        <p className="mt-0.5 text-micro font-medium text-slate-500">{description}</p>
       </div>
     </div>
   );
@@ -774,7 +774,7 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
     <section className={cn(panelBase, "space-y-4")}>
       <div className="flex items-center justify-between">
         <h3 className="text-base font-extrabold text-slate-900">{title}</h3>
-        <span className="text-[11px] font-bold text-slate-400">{items.length}</span>
+        <span className="text-micro font-bold text-slate-400">{items.length}</span>
       </div>
       {loading ? (
         <div className="space-y-3">
@@ -795,7 +795,7 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-extrabold text-slate-800">{item.title}</span>
-                <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500">{item.document_type} · {formatDate(item.updated_at || item.created_at)}</span>
+                <span className="mt-0.5 block truncate text-micro font-medium text-slate-500">{item.document_type} · {formatDate(item.updated_at || item.created_at)}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
             </button>
@@ -807,7 +807,7 @@ function DocumentList({ title, items, loading, onOpen }: { title: string; items:
             <Check className="h-4 w-4" />
           </div>
           <p className="mt-3 text-xs font-bold text-slate-650">No documents yet</p>
-          <p className="mt-1 text-[11px] font-medium text-slate-400">Generated writing will appear here.</p>
+          <p className="mt-1 text-micro font-medium text-slate-400">Generated writing will appear here.</p>
         </div>
       )}
     </section>

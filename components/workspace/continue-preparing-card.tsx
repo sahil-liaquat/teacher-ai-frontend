@@ -50,7 +50,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
             <h2 id="continue-preparing-title" className="text-lg font-black tracking-[-0.035em] text-[#0b1430] sm:text-xl">
               Continue Preparing
             </h2>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-500 sm:text-xs">Pick up where you left off and finish strong.</p>
+            <p className="mt-0.5 text-micro font-medium text-slate-500 sm:text-xs">Pick up where you left off and finish strong.</p>
           </div>
         </div>
         <Link
@@ -67,7 +67,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[38%] bg-[radial-gradient(circle_at_78%_100%,rgba(209,250,229,0.95),transparent_56%),linear-gradient(to_top,rgba(240,253,250,0.9),transparent)]" />
             <span
               className={cn(
-                "inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black",
+                "inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-micro font-black",
                 progress.status === "ready"
                   ? "bg-emerald-50 text-emerald-800"
                   : progress.status === "not_started"
@@ -79,9 +79,9 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
               {statusLabel}
             </span>
 
-            <h3 className="mt-5 text-[24px] font-black leading-[1.12] tracking-[-0.04em] text-[#09132f] sm:text-[26px]">{item.chapter_title}</h3>
+            <h3 className="mt-5 text-h3 font-black leading-[1.12] tracking-[-0.04em] text-[#09132f] sm:text-h3">{item.chapter_title}</h3>
 
-            <div className="mt-5 flex flex-nowrap items-center gap-x-2 text-[11px] font-medium text-slate-500">
+            <div className="mt-5 flex flex-nowrap items-center gap-x-2 text-micro font-medium text-slate-500">
               <span className="inline-flex shrink-0 items-center gap-1.5"><GraduationCap className="h-[18px] w-[18px]" />{item.class_name}</span>
               <span className="text-slate-300">•</span>
               <span className="inline-flex min-w-0 items-center gap-1.5"><Globe2 className="h-[18px] w-[18px] shrink-0" /><span className="truncate">{item.subject}</span></span>
@@ -93,7 +93,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
               <BookOpen className="h-[18px] w-[18px]" strokeWidth={2} /> Chapter {item.chapter_number}
             </span>
 
-            <p className="mt-5 flex items-center gap-2 text-[11px] font-medium text-slate-500">
+            <p className="mt-5 flex items-center gap-2 text-micro font-medium text-slate-500">
               <Clock3 className="h-[18px] w-[18px] shrink-0" />
               <span>Last generated <strong className="font-black text-slate-600">{relativeTime(item.last_generated_at || item.last_opened_at)}</strong></span>
             </p>
@@ -140,14 +140,14 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
 
                 <div className="relative z-10 grid h-[112px] w-[112px] place-items-center rounded-full border border-white bg-gradient-to-br from-white via-white to-emerald-50/70 text-center shadow-[0_8px_22px_rgba(30,64,175,0.08),inset_0_0_0_1px_rgba(226,232,240,0.65)]">
                   <div>
-                    <p className="tracking-[-0.055em] text-[#0b1430]"><span className="text-[34px] font-black">{progress.createdCount}</span><span className="ml-0.5 text-base font-extrabold text-slate-400">/5</span></p>
-                    <p className="mt-0.5 text-[10px] font-extrabold leading-[14px] text-slate-500">resources ready</p>
+                    <p className="tracking-[-0.055em] text-[#0b1430]"><span className="text-h1 font-black">{progress.createdCount}</span><span className="ml-0.5 text-base font-extrabold text-slate-400">/5</span></p>
+                    <p className="mt-0.5 text-micro font-extrabold leading-[14px] text-slate-500">resources ready</p>
                   </div>
                 </div>
               </div>
               <div className="mt-auto hidden w-full items-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-slate-50 px-3 py-3 text-slate-500 xl:flex">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-100/80 text-emerald-700"><TrendingUp className="h-5 w-5" /></span>
-                <p className="text-[10px] font-medium leading-[14px]"><strong className="block font-black text-slate-600">Keep going!</strong>You&apos;re making great progress.</p>
+                <p className="text-micro font-medium leading-[14px]"><strong className="block font-black text-slate-600">Keep going!</strong>You&apos;re making great progress.</p>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ export function ContinuePreparingCard({ item }: { item: WorkspaceHomeTopic }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black leading-4 text-[#0d1631]">{resourceLabels[type]}</p>
-                    <p className={cn("mt-0.5 text-[10px] font-bold", created ? "text-emerald-600" : generating ? "text-blue-600" : "text-orange-600")}>
+                    <p className={cn("mt-0.5 text-micro font-bold", created ? "text-emerald-600" : generating ? "text-blue-600" : "text-orange-600")}>
                       {created ? "Created" : generating ? "Generating" : "Not created"}
                     </p>
                   </div>

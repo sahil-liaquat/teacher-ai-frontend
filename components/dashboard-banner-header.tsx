@@ -24,7 +24,7 @@ export function DashboardBannerHeader({
     >
       <div className="relative z-10 flex min-h-[150px] flex-col justify-center sm:min-h-[174px] lg:min-h-[190px]">
         <div className="max-w-[620px] pr-0 lg:pr-[260px]">
-          <h1 className="text-[32px] font-black leading-[1.1] tracking-normal text-[#071b49] min-[390px]:text-[36px] sm:text-[46px] lg:text-[52px]">
+          <h1 className="text-h2 font-black leading-[1.1] tracking-normal text-[#071b49] min-[390px]:text-h1 sm:text-display lg:text-display">
             <span className="block">{titleTop}</span>
             <span className="block sm:whitespace-nowrap">
               <span className="text-[#126de8]">{titleHighlight}</span>

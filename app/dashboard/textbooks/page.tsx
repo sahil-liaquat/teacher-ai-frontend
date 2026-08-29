@@ -283,7 +283,7 @@ export default function TeacherTextbooksPage() {
                 <X className="h-4 w-4" />
               </button>
             ) : (
-              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 shadow-sm opacity-80 transition-opacity duration-200 group-focus-within:opacity-0 sm:inline-block hidden">
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-micro font-bold text-slate-400 shadow-sm opacity-80 transition-opacity duration-200 group-focus-within:opacity-0 sm:inline-block hidden">
                 ⌘K
               </span>
             )}
@@ -528,8 +528,8 @@ function BookRow({ book, boardId, classId }: { book: Book; boardId: string; clas
           <div className="space-y-1">
             {chapters.map((chapter) => (
               <div key={chapter.id} className="flex flex-col gap-2 rounded-xl px-3 py-2.5 transition hover:bg-blue-50/60 sm:flex-row sm:items-center sm:justify-between">
-                <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-800">Chapter {chapter.chapter_number}: {chapter.chapter_title}</span><span className="mt-0.5 block text-[10px] font-semibold text-slate-400">Open a saved teaching workspace for this chapter.</span></span>
-                <button type="button" disabled={startingChapterId === chapter.id} onClick={() => void startWorkspace(chapter)} className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-50 px-3 text-[10px] font-black text-violet-700 hover:bg-violet-100 disabled:opacity-60">{startingChapterId === chapter.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PanelsTopLeft className="h-3.5 w-3.5" />}Start Workspace</button>
+                <span className="min-w-0"><span className="block truncate text-xs font-black text-slate-800">Chapter {chapter.chapter_number}: {chapter.chapter_title}</span><span className="mt-0.5 block text-micro font-semibold text-slate-400">Open a saved teaching workspace for this chapter.</span></span>
+                <button type="button" disabled={startingChapterId === chapter.id} onClick={() => void startWorkspace(chapter)} className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-violet-50 px-3 text-micro font-black text-violet-700 hover:bg-violet-100 disabled:opacity-60">{startingChapterId === chapter.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PanelsTopLeft className="h-3.5 w-3.5" />}Start Workspace</button>
               </div>
             ))}
           </div>

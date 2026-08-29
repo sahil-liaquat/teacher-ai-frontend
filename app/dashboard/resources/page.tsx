@@ -436,10 +436,10 @@ export default function ResourcesPage() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className={cn("inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-bold border", meta.colors.border, meta.colors.bg, meta.colors.text)}>
+                                  <span className={cn("inline-flex items-center rounded-lg px-2 py-0.5 text-micro font-bold border", meta.colors.border, meta.colors.bg, meta.colors.text)}>
                                     {meta.label}
                                   </span>
-                                  <span className="text-[11px] font-semibold text-slate-400">
+                                  <span className="text-micro font-semibold text-slate-400">
                                     <span className="sm:hidden">{new Date(resource.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} • </span>
                                     {new Date(resource.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                                   </span>
@@ -549,7 +549,7 @@ function CalendarDateBadge({ dateString }: { dateString: string }) {
   
   return (
     <div className="flex flex-col items-center justify-center shrink-0 w-11 h-[48px] rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm select-none">
-      <div className="w-full text-center text-[9px] font-black tracking-wider text-white bg-blue-500 py-0.5 px-1 leading-none uppercase">
+      <div className="w-full text-center text-micro font-black tracking-wider text-white bg-blue-500 py-0.5 px-1 leading-none uppercase">
         {month}
       </div>
       <div className="w-full text-center text-base font-extrabold text-slate-800 bg-slate-50 py-1 leading-none">

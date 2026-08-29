@@ -34,16 +34,16 @@ export function ResourceCard({ resource, workspaceId, topicId }: { resource: Wor
         {ready ? <span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-600 text-white"><Check className="h-3.5 w-3.5" /></span> : !generating ? <span className="grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-slate-500"><Plus className="h-3.5 w-3.5" /></span> : <Sparkles className="h-5 w-5 text-blue-500" />}
       </div>
 
-      <div className="mt-3 text-center"><h3 className="text-xs font-black text-[#171e38]">{resourceLabels[resource.type]}</h3><p className={cn("mt-1 text-[10px] font-bold", ready ? "text-slate-500" : generating ? "text-blue-600" : retry ? "text-rose-600" : stale ? "text-amber-700" : "text-slate-500")}>{ready ? `Created ${resource.generated_at ? relativeTime(resource.generated_at) : "and ready"}` : generating ? "Generating…" : retry ? "Generation failed" : stale ? "Needs update" : skipped ? "Skipped for now" : "Not created yet"}</p></div>
+      <div className="mt-3 text-center"><h3 className="text-xs font-black text-[#171e38]">{resourceLabels[resource.type]}</h3><p className={cn("mt-1 text-micro font-bold", ready ? "text-slate-500" : generating ? "text-blue-600" : retry ? "text-rose-600" : stale ? "text-amber-700" : "text-slate-500")}>{ready ? `Created ${resource.generated_at ? relativeTime(resource.generated_at) : "and ready"}` : generating ? "Generating…" : retry ? "Generation failed" : stale ? "Needs update" : skipped ? "Skipped for now" : "Not created yet"}</p></div>
 
       <div className="mt-4 flex h-[88px] items-center justify-center overflow-hidden rounded-xl border border-slate-200/80 bg-white/80 p-2">
         <img src={visual.preview} alt="" className={cn("h-full w-full object-cover", generating && "animate-pulse opacity-70", !ready && !generating && "opacity-45 grayscale-[0.2]")} />
       </div>
 
-      {generating ? <div className="mt-3"><p className="mb-1.5 text-[9px] font-semibold text-slate-500">Generating your resource…</p><div className="h-1.5 overflow-hidden rounded-full bg-blue-100"><div className="workspace-indeterminate h-full w-1/2 rounded-full bg-blue-600" /></div></div> : null}
+      {generating ? <div className="mt-3"><p className="mb-1.5 text-micro font-semibold text-slate-500">Generating your resource…</p><div className="h-1.5 overflow-hidden rounded-full bg-blue-100"><div className="workspace-indeterminate h-full w-1/2 rounded-full bg-blue-600" /></div></div> : null}
 
       <div className="mt-auto pt-3">
-        <Link href={ready ? openHref : generating ? openHref : generateHref} className={cn("inline-flex h-9 w-full items-center justify-center rounded-lg text-[11px] font-black transition", ready ? "border border-slate-200 bg-white text-[#151d37] hover:border-blue-300" : generating ? "bg-blue-100 text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700")}>{ready ? "Open" : generating ? "View progress" : retry ? "Try again" : stale ? "Update" : "Generate"}</Link>
+        <Link href={ready ? openHref : generating ? openHref : generateHref} className={cn("inline-flex h-9 w-full items-center justify-center rounded-lg text-micro font-black transition", ready ? "border border-slate-200 bg-white text-[#151d37] hover:border-blue-300" : generating ? "bg-blue-100 text-blue-600" : "bg-blue-600 text-white hover:bg-blue-700")}>{ready ? "Open" : generating ? "View progress" : retry ? "Try again" : stale ? "Update" : "Generate"}</Link>
       </div>
     </article>
   );

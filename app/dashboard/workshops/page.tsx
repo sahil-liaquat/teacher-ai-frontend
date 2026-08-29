@@ -248,7 +248,7 @@ function WorkshopCard({
                   {workshop.duration_minutes ? `${workshop.duration_minutes} mins` : "Live session"}
                 </span>
               </div>
-              <h3 className="mt-2 text-[16px] font-extrabold leading-snug text-slate-950 transition-colors group-hover/card:text-blue-600 sm:text-[18px]">
+              <h3 className="mt-2 text-base font-extrabold leading-snug text-slate-950 transition-colors group-hover/card:text-blue-600 sm:text-lead">
                 {workshop.title}
               </h3>
             </div>
@@ -271,16 +271,16 @@ function WorkshopCard({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-blue-500">Speaker / Host</p>
+                  <p className="text-micro font-black uppercase tracking-wider text-blue-500">Speaker / Host</p>
                   <p className="truncate text-xs font-extrabold leading-tight text-slate-900">{primaryHost.full_name}</p>
                   {primaryHost.designation ? (
-                    <p className="truncate text-[9px] font-medium leading-tight text-slate-500">
+                    <p className="truncate text-micro font-medium leading-tight text-slate-500">
                       {primaryHost.designation}{primaryHost.organization ? ` at ${primaryHost.organization}` : ""}
                     </p>
                   ) : null}
                 </div>
                 {workshop.hosts.length > 1 ? (
-                  <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[9px] font-black text-blue-600">
+                  <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-micro font-black text-blue-600">
                     +{workshop.hosts.length - 1}
                   </span>
                 ) : null}

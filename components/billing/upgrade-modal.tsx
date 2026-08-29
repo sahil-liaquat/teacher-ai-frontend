@@ -417,7 +417,7 @@ function UpgradeModalUI({
                 )}
               >
                 {plan.badge && (
-                  <span className="absolute -right-1 -top-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-md">
+                  <span className="absolute -right-1 -top-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-2.5 py-0.5 text-micro font-bold uppercase tracking-wide text-white shadow-md">
                     {plan.badge}
                   </span>
                 )}

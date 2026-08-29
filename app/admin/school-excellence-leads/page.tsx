@@ -399,7 +399,7 @@ function LeadDetailDialog({
                     placeholder="Add call outcomes, next steps, or ownership notes..."
                     className="mt-2 resize-y bg-white"
                   />
-                  <p className="mt-1 text-right text-[11px] text-slate-400">{notes.length}/4000</p>
+                  <p className="mt-1 text-right text-micro text-slate-400">{notes.length}/4000</p>
 
                   {save.isError ? <p role="alert" className="mt-3 text-sm font-medium text-rose-600">We could not save the follow-up update. Please try again.</p> : null}
                   {save.isSuccess ? <p role="status" className="mt-3 text-sm font-medium text-emerald-700">Follow-up details saved.</p> : null}
@@ -435,7 +435,7 @@ function DetailSection({ title, children }: { title: string; children: React.Rea
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="text-micro font-bold uppercase tracking-wider text-slate-400">{label}</p>
       <div className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-800">{value}</div>
     </div>
   );

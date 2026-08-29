@@ -239,7 +239,7 @@ async function loadDashboardInsights(): Promise<DashboardInsights> {
 }
 
 function StreakMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-950">{value}</p><p className="mt-1 text-xs font-medium text-slate-500">{detail}</p></div>;
+  return <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-micro font-bold uppercase tracking-wider text-slate-500">{label}</p><p className="mt-2 text-2xl font-black text-slate-950">{value}</p><p className="mt-1 text-xs font-medium text-slate-500">{detail}</p></div>;
 }
 
 function ProgressRow({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
@@ -257,7 +257,7 @@ function SignupProgress({ user }: { user: ApiUser }) {
     { label: "L", on: Boolean(user.logged_in), title: "Has signed in" },
     { label: "S", on: Boolean(user.has_subscription), title: "Has subscription" },
   ];
-  return <div className="flex gap-1.5">{steps.map((step) => <span key={step.label} title={step.title} className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-black ring-1 ${step.on ? "bg-emerald-50 text-emerald-600 ring-emerald-200" : "bg-slate-50 text-slate-400 ring-slate-200"}`}>{step.label}</span>)}</div>;
+  return <div className="flex gap-1.5">{steps.map((step) => <span key={step.label} title={step.title} className={`grid h-6 w-6 place-items-center rounded-full text-micro font-black ring-1 ${step.on ? "bg-emerald-50 text-emerald-600 ring-emerald-200" : "bg-slate-50 text-slate-400 ring-slate-200"}`}>{step.label}</span>)}</div>;
 }
 
 function OpportunityCard({ value, title, description, href, tone }: { value: number; title: string; description: string; href: string; tone: "amber" | "blue" | "rose" }) {

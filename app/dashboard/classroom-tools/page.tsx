@@ -115,14 +115,14 @@ export default function ClassroomToolsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className={cn("text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors", s.text)}>{tool.title}</h2>
+                  <h2 className={cn("text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors", s.text)}>{tool.title}</h2>
                   {tool.status !== "ready" ? (
-                    <Badge className="shrink-0 border-[#fff0bf] bg-[#fff0bf] px-2 py-0 text-[10px] text-[#b97800]">
+                    <Badge className="shrink-0 border-[#fff0bf] bg-[#fff0bf] px-2 py-0 text-micro text-[#b97800]">
                       {tool.badge}
                     </Badge>
                   ) : null}
                 </div>
-                <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">{tool.description}</p>
+                <p className="mt-1 line-clamp-2 text-micro font-medium leading-snug text-slate-500 sm:text-xs">{tool.description}</p>
               </div>
               <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover/card:translate-x-0.5" />
             </div>

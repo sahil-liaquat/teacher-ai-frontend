@@ -28,7 +28,7 @@ export function TeachingBadge({ tier, label, compact = false }: { tier: StreakBa
   const style = tierStyle[tier];
   const artwork = badgeArtwork[tier];
   return (
-    <div className={cn("inline-flex items-center gap-2 rounded-full bg-gradient-to-br font-black shadow-sm ring-1", style.fill, style.ring, style.text, compact ? "px-2.5 py-1 text-[10px]" : "px-3 py-1.5 text-xs")}>
+    <div className={cn("inline-flex items-center gap-2 rounded-full bg-gradient-to-br font-black shadow-sm ring-1", style.fill, style.ring, style.text, compact ? "px-2.5 py-1 text-micro" : "px-3 py-1.5 text-xs")}>
       {artwork ? <img src={artwork} alt="" aria-hidden="true" className={cn("shrink-0 object-contain drop-shadow-sm", compact ? "h-5 w-5" : "h-6 w-6")} /> : <Award className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden="true" />}
       <span>{label}</span>
     </div>
@@ -43,7 +43,7 @@ export function RewardArtwork({ tier, muted = false, className }: { tier: Streak
       <span aria-hidden="true" className="absolute -left-8 -top-10 h-24 w-24 rounded-full bg-white/45 blur-2xl" />
       <span aria-hidden="true" className="absolute -bottom-12 -right-8 h-28 w-28 rounded-full bg-white/25 blur-2xl" />
       {src && <img src={src} alt={isChampion ? "TeachPad Champion Teacher certificate artwork" : `${tier} Consistent Teacher badge`} className={cn("relative z-10 object-contain", isChampion ? "h-full w-full rounded-[10px] p-1.5 shadow-[0_8px_18px_rgba(0,0,0,0.2)]" : "h-28 w-28 drop-shadow-[0_12px_14px_rgba(15,23,42,0.20)] min-[390px]:h-32 min-[390px]:w-32")} />}
-      {isChampion && <span className="absolute bottom-2 right-2 z-20 rounded-full border border-amber-200/70 bg-[#071b49]/90 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-amber-200 shadow-md">30-day recognition</span>}
+      {isChampion && <span className="absolute bottom-2 right-2 z-20 rounded-full border border-amber-200/70 bg-[#071b49]/90 px-2 py-1 text-micro font-black uppercase tracking-[0.12em] text-amber-200 shadow-md">30-day recognition</span>}
     </div>
   );
 }
@@ -58,7 +58,7 @@ export function CertificateModal({ reward, teacherName, open, onClose }: { rewar
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#071b49]/55 p-2 backdrop-blur-sm min-[390px]:p-3" role="dialog" aria-modal="true" aria-labelledby="certificate-title" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div className="max-h-[calc(100dvh-1rem)] w-full max-w-5xl overflow-y-auto overscroll-contain rounded-[20px] border border-white/70 bg-[linear-gradient(180deg,#f4f9ff_0%,#ffffff_180px)] p-3 shadow-[0_28px_80px_rgba(7,27,73,0.24)] min-[390px]:rounded-[24px] min-[390px]:p-4 sm:rounded-[28px] sm:p-6">
         <div className="mb-3 flex min-w-0 items-start justify-between gap-3 min-[390px]:mb-4 min-[390px]:gap-4">
-          <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#f45f98] min-[390px]:text-[10px] min-[390px]:tracking-[0.18em]">TeachPad achievement</p><h2 id="certificate-title" className="mt-1 break-words text-base font-black leading-5 text-[#071b49] min-[390px]:text-xl min-[390px]:leading-7">{reward.reward_label}</h2></div>
+          <div className="min-w-0"><p className="text-micro font-black uppercase tracking-[0.16em] text-[#f45f98] min-[390px]:text-micro min-[390px]:tracking-[0.18em]">TeachPad achievement</p><h2 id="certificate-title" className="mt-1 break-words text-base font-black leading-5 text-[#071b49] min-[390px]:text-xl min-[390px]:leading-7">{reward.reward_label}</h2></div>
           <button type="button" onClick={onClose} aria-label="Close certificate" className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#6d6f78] shadow-sm ring-1 ring-white hover:bg-[#f7f8fb]"><X className="h-4 w-4" /></button>
         </div>
         <img src={previewUrl} alt={`Certificate for ${teacherName}`} className="w-full rounded-xl border border-slate-200 bg-slate-50 shadow-sm min-[390px]:rounded-2xl" />

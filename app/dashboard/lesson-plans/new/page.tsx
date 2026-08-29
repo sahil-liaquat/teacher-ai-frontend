@@ -493,16 +493,16 @@ export default function NewLessonPlanPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 border border-teachpad-cardBorder px-3 py-1.5 text-xs font-bold text-teachpad-blue shadow-sm backdrop-blur-sm">
                 <Sparkles className="h-4 w-4" /> AI-Powered
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">Create Lesson Plan</h1>
+              <h1 className="text-h2 font-black tracking-tight text-teachpad-ink sm:text-h1">Create Lesson Plan</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Generate curriculum-aligned lesson plans from the selected textbook chapter in seconds.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teachpad-cardBorder bg-white px-3 py-1.5 text-xs font-semibold text-teachpad-muted shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600 text-[10px] font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-teachpad-blue to-blue-600 text-micro font-bold text-white">2</span>
                 Step 2 of 2
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-teachpad-ink sm:text-[34px]">Customize Your Lesson</h1>
+              <h1 className="text-h2 font-black tracking-tight text-teachpad-ink sm:text-h1">Customize Your Lesson</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-teachpad-muted">Fine-tune your lesson plan by defining learning outcomes and selecting instructional components.</p>
             </div>
           )}

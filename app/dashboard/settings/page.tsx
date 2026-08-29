@@ -351,8 +351,8 @@ export default function SettingsPage() {
               <User className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Account</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Profile photo, name, email &amp; mobile</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Account</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Profile photo, name, email &amp; mobile</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
@@ -368,8 +368,8 @@ export default function SettingsPage() {
               <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Security</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Password credentials &amp; reset links</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Security</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Password credentials &amp; reset links</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
@@ -385,8 +385,8 @@ export default function SettingsPage() {
               <GraduationCap className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Teaching Preferences</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Default curriculum &amp; board preferences</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Teaching Preferences</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Default curriculum &amp; board preferences</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
@@ -402,8 +402,8 @@ export default function SettingsPage() {
               <Heart className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Referral Program</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Invite teachers &amp; earn rewards</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Referral Program</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Invite teachers &amp; earn rewards</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
@@ -419,8 +419,8 @@ export default function SettingsPage() {
               <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Appearance</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Sidebar &amp; dashboard layout config</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Appearance</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Sidebar &amp; dashboard layout config</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </button>
@@ -435,8 +435,8 @@ export default function SettingsPage() {
               <CreditCard className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.3]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14.5px] font-extrabold leading-snug text-slate-900 sm:text-[16.5px] transition-colors group-hover/card:text-blue-600">Billing</p>
-              <p className="mt-1 text-[11px] font-medium leading-snug text-slate-500 sm:text-xs">Manage subscription &amp; cancel anytime</p>
+              <p className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base transition-colors group-hover/card:text-blue-600">Billing</p>
+              <p className="mt-1 text-micro font-medium leading-snug text-slate-500 sm:text-xs">Manage subscription &amp; cancel anytime</p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover/card:translate-x-0.5 transition-transform" />
           </Link>
@@ -451,7 +451,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Account</h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Manage your profile information and contact details.</p>
+              <p className="text-micro font-medium text-slate-500 mt-0.5">Manage your profile information and contact details.</p>
             </div>
           </div>
 
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                       <span className="block aspect-square overflow-hidden rounded-full bg-slate-100">
                         <BoyAvatar avatarKey={avatar.key} alt="" />
                       </span>
-                      <span className={cn("mt-2 block text-[11px] font-bold", selected ? "text-[#0B73FF]" : "text-slate-600")}>
+                      <span className={cn("mt-2 block text-micro font-bold", selected ? "text-[#0B73FF]" : "text-slate-600")}>
                         {avatar.label}
                       </span>
                       {selected && (
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
-              <p className="mt-3 text-[11px] font-medium text-slate-400">Click Save Profile below to keep your selection.</p>
+              <p className="mt-3 text-micro font-medium text-slate-400">Click Save Profile below to keep your selection.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -593,7 +593,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Security</h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Manage password credentials and active session resets.</p>
+              <p className="text-micro font-medium text-slate-500 mt-0.5">Manage password credentials and active session resets.</p>
             </div>
           </div>
 
@@ -631,7 +631,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Teaching Preferences</h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Prefill board configurations to automate curriculum loading.</p>
+              <p className="text-micro font-medium text-slate-500 mt-0.5">Prefill board configurations to automate curriculum loading.</p>
             </div>
           </div>
 
@@ -668,7 +668,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="min-w-0 pr-6">
                     <span className="font-bold text-slate-800 text-sm block">JKBOSE</span>
-                    <span className="text-[10px] font-medium text-slate-400 block mt-0.5">Jammu & Kashmir Board</span>
+                    <span className="text-micro font-medium text-slate-400 block mt-0.5">Jammu & Kashmir Board</span>
                   </div>
                   {jkboseBoard && defaultBoardId === jkboseBoard.id && (
                     <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white">
@@ -698,7 +698,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="min-w-0 pr-6">
                     <span className="font-bold text-slate-800 text-sm block">CBSE</span>
-                    <span className="text-[10px] font-medium text-slate-400 block mt-0.5">Central Board of Secondary Education</span>
+                    <span className="text-micro font-medium text-slate-400 block mt-0.5">Central Board of Secondary Education</span>
                   </div>
                   {cbseBoard && defaultBoardId === cbseBoard.id && (
                     <span className="absolute top-3 right-3 grid h-5 w-5 place-items-center rounded-full bg-[#0B73FF] text-white">
@@ -720,7 +720,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Referral Program</h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Invite fellow teachers and earn subscription rewards.</p>
+              <p className="text-micro font-medium text-slate-500 mt-0.5">Invite fellow teachers and earn subscription rewards.</p>
             </div>
           </div>
 
@@ -730,7 +730,7 @@ export default function SettingsPage() {
             ) : primaryCode ? (
               <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-[#fff8f9] to-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-[10px] font-bold text-red-500">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/60 bg-white px-2.5 py-1 text-micro font-bold text-red-500">
                     <Ticket className="h-3.5 w-3.5" />
                     Referral Code
                   </div>
@@ -781,7 +781,7 @@ export default function SettingsPage() {
                     <p className="mt-1 text-xs font-semibold leading-5 text-amber-800">
                       Copy and sharing options will appear here after TeachPad assigns a code to your account.
                     </p>
-                    {referralCodesQuery.isError ? <p className="mt-2 text-[11px] font-bold text-red-600">We could not check your code right now. Please try again later.</p> : null}
+                    {referralCodesQuery.isError ? <p className="mt-2 text-micro font-bold text-red-600">We could not check your code right now. Please try again later.</p> : null}
                   </div>
                 </div>
               </div>
@@ -789,14 +789,14 @@ export default function SettingsPage() {
 
             {/* Performance summary cards */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Referral Metrics</h4>
+              <h4 className="text-micro font-black uppercase tracking-wider text-slate-400">Referral Metrics</h4>
               <div className="grid gap-4 grid-cols-3">
                 {/* Total Referrals */}
                 <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-center">
                   <span className="text-lg font-black text-slate-800 block">
                     {influencerDashboardQuery.data?.total_referred_signups ?? 0}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1 block">Total Referrals</span>
+                  <span className="text-micro font-bold text-slate-400 uppercase tracking-wider mt-1 block">Total Referrals</span>
                 </div>
 
                 {/* Active Teachers */}
@@ -804,7 +804,7 @@ export default function SettingsPage() {
                   <span className="text-lg font-black text-slate-800 block">
                     {influencerDashboardQuery.data?.total_active_subscribers ?? 0}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1 block">Active Teachers</span>
+                  <span className="text-micro font-bold text-slate-400 uppercase tracking-wider mt-1 block">Active Teachers</span>
                 </div>
 
                 {/* Rewards Earned */}
@@ -812,7 +812,7 @@ export default function SettingsPage() {
                   <span className="text-lg font-black text-slate-800 block">
                     ₹{influencerDashboardQuery.data?.total_earned_commission_inr ?? 0}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1 block">Rewards Earned</span>
+                  <span className="text-micro font-bold text-slate-400 uppercase tracking-wider mt-1 block">Rewards Earned</span>
                 </div>
               </div>
             </div>
@@ -828,14 +828,14 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Appearance</h3>
-              <p className="text-[11px] font-medium text-slate-500 mt-0.5">Configure layout densities and theme alignments.</p>
+              <p className="text-micro font-medium text-slate-500 mt-0.5">Configure layout densities and theme alignments.</p>
             </div>
           </div>
 
           <div className="space-y-6 pt-5 border-t border-slate-100">
             {/* Sidebar Style */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Sidebar Style</h4>
+              <h4 className="text-micro font-black uppercase tracking-wider text-slate-400">Sidebar Style</h4>
               <div className="grid gap-4 sm:grid-cols-2">
                 
                 {/* Floating Sidebar Option */}
@@ -910,7 +910,7 @@ export default function SettingsPage() {
 
             {/* Dashboard Layout */}
             <div className="space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Dashboard Layout</h4>
+              <h4 className="text-micro font-black uppercase tracking-wider text-slate-400">Dashboard Layout</h4>
               <div className="grid gap-4 sm:grid-cols-2">
                 
                 {/* Search-First Dashboard */}

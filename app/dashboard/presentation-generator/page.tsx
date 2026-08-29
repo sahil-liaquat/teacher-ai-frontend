@@ -497,25 +497,25 @@ export default function PresentationGeneratorPage() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-[#eb3b5a] shadow-sm">
                 <Presentation className="h-4 w-4" /> Create presentation
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Presentation Generator</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Presentation Generator</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Generate textbook-grounded classroom presentations with visuals, speaker notes, and activities.</p>
             </div>
           ) : step === 2 ? (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9de] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-[10px] font-bold text-white">2</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-micro font-bold text-white">2</span>
                 Step 2 of 3
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Customize Your Presentation</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Customize Your Presentation</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Fine-tune your presentation by choosing the style, tone, detail level, and sections to include.</p>
             </div>
           ) : (
             <div className="relative z-10 max-w-[560px]">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#ffd9de] bg-white px-3 py-1.5 text-xs font-semibold text-[#55516e] shadow-sm">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-[10px] font-bold text-white">3</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-[#eb3b5a] to-[#ff6f86] text-micro font-bold text-white">3</span>
                 Step 3 of 3
               </div>
-              <h1 className="text-[28px] font-black tracking-tight text-[#25262b] sm:text-[34px]">Choose Visual Theme</h1>
+              <h1 className="text-h2 font-black tracking-tight text-[#25262b] sm:text-h1">Choose Visual Theme</h1>
               <p className="mt-2.5 max-w-[520px] text-sm font-medium leading-6 text-[#55516e]">Select a premium theme for your presentation slides. Emojis, background gradients, and elements will adapt dynamically.</p>
             </div>
           )}
