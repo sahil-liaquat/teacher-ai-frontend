@@ -1,10 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { BACKEND_ROOT } from "@/lib/api";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export { cn } from "./cn";
 
 export function resolveMediaUrl(path?: string | null): string {
   if (!path) return "";

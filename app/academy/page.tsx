@@ -720,7 +720,7 @@ function InstructorCard({ host }: { host: Host }) {
         {host.profile_photo ? (
           <img src={resolveUploadUrl(host.profile_photo)} alt={host.full_name} className="h-16 w-16 rounded-2xl border border-white object-cover shadow-sm" />
         ) : (
-          <div className="grid h-16 w-16 place-items-center rounded-2xl border border-blue-100 bg-teachpad-sky text-blue-600">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl border border-teachpad-sky bg-teachpad-sky text-blue-600">
             <User className="h-8 w-8" />
           </div>
         )}

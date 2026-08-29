@@ -84,6 +84,7 @@ const config: Config = {
         e3: "0 12px 32px rgba(16,24,40,.12)"
       },
       animation: {
+        // Both keyframes are defined in app/globals.css, not here.
         'slide-in-left': 'slide-in-left 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'slide-in-right': 'slide-in-right 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both'
       }
