@@ -58,7 +58,7 @@ export function ErrorPageShell({
               </p>
             ) : null}
 
-            <h1 className="mt-5 text-h1 font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-display sm:text-6xl lg:text-display">
+            <h1 className="mt-5 text-h1 font-black leading-[1.05] tracking-tight text-slate-950 min-[390px]:text-display sm:text-6xl">
               {title}
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8 lg:mx-0">
